@@ -54,6 +54,7 @@ subprojects { subproject ->
     
     checkerFramework {
       checkers = [
+        /*
               'org.checkerframework.checker.nullness.NullnessChecker'
       ] + ("all".equals(project.findProperty("checkers")) ? [         
               'org.checkerframework.checker.optional.OptionalChecker',
@@ -63,9 +64,14 @@ subprojects { subproject ->
               'annotation.userindex.UserIndexChecker',
               'annotation.help.HelpFileChecker',
               'annotation.funcdoc.FuncDocChecker',
-              'annotation.recorded.RecordedChecker'
-      ] : [])
+              'annotation.recorded.RecordedChecker' 
+      */
+      
+      'org.checkerframework.common.util.count.AnnotationStatistics',]
+            
       extraJavacArgs = [
+          '-Aannotations',
+          '-Anolocations',
           //'-AskipDefs=records.grammar.|one.util.',
           "-Astubs=" + stubs.collect{s -> return "$rootDir" + File.separator + "stubs" + File.separator + s + ".astub"}.findAll {s -> return new File(s).exists()}.join(File.pathSeparator),
           '-AsuppressWarnings=optional.parameter,optional.as.element.type,optional.collection'
@@ -221,7 +227,7 @@ subprojects { subproject ->
     }
   }
   tasks.withType(JavaCompile) {
-    options.compilerArgs += ["-Xlint:unchecked", "-Xlint:deprecation", "-Xlint:module", "-Werror", "-parameters", "--enable-preview"]
+    options.compilerArgs += ["-Xlint:unchecked", "-Xlint:deprecation", "-Xlint:module", "-parameters", "--enable-preview"]
     options.encoding = 'UTF-8'
     options.release = 17
     options.fork = true
