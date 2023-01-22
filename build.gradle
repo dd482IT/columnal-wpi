@@ -215,6 +215,7 @@ subprojects { subproject ->
 
   repositories {
     mavenCentral()
+    mavenLocal()
     maven {
       url "https://artifactory.nimblygames.com/artifactory/ng-public-release/"
     }

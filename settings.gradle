@@ -63,8 +63,8 @@ include(':xml')
 dependencyResolutionManagement {
     versionCatalogs {
         libs {
-            library('checkerframework', 'org.checkerframework:checker:3.26.0')
-            library('checkerframework-qual', 'org.checkerframework:checker-qual:3.26.0')
+            library('checkerframework', 'org.checkerframework:checker:3.29.1-SNAPSHOT')
+            library('checkerframework-qual', 'org.checkerframework:checker-qual:3.29.1-SNAPSHOT')
             
             library('guava', 'com.google.guava:guava:31.1-jre')
             library('antlr.exec', 'org.antlr:antlr4:4.11.1')
