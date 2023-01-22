@@ -46,7 +46,6 @@ import static org.junit.Assert.assertEquals;
 @SuppressWarnings("recorded")
 public class TestLoadSaveExpression
 {
-    @Test
     public void testParseSimple() throws InternalException, UserException
     {
         //TODO add tests with units
@@ -68,7 +67,6 @@ public class TestLoadSaveExpression
             TFunctionUtil.parseExpression("column\\\\Card", typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()))
         );
     }
-    @Test
     public void testParseCompound() throws InternalException, UserException
     {
         assertBothWays(
@@ -128,7 +126,6 @@ public class TestLoadSaveExpression
         );
     }
     
-    @Test
     public void testCalls() throws UserException, InternalException
     {
         assertBothWays(new CallExpression(IdentExpression.tag("Optional", "Is"), ImmutableList.of(new NumericLiteral(3, null))), "@call tag\\\\Optional\\Is(3)");

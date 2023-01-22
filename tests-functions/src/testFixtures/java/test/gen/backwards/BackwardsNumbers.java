@@ -53,13 +53,13 @@ public class BackwardsNumbers extends BackwardsProvider
     }
 
     @Override
-    public List<ExpressionMaker> terminals(DataType targetType, @Value Object targetValue) throws InternalException, UserException
+    public List<ExpressionMaker> terminals(DataType targetType, Object targetValue) throws InternalException, UserException
     {
         return ImmutableList.of();
     }
 
     @Override
-    public List<ExpressionMaker> deep(int maxLevels, DataType type, @Value Object targetValue) throws InternalException, UserException
+    public List<ExpressionMaker> deep(int maxLevels, DataType type, Object targetValue) throws InternalException, UserException
     {
         if (!DataTypeUtility.isNumber(type))
             return ImmutableList.of();
@@ -114,7 +114,7 @@ public class BackwardsNumbers extends BackwardsProvider
                             denominator = parent.genInt();
                         }
                         while (Utility.compareNumbers(denominator, 0) == 0);
-                        @Value Number numerator = Utility.multiplyNumbers((Number) targetValue, DataTypeUtility.value(denominator));
+                        Number numerator = Utility.multiplyNumbers((Number) targetValue, DataTypeUtility.value(denominator));
                         if (Utility.compareNumbers(Utility.divideNumbers(numerator, DataTypeUtility.value(denominator)), (Number)targetValue) != 0)
                         {
                             // Divide won't come out right: just divide by 1:
@@ -141,7 +141,7 @@ public class BackwardsNumbers extends BackwardsProvider
 
     private Unit makeUnit() throws InternalException, UserException
     {
-        return r.<@NonNull Unit>choose(Arrays.asList(
+        return r.<Unit>choose(Arrays.asList(
             getUnit("m"),
             getUnit("cm"),
             getUnit("inch"),

@@ -63,20 +63,16 @@ import static org.junit.Assert.fail;
 /**
  * Created by neil on 13/12/2016.
  */
-@RunWith(JUnitQuickcheck.class)
 public class PropNumericFunctions
 {
-    private @MonotonicNonNull UnitManager mgr;
-    @Before
+    private UnitManager mgr;
     public void init() throws UserException, InternalException
     {
         mgr = new UnitManager();
     }
 
 
-    @Property
-    @OnThread(Tag.Simulation)
-    public void propAbs(@From(GenNumber.class) @Value Number src, @From(GenUnit.class) Unit u) throws Throwable
+    public void propAbs(Number src, Unit u) throws Throwable
     {
         BigDecimal absed = Utility.toBigDecimal(runNumericFunction(u.toString(), src, u.toString(), new Absolute()));
         // Change *after* call; important so that we test diff classes above, but need BigDecimal for comparisons:
@@ -85,12 +81,10 @@ public class PropNumericFunctions
         assertThat(absed, Matchers.anyOf(Matchers.equalTo(src), Matchers.equalTo(Utility.addSubtractNumbers(DataTypeUtility.value(0), src, false))));
     }
 
-    @Property
-    @OnThread(Tag.Simulation)
-    public void propRound(@From(GenNumber.class) @Value Number src, @From(GenUnit.class) Unit u) throws Throwable
+    public void propRound(Number src, Unit u) throws Throwable
     {
-        @Value BigDecimal rounded = Utility.toBigDecimal(runNumericFunction(u.toString(), src, u.toString(), new Round()));
-        @Value BigDecimal orig = Utility.toBigDecimal(src);
+        BigDecimal rounded = Utility.toBigDecimal(runNumericFunction(u.toString(), src, u.toString(), new Round()));
+        BigDecimal orig = Utility.toBigDecimal(src);
         // Check that it is round by doing this; will throw if not:
         try
         {
@@ -104,19 +98,15 @@ public class PropNumericFunctions
         assertThat(gap, Matchers.lessThanOrEqualTo(BigDecimal.valueOf(0.5)));
     }
 
-    @Property
-    @OnThread(Tag.Simulation)
-    public void propSum(@From(GenNumbers.class) List<@Value Number> src, @From(GenUnit.class) Unit u) throws Throwable
+    public void propSum(List<Number> src, Unit u) throws Throwable
     {
-        @Nullable @Value Number total = src.stream().reduce((a, b) -> Utility.addSubtractNumbers(a, b, true)).orElse(null);
+        Number total = src.stream().reduce((a, b) -> Utility.addSubtractNumbers(a, b, true)).orElse(null);
         assertEquals(total == null ? BigDecimal.ZERO : Utility.toBigDecimal(total), Utility.toBigDecimal(runNumericSummaryFunction(u.toString(), src, u.toString(), new Sum())));
     }
 
-    @Property
-    @OnThread(Tag.Simulation)
-    public void propAverage(@From(GenNumbers.class) List<@Value Number> src, @From(GenUnit.class) Unit u) throws Throwable
+    public void propAverage(List<Number> src, Unit u) throws Throwable
     {
-        @Nullable @Value Number total = src.stream().reduce((a, b) -> Utility.addSubtractNumbers(a, b, true)).orElse(null);
+        Number total = src.stream().reduce((a, b) -> Utility.addSubtractNumbers(a, b, true)).orElse(null);
         if (total == null)
         {
             // List must be empty:
@@ -132,27 +122,26 @@ public class PropNumericFunctions
         }
         else
         {
-            @Value BigDecimal expected = Utility.toBigDecimal(Utility.divideNumbers(total, DataTypeUtility.value(src.size())));
-            @Value BigDecimal actual = Utility.toBigDecimal(runNumericSummaryFunction(u.toString(), src, u.toString(), new Mean()));
+            BigDecimal expected = Utility.toBigDecimal(Utility.divideNumbers(total, DataTypeUtility.value(src.size())));
+            BigDecimal actual = Utility.toBigDecimal(runNumericSummaryFunction(u.toString(), src, u.toString(), new Mean()));
             assertThat("Expected " + expected + " actual" + actual, Utility.toBigDecimal(Utility.addSubtractNumbers(actual, expected, false)).abs(), Matchers.lessThanOrEqualTo(new BigDecimal("0.000001")));
         }
     }
 
     // Tests single numeric input, numeric output function
-    @OnThread(Tag.Simulation)
-    private @Value Number runNumericFunction(String expectedUnit, @Value Number src, String srcUnit, FunctionDefinition function) throws InternalException, UserException, Throwable
+    private Number runNumericFunction(String expectedUnit, Number src, String srcUnit, FunctionDefinition function) throws InternalException, UserException, Throwable
     {
         if (mgr == null)
             throw new RuntimeException();
         try
         {
-            @Nullable Pair<ValueFunction, DataType> instance = TFunctionUtil.typeCheckFunction(function, ImmutableList.of(DataType.number(new NumberInfo(mgr.loadUse(srcUnit)))));
+            Pair<ValueFunction, DataType> instance = TFunctionUtil.typeCheckFunction(function, ImmutableList.of(DataType.number(new NumberInfo(mgr.loadUse(srcUnit)))));
             assertNotNull(instance);
             // Won't happen, but for nullness checker:
             if (instance == null) throw new RuntimeException();
             assertTrue(DataTypeUtility.isNumber(instance.getSecond()));
             assertEquals(mgr.loadUse(expectedUnit), TFunctionUtil.getUnit(instance.getSecond()));
-            @Value Object num = instance.getFirst().call(new @Value Object[] {src});
+            Object num = instance.getFirst().call(new Object[] {src});
             return Utility.cast(num, Number.class);
         }
         catch (RuntimeException e)
@@ -165,20 +154,19 @@ public class PropNumericFunctions
     }
 
     // Tests single numeric input, numeric output function
-    @OnThread(Tag.Simulation)
-    private @Value Number runNumericSummaryFunction(String expectedUnit, List<@Value Number> src, String srcUnit, FunctionDefinition function) throws InternalException, UserException, Throwable
+    private Number runNumericSummaryFunction(String expectedUnit, List<Number> src, String srcUnit, FunctionDefinition function) throws InternalException, UserException, Throwable
     {
         if (mgr == null)
             throw new RuntimeException();
         try
         {
-            @Nullable Pair<ValueFunction, DataType> instance = TFunctionUtil.typeCheckFunction(function, ImmutableList.of(DataType.array(DataType.number(new NumberInfo(mgr.loadUse(srcUnit))))));
+            Pair<ValueFunction, DataType> instance = TFunctionUtil.typeCheckFunction(function, ImmutableList.of(DataType.array(DataType.number(new NumberInfo(mgr.loadUse(srcUnit))))));
             assertNotNull(instance);
             // Won't happen, but for nullness checker:
             if (instance == null) throw new RuntimeException();
             assertTrue(DataTypeUtility.isNumber(instance.getSecond()));
             assertEquals(mgr.loadUse(expectedUnit), TFunctionUtil.getUnit(instance.getSecond()));
-            @Value Object num = instance.getFirst().call(new @Value Object[] {DataTypeUtility.value(Utility.<@Value Number, @Value Object>mapList(src, s -> s))});
+            Object num = instance.getFirst().call(new Object[] {DataTypeUtility.value(Utility.<Number, Object>mapList(src, s -> s))});
             return Utility.cast(num, Number.class);
         }
         catch (RuntimeException e)

@@ -35,17 +35,15 @@ public interface Exporter
     /**
      * Do the actual export to the given file.
      */
-    @OnThread(Tag.Simulation)
     public void exportData(File destination, Table data) throws UserException, InternalException;
 
     /**
      * The name of the exporter to display to the user when picking an exporter
      */
-    @Localized String getName();
+    String getName();
 
     /**
      * Get the list of supported file types.  Each item is a file extension (like "*.txt").
      */
-    @OnThread(Tag.Any)
     public ImmutableList<String> getSupportedFileTypes();
 }

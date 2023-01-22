@@ -51,7 +51,6 @@ import java.util.Optional;
 /**
  * Lets you pick a column, or select to use row numbers
  */
-@OnThread(Tag.FXPlatform)
 public class PickManualEditIdentifierDialog extends ErrorableLightDialog<Optional<ColumnId>>
 {
     private final RadioButton byColumnRadio;
@@ -86,13 +85,13 @@ public class PickManualEditIdentifierDialog extends ErrorableLightDialog<Optiona
         }, new CompletionListener<ColumnCompletion>()
         {
             @Override
-            public @Nullable String doubleClick(String currentText, ColumnCompletion selectedItem)
+            public String doubleClick(String currentText, ColumnCompletion selectedItem)
             {
                 return selectedItem.columnId.getRaw();
             }
 
             @Override
-            public @Nullable String keyboardSelect(String textBeforeCaret, String textAfterCaret, @Nullable ColumnCompletion selectedItem, boolean wasTab)
+            public String keyboardSelect(String textBeforeCaret, String textAfterCaret, ColumnCompletion selectedItem, boolean wasTab)
             {
                 return selectedItem != null ? selectedItem.columnId.getRaw() : null;
             }
@@ -112,20 +111,20 @@ public class PickManualEditIdentifierDialog extends ErrorableLightDialog<Optiona
     }
 
     @Override
-    protected @OnThread(Tag.FXPlatform) Either<@Localized String, Optional<ColumnId>> calculateResult()
+    protected Either<String, Optional<ColumnId>> calculateResult()
     {
         if (byColumnRadio.isSelected())
         {
-            @Nullable @ExpressionIdentifier String id = IdentifierUtility.asExpressionIdentifier(byColumnName.getText().trim());
+            String id = IdentifierUtility.asExpressionIdentifier(byColumnName.getText().trim());
             
             if (id != null && srcTableColumns.contains(new ColumnId(id)))
-                return Either.<@Localized String, Optional<ColumnId>>right(Optional.<ColumnId>of(new ColumnId(id)));
+                return Either.<String, Optional<ColumnId>>right(Optional.<ColumnId>of(new ColumnId(id)));
             else
                 return Either.left(TranslationUtility.getString("manual.edit.column.not.found", byColumnName.getText().trim()));
         }
         else
         {
-            return Either.<@Localized String, Optional<ColumnId>>right(Optional.<ColumnId>empty());
+            return Either.<String, Optional<ColumnId>>right(Optional.<ColumnId>empty());
         }
     }
 
@@ -139,7 +138,7 @@ public class PickManualEditIdentifierDialog extends ErrorableLightDialog<Optiona
         }
 
         @Override
-        public @OnThread(Tag.FXPlatform) CompletionContent makeDisplay(ObservableStringValue currentText)
+        public CompletionContent makeDisplay(ObservableStringValue currentText)
         {
             return new CompletionContent(columnId.getRaw(), null);
         }

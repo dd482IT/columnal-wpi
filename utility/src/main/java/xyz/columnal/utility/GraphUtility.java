@@ -48,7 +48,7 @@ public class GraphUtility
      * @param <T> The node type.  Nodes are compared using .equals
      * @return The flattened ordered list of nodes.
      */
-    public static <T> List<T> lineariseDAG(Collection<@NonNull T> nodes, Map<@NonNull T, ? extends Collection<T>> incomingEdges, Collection<T> putAsLateAsPossible)
+    public static <T> List<T> lineariseDAG(Collection<T> nodes, Map<T, ? extends Collection<T>> incomingEdges, Collection<T> putAsLateAsPossible)
     {
         // Kahn's algorithm, from wikipedia:
         //   L ← Empty list that will contain the sorted elements
@@ -62,18 +62,18 @@ public class GraphUtility
         //           insert m into S
 
         // We don't have any empty lists in the map:
-        Map<@NonNull T, HashSet<T>> remainingEdges = new HashMap<>();
-        for (Entry<@NonNull @KeyFor("incomingEdges") T, ? extends Collection<T>> origEdge : incomingEdges.entrySet())
+        Map<T, HashSet<T>> remainingEdges = new HashMap<>();
+        for (Entry<T, ? extends Collection<T>> origEdge : incomingEdges.entrySet())
         {
             if (!origEdge.getValue().isEmpty())
                 remainingEdges.put(origEdge.getKey(), new HashSet<>(origEdge.getValue()));
         }
 
         List<T> l = new ArrayList<T>();
-        List<@NonNull T> s = new ArrayList<@NonNull T>(nodes);
-        for (Iterator<@NonNull T> iterator = s.iterator(); iterator.hasNext(); )
+        List<T> s = new ArrayList<T>(nodes);
+        for (Iterator<T> iterator = s.iterator(); iterator.hasNext(); )
         {
-            @NonNull T t = iterator.next();
+            T t = iterator.next();
             Collection<T> incoming = remainingEdges.get(t);
             if (incoming != null) // List is not empty given above list, so no need to check size
                 iterator.remove(); // Has an incoming edge; shouldn't be in s.
@@ -95,9 +95,9 @@ public class GraphUtility
             if (next == null)
                 next = s.remove(s.size() - 1); // Faster to remove from end
             l.add(next);
-            for (Iterator<Entry<@NonNull @KeyFor("remainingEdges") T, HashSet<T>>> iterator = remainingEdges.entrySet().iterator(); iterator.hasNext(); )
+            for (Iterator<Entry<T, HashSet<T>>> iterator = remainingEdges.entrySet().iterator(); iterator.hasNext(); )
             {
-                Entry<@NonNull @KeyFor("remainingEdges") T, HashSet<T>> incoming = iterator.next();
+                Entry<T, HashSet<T>> incoming = iterator.next();
                 incoming.getValue().remove(next);
                 if (incoming.getValue().isEmpty())
                 {

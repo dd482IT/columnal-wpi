@@ -85,80 +85,80 @@ import java.util.stream.Stream;
 public class IdentExpression extends NonOperatorExpression
 {
     // The name of the field in a table reference with the list of rows
-    public static final @ExpressionIdentifier String ROWS = "rows";
-    public static final @ExpressionIdentifier String NAMESPACE_COLUMN = "column";
+    public static final String ROWS = "rows";
+    public static final String NAMESPACE_COLUMN = "column";
 
     // TODO add resolver listener
-    private final @Nullable @ExpressionIdentifier String namespace;
-    private final ImmutableList<@ExpressionIdentifier String> idents;
-    private @MonotonicNonNull Resolution resolution;
+    private final String namespace;
+    private final ImmutableList<String> idents;
+    private Resolution resolution;
 
-    private IdentExpression(@Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents)
+    private IdentExpression(String namespace, ImmutableList<String> idents)
     {
         this.namespace = namespace;
         this.idents = idents;
     }
 
-    public static IdentExpression load(@Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents)
+    public static IdentExpression load(String namespace, ImmutableList<String> idents)
     {
         return new IdentExpression(namespace, idents);
     }
 
-    public static IdentExpression load(@ExpressionIdentifier String ident)
+    public static IdentExpression load(String ident)
     {
-        return new IdentExpression(null, ImmutableList.<@ExpressionIdentifier String>of(ident));
+        return new IdentExpression(null, ImmutableList.<String>of(ident));
     }
 
-    public static IdentExpression tag(@ExpressionIdentifier String typeName, @ExpressionIdentifier String tagName)
+    public static IdentExpression tag(String typeName, String tagName)
     {
-        return new IdentExpression("tag", ImmutableList.<@ExpressionIdentifier String>of(typeName, tagName));
+        return new IdentExpression("tag", ImmutableList.<String>of(typeName, tagName));
     }
     
-    public static IdentExpression tag(@ExpressionIdentifier String tagName)
+    public static IdentExpression tag(String tagName)
     {
-        return new IdentExpression("tag", ImmutableList.<@ExpressionIdentifier String>of(tagName));
+        return new IdentExpression("tag", ImmutableList.<String>of(tagName));
     }
 
-    public static IdentExpression function(ImmutableList<@ExpressionIdentifier String> functionFullName)
+    public static IdentExpression function(ImmutableList<String> functionFullName)
     {
         return new IdentExpression("function", functionFullName);
     }
 
-    public static IdentExpression table(@ExpressionIdentifier String tableName)
+    public static IdentExpression table(String tableName)
     {
-        return new IdentExpression("table", ImmutableList.<@ExpressionIdentifier String>of(tableName));
+        return new IdentExpression("table", ImmutableList.<String>of(tableName));
     }
 
-    public static IdentExpression column(@Nullable TableId tableName, ColumnId columnName)
+    public static IdentExpression column(TableId tableName, ColumnId columnName)
     {
         if (tableName == null)
             return column(columnName);
         else
-            return new IdentExpression(NAMESPACE_COLUMN, ImmutableList.<@ExpressionIdentifier String>of(tableName.getRaw(), columnName.getRaw()));
+            return new IdentExpression(NAMESPACE_COLUMN, ImmutableList.<String>of(tableName.getRaw(), columnName.getRaw()));
     }
 
     public static IdentExpression column(ColumnId columnName)
     {
-        return new IdentExpression(NAMESPACE_COLUMN, ImmutableList.<@ExpressionIdentifier String>of(columnName.getRaw()));
+        return new IdentExpression(NAMESPACE_COLUMN, ImmutableList.<String>of(columnName.getRaw()));
     }
 
     @SuppressWarnings("recorded") // Only used for items which will be reloaded anyway
-    public static @Recorded Expression makeEntireColumnReference(TableId tableId, ColumnId columnId)
+    public static Expression makeEntireColumnReference(TableId tableId, ColumnId columnId)
     {
         return new FieldAccessExpression(IdentExpression.table(tableId.getRaw()), columnId.getRaw());
     }
 
     // Resolves all IdentExpression recursively throughout the
     // whole expression:
-    public static void resolveThroughout(@Recorded Expression expression, ColumnLookup columnLookup, FunctionLookup functionLookup, TypeManager typeManager) throws InternalException, UserException
+    public static void resolveThroughout(Expression expression, ColumnLookup columnLookup, FunctionLookup functionLookup, TypeManager typeManager) throws InternalException, UserException
     {
         Either<InternalException, UserException> ex = expression.visit(new ExpressionVisitorStream<Either<InternalException, UserException>>() {
             @Override
-            public Stream<Either<InternalException, UserException>> ident(@Recorded IdentExpression self, @Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents, boolean isVariable)
+            public Stream<Either<InternalException, UserException>> ident(IdentExpression self, String namespace, ImmutableList<String> idents, boolean isVariable)
             {
                 try
                 {
-                    @Nullable Resolution res = self.resolve(columnLookup, functionLookup, typeManager);
+                    Resolution res = self.resolve(columnLookup, functionLookup, typeManager);
                     if (res != null)
                         self.resolution = res;
                     return super.ident(self, namespace, idents, isVariable);
@@ -179,7 +179,7 @@ public class IdentExpression extends NonOperatorExpression
 
 
     @Override
-    public @Nullable CheckedExp check(@Recorded IdentExpression this, ColumnLookup dataLookup, TypeState original, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public CheckedExp check(IdentExpression this, ColumnLookup dataLookup, TypeState original, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         // I think should now be impossible:
         String invalid = streamAllParts().filter(n -> !GrammarUtility.validIdentifier(n)).findFirst().orElse(null);
@@ -193,7 +193,7 @@ public class IdentExpression extends NonOperatorExpression
         {
             // Didn't find it anywhere:
             onError.recordError(this, StyledString.s("Unknown name: \"" + idents.stream().collect(Collectors.joining("\\")) + "\""));
-            @Nullable QuickFix<Expression> fix = dataLookup.getFixForIdent(namespace, idents, this);
+            QuickFix<Expression> fix = dataLookup.getFixForIdent(namespace, idents, this);
             if (fix != null)
             {
                 onError.recordQuickFixes(this, ImmutableList.<QuickFix<Expression>>of(fix));
@@ -204,7 +204,7 @@ public class IdentExpression extends NonOperatorExpression
             return resolution.checkType(this, original, kind, onError);
     }
     
-    private @Nullable Resolution resolve(@Recorded IdentExpression this, ColumnLookup dataLookup, FunctionLookup functionLookup, TypeManager typeManager) throws InternalException, UserException
+    private Resolution resolve(IdentExpression this, ColumnLookup dataLookup, FunctionLookup functionLookup, TypeManager typeManager) throws InternalException, UserException
     {
         // Possible lookup destinations, in order of preference:
         // (Preference is roughly how likely it is that the user defined it and wants it)
@@ -216,7 +216,7 @@ public class IdentExpression extends NonOperatorExpression
 
         if (namespace == null || namespace.equals(NAMESPACE_COLUMN))
         {
-            Expression.ColumnLookup.@Nullable FoundColumn col;
+            Expression.ColumnLookup.FoundColumn col;
             final ColumnId columnName;
             if (idents.size() == 1)
             {
@@ -249,8 +249,8 @@ public class IdentExpression extends NonOperatorExpression
             }
             else if (table != null)
             {
-                HashMap<@ExpressionIdentifier String, TypeExp> fieldsAsSingle = new HashMap<>();
-                HashMap<@ExpressionIdentifier String, TypeExp> fieldsAsList = new HashMap<>();
+                HashMap<String, TypeExp> fieldsAsSingle = new HashMap<>();
+                HashMap<String, TypeExp> fieldsAsList = new HashMap<>();
 
                 for (Entry<ColumnId, DataTypeValue> entry : table.getColumnTypes().entrySet())
                 {
@@ -320,9 +320,9 @@ public class IdentExpression extends NonOperatorExpression
         return null;
     }
 
-    private Stream<@ExpressionIdentifier String> streamAllParts()
+    private Stream<String> streamAllParts()
     {
-        return Stream.<@ExpressionIdentifier String>concat(Utility.<@ExpressionIdentifier String>streamNullable(namespace), idents.stream());
+        return Stream.<String>concat(Utility.<String>streamNullable(namespace), idents.stream());
     }
 
     private TypeExp makeTagType(TagInfo t) throws InternalException
@@ -332,7 +332,7 @@ public class IdentExpression extends NonOperatorExpression
     }
 
     @Override
-    public ValueResult matchAsPattern(@Value Object value, EvaluateState state) throws InternalException, EvaluationException
+    public ValueResult matchAsPattern(Object value, EvaluateState state) throws InternalException, EvaluationException
     {
         if (resolution == null)
             throw new InternalException("Calling matchAsPattern on variable without typecheck");
@@ -375,12 +375,12 @@ public class IdentExpression extends NonOperatorExpression
         return toText(resolution == null ? saveDestination.disambiguate(namespace, idents) : resolution.save(saveDestination, renames));
     }
 
-    private static String toText(Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> namespaceAndIdents)
+    private static String toText(Pair<String, ImmutableList<String>> namespaceAndIdents)
     {
         return toText(namespaceAndIdents.getFirst(), namespaceAndIdents.getSecond());
     }
     
-    private static String toText(@Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents)
+    private static String toText(String namespace, ImmutableList<String> idents)
     {
         StringBuilder stringBuilder = new StringBuilder();
         if (namespace != null)
@@ -407,13 +407,13 @@ public class IdentExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
+    public Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
     {
         return null;
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -434,7 +434,7 @@ public class IdentExpression extends NonOperatorExpression
     }
 
     @Override
-    public <T> T visit(@Recorded IdentExpression this, ExpressionVisitor<T> visitor)
+    public <T> T visit(IdentExpression this, ExpressionVisitor<T> visitor)
     {
         return visitor.ident(this, namespace, idents, resolution != null && resolution.isVariable());
     }
@@ -451,7 +451,7 @@ public class IdentExpression extends NonOperatorExpression
      * Only valid to call after type-checking!  Before that we can't know.
      * Bit hacky to provide this, but useful elsewhere...
      */
-    public @Nullable TagInfo getResolvedConstructor()
+    public TagInfo getResolvedConstructor()
     {
         return resolution != null ? resolution.getResolvedConstructor() : null;
     }
@@ -460,7 +460,7 @@ public class IdentExpression extends NonOperatorExpression
      * Only valid to call after type-checking!  Before that we can't know.
      * Bit hacky to provide this, but useful elsewhere...
      */
-    public @Nullable StandardFunctionDefinition getFunctionDefinition()
+    public StandardFunctionDefinition getFunctionDefinition()
     {
         return resolution != null ? resolution.getResolvedFunctionDefinition() : null;
     }
@@ -474,28 +474,27 @@ public class IdentExpression extends NonOperatorExpression
         
         public boolean hideFromExplanation(boolean skipIfTrivial);
 
-        @OnThread(Tag.Simulation)
         public ValueResult getValue(EvaluateState state) throws InternalException, UserException;
         
-        public Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> save(SaveDestination saveDestination, TableAndColumnRenames renames);
+        public Pair<String, ImmutableList<String>> save(SaveDestination saveDestination, TableAndColumnRenames renames);
 
         public boolean isVariable();
         
-        public default @Nullable TagInfo getResolvedConstructor()
+        public default TagInfo getResolvedConstructor()
         {
             return null;
         }
 
-        public default @Nullable StandardFunctionDefinition getResolvedFunctionDefinition()
+        public default StandardFunctionDefinition getResolvedFunctionDefinition()
         {
             return null;
         }
 
-        public @Nullable CheckedExp checkType(@Recorded IdentExpression identExpression, TypeState state, ExpressionKind expressionKind, ErrorAndTypeRecorder onError) throws InternalException;
+        public CheckedExp checkType(IdentExpression identExpression, TypeState state, ExpressionKind expressionKind, ErrorAndTypeRecorder onError) throws InternalException;
     }
     
     // If parameter is IdentExpression with single ident and no namespace, return the ident
-    public static @Nullable @ExpressionIdentifier String getSingleIdent(Expression expression)
+    public static String getSingleIdent(Expression expression)
     {
         if (expression instanceof IdentExpression)
         {
@@ -511,9 +510,9 @@ public class IdentExpression extends NonOperatorExpression
         private final DataTypeValue column;
         private final Expression.ColumnLookup.FoundColumn col;
         private final ColumnId columnName;
-        private final @Nullable TableId resolvedTableName;
+        private final TableId resolvedTableName;
 
-        public ColumnResolution(DataTypeValue column, Expression.ColumnLookup.FoundColumn col, ColumnId columnName, @Nullable TableId resolvedTableName)
+        public ColumnResolution(DataTypeValue column, Expression.ColumnLookup.FoundColumn col, ColumnId columnName, TableId resolvedTableName)
         {
             this.column = column;
             this.col = col;
@@ -528,7 +527,6 @@ public class IdentExpression extends NonOperatorExpression
         }
 
         @Override
-        @OnThread(Tag.Simulation)
         public ValueResult getValue(EvaluateState state) throws InternalException, UserException
         {
             if (column == null)
@@ -543,29 +541,29 @@ public class IdentExpression extends NonOperatorExpression
             return false;
         }
 
-        private @ExpressionIdentifier String getFoundNamespace()
+        private String getFoundNamespace()
         {
             return NAMESPACE_COLUMN;
         }
 
-        private ImmutableList<@ExpressionIdentifier String> getFoundFullName()
+        private ImmutableList<String> getFoundFullName()
         {
             return ImmutableList.of(col.tableId.getRaw(), columnName.getRaw());
         }
 
         @Override
-        public Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> save(SaveDestination saveDestination, TableAndColumnRenames renames)
+        public Pair<String, ImmutableList<String>> save(SaveDestination saveDestination, TableAndColumnRenames renames)
         {
-            final Pair<@Nullable TableId, ColumnId> renamed = renames.columnId(resolvedTableName, columnName, null);
+            final Pair<TableId, ColumnId> renamed = renames.columnId(resolvedTableName, columnName, null);
 
-            final @Nullable TableId renamedTableId = renamed.getFirst();
-            ImmutableList<@ExpressionIdentifier String> tablePlusColumn = renamedTableId != null ? ImmutableList.of(renamedTableId.getRaw(), renamed.getSecond().getRaw()) : ImmutableList.of(renamed.getSecond().getRaw());
+            final TableId renamedTableId = renamed.getFirst();
+            ImmutableList<String> tablePlusColumn = renamedTableId != null ? ImmutableList.of(renamedTableId.getRaw(), renamed.getSecond().getRaw()) : ImmutableList.of(renamed.getSecond().getRaw());
 
             return saveDestination.disambiguate(getFoundNamespace(), tablePlusColumn);
         }
 
         @Override
-        public @Nullable CheckedExp checkType(@Recorded IdentExpression identExpression, TypeState state, ExpressionKind expressionKind, ErrorAndTypeRecorder onError) throws InternalException
+        public CheckedExp checkType(IdentExpression identExpression, TypeState state, ExpressionKind expressionKind, ErrorAndTypeRecorder onError) throws InternalException
         {
             if (col.information != null)
             {
@@ -579,16 +577,16 @@ public class IdentExpression extends NonOperatorExpression
     {
         private final FoundTable resolvedTable;
         private final boolean includeRows;
-        private final HashMap<@ExpressionIdentifier String, TypeExp> fieldsAsList;
+        private final HashMap<String, TypeExp> fieldsAsList;
 
-        public TableResolution(FoundTable resolvedTable, boolean includeRows, HashMap<@ExpressionIdentifier String, TypeExp> fieldsAsList)
+        public TableResolution(FoundTable resolvedTable, boolean includeRows, HashMap<String, TypeExp> fieldsAsList)
         {
             this.resolvedTable = resolvedTable;
             this.includeRows = includeRows;
             this.fieldsAsList = fieldsAsList;
         }
 
-        private @ExpressionIdentifier String getFoundNamespace()
+        private String getFoundNamespace()
         {
             return "table";
         }
@@ -600,29 +598,28 @@ public class IdentExpression extends NonOperatorExpression
             return true;
         }
 
-        private ImmutableList<@ExpressionIdentifier String> getFoundFullName()
+        private ImmutableList<String> getFoundFullName()
         {
             return ImmutableList.of(resolvedTable.getTableId().getRaw());
         }
 
         @Override
-        public Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> save(SaveDestination saveDestination, TableAndColumnRenames renames)
+        public Pair<String, ImmutableList<String>> save(SaveDestination saveDestination, TableAndColumnRenames renames)
         {
             return saveDestination.disambiguate(getFoundNamespace(), ImmutableList.of(renames.tableId(new TableId(idents.get(0))).getRaw()));
         }
 
         @Override
-        @OnThread(Tag.Simulation)
         public ValueResult getValue(EvaluateState state) throws InternalException, UserException
         {
             if (resolvedTable == null)
                 throw new InternalException("Attempting to fetch value despite type check failure");
             final FoundTable resolvedTableNN = resolvedTable;
             final ImmutableMap<ColumnId, DataTypeValue> columnTypes = resolvedTableNN.getColumnTypes();
-            @Value Record result = DataTypeUtility.value(new Record()
+            Record result = DataTypeUtility.value(new Record()
             {
                 @Override
-                public @Value Object getField(@ExpressionIdentifier String name) throws InternalException
+                public Object getField(String name) throws InternalException
                 {
                     if (includeRows && name.equals(ROWS))
                         return DataTypeUtility.value(new RowsAsList());
@@ -638,25 +635,25 @@ public class IdentExpression extends NonOperatorExpression
                     }
 
                     @Override
-                    public @Value Object get(int index) throws InternalException, UserException
+                    public Object get(int index) throws InternalException, UserException
                     {
-                        ImmutableMap.Builder<@ExpressionIdentifier String, @Value Object> rowValuesBuilder = ImmutableMap.builder();
+                        ImmutableMap.Builder<String, Object> rowValuesBuilder = ImmutableMap.builder();
                         for (Entry<ColumnId, DataTypeValue> entry : columnTypes.entrySet())
                         {
                             rowValuesBuilder.put(entry.getKey().getRaw(), entry.getValue().getCollapsed(index));
                         }
-                        ImmutableMap<@ExpressionIdentifier String, @Value Object> rowValues = rowValuesBuilder.build();
+                        ImmutableMap<String, Object> rowValues = rowValuesBuilder.build();
 
                         return DataTypeUtility.value(new Record()
                         {
                             @Override
-                            public @Value Object getField(@ExpressionIdentifier String name) throws InternalException
+                            public Object getField(String name) throws InternalException
                             {
                                 return Utility.getOrThrow(rowValues, name, () -> new InternalException("Cannot find column " + name));
                             }
 
                             @Override
-                            public ImmutableMap<@ExpressionIdentifier String, @Value Object> getFullContent() throws InternalException
+                            public ImmutableMap<String, Object> getFullContent() throws InternalException
                             {
                                 return rowValues;
                             }
@@ -680,16 +677,16 @@ public class IdentExpression extends NonOperatorExpression
                     }
 
                     @Override
-                    public @Value Object get(int index) throws InternalException, UserException
+                    public Object get(int index) throws InternalException, UserException
                     {
                         return dataTypeValue.getCollapsed(index);
                     }
                 }
 
                 @Override
-                public ImmutableMap<@ExpressionIdentifier String, @Value Object> getFullContent() throws InternalException
+                public ImmutableMap<String, Object> getFullContent() throws InternalException
                 {
-                    return columnTypes.entrySet().stream().collect(ImmutableMap.<Entry<ColumnId, DataTypeValue>, @ExpressionIdentifier String, @Value Object>toImmutableMap(e -> e.getKey().getRaw(), e -> DataTypeUtility.value(new ColumnAsList(e.getValue()))));
+                    return columnTypes.entrySet().stream().collect(ImmutableMap.<Entry<ColumnId, DataTypeValue>, String, Object>toImmutableMap(e -> e.getKey().getRaw(), e -> DataTypeUtility.value(new ColumnAsList(e.getValue()))));
                 }
             });
 
@@ -704,7 +701,7 @@ public class IdentExpression extends NonOperatorExpression
         }
 
         @Override
-        public @Nullable CheckedExp checkType(@Recorded IdentExpression identExpression, TypeState state, ExpressionKind expressionKind, ErrorAndTypeRecorder onError)
+        public CheckedExp checkType(IdentExpression identExpression, TypeState state, ExpressionKind expressionKind, ErrorAndTypeRecorder onError)
         {
             return new CheckedExp(onError.recordType(IdentExpression.this, TypeExp.record(IdentExpression.this, fieldsAsList, true)), state);
         }
@@ -725,7 +722,7 @@ public class IdentExpression extends NonOperatorExpression
             return false;
         }
 
-        private @ExpressionIdentifier String getFoundNamespace()
+        private String getFoundNamespace()
         {
             return "tag";
         }
@@ -737,36 +734,35 @@ public class IdentExpression extends NonOperatorExpression
             return true;
         }
 
-        private ImmutableList<@ExpressionIdentifier String> getFoundFullName()
+        private ImmutableList<String> getFoundFullName()
         {
             return ImmutableList.of(tagFinal.getTypeName().getRaw(), tagFinal.getTagInfo().getName());
         }
 
         @Override
-        public @Nullable TagInfo getResolvedConstructor()
+        public TagInfo getResolvedConstructor()
         {
             return tagFinal;
         }
 
         @Override
-        public Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> save(SaveDestination saveDestination, TableAndColumnRenames renames)
+        public Pair<String, ImmutableList<String>> save(SaveDestination saveDestination, TableAndColumnRenames renames)
         {
             return saveDestination.disambiguate(getFoundNamespace(), getFoundFullName());
         }
 
         @Override
-        @OnThread(Tag.Simulation)
         public ValueResult getValue(EvaluateState state)
         {
-            @Value Object value;
+            Object value;
             if (tagFinal.getTagInfo().getInner() == null)
                 value = new TaggedValue(tagFinal.tagIndex, null, tagFinal.wholeType);
             else
                 value = ValueFunction.value(new ValueFunction()
                     {
                         @Override
-                        public @OnThread(Tag.Simulation)
-                        @Value Object _call() throws InternalException, UserException
+                        public 
+                        Object _call() throws InternalException, UserException
                         {
                         return new TaggedValue(tagFinal.tagIndex, arg(0), tagFinal.wholeType);
             }
@@ -775,7 +771,7 @@ public class IdentExpression extends NonOperatorExpression
         }
 
         @Override
-        public @Nullable CheckedExp checkType(@Recorded IdentExpression identExpression, TypeState state, ExpressionKind expressionKind, ErrorAndTypeRecorder onError) throws InternalException
+        public CheckedExp checkType(IdentExpression identExpression, TypeState state, ExpressionKind expressionKind, ErrorAndTypeRecorder onError) throws InternalException
         {
             return onError.recordType(IdentExpression.this, state, IdentExpression.this.makeTagType(tagFinal));
         }
@@ -805,30 +801,29 @@ public class IdentExpression extends NonOperatorExpression
             return false;
         }
 
-        private @ExpressionIdentifier String getFoundNamespace()
+        private String getFoundNamespace()
         {
             return "function";
         }
 
-        private ImmutableList<@ExpressionIdentifier String> getFoundFullName()
+        private ImmutableList<String> getFoundFullName()
         {
             return functionDefinition.getFullName();
         }
 
         @Override
-        public Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> save(SaveDestination saveDestination, TableAndColumnRenames renames)
+        public Pair<String, ImmutableList<String>> save(SaveDestination saveDestination, TableAndColumnRenames renames)
         {
             return saveDestination.disambiguate(getFoundNamespace(), getFoundFullName());
         }
 
         @Override
-        public @Nullable StandardFunctionDefinition getResolvedFunctionDefinition()
+        public StandardFunctionDefinition getResolvedFunctionDefinition()
         {
             return functionDefinition;
         }
 
         @Override
-        @OnThread(Tag.Simulation)
         public ValueResult getValue(EvaluateState state) throws InternalException, UserException
         {
             return result(ValueFunction.value(functionDefinition.getInstance(state.getTypeManager(), s -> {
@@ -850,7 +845,7 @@ public class IdentExpression extends NonOperatorExpression
         }
 
         @Override
-        public @Nullable CheckedExp checkType(@Recorded IdentExpression identExpression, TypeState state, ExpressionKind expressionKind, ErrorAndTypeRecorder onError) throws InternalException
+        public CheckedExp checkType(IdentExpression identExpression, TypeState state, ExpressionKind expressionKind, ErrorAndTypeRecorder onError) throws InternalException
         {
             return onError.recordType(IdentExpression.this, state, type.getFirst());
         }
@@ -884,18 +879,17 @@ public class IdentExpression extends NonOperatorExpression
             return true;
         }
 
-        private @Nullable @ExpressionIdentifier String getFoundNamespace()
+        private String getFoundNamespace()
         {
             return explicitVarNamespace ? "var" : null;
         }
 
-        private ImmutableList<@ExpressionIdentifier String> getFoundFullName()
+        private ImmutableList<String> getFoundFullName()
         {
             return idents;
         }
 
         @Override
-        @OnThread(Tag.Simulation)
         public ValueResult getValue(EvaluateState state) throws InternalException
         {
             if (patternMatch)
@@ -904,13 +898,13 @@ public class IdentExpression extends NonOperatorExpression
         }
 
         @Override
-        public Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> save(SaveDestination saveDestination, TableAndColumnRenames renames)
+        public Pair<String, ImmutableList<String>> save(SaveDestination saveDestination, TableAndColumnRenames renames)
         {
             return saveDestination.disambiguate(getFoundNamespace(), getFoundFullName());
         }
 
         @Override
-        public @Nullable CheckedExp checkType(@Recorded IdentExpression identExpression, TypeState original, ExpressionKind expressionKind, ErrorAndTypeRecorder onError) throws InternalException
+        public CheckedExp checkType(IdentExpression identExpression, TypeState original, ExpressionKind expressionKind, ErrorAndTypeRecorder onError) throws InternalException
         {
             List<TypeExp> varType = original.findVarType(idents.get(0));
             patternMatch = varType == null && expressionKind == ExpressionKind.PATTERN;
@@ -928,7 +922,7 @@ public class IdentExpression extends NonOperatorExpression
                 explicitVarNamespace = true;
                 
                 MutVar patternType = new MutVar(identExpression);
-                @Nullable TypeState state = original.add(idents.get(0), patternType, s -> onError.recordError(this, s));
+                TypeState state = original.add(idents.get(0), patternType, s -> onError.recordError(this, s));
                 if (state == null)
                     return null;
                 return onError.recordType(identExpression, state, patternType);

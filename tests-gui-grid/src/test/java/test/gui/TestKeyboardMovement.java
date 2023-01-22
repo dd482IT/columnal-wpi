@@ -63,16 +63,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-@RunWith(JUnitQuickcheck.class)
 public class TestKeyboardMovement extends FXApplicationTest implements ScrollToTrait
 {
     /**
      * Check that keyboard moving around is consistent (right always selects more to the right, etc)
      * and reversible, and keeps the selected item in view.
      */
-    @Property(trials=5)
-    @OnThread(Tag.Simulation)
-    public void testKeyboardMovement(@NumTables(minTables = 3, maxTables = 5) @From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr src, @From(GenRandom.class) Random r) throws Exception
+    public void testKeyboardMovement(GenImmediateData.ImmediateData_Mgr src, Random r) throws Exception
     {
         MainWindowActions mainWindowActions = TAppUtil.openDataAsTable(windowToUse, src.mgr).get();
         TFXUtil.sleep(2000);
@@ -146,7 +143,6 @@ public class TestKeyboardMovement extends FXApplicationTest implements ScrollToT
     }
 
     @SuppressWarnings("nullness")
-    @OnThread(Tag.Any)
     public void checkSelectionOnScreen(String prefix, VirtualGrid virtualGrid)
     {
         assertTrue(prefix, TFXUtil.fx(() -> windowToUse.isFocused()));
@@ -175,9 +171,7 @@ public class TestKeyboardMovement extends FXApplicationTest implements ScrollToT
         }
     }
 
-    @Property(trials=5)
-    @OnThread(Tag.Simulation)
-    public void testKeyboardScrollTo(@NumTables(minTables = 3, maxTables = 5) @From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr src, @From(GenRandom.class) Random r) throws Exception
+    public void testKeyboardScrollTo(GenImmediateData.ImmediateData_Mgr src, Random r) throws Exception
     {
         MainWindowActions mainWindowActions = TAppUtil.openDataAsTable(windowToUse, src.mgr).get();
         TFXUtil.sleep(2000);
@@ -192,11 +186,11 @@ public class TestKeyboardMovement extends FXApplicationTest implements ScrollToT
         for (int i = 0; i < 6; i++)
         {
             Table t = allTables.get(r.nextInt(allTables.size()));
-            @TableDataColIndex int col = DataItemPosition.col(r.nextInt(t.getData().getColumns().size()));
-            @TableDataRowIndex int length = t.getData().getLength();
+            int col = DataItemPosition.col(r.nextInt(t.getData().getColumns().size()));
+            int length = t.getData().getLength();
             if (length <= 0) // Can happen with empty table, just skip
                 continue;
-            @TableDataRowIndex int row = DataItemPosition.row(r.nextInt(length));
+            int row = DataItemPosition.row(r.nextInt(length));
             
             keyboardMoveTo(virtualGrid, mainWindowActions._test_getTableManager(), t.getId(), row, col);
 

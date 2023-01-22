@@ -47,7 +47,6 @@ import java.util.Optional;
  * 
  * Returns a pair of mouse screen position, and choice
  */
-@OnThread(Tag.FXPlatform)
 public class NewTableDialog extends LightDialog<Pair<Point2D, DataOrTransform>>
 {
     private static final double WIDTH = 380;
@@ -57,7 +56,7 @@ public class NewTableDialog extends LightDialog<Pair<Point2D, DataOrTransform>>
     {
         super(parent);
         
-        @UnknownInitialization(Dialog.class) NewTableDialog us = NewTableDialog.this;
+        NewTableDialog us = NewTableDialog.this;
         Button transformButton = new ExplainedButton("new.transform", "new.transform.explanation", NewTableDialog.WIDTH * 0.45, p -> {
             us.setResult(new Pair<>(p, DataOrTransform.TRANSFORM));
             close();

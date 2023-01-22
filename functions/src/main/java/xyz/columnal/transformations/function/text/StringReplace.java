@@ -48,10 +48,10 @@ public class StringReplace extends FunctionDefinition
     private static class Instance extends ValueFunction
     {
         @Override
-        public @Value Object _call() throws UserException, InternalException
+        public Object _call() throws UserException, InternalException
         {
-            @Value String target = arg(0, String.class);
-            @Value String whole = arg(2, String.class);
+            String target = arg(0, String.class);
+            String whole = arg(2, String.class);
             // Java does act on replacing empty string, but we don't:
             if (target.isEmpty())
                 return whole;

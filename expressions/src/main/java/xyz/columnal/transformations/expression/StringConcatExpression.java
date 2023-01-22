@@ -42,14 +42,14 @@ import java.util.Random;
 
 public class StringConcatExpression extends NaryOpTotalExpression
 {
-    public StringConcatExpression(List<@Recorded Expression> operands)
+    public StringConcatExpression(List<Expression> operands)
     {
         super(operands);
         
     }
 
     @Override
-    public NaryOpExpression copyNoNull(List<@Recorded Expression> replacements)
+    public NaryOpExpression copyNoNull(List<Expression> replacements)
     {
         return new StringConcatExpression(replacements);
     }
@@ -61,7 +61,7 @@ public class StringConcatExpression extends NaryOpTotalExpression
     }
 
     @Override
-    public @Nullable CheckedExp checkNaryOp(@Recorded StringConcatExpression this, ColumnLookup dataLookup, TypeState state, final ExpressionKind kind, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public CheckedExp checkNaryOp(StringConcatExpression this, ColumnLookup dataLookup, TypeState state, final ExpressionKind kind, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         // Items in a String concat expression can be:
         // - Variable declaration
@@ -70,7 +70,7 @@ public class StringConcatExpression extends NaryOpTotalExpression
         // Although it's a bit hacky, we check for variables directly from here using instanceof
         
         boolean lastWasVariable = false;
-        for (@Recorded Expression expression : expressions)
+        for (Expression expression : expressions)
         {
             if (isPattern(expression))
             {
@@ -89,7 +89,7 @@ public class StringConcatExpression extends NaryOpTotalExpression
                 
                 lastWasVariable = false;
             }
-            @Nullable CheckedExp c = expression.check(dataLookup, state, kind, LocationInfo.UNIT_DEFAULT, onError);
+            CheckedExp c = expression.check(dataLookup, state, kind, LocationInfo.UNIT_DEFAULT, onError);
             
             if (c == null)
                 return null;
@@ -114,13 +114,13 @@ public class StringConcatExpression extends NaryOpTotalExpression
     }
 
     @Override
-    public ValueResult matchAsPattern(@Value Object value, final @NonNull EvaluateState originalState) throws InternalException, EvaluationException
+    public ValueResult matchAsPattern(Object value, final EvaluateState originalState) throws InternalException, EvaluationException
     {
         String s = Utility.cast(value, String.class);
         int curOffset = 0;
 
         ImmutableList.Builder<ValueResult> matches = ImmutableList.builderWithExpectedSize(expressions.size());
-        @Nullable Expression pendingMatch = null;
+        Expression pendingMatch = null;
         EvaluateState threadedState = originalState;
         for (int i = 0; i < expressions.size(); i++)
         {
@@ -192,7 +192,7 @@ public class StringConcatExpression extends NaryOpTotalExpression
     }
 
     @Override
-    public @Nullable Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
+    public Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
     {
         return null;
     }

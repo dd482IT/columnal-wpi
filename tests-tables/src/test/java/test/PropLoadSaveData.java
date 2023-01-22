@@ -64,16 +64,13 @@ import static org.junit.Assert.assertEquals;
 /**
  * Created by neil on 07/12/2016.
  */
-@RunWith(JUnitQuickcheck.class)
 public class PropLoadSaveData
 {
-    @Property(trials = 20)
-    @OnThread(value = Tag.Simulation, ignoreParent = true)
     public void testImmediate(
-            @From(GenTableManager.class) TableManager mgr1,
-            @From(GenTableManager.class) TableManager mgr2,
-            @From(GenImmediateData.class) @NumTables(maxTables = 4) GenImmediateData.ImmediateData_Mgr original,
-            @From(GenRandom.class) Random r)
+            TableManager mgr1,
+            TableManager mgr2,
+            GenImmediateData.ImmediateData_Mgr original,
+            Random r)
         throws ExecutionException, InterruptedException, UserException, InternalException, InvocationTargetException
     {
         SourceOfRandomness sourceOfRandomness = new SourceOfRandomness(r);
@@ -118,17 +115,15 @@ public class PropLoadSaveData
         return new Pair<>(tablesAndComments.loadedTables.stream().collect(Collectors.<Table, TableId, Table>toMap(Table::getId, Function.identity())), tablesAndComments.gridComments);
     }
 
-    @Property(trials = 20)
-    @OnThread(value = Tag.Simulation, ignoreParent = true)
     public void testImmediateInclError(
             //@When(seed=4184268094197695469L)
-            @From(GenTableManager.class) TableManager mgr1,
+            TableManager mgr1,
             //@When(seed=6457512938358589961L)
-            @From(GenTableManager.class) TableManager mgr2,
+            TableManager mgr2,
             //@When(seed=1860968919937845412L)
-            @From(GenImmediateData.class) @NumTables(maxTables = 4) GenImmediateData.ImmediateData_Mgr original,
+            GenImmediateData.ImmediateData_Mgr original,
             //@When(seed=2075546916866037623L)
-            @From(GenRandom.class) Random r)
+            Random r)
             throws Exception
     {
         TBasicUtil.printSeedOnFail(() -> {
@@ -148,7 +143,6 @@ public class PropLoadSaveData
         });
     }
 
-    @OnThread(Tag.Simulation)
     private void setInvalid(Column column, int row, Random r) throws UserException, InternalException
     {
         column.getType().setCollapsed(row, Either.left(r.nextInt(10) == 1 ? "@END" : ("@" + r.nextInt())));

@@ -75,7 +75,7 @@ public class JellyUnit
     public UnitExp makeUnitExp(ImmutableMap<String, Either<MutUnitVar, MutVar>> typeVariables) throws InternalException
     {
         UnitExp u = UnitExp.SCALAR;
-        for (Entry<@KeyFor("units") ComparableEither<String, SingleUnit>, Integer> e : units.entrySet())
+        for (Entry<ComparableEither<String, SingleUnit>, Integer> e : units.entrySet())
         {
             u = u.times(e.getKey().eitherInt(name -> {
                 Either<MutUnitVar, MutVar> var = typeVariables.get(name);
@@ -91,7 +91,7 @@ public class JellyUnit
     public Unit makeUnit(ImmutableMap<String, Either<Unit, DataType>> typeVariables) throws InternalException
     {
         Unit u = Unit.SCALAR;
-        for (Entry<@KeyFor("units") ComparableEither<String, SingleUnit>, Integer> e : units.entrySet())
+        for (Entry<ComparableEither<String, SingleUnit>, Integer> e : units.entrySet())
         {
             u = u.times(e.getKey().eitherInt(name -> {
                     Either<Unit, DataType> subst = typeVariables.get(name);
@@ -117,7 +117,7 @@ public class JellyUnit
     {
         JellyUnit u = new JellyUnit();
         u.units.putAll(units);
-        for (Entry<@KeyFor("rhs.units") ComparableEither<String, SingleUnit>, Integer> rhsUnit : rhs.units.entrySet())
+        for (Entry<ComparableEither<String, SingleUnit>, Integer> rhsUnit : rhs.units.entrySet())
         {
             u.units.merge(rhsUnit.getKey(), rhsUnit.getValue(), (l, r) -> {
                 // Suppress null warning when we're removing key (fine with contract of method):
@@ -148,7 +148,7 @@ public class JellyUnit
         }
         
         boolean first = true;
-        for (Entry<@KeyFor("units") ComparableEither<String, SingleUnit>, Integer> e : units.entrySet())
+        for (Entry<ComparableEither<String, SingleUnit>, Integer> e : units.entrySet())
         {
             if (!first)
             {
@@ -165,7 +165,7 @@ public class JellyUnit
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -247,7 +247,7 @@ public class JellyUnit
     private static JellyUnit load(SingleUnitContext ctx, UnitManager mgr) throws InternalException
     {
         JellyUnit u = new JellyUnit();
-        @UnitIdentifier String unitName = IdentifierUtility.fromParsed(ctx);
+        String unitName = IdentifierUtility.fromParsed(ctx);
         if (ctx.UNITVAR() != null)
         {
             u.units.put(ComparableEither.left(unitName), 1);

@@ -40,7 +40,7 @@ public class BlankColumnType extends ColumnType
 
     @SuppressWarnings("interned")
     @Override
-    public boolean equals(@Nullable Object obj)
+    public boolean equals(Object obj)
     {
         return obj == INSTANCE;
     }

@@ -34,7 +34,7 @@ import xyz.columnal.utility.ParseProgress;
 
 import java.time.temporal.TemporalAccessor;
 
-public class TemporalRecogniser extends Recogniser<@ImmediateValue TemporalAccessor>
+public class TemporalRecogniser extends Recogniser<TemporalAccessor>
 {
     private final DateTimeType dateTimeType;
 
@@ -44,14 +44,14 @@ public class TemporalRecogniser extends Recogniser<@ImmediateValue TemporalAcces
     }
 
     @Override
-    public Either<ErrorDetails, SuccessDetails<@ImmediateValue TemporalAccessor>> process(ParseProgress orig, boolean immediatelySurroundedByRoundBrackets)
+    public Either<ErrorDetails, SuccessDetails<TemporalAccessor>> process(ParseProgress orig, boolean immediatelySurroundedByRoundBrackets)
     {
         try
         {
             int start = orig.curCharIndex;
             StringView stringView = new StringView(orig);
             DateTimeInfo dateTimeInfo = new DateTimeInfo(dateTimeType);
-            @ImmediateValue TemporalAccessor temporal = DataTypeUtility.parseTemporalFlexible(dateTimeInfo, stringView);
+            TemporalAccessor temporal = DataTypeUtility.parseTemporalFlexible(dateTimeInfo, stringView);
             String replacementText = orig.src.substring(start, stringView.getPosition());
             try
             {

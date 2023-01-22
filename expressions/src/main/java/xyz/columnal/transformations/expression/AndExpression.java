@@ -40,13 +40,13 @@ import java.util.Random;
  */
 public class AndExpression extends NaryOpShortCircuitExpression
 {
-    public AndExpression(List<@Recorded Expression> expressions)
+    public AndExpression(List<Expression> expressions)
     {
         super(expressions);
     }
 
     @Override
-    public NaryOpExpression copyNoNull(List<@Recorded Expression> replacements)
+    public NaryOpExpression copyNoNull(List<Expression> replacements)
     {
         return new AndExpression(replacements);
     }
@@ -58,12 +58,12 @@ public class AndExpression extends NaryOpShortCircuitExpression
     }
 
     @Override
-    public @Nullable CheckedExp checkNaryOp(ColumnLookup dataLookup, TypeState state, ExpressionKind kind, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public CheckedExp checkNaryOp(ColumnLookup dataLookup, TypeState state, ExpressionKind kind, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         // And has a special property: the type state is threaded through to the next item.
-        for (@Recorded Expression expression : expressions)
+        for (Expression expression : expressions)
         {
-            @Nullable CheckedExp checked = expression.check(dataLookup, state, ExpressionKind.EXPRESSION, LocationInfo.UNIT_DEFAULT, onError);
+            CheckedExp checked = expression.check(dataLookup, state, ExpressionKind.EXPRESSION, LocationInfo.UNIT_DEFAULT, onError);
             if (checked == null)
                 return null;
             

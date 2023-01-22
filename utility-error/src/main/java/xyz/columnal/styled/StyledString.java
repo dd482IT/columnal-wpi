@@ -56,14 +56,13 @@ public final record StyledString(ImmutableList<StyledSegment> members)
             this.thisClass = thisClass;
         }
 
-        @OnThread(Tag.FXPlatform)
         protected abstract void style(Text t);
         
         // The first applied style is this; the next applied style is the parameter.
         // To keep first, return this, to keep last, return the parameter.
         protected abstract S combine(S with);
                 
-        protected final <T> @Nullable T as(Class<T> otherClass)
+        protected final <T> T as(Class<T> otherClass)
         {
             if (otherClass.isInstance(this))
                 return otherClass.cast(this);
@@ -71,7 +70,7 @@ public final record StyledString(ImmutableList<StyledSegment> members)
                 return null;
         }
         
-        public final boolean equals(@Nullable Object x)
+        public final boolean equals(Object x)
         {
             if (thisClass.isInstance(x))
                 return equalsStyle(thisClass.cast(x));
@@ -117,7 +116,6 @@ public final record StyledString(ImmutableList<StyledSegment> members)
         this(ImmutableList.of(new StyledSegment(ImmutableStyleMap.EMPTY, normal)));
     }
 
-    @Pure
     public static <S extends Style<S>> StyledString styled(String content, S style)
     {
         return new StyledString(ImmutableList.of(new StyledSegment(new ImmutableStyleMap(ImmutableList.of(style)), content)));
@@ -127,14 +125,14 @@ public final record StyledString(ImmutableList<StyledSegment> members)
      * Adds the given style to all our members.  If a style of the same class exists already,
      * they will get merged using the style's combine method.
      */
-    @Pure public <S extends Style<S>> StyledString withStyle(S newStyle)
+    public <S extends Style<S>> StyledString withStyle(S newStyle)
     {
         return new StyledString(members.stream().map(p -> p.mapFirst(prevStyles -> {
             ImmutableList.Builder<Style<?>> newStyles = ImmutableList.builder();
             boolean added = false;
             for (Style<?> prevStyleMember : prevStyles.styleMembers)
             {
-                @Nullable S prevStyleAsS = prevStyleMember.as(newStyle.thisClass);
+                S prevStyleAsS = prevStyleMember.as(newStyle.thisClass);
                 if (prevStyleAsS != null)
                 {
                     newStyles.add(prevStyleAsS.combine(newStyle));
@@ -194,7 +192,6 @@ public final record StyledString(ImmutableList<StyledSegment> members)
         return new StyledString(l.build());
     }
 
-    @OnThread(Tag.FXPlatform)
     public ImmutableList<Text> toGUI()
     {
         return members.stream().map(p -> {
@@ -212,7 +209,6 @@ public final record StyledString(ImmutableList<StyledSegment> members)
         }, Builder::new, b -> s.isEmpty() ? b.build() : b.build(StyledString.s(s)));
     }
 
-    @Pure
     public static StyledString concat(StyledString... items)
     {
         return new StyledString(
@@ -223,7 +219,6 @@ public final record StyledString(ImmutableList<StyledSegment> members)
         );
     }
     
-    @Pure
     public static StyledString s(String content)
     {
         return new StyledString(content);

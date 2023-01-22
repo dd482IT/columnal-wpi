@@ -76,7 +76,7 @@ import java.util.concurrent.ExecutionException;
 public class ExcelExporter implements Exporter
 {
     @Override
-    public @OnThread(Tag.Simulation) void exportData(File destination, Table data) throws UserException, InternalException
+    public void exportData(File destination, Table data) throws UserException, InternalException
     {
         XSSFWorkbook workbook = new XSSFWorkbook();
         
@@ -118,32 +118,28 @@ public class ExcelExporter implements Exporter
                     column.getType().applyGet(new DataTypeVisitorGet<UnitType>()
                     {                        
                         @Override
-                        @OnThread(Tag.Simulation)
-                        public UnitType number(GetValue<@Value Number> g, NumberInfo displayInfo) throws InternalException, UserException
+                        public UnitType number(GetValue<Number> g, NumberInfo displayInfo) throws InternalException, UserException
                         {
                             cell.setCellValue(g.get(rowIndexFinal).doubleValue());
                             return UnitType.UNIT;
                         }
 
                         @Override
-                        @OnThread(Tag.Simulation)
-                        public UnitType text(GetValue<@Value String> g) throws InternalException, UserException
+                        public UnitType text(GetValue<String> g) throws InternalException, UserException
                         {
                             cell.setCellValue(g.get(rowIndexFinal));
                             return UnitType.UNIT;
                         }
 
                         @Override
-                        @OnThread(Tag.Simulation)
-                        public UnitType bool(GetValue<@Value Boolean> g) throws InternalException, UserException
+                        public UnitType bool(GetValue<Boolean> g) throws InternalException, UserException
                         {
                             cell.setCellValue(g.get(rowIndexFinal));
                             return UnitType.UNIT;
                         }
 
                         @Override
-                        @OnThread(Tag.Simulation)
-                        public UnitType date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> g) throws InternalException, UserException
+                        public UnitType date(DateTimeInfo dateTimeInfo, GetValue<TemporalAccessor> g) throws InternalException, UserException
                         {
                             try
                             {
@@ -185,8 +181,7 @@ public class ExcelExporter implements Exporter
                         }
 
                         @Override
-                        @OnThread(Tag.Simulation)
-                        public UnitType tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tagTypes, GetValue<@Value TaggedValue> g) throws InternalException, UserException
+                        public UnitType tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tagTypes, GetValue<TaggedValue> g) throws InternalException, UserException
                         {
                             DataType dataType = data.getManager().getTypeManager().lookupType(typeName, typeVars);
                             if (dataType != null)
@@ -196,20 +191,17 @@ public class ExcelExporter implements Exporter
                         }
 
                         @Override
-                        @OnThread(Tag.Simulation)
-                        public UnitType record(ImmutableMap<@ExpressionIdentifier String, DataType> types, GetValue<@Value Record> g) throws InternalException, UserException
+                        public UnitType record(ImmutableMap<String, DataType> types, GetValue<Record> g) throws InternalException, UserException
                         {
                             return putString(DataType.record(types), g);
                         }
 
                         @Override
-                        @OnThread(Tag.Simulation)
-                        public UnitType array(DataType inner, GetValue<@Value ListEx> g) throws InternalException, UserException
+                        public UnitType array(DataType inner, GetValue<ListEx> g) throws InternalException, UserException
                         {
                             return putString(DataType.array(inner), g);
                         }
 
-                        @OnThread(Tag.Simulation)
                         private UnitType putString(DataType dataType, GetValue<?> g) throws InternalException, UserException
                         {
                             cell.setCellValue(DataTypeUtility.valueToString(g.get(rowIndexFinal)));
@@ -237,13 +229,13 @@ public class ExcelExporter implements Exporter
     }
 
     @Override
-    public @Localized String getName()
+    public String getName()
     {
         return TranslationUtility.getString("importer.excel.files");
     }
 
     @Override
-    public @OnThread(Tag.Any) ImmutableList<String> getSupportedFileTypes()
+    public ImmutableList<String> getSupportedFileTypes()
     {
         return ImmutableList.of("*.xlsx");
     }

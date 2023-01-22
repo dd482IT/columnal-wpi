@@ -65,7 +65,7 @@ public class FocusTracker
         }
     }
 
-    public @Nullable Node getRecentlyFocused()
+    public Node getRecentlyFocused()
     {
         TimedFocusable timedFocusable = TimedFocusable.getRecentlyFocused(items.toArray(new TimedFocusable[0]));
         if (timedFocusable instanceof Node)
@@ -92,7 +92,6 @@ public class FocusTracker
         }
 
         @Override
-        @OnThread(value = Tag.FXPlatform, ignoreParent = true)
         public void changed(ObservableValue<? extends Boolean> observable, Boolean wasFocused, Boolean newValue)
         {
             if (wasFocused)
@@ -100,7 +99,6 @@ public class FocusTracker
         }
 
         @Override
-        @OnThread(Tag.FXPlatform)
         public long lastFocusedTime()
         {
             return wrapped.isFocused() ? System.currentTimeMillis() : lastFocusTime;

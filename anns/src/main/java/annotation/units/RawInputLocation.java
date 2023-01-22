@@ -33,11 +33,10 @@ import java.lang.annotation.Target;
  * A location in the raw input to a lex editor, before spaces are removed
  */
 @Documented
-@SubtypeOf(value= UnknownUnits.class)
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE_USE, ElementType.TYPE_PARAMETER})
 public @interface RawInputLocation
 {
-    public static @RawInputLocation int ONE = 1;
-    public static @RawInputLocation int ZERO = 0;
+    public static int ONE = 1;
+    public static int ZERO = 0;
 }

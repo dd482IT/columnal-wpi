@@ -61,7 +61,6 @@ import java.util.stream.Stream;
  * a tickbox whether to do left join or inner join, and pairs
  * of columns on which to join.
  */
-@OnThread(Tag.FXPlatform)
 public final class EditJoinDialog extends ErrorableLightDialog<EditJoinDialog.JoinDetails>
 {
     private final PickTablePane primaryTableNamePane;
@@ -79,7 +78,7 @@ public final class EditJoinDialog extends ErrorableLightDialog<EditJoinDialog.Jo
         Pair<CheckBox, Row> leftJoinRow = LabelledGrid.tickGridRow("join.isLeftJoin", "edit-join/left-join", new Label());
         isLeftJoin = leftJoinRow.getFirst();
         isLeftJoin.setSelected(join.isKeepPrimaryWithNoMatch());
-        joinOn = new ColumnList((ImmutableList<Pair<@Nullable ColumnId, @Nullable ColumnId>>)join.getColumnsToMatch());
+        joinOn = new ColumnList((ImmutableList<Pair<ColumnId, ColumnId>>)join.getColumnsToMatch());
         ImmutableSet<Table> exclude = ImmutableSet.of(join); 
         secondaryTableNamePane = new PickTablePane(parent.getManager(), exclude, join.getSecondarySource().getRaw(), t -> {
             joinOn.focusAddButton();
@@ -138,7 +137,7 @@ public final class EditJoinDialog extends ErrorableLightDialog<EditJoinDialog.Jo
         return pane;
     }
 
-    private @Nullable Either<FXPlatformConsumer<Table>, Pair<TableId, FXPlatformConsumer<ColumnId>>> pick()
+    private Either<FXPlatformConsumer<Table>, Pair<TableId, FXPlatformConsumer<ColumnId>>> pick()
     {
         long curTime = System.currentTimeMillis();
         return Stream.<Pair<Long, Either<FXPlatformConsumer<Table>, Pair<TableId, FXPlatformConsumer<ColumnId>>>>>concat(Stream.<Pair<Long, Either<FXPlatformConsumer<Table>, Pair<TableId, FXPlatformConsumer<ColumnId>>>>>of(
@@ -150,14 +149,14 @@ public final class EditJoinDialog extends ErrorableLightDialog<EditJoinDialog.Jo
     }
 
     @Override
-    protected @OnThread(Tag.FXPlatform) Either<@Localized String, JoinDetails> calculateResult()
+    protected Either<String, JoinDetails> calculateResult()
     {
         TableId prim = this.primaryTableNamePane.getValue();
         TableId sec = this.secondaryTableNamePane.getValue();
         if (prim == null || sec == null)
             return Either.left(TranslationUtility.getString("join.invalid.table.names"));
         ImmutableList.Builder<Pair<ColumnId, ColumnId>> joinColumns = ImmutableList.builder();
-        for (Pair<@Nullable ColumnId, @Nullable ColumnId> item : joinOn.getItems())
+        for (Pair<ColumnId, ColumnId> item : joinOn.getItems())
         {
             if (item.getFirst() == null || item.getSecond() == null)
                 return Either.left(TranslationUtility.getString("join.invalid.column.names"));
@@ -166,31 +165,29 @@ public final class EditJoinDialog extends ErrorableLightDialog<EditJoinDialog.Jo
         return Either.right(new JoinDetails(prim, sec, isLeftJoin.isSelected(), joinColumns.build()));
     }
 
-    private class ColumnList extends FancyList<Pair<@Nullable ColumnId, @Nullable ColumnId>, DualColumnPane>
+    private class ColumnList extends FancyList<Pair<ColumnId, ColumnId>, DualColumnPane>
     {
 
-        public ColumnList(ImmutableList<Pair<@Nullable ColumnId, @Nullable ColumnId>> initialItems)
+        public ColumnList(ImmutableList<Pair<ColumnId, ColumnId>> initialItems)
         {
             super(initialItems, true, false, true);
         }
 
         @Override
-        protected @OnThread(Tag.FXPlatform) Pair<DualColumnPane, FXPlatformSupplier<Pair<@Nullable ColumnId, @Nullable ColumnId>>> makeCellContent(Optional< Pair<@Nullable ColumnId, @Nullable ColumnId>> initialContent, boolean editImmediately)
+        protected Pair<DualColumnPane, FXPlatformSupplier<Pair<ColumnId, ColumnId>>> makeCellContent(Optional< Pair<ColumnId, ColumnId>> initialContent, boolean editImmediately)
         {
             DualColumnPane dualColumnPane = new DualColumnPane(initialContent.orElse(null));
             if (editImmediately)
                 FXUtility.onceNotNull(dualColumnPane.sceneProperty(), s -> FXUtility.runAfter(dualColumnPane.primaryColumn::requestFocus));
-            return new Pair<DualColumnPane, FXPlatformSupplier<Pair<@Nullable ColumnId, @Nullable ColumnId>>>(dualColumnPane, dualColumnPane::getValue);
+            return new Pair<DualColumnPane, FXPlatformSupplier<Pair<ColumnId, ColumnId>>>(dualColumnPane, dualColumnPane::getValue);
         }
 
-        @OnThread(Tag.FXPlatform)
-        public Stream<Pair<Long, Either<FXPlatformConsumer<Table>, Pair<TableId, FXPlatformConsumer<ColumnId>>>>> pick(@Nullable TableId primaryTable, @Nullable TableId secondaryTable)
+        public Stream<Pair<Long, Either<FXPlatformConsumer<Table>, Pair<TableId, FXPlatformConsumer<ColumnId>>>>> pick(TableId primaryTable, TableId secondaryTable)
         {
             return streamCells().flatMap(cell -> cell.getContent().pick(primaryTable, secondaryTable));
         }
     }
     
-    @OnThread(Tag.FXPlatform)
     private final class DualColumnPane extends BorderPane
     {
         private final TextField primaryColumn;
@@ -198,7 +195,7 @@ public final class EditJoinDialog extends ErrorableLightDialog<EditJoinDialog.Jo
         private long lastPrimaryEditTime = 0;
         private long lastSecondaryEditTime = 0;
 
-        public DualColumnPane(@Nullable Pair<@Nullable ColumnId, @Nullable ColumnId> initialContent)
+        public DualColumnPane(Pair<ColumnId, ColumnId> initialContent)
         {
             this.primaryColumn = new TextField();
             this.secondaryColumn = new TextField();
@@ -220,14 +217,14 @@ public final class EditJoinDialog extends ErrorableLightDialog<EditJoinDialog.Jo
             });
         }
 
-        public Pair<@Nullable ColumnId, @Nullable ColumnId> getValue()
+        public Pair<ColumnId, ColumnId> getValue()
         {
-            @ExpressionIdentifier String primaryIdent = IdentifierUtility.asExpressionIdentifier(primaryColumn.getText());
-            @ExpressionIdentifier String secondaryIdent = IdentifierUtility.asExpressionIdentifier(secondaryColumn.getText());
+            String primaryIdent = IdentifierUtility.asExpressionIdentifier(primaryColumn.getText());
+            String secondaryIdent = IdentifierUtility.asExpressionIdentifier(secondaryColumn.getText());
             return new Pair<>(primaryIdent == null ? null : new ColumnId(primaryIdent), secondaryIdent == null ? null : new ColumnId(secondaryIdent));
         }
 
-        public Stream<Pair<Long, Either<FXPlatformConsumer<Table>, Pair<TableId, FXPlatformConsumer<ColumnId>>>>> pick(@Nullable TableId primaryTable, @Nullable TableId secondaryTable)
+        public Stream<Pair<Long, Either<FXPlatformConsumer<Table>, Pair<TableId, FXPlatformConsumer<ColumnId>>>>> pick(TableId primaryTable, TableId secondaryTable)
         {
             return Utility.streamNullable(
                 primaryTable == null ? null : new Pair<>(primaryColumn.isFocused() ? System.currentTimeMillis() : lastPrimaryEditTime, Either.right(new Pair<TableId, FXPlatformConsumer<ColumnId>>(primaryTable, c -> primaryColumn.setText(c.getRaw())))),

@@ -57,9 +57,9 @@ public interface ErrorAndTypeRecorder
      * @param errorOrType
      * @return
      */
-    public default @Nullable TypeExp recordError(@Recorded Expression src, Either<@Nullable TypeError, TypeExp> errorOrType)
+    public default TypeExp recordError(Expression src, Either<TypeError, TypeExp> errorOrType)
     {
-        return errorOrType.<@Nullable TypeExp>either(err -> {
+        return errorOrType.<TypeExp>either(err -> {
             if (err != null)
             {
                 recordError(src, err.getMessage());
@@ -71,10 +71,10 @@ public interface ErrorAndTypeRecorder
     /**
      * Records an error source and error message
      */
-    public default <T> @Nullable T recordLeftError(TypeManager typeManager, FunctionLookup functionLookup, @Recorded Expression src, Either<TypeConcretisationError, T> errorOrVal)
+    public default <T> T recordLeftError(TypeManager typeManager, FunctionLookup functionLookup, Expression src, Either<TypeConcretisationError, T> errorOrVal)
     {
-        return errorOrVal.<@Nullable T>either(err -> {
-            @Nullable DataType fix = err.getSuggestedTypeFix();
+        return errorOrVal.<T>either(err -> {
+            DataType fix = err.getSuggestedTypeFix();
             recordError(src, err.getErrorText());
             recordQuickFixes(src, ExpressionUtil.quickFixesForTypeError(typeManager, functionLookup, src, fix));
             return null;
@@ -84,7 +84,7 @@ public interface ErrorAndTypeRecorder
     /**
      * Records the type for a particular expression.
      */
-    public default @Recorded @PolyNull TypeExp recordType(Expression expression, @PolyNull TypeExp typeExp)
+    public default TypeExp recordType(Expression expression, TypeExp typeExp)
     {
         if (typeExp == null)
             return null;
@@ -92,7 +92,7 @@ public interface ErrorAndTypeRecorder
             return recordTypeNN(expression, typeExp);
     }
 
-    public default @Nullable CheckedExp recordType(Expression expression, TypeState typeState, @Nullable TypeExp typeExp)
+    public default CheckedExp recordType(Expression expression, TypeState typeState, TypeExp typeExp)
     {
         if (typeExp != null)
             return new CheckedExp(recordTypeNN(expression, typeExp), typeState);
@@ -103,7 +103,6 @@ public interface ErrorAndTypeRecorder
     /**
      * A curried version of the two-arg function of the same name.
      */
-    @Pure
     public default Consumer<StyledString> recordErrorCurried(Expression src)
     {
         return errMsg -> recordError(src, errMsg);
@@ -117,24 +116,24 @@ public interface ErrorAndTypeRecorder
     /**
      * Records an source and information message.
      */
-    public <EXPRESSION extends StyledShowable> void recordInformation(@Recorded EXPRESSION src, Pair<StyledString, @Nullable QuickFix<EXPRESSION>> informaton);
+    public <EXPRESSION extends StyledShowable> void recordInformation(EXPRESSION src, Pair<StyledString, QuickFix<EXPRESSION>> informaton);
     
-    public <EXPRESSION extends StyledShowable> void recordQuickFixes(@Recorded EXPRESSION src, List<QuickFix<EXPRESSION>> fixes);
+    public <EXPRESSION extends StyledShowable> void recordQuickFixes(EXPRESSION src, List<QuickFix<EXPRESSION>> fixes);
 
-    public default @Nullable CheckedExp recordTypeAndError(@Recorded Expression expression, Either<@Nullable TypeError, TypeExp> typeOrError, TypeState typeState)
+    public default CheckedExp recordTypeAndError(Expression expression, Either<TypeError, TypeExp> typeOrError, TypeState typeState)
     {
         return recordTypeAndError(expression, expression, typeOrError, typeState);
     }
     
-    public default @Nullable CheckedExp recordTypeAndError(Expression typeExpression, @Recorded Expression errorExpression, Either<@Nullable TypeError, TypeExp> typeOrError, TypeState typeState)
+    public default CheckedExp recordTypeAndError(Expression typeExpression, Expression errorExpression, Either<TypeError, TypeExp> typeOrError, TypeState typeState)
     {
-        @Nullable @Recorded TypeExp typeExp = recordType(typeExpression, recordError(errorExpression, typeOrError));
+        TypeExp typeExp = recordType(typeExpression, recordError(errorExpression, typeOrError));
         if (typeExp == null)
             return null;
         else
             return new CheckedExp(typeExp, typeState);
     }
 
-    public @Recorded @NonNull TypeExp recordTypeNN(Expression expression, @NonNull TypeExp typeExp);
+    public TypeExp recordTypeNN(Expression expression, TypeExp typeExp);
 
 }

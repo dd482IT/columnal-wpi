@@ -57,7 +57,6 @@ public class GenDataType extends Generator<DataType>
     }
     
     @Override
-    @OnThread(value = Tag.Simulation, ignoreParent = true)
     public DataType generate(SourceOfRandomness r, GenerationStatus generationStatus)
     {
         try

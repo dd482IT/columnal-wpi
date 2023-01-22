@@ -54,21 +54,17 @@ import static org.junit.Assert.assertTrue;
 /**
  * Created by neil on 30/05/2017.
  */
-@RunWith(JUnitQuickcheck.class)
 public class PropInsertRemoveRows
 {
-    @BeforeClass
     public static void initFX() throws InvocationTargetException, InterruptedException
     {
         // Initialise JavaFX:
         SwingUtilities.invokeAndWait(() -> new JFXPanel());
     }
 
-    @Property(trials = 100)
-    @OnThread(Tag.Simulation)
-    public void insertRows(@From(GenEditableColumn.class) EditableColumn column, @From(GenRandom.class) Random r) throws InternalException, UserException
+    public void insertRows(EditableColumn column, Random r) throws InternalException, UserException
     {
-        List<@Value Object> prevValues = new ArrayList<>();
+        List<Object> prevValues = new ArrayList<>();
         for (int i = 0; column.indexValid(i); i++)
         {
             prevValues.add(column.getType().getCollapsed(i));
@@ -78,7 +74,7 @@ public class PropInsertRemoveRows
         int insertCount = r.nextInt(1000);
 
         // Do it via RecordSet to get the validIndex function updated:
-        @Nullable SimulationRunnable revert = ((EditableRecordSet) column.getRecordSet()).insertRows(insertAtIndex, insertCount);
+        SimulationRunnable revert = ((EditableRecordSet) column.getRecordSet()).insertRows(insertAtIndex, insertCount);
 
         for (int i = 0; i < insertAtIndex; i++)
         {
@@ -113,14 +109,12 @@ public class PropInsertRemoveRows
         }
     }
 
-    @Property(trials = 100)
-    @OnThread(Tag.Simulation)
-    public void removeRows(@From(GenEditableColumn.class) EditableColumn column, @From(GenRandom.class) Random r) throws InternalException, UserException
+    public void removeRows(EditableColumn column, Random r) throws InternalException, UserException
     {
         if (column.getLength() == 0)
             return; // Can't remove any rows.  Happens rarely.
         
-        List<@Value Object> prevValues = new ArrayList<>();
+        List<Object> prevValues = new ArrayList<>();
         for (int i = 0; column.indexValid(i); i++)
         {
             prevValues.add(column.getType().getCollapsed(i));
@@ -130,7 +124,7 @@ public class PropInsertRemoveRows
         int removeCount = r.nextInt(column.getLength() - removeAtIndex);
 
         // Do it via RecordSet to get the validIndex function updated:
-        @Nullable SimulationRunnable revert = ((EditableRecordSet) column.getRecordSet()).removeRows(removeAtIndex, removeCount);
+        SimulationRunnable revert = ((EditableRecordSet) column.getRecordSet()).removeRows(removeAtIndex, removeCount);
 
         for (int i = 0; i < removeAtIndex; i++)
         {

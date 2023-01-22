@@ -37,7 +37,7 @@ import xyz.columnal.transformations.expression.function.ValueFunction;
 public class AsType extends FunctionDefinition
 {
 
-    public static final @FuncDocKey String NAME = "core:as type";
+    public static final String NAME = "core:as type";
 
     public AsType() throws InternalException
     {
@@ -53,7 +53,7 @@ public class AsType extends FunctionDefinition
     private static class Instance extends ValueFunction
     {
         @Override
-        public @OnThread(Tag.Simulation) @Value Object _call() throws InternalException, UserException
+        public Object _call() throws InternalException, UserException
         {
             return arg(1);
         }

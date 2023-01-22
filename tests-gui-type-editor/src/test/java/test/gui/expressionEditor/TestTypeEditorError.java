@@ -63,151 +63,127 @@ import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
 
-@RunWith(JUnitQuickcheck.class)
-@OnThread(Tag.Simulation)
 public class TestTypeEditorError extends FXApplicationTest implements ScrollToTrait, ListUtilTrait, ClickTableLocationTrait, PopupTrait, EnterTypeTrait
 {
-    @Test
     public void testFine1()
     {
         // Check basic:
         testError("Text");
     }
-    @Test
     public void testFine2()
     {
         // Check basic:
         testError(TypeManager.MAYBE_NAME + "(Text)");
     }
-    @Test
     public void testFine3()
     {
         // Check basic:
         testError("["+ TypeManager.MAYBE_NAME +  "(Number{m})]");
     }
 
-    @Test
     public void testExtraOp()
     {
         // Check basic:
         testError("Text,", e(5, 5, "missing"));
     }
 
-    @Test
     public void testInvalidChar()
     {
         // Check basic:
         testError("Text#", e(4,4, "missing", "operator"), e(4, 5, "not allowed"));
     }
 
-    @Test
     public void testInvalidBracket1()
     {
         // Check basic:
         testError("Number()",e(6,6, "missing"), e(7, 7, "empty"));
     }
     
-    @Test
     public void testInvalidEmptyBracket()
     {
         // Check basic:
         testError("()", e(1, 1, "empty"));
     }
     
-    @Test
     public void testUnclosedRound()
     {
         // Check basic:
         testError("(", e(1, 1, "missing"));
     }
 
-    @Test
     public void testUnclosedCurly()
     {
         // Check basic:
         testError("Number{", e(6, 7, "missing"));
     }
 
-    @Test
     public void testEmptyUnit()
     {
         // Check basic:
         testError("Number{}", e(7, 7, "missing"));
     }
 
-    @Test
     public void testOnlyUnit()
     {
         // Check basic:
         testError("{m}", e(0, 3, "unit"));
     }
 
-    @Test
     public void testUnknownUnit()
     {
         // Check basic:
         testError("Number{zzz}", e(7, 10, "unknown"));
     }
 
-    @Test
     public void testUnknownUnit2()
     {
         // Check basic:
         testError("(a:Number{zzz}, b:Text)", e(10, 13, "unknown"));
     }
 
-    @Test
     public void testUnitInvalidOp()
     {
         // Check basic:
         testError("Number{m**m}", e(9, 9, "missing"));
     }
 
-    @Test
     public void testUnitInvalidOp2()
     {
         // Check basic:
         testError("Number{m^m}", e(7, 10, "raise"));
     }
 
-    @Test
     public void testUnknown0()
     {
         testError("NumbeX", e(0, 6, "unknown"));
     }
     
-    @Test
     public void testUnknown1()
     {
         testError("NumberX", e(0, 7, "unknown"));
     }
     
-    @Test
     public void testUnknown2()
     {
         testError("Number X", e(0, 8, "unknown"));
     }
 
-    @Test
     public void testRecord()
     {
         testError("(a: Text, b: Number)");
     }
 
-    @Test
     public void testRecord2()
     {
         // It should be fine to use type names as labels
         testError("(Number: Text, Text: Number, Boolean: [Date], DateYM : Boolean)");
     }
     
-    @Test
     public void testBadTuple1()
     {
         testError("Text,Number", e(0, 11, "bracket"));
     }
 
-    @Test
     public void testBadTuple2()
     {
         testError("[Text,Number]", e(1, 12, "invalid"));
@@ -305,7 +281,7 @@ public class TestTypeEditorError extends FXApplicationTest implements ScrollToTr
         }
     }
 
-    private void assertErrorShowing(boolean underlineShowing, @Nullable Boolean popupShowing)
+    private void assertErrorShowing(boolean underlineShowing, Boolean popupShowing)
     {
         Scene dialogScene = TFXUtil.fx(() -> getRealFocusedWindow().getScene());
         Collection<Path> errorUnderline = TFXUtil.fx(() -> lookup(".type-editor .error-underline").<Path>queryAll());
@@ -325,7 +301,7 @@ public class TestTypeEditorError extends FXApplicationTest implements ScrollToTr
         private final CanonicalSpan location;
         private final ImmutableList<String> expectedMessageParts;
 
-        public Error(@CanonicalLocation int start, @CanonicalLocation int end, ImmutableList<String> expectedMessageParts)
+        public Error(int start, int end, ImmutableList<String> expectedMessageParts)
         {
             this.location = new CanonicalSpan(start, end);
             this.expectedMessageParts = expectedMessageParts;

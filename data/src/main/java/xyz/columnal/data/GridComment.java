@@ -39,17 +39,12 @@ public class GridComment
     // Note that the fields below are all mutable;
             
     // No escapes
-    @OnThread(value = Tag.Any, requireSynchronized = true)
     private String content;
-    @OnThread(value = Tag.Any, requireSynchronized = true)
     private CellPosition position;
-    @OnThread(value = Tag.Any, requireSynchronized = true)
     private int widthInColumns;
-    @OnThread(value = Tag.Any, requireSynchronized = true)
     private int heightInColumns;
     
-    @OnThread(Tag.FXPlatform)
-    private @MonotonicNonNull GridCommentDisplayBase display;
+    private GridCommentDisplayBase display;
     
     //@OnThread(value = Tag.Any, requireSynchronized = true)
     //private @MonotonicNonNull GridCommentDisplayBase display;
@@ -81,43 +76,36 @@ public class GridComment
         saver.saveComment(commentSrc);
     }
 
-    @OnThread(Tag.Any)
     public synchronized String getContent()
     {
         return content;
     }
 
-    @OnThread(Tag.Any)
     public synchronized void setContent(String content)
     {
         this.content = content;
     }
 
-    @OnThread(Tag.FXPlatform)
-    public @Nullable GridCommentDisplayBase getDisplay()
+    public GridCommentDisplayBase getDisplay()
     {
         return display;
     }
     
-    @OnThread(Tag.FXPlatform)
     public void setDisplay(GridCommentDisplayBase display)
     {
         this.display = display;
     }
 
-    @OnThread(Tag.Any)
     public synchronized CellPosition getPosition()
     {
         return position;
     }
 
-    @OnThread(Tag.Any)
     public synchronized CellPosition getBottomRight()
     {
         return position.offsetByRowCols(heightInColumns - 1, widthInColumns - 1);
     }
 
-    @OnThread(Tag.Any)
     public synchronized void setBottomRight(CellPosition bottomRight)
     {
         this.widthInColumns = Math.max(1, bottomRight.columnIndex - getPosition().columnIndex + 1);
@@ -134,7 +122,7 @@ public class GridComment
     }
 
     @Override
-    public synchronized boolean equals(@Nullable Object o)
+    public synchronized boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;

@@ -55,14 +55,14 @@ import java.util.stream.Stream;
 public class TypeLiteralExpression extends NonOperatorExpression
 {
     // This may a type expression that doesn't save to a valid type:
-    private final @Recorded TypeExpression type;
+    private final TypeExpression type;
     
-    public TypeLiteralExpression(@Recorded TypeExpression type)
+    public TypeLiteralExpression(TypeExpression type)
     {
         this.type = type;
     }
 
-    public static Expression fixType(TypeManager typeManager, FunctionLookup functionLookup, JellyType fix, @Recorded Expression expression) throws InternalException
+    public static Expression fixType(TypeManager typeManager, FunctionLookup functionLookup, JellyType fix, Expression expression) throws InternalException
     {
         try
         {
@@ -78,7 +78,7 @@ public class TypeLiteralExpression extends NonOperatorExpression
     }
     
     @SuppressWarnings("recorded") // Don't need to record when making a fix
-    public static Expression fixType(FunctionLookup functionLookup, TypeExpression fixTo, @Recorded Expression expression) throws InternalException
+    public static Expression fixType(FunctionLookup functionLookup, TypeExpression fixTo, Expression expression) throws InternalException
     {
         // Special case -- if it's "from text", switch to "from text to":
         if (expression instanceof CallExpression)
@@ -117,9 +117,9 @@ public class TypeLiteralExpression extends NonOperatorExpression
     }
         
     @Override
-    public @Nullable CheckedExp check(@Recorded TypeLiteralExpression this, ColumnLookup dataLookup, TypeState typeState, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public CheckedExp check(TypeLiteralExpression this, ColumnLookup dataLookup, TypeState typeState, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        @Nullable DataType dataType = type.toDataType(typeState.getTypeManager());
+        DataType dataType = type.toDataType(typeState.getTypeManager());
         if (dataType == null)
         {
             // Error should already have been given in the editor check
@@ -156,7 +156,7 @@ public class TypeLiteralExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
+    public Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
     {
         // TODO
         return null;
@@ -164,7 +164,7 @@ public class TypeLiteralExpression extends NonOperatorExpression
 
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -178,7 +178,7 @@ public class TypeLiteralExpression extends NonOperatorExpression
         return Objects.hash(type);
     }
 
-    public @Recorded TypeExpression getType()
+    public TypeExpression getType()
     {
         return type;
     }

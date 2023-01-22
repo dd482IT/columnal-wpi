@@ -64,16 +64,15 @@ public class UnitLexer extends Lexer<UnitExpression, CodeCompletionContext>
         MULTIPLY("*", "op.times"), DIVIDE("/", "op.divide"), RAISE("^", "op.raise");
 
         private final String op;
-        private final @LocalizableKey String localNameKey;
+        private final String localNameKey;
 
-        private UnitOp(String op, @LocalizableKey String localNameKey)
+        private UnitOp(String op, String localNameKey)
         {
             this.op = op;
             this.localNameKey = localNameKey;
         }
 
         @Override
-        @OnThread(Tag.Any)
         public String getContent()
         {
             return op;
@@ -92,7 +91,6 @@ public class UnitLexer extends Lexer<UnitExpression, CodeCompletionContext>
         }
 
         @Override
-        @OnThread(Tag.Any)
         public String getContent()
         {
             return bracket;
@@ -115,12 +113,12 @@ public class UnitLexer extends Lexer<UnitExpression, CodeCompletionContext>
     }
 
     @Override
-    public LexerResult<UnitExpression, CodeCompletionContext> process(String content, @Nullable Integer curCaretPos, InsertListener insertListener)
+    public LexerResult<UnitExpression, CodeCompletionContext> process(String content, Integer curCaretPos, InsertListener insertListener)
     {
         UnitSaver saver = new UnitSaver(typeManager, insertListener);
         RemovedCharacters removedCharacters = new RemovedCharacters();
         ArrayList<ContentChunk> chunks = new ArrayList<>();
-        @RawInputLocation int curIndex = RawInputLocation.ZERO;
+        int curIndex = RawInputLocation.ZERO;
         nextToken: while (curIndex < content.length())
         {
             for (UnitBracket bracket : UnitBracket.values())
@@ -147,7 +145,7 @@ public class UnitLexer extends Lexer<UnitExpression, CodeCompletionContext>
             if ((content.charAt(curIndex) >= '0' && content.charAt(curIndex) <= '9') || 
                 (content.charAt(curIndex) == '-' && curIndex + 1 < content.length() && (content.charAt(curIndex + 1) >= '0' && content.charAt(curIndex + 1) <= '9')))
             {
-                @RawInputLocation int startIndex = curIndex;
+                int startIndex = curIndex;
                 // Minus only allowed at start:
                 if (content.charAt(curIndex) == '-')
                 {
@@ -161,7 +159,7 @@ public class UnitLexer extends Lexer<UnitExpression, CodeCompletionContext>
                 continue nextToken;
             }
 
-            @Nullable Pair<@UnitIdentifier String, @RawInputLocation Integer> parsed = IdentifierUtility.consumeUnitIdentifier(content, curIndex);
+            Pair<String, Integer> parsed = IdentifierUtility.consumeUnitIdentifier(content, curIndex);
             if (parsed != null && parsed.getSecond() > curIndex)
             {
                 saver.saveOperand(new SingleUnitExpression(parsed.getFirst()), removedCharacters.map(curIndex, parsed.getSecond()));
@@ -178,12 +176,12 @@ public class UnitLexer extends Lexer<UnitExpression, CodeCompletionContext>
             
             curIndex += RawInputLocation.ONE;
         }
-        @Recorded UnitExpression saved = saver.finish(removedCharacters.map(curIndex, curIndex));
-        Pair<ArrayList<CaretPos>, ImmutableList<@CanonicalLocation Integer>> caretPositions = calculateCaretPos(chunks);
+        UnitExpression saved = saver.finish(removedCharacters.map(curIndex, curIndex));
+        Pair<ArrayList<CaretPos>, ImmutableList<Integer>> caretPositions = calculateCaretPos(chunks);
         
         if (requireConcrete)
         {
-            @RawInputLocation int lastIndex = curIndex;
+            int lastIndex = curIndex;
             try
             {
                 saved.asUnit(unitManager);
@@ -200,7 +198,7 @@ public class UnitLexer extends Lexer<UnitExpression, CodeCompletionContext>
         return new LexerResult<>(saved, content, removedCharacters, false, ImmutableList.copyOf(caretPositions.getFirst()), ImmutableList.copyOf(caretPositions.getSecond()), StyledString.s(content), saver.getErrors(), saver.locationRecorder, makeCompletions(chunks, this::makeCompletions), new BitSet(), !saver.hasUnmatchedBrackets(), (i, n) -> ImmutableMap.<DisplayType, Pair<StyledString, ImmutableList<TextQuickFix>>>of());
     }
     
-    private CodeCompletionContext makeCompletions(String stem, @CanonicalLocation int canonIndex, ChunkType curType, ChunkType preceding)
+    private CodeCompletionContext makeCompletions(String stem, int canonIndex, ChunkType curType, ChunkType preceding)
     {
         ImmutableList<SingleUnit> allDeclared = ImmutableList.sortedCopyOf(
             (u, v) -> u.getName().compareToIgnoreCase(v.getName()),
@@ -216,7 +214,7 @@ public class UnitLexer extends Lexer<UnitExpression, CodeCompletionContext>
                 int len = Utility.longestCommonStartIgnoringCase(u.getDescription(), 0, stem, 0);
                 return new LexCompletion(canonIndex, len, u.getName()) {
                     @Override
-                    public boolean showFor(@CanonicalLocation int caretPos)
+                    public boolean showFor(int caretPos)
                     {
                         return caretPos > canonIndex + Utility.longestCommonStartIgnoringCase(u.getName(), 0, stem, 0) && super.showFor(caretPos);
                     }

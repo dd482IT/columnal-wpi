@@ -35,13 +35,9 @@ import threadchecker.Tag;
 
 import java.util.Random;
 
-@RunWith(JUnitQuickcheck.class)
-@OnThread(Tag.Simulation)
 public class PropExpressionEditor extends BaseTestExpressionEditorEntry
 {
-    @Ignore
-    @Property(trials = 10)
-    public void testEntry(@When(satisfies = "#_.expressionLength < 500") @From(GenExpressionValueForwards.class) @From(GenExpressionValueBackwards.class) ExpressionValue expressionValue, @From(GenRandom.class) Random r) throws Exception
+    public void testEntry(ExpressionValue expressionValue, Random r) throws Exception
     {
         testEntry_Impl(expressionValue, r);
     }

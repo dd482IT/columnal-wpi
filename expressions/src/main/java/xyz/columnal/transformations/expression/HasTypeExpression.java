@@ -52,32 +52,32 @@ import java.util.stream.Stream;
 public class HasTypeExpression extends Expression
 {
     // Var name, without the leading decorator
-    private final @ExpressionIdentifier String lhsVar;
-    private final @Recorded Expression rhsType;
+    private final String lhsVar;
+    private final Expression rhsType;
 
-    public HasTypeExpression(@ExpressionIdentifier String lhsVar, @Recorded Expression rhsType)
+    public HasTypeExpression(String lhsVar, Expression rhsType)
     {
         this.lhsVar = lhsVar;
         this.rhsType = rhsType;
     }
 
     @Override
-    public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState original, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public CheckedExp check(ColumnLookup dataLookup, TypeState original, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         if (lhsVar == null)
             onError.recordError(this, StyledString.s("Left-hand side of :: must be a valid name"));
         
-        @Nullable @Recorded TypeExpression rhsTypeExpression = rhsType.visit(new ExpressionVisitorFlat<@Nullable @Recorded TypeExpression>()
+        TypeExpression rhsTypeExpression = rhsType.visit(new ExpressionVisitorFlat<TypeExpression>()
         {
             @Override
-            protected @Nullable @Recorded TypeExpression makeDef(Expression expression)
+            protected TypeExpression makeDef(Expression expression)
             {
                 onError.recordError(rhsType, StyledString.s("Right-hand side of :: must be a type{} expression"));
                 return null;
             }
 
             @Override
-            public @Nullable @Recorded TypeExpression litType(TypeLiteralExpression self, @Recorded TypeExpression type)
+            public TypeExpression litType(TypeLiteralExpression self, TypeExpression type)
             {
                 return type;
             }
@@ -90,7 +90,7 @@ public class HasTypeExpression extends Expression
         {
             @SuppressWarnings("recorded")
             @Override
-            public @Recorded JellyType record(JellyType jellyType, @Recorded TypeExpression source)
+            public JellyType record(JellyType jellyType, TypeExpression source)
             {
                 return jellyType;
             }
@@ -104,13 +104,13 @@ public class HasTypeExpression extends Expression
     }
 
     @Override
-    public @OnThread(Tag.Simulation) ValueResult calculateValue(EvaluateState state) throws InternalException
+    public ValueResult calculateValue(EvaluateState state) throws InternalException
     {
         throw new InternalException("Type definitions have no value");
     }
 
     @Override
-    public <T> T visit(@Recorded HasTypeExpression this, ExpressionVisitor<T> visitor)
+    public <T> T visit(HasTypeExpression this, ExpressionVisitor<T> visitor)
     {
         return visitor.hasType(this, lhsVar, rhsType);
     }
@@ -128,13 +128,13 @@ public class HasTypeExpression extends Expression
     }
 
     @Override
-    public @Nullable Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
+    public Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
     {
         return null;
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -165,7 +165,7 @@ public class HasTypeExpression extends Expression
             return new HasTypeExpression(lhsVar, rhsType.replaceSubExpression(toReplace, replaceWith));
     }
 
-    public @ExpressionIdentifier String getVarName()
+    public String getVarName()
     {
         return lhsVar;
     }

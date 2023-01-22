@@ -67,13 +67,13 @@ public abstract class FunctionDefinition implements StandardFunctionDefinition
     private static final ResourceBundle FUNCTION_SYNONYMS = ResourceBundle.getBundle("function_synonyms");
     
     // Namespace colon function name
-    private final @FuncDocKey String funcDocKey;
+    private final String funcDocKey;
     private final TypeMatcher typeMatcher;
-    private final @Localized String miniDescription;
+    private final String miniDescription;
     private final ImmutableList<String> synonyms;
     private final ImmutableList<String> paramNames;
 
-    public FunctionDefinition(@FuncDocKey String funcDocKey) throws InternalException
+    public FunctionDefinition(String funcDocKey) throws InternalException
     {
         this.funcDocKey = funcDocKey;
         Details details = lookupFunction(extractName(funcDocKey), funcDocKey);
@@ -83,14 +83,14 @@ public abstract class FunctionDefinition implements StandardFunctionDefinition
         this.paramNames = details.paramNames;
     }
 
-    private static String extractNamespace(@FuncDocKey String funcDocKey)
+    private static String extractNamespace(String funcDocKey)
     {
         String[] split = funcDocKey.split(":");
         return split[0];
     }
 
     @SuppressWarnings("identifier")
-    private static @ExpressionIdentifier String extractName(@FuncDocKey String funcDocKey)
+    private static String extractName(String funcDocKey)
     {
         String[] split = funcDocKey.split(":");
         return split[split.length - 1];
@@ -105,14 +105,14 @@ public abstract class FunctionDefinition implements StandardFunctionDefinition
     }
 
     @SuppressWarnings("identifier")
-    public ImmutableList<@ExpressionIdentifier String> getFullName()
+    public ImmutableList<String> getFullName()
     {
         String[] split = funcDocKey.split(":");
         return ImmutableList.copyOf(split);
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || !(o instanceof FunctionDefinition)) return false;
@@ -128,12 +128,12 @@ public abstract class FunctionDefinition implements StandardFunctionDefinition
 
     private static class Details
     {
-        private final @Localized String miniDescription;
+        private final String miniDescription;
         private final ImmutableList<String> synonyms;
         private final ImmutableList<String> paramNames;
         private final TypeMatcher typeMatcher;
 
-        private Details(@Localized String miniDescription, ImmutableList<String> synonyms, ImmutableList<String> paramNames, TypeMatcher typeMatcher)
+        private Details(String miniDescription, ImmutableList<String> synonyms, ImmutableList<String> paramNames, TypeMatcher typeMatcher)
         {
             this.miniDescription = miniDescription;
             this.synonyms = synonyms;
@@ -142,17 +142,17 @@ public abstract class FunctionDefinition implements StandardFunctionDefinition
         }
     }
     
-    private static Details lookupFunction(String functionName, @FuncDocKey String funcDocKey) throws InternalException
+    private static Details lookupFunction(String functionName, String funcDocKey) throws InternalException
     {
         // We call ResourceBundle.getString() here, but it's covered by @FuncDocKey rather than @LocalizableKey,
         // especially since the keys occur duplicated in each file.
         @SuppressWarnings("all")
-        @LocalizableKey String key = funcDocKey;
+        String key = funcDocKey;
         try
         {
             // TODO move the signature to its own file?
             @SuppressWarnings("all")
-            @LocalizableKey String sigKey = key + ":sig";
+            String sigKey = key + ":sig";
             return new Details(
                 FUNCTION_MINIS.getString(key),
                 ImmutableList.copyOf(StringUtils.split(FUNCTION_SYNONYMS.getString(key), ";")),
@@ -207,7 +207,7 @@ public abstract class FunctionDefinition implements StandardFunctionDefinition
     }
 
 
-    public @Localized String getMiniDescription()
+    public String getMiniDescription()
     {
         return miniDescription;
     }
@@ -224,13 +224,12 @@ public abstract class FunctionDefinition implements StandardFunctionDefinition
      * @param paramTypes A map from the declared typevar/unitvar items in the function XML description, to the concrete Unit or DataType
      * @return The function instance to use during execution.
      */
-    @OnThread(Tag.Simulation)
     public abstract ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException;
     
     /**
      * For autocompleting parameters: what are likely types to this function?
      */
-    private @Nullable TypeExp getLikelyParamType()
+    private TypeExp getLikelyParamType()
     {
         return null; /*
         try
@@ -247,9 +246,9 @@ public abstract class FunctionDefinition implements StandardFunctionDefinition
     /**
      * Gets the text to display when showing information about the argument type in the GUI.
      */
-    public @Localized String getParamDisplay()
+    public String getParamDisplay()
     {
-        @Nullable TypeExp paramType = getLikelyParamType();
+        TypeExp paramType = getLikelyParamType();
         return paramType == null ? "" : paramType.toString();
     }
     
@@ -262,7 +261,7 @@ public abstract class FunctionDefinition implements StandardFunctionDefinition
     /**
      * Gets the text to display when showing information about the return type in the GUI.
      */
-    public @Localized String getReturnDisplay()
+    public String getReturnDisplay()
     {
         return ""; /*
         try
@@ -276,7 +275,7 @@ public abstract class FunctionDefinition implements StandardFunctionDefinition
         }*/
     }
 
-    public @ExpressionIdentifier String getName()
+    public String getName()
     {
         return extractName(funcDocKey);
     }
@@ -286,7 +285,7 @@ public abstract class FunctionDefinition implements StandardFunctionDefinition
         return extractNamespace(funcDocKey);
     }
 
-    public @FuncDocKey String getDocKey()
+    public String getDocKey()
     {
         return funcDocKey;
     }

@@ -53,7 +53,7 @@ public class TypeOf extends FunctionDefinition
     private static class Instance extends ValueFunction
     {
         @Override
-        public @OnThread(Tag.Simulation) @Value Object _call() throws InternalException, UserException
+        public Object _call() throws InternalException, UserException
         {
             // TODO return the actual type literal once we define the GADT
             return new TaggedValue(0, null, DataTypeUtility.fromTags(ImmutableList.<TagType<Object>>of(new TagType<Object>("Type", null))));

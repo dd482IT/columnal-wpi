@@ -30,6 +30,5 @@ import threadchecker.Tag;
  */
 public interface FXPlatformFunctionIntUser<T, R>
 {
-    @OnThread(Tag.FXPlatform)
     public R apply(T t) throws InternalException, UserException;
 }

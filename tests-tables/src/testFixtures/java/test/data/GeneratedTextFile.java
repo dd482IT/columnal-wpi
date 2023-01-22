@@ -39,9 +39,9 @@ public class GeneratedTextFile
     private final String quote;
     private final ImmutableList<DataType> columnTypes;
     // Each item in outer list is a column.
-    private final ImmutableList<ImmutableList<@Value Object>> expectedColumns;
+    private final ImmutableList<ImmutableList<Object>> expectedColumns;
 
-    public GeneratedTextFile(File file, Charset charset, int lineCount, String separator, String quote, ImmutableList<DataType> columnTypes, ImmutableList<ImmutableList<@Value Object>> expectedColumns)
+    public GeneratedTextFile(File file, Charset charset, int lineCount, String separator, String quote, ImmutableList<DataType> columnTypes, ImmutableList<ImmutableList<Object>> expectedColumns)
     {
         this.file = file;
         this.charset = charset;
@@ -98,7 +98,7 @@ public class GeneratedTextFile
         return columnTypes.size();
     }
 
-    public @Value Object getExpectedValue(int column, int line)
+    public Object getExpectedValue(int column, int line)
     {
         return expectedColumns.get(column).get(line);
     }

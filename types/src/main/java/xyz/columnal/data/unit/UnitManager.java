@@ -71,14 +71,12 @@ import java.util.stream.Stream;
 public final class UnitManager
 {
     // Left means it's an alias, Right means full-unit
-    private final Map<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> builtInUnits = new HashMap<>();
-    @OnThread(value = Tag.Any, requireSynchronized = true)
-    private final Map<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> userUnits = new HashMap<>();
+    private final Map<String, Either<String, UnitDeclaration>> builtInUnits = new HashMap<>();
+    private final Map<String, Either<String, UnitDeclaration>> userUnits = new HashMap<>();
     
     // This map is the merger of builtInUnits and userUnits.
     // In case of clashes, builtInUnits is preferred.
-    @OnThread(value = Tag.Any, requireSynchronized = true)
-    private final Map<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> knownUnits = new HashMap<>();
+    private final Map<String, Either<String, UnitDeclaration>> knownUnits = new HashMap<>();
     
     public UnitManager() throws InternalException, UserException
     {
@@ -86,13 +84,13 @@ public final class UnitManager
     }
     
     @SuppressWarnings("initialization")
-    public UnitManager(@Nullable String builtInName) throws InternalException, UserException
+    public UnitManager(String builtInName) throws InternalException, UserException
     {
         if (builtInName == null)
             return;
         try
         {
-            @Nullable InputStream stream = ResourceUtility.getResourceAsStream(builtInName);
+            InputStream stream = ResourceUtility.getResourceAsStream(builtInName);
             if (stream == null)
                 throw new InternalException("Could not find data file");
             String builtInUnits = IOUtils.toString(stream, StandardCharsets.UTF_8);
@@ -104,15 +102,15 @@ public final class UnitManager
                 if (item.declaration() != null && item.declaration().unitDeclaration() != null)
                 {
                     UnitDeclaration unit = loadDeclaration(item.declaration().unitDeclaration(), curCategory);
-                    @UnitIdentifier String name = unit.getDefined().getName();
+                    String name = unit.getDefined().getName();
                     knownUnits.put(name, Either.right(unit));
                     this.builtInUnits.put(name, Either.right(unit));
                 }
                 else if (item.declaration() != null && item.declaration().aliasDeclaration() != null)
                 {
                     AliasDeclarationContext aliasDeclaration = item.declaration().aliasDeclaration();
-                    @UnitIdentifier String newName = IdentifierUtility.fromParsed(aliasDeclaration.singleUnit(0));
-                    @UnitIdentifier String origName = IdentifierUtility.fromParsed(aliasDeclaration.singleUnit(1));
+                    String newName = IdentifierUtility.fromParsed(aliasDeclaration.singleUnit(0));
+                    String origName = IdentifierUtility.fromParsed(aliasDeclaration.singleUnit(1));
                     knownUnits.put(newName, Either.left(origName));
                     this.builtInUnits.put(newName, Either.left(origName));
                 }
@@ -128,22 +126,22 @@ public final class UnitManager
         }
     }
 
-    private synchronized @Nullable UnitDeclaration getKnownUnit(@UnitIdentifier String name)
+    private synchronized UnitDeclaration getKnownUnit(String name)
     {
-        Either<@UnitIdentifier String, UnitDeclaration> target = knownUnits.get(name);
+        Either<String, UnitDeclaration> target = knownUnits.get(name);
         if (target == null)
             return null;
         else
-            return target.<@Nullable UnitDeclaration>either(this::getKnownUnit, d -> d);
+            return target.<UnitDeclaration>either(this::getKnownUnit, d -> d);
     }
 
     private UnitDeclaration loadDeclaration(UnitDeclarationContext decl, String category) throws UserException
     {
-        @UnitIdentifier String defined = IdentifierUtility.fromParsed(decl.singleUnit());
+        String defined = IdentifierUtility.fromParsed(decl.singleUnit());
         String description = decl.STRING() != null ? decl.STRING().getText() : "";
         String suffix = "";
         String prefix = "";
-        @Nullable Pair<Rational, Unit> equiv = null;
+        Pair<Rational, Unit> equiv = null;
         for (DisplayContext displayContext : decl.display())
         {
             if (displayContext.PREFIX() != null)
@@ -242,8 +240,8 @@ public final class UnitManager
             }
             else
             {
-                @UnitIdentifier String unitName = IdentifierUtility.fromParsed(singleOrScaleContext.singleUnit());
-                @Nullable UnitDeclaration lookedUp = getKnownUnit(unitName);
+                String unitName = IdentifierUtility.fromParsed(singleOrScaleContext.singleUnit());
+                UnitDeclaration lookedUp = getKnownUnit(unitName);
                 if (lookedUp == null)
                     throw new UserException("Unknown unit: \"" + unitName + "\"");
                 base = lookedUp.getUnit();
@@ -272,12 +270,12 @@ public final class UnitManager
             return base;
     }
 
-    public Unit guessUnit(@Nullable String commonPrefix)
+    public Unit guessUnit(String commonPrefix)
     {
         if (commonPrefix == null)
             return Unit.SCALAR;
 
-        @UnitIdentifier String possName = IdentifierUtility.asUnitIdentifier(commonPrefix.trim());
+        String possName = IdentifierUtility.asUnitIdentifier(commonPrefix.trim());
         if (possName == null)
             return Unit.SCALAR;
         UnitDeclaration possUnit = getKnownUnit(possName);
@@ -292,7 +290,7 @@ public final class UnitManager
         UnitDeclaration decl = getKnownUnit(original.getName());
         if (decl == null)
             throw new UserException("Unknown unit: {" + original.getName() + "}");
-        @Nullable Pair<Rational, Unit> equiv = decl.getEquivalentTo();
+        Pair<Rational, Unit> equiv = decl.getEquivalentTo();
         if (equiv == null)
             return new Pair<>(Rational.ONE, decl.getUnit());
         else
@@ -312,7 +310,7 @@ public final class UnitManager
         Rational accumScale = original.getFirst();
         Unit accumUnit = Unit.SCALAR;
         Map<SingleUnit, Integer> details = original.getSecond().getDetails();
-        for (Entry<@KeyFor("details") SingleUnit, Integer> entry : details.entrySet())
+        for (Entry<SingleUnit, Integer> entry : details.entrySet())
         {
             Pair<Rational, Unit> canonicalised = entry.getKey() instanceof SingleUnit ?
                 canonicalise((SingleUnit)entry.getKey()) : new Pair<>(Rational.ONE, new Unit(entry.getKey()));
@@ -322,7 +320,7 @@ public final class UnitManager
         return new Pair<>(accumScale, accumUnit);
     }
 
-    public SingleUnit getDeclared(@UnitIdentifier String m) throws InternalException
+    public SingleUnit getDeclared(String m) throws InternalException
     {
         UnitDeclaration unitDeclaration = getKnownUnit(m);
         if (unitDeclaration == null)
@@ -332,7 +330,7 @@ public final class UnitManager
 
     public synchronized List<SingleUnit> getAllDeclared()
     {
-        return knownUnits.values().stream().flatMap(e -> e.<Stream<SingleUnit>>either(a -> Stream.<SingleUnit>empty(), d -> Stream.of(d.getDefined()))).collect(Collectors.<@NonNull SingleUnit>toList());
+        return knownUnits.values().stream().flatMap(e -> e.<Stream<SingleUnit>>either(a -> Stream.<SingleUnit>empty(), d -> Stream.of(d.getDefined()))).collect(Collectors.<SingleUnit>toList());
     }
 
     public synchronized void loadUserUnits(String unitsSrc) throws UserException, InternalException
@@ -344,7 +342,7 @@ public final class UnitManager
             if (decl.declaration().unitDeclaration() != null)
             {
                 UnitDeclaration unit = loadDeclaration(decl.declaration().unitDeclaration(), "");
-                @UnitIdentifier String name = unit.getDefined().getName();
+                String name = unit.getDefined().getName();
                 userUnits.putIfAbsent(name, Either.right(unit));
                 // Don't overwrite existing binding:
                 knownUnits.putIfAbsent(name, Either.right(unit));
@@ -353,8 +351,8 @@ public final class UnitManager
             else if (decl.declaration().aliasDeclaration() != null)
             {
                 AliasDeclarationContext aliasDeclaration = decl.declaration().aliasDeclaration();
-                @UnitIdentifier String newName = IdentifierUtility.fromParsed(aliasDeclaration.singleUnit(0));
-                @UnitIdentifier String origName = IdentifierUtility.fromParsed(aliasDeclaration.singleUnit(1));
+                String newName = IdentifierUtility.fromParsed(aliasDeclaration.singleUnit(0));
+                String origName = IdentifierUtility.fromParsed(aliasDeclaration.singleUnit(1));
                 knownUnits.putIfAbsent(newName, Either.left(origName));
                 this.userUnits.putIfAbsent(newName, Either.left(origName));
             }
@@ -362,19 +360,19 @@ public final class UnitManager
 
     }
 
-    public ImmutableMap<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> getAllBuiltIn()
+    public ImmutableMap<String, Either<String, UnitDeclaration>> getAllBuiltIn()
     {
         return ImmutableMap.copyOf(this.builtInUnits);
     }
 
-    public ImmutableMap<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> getAllUserDeclared()
+    public ImmutableMap<String, Either<String, UnitDeclaration>> getAllUserDeclared()
     {
         return ImmutableMap.copyOf(this.userUnits);
     }
     
     // Gets the name of the canonical unit at the end of the conversion chain
     // for the given unit name.  In case of problems (broken links etc), null is returned
-    public @Nullable ImmutableSet<String> getCanonicalBaseUnit(@UnitIdentifier String unitName)
+    public ImmutableSet<String> getCanonicalBaseUnit(String unitName)
     {
         UnitDeclaration declaration = getKnownUnit(unitName);
         if (declaration == null)
@@ -410,7 +408,7 @@ public final class UnitManager
         }
     }
     
-    public synchronized void addUserUnit(Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> unit)
+    public synchronized void addUserUnit(Pair<String, Either<String, UnitDeclaration>> unit)
     {
         userUnits.putIfAbsent(unit.getFirst(), unit.getSecond());
         knownUnits.putIfAbsent(unit.getFirst(), unit.getSecond());
@@ -421,22 +419,22 @@ public final class UnitManager
         return save(u -> true);
     }
 
-    public synchronized List<String> save(Predicate<@UnitIdentifier String> saveUnit)
+    public synchronized List<String> save(Predicate<String> saveUnit)
     {
-        return save(userUnits.keySet().stream().<@UnitIdentifier String>map(x -> x).filter(saveUnit));
+        return save(userUnits.keySet().stream().<String>map(x -> x).filter(saveUnit));
     }
 
-    public synchronized List<String> save(Stream<@UnitIdentifier String> unitsToSaveStream)
+    public synchronized List<String> save(Stream<String> unitsToSaveStream)
     {
-        List<@UnitIdentifier String> toProcess = new ArrayList<>(unitsToSaveStream.collect(Collectors.<@UnitIdentifier String>toList()));
-        HashSet<@UnitIdentifier String> unitsToSave = new HashSet<>();
+        List<String> toProcess = new ArrayList<>(unitsToSaveStream.collect(Collectors.<String>toList()));
+        HashSet<String> unitsToSave = new HashSet<>();
         // Now save any units aliased or used in definition of those units:
         // Note: toProcess may grow while we execute!
         for (int i = 0; i < toProcess.size(); i++)
         {
-            @UnitIdentifier String u = toProcess.get(i);
+            String u = toProcess.get(i);
             unitsToSave.add(u);
-            Either<@UnitIdentifier String, UnitDeclaration> def = knownUnits.get(u);
+            Either<String, UnitDeclaration> def = knownUnits.get(u);
             if (def != null)
             {
                 def.either_(t -> {
@@ -455,10 +453,10 @@ public final class UnitManager
             }
         }
         
-        return unitsToSave.stream().<Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>>>flatMap(u -> {
-            Either<@UnitIdentifier String, UnitDeclaration> v = userUnits.get(u);
+        return unitsToSave.stream().<Pair<String, Either<String, UnitDeclaration>>>flatMap(u -> {
+            Either<String, UnitDeclaration> v = userUnits.get(u);
             return v == null ? Stream.of() : Stream.of(new Pair<>(u, v));
-        }).map((Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> e) -> e.getSecond().either(alias -> {
+        }).map((Pair<String, Either<String, UnitDeclaration>> e) -> e.getSecond().either(alias -> {
             OutputBuilder b = new OutputBuilder();
             b.t(UnitParser.ALIAS, UnitParser.VOCABULARY);
             b.raw(e.getFirst());
@@ -470,7 +468,7 @@ public final class UnitManager
             b.t(UnitParser.UNIT, UnitParser.VOCABULARY);
             b.raw(e.getFirst());
             b.s(decl.getDefined().getDescription());
-            @Nullable Pair<Rational, Unit> equiv = decl.getEquivalentTo();
+            Pair<Rational, Unit> equiv = decl.getEquivalentTo();
             if (equiv != null)
             {
                 b.t(UnitParser.EQUALS, UnitParser.VOCABULARY);

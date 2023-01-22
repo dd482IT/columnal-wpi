@@ -53,13 +53,13 @@ public class MutVar extends TypeExp
     // If we don't point to something, we have the type-class info:
     Either<TypeClassRequirements, TypeExp> typeClassesOrPointer;
 
-    public MutVar(@Nullable ExpressionBase src, TypeClassRequirements typeClasses)
+    public MutVar(ExpressionBase src, TypeClassRequirements typeClasses)
     {
         super(src);
         this.typeClassesOrPointer = Either.left(typeClasses);
     }
 
-    public MutVar(@Nullable ExpressionBase src)
+    public MutVar(ExpressionBase src)
     {
         this(src, TypeClassRequirements.empty());
     }
@@ -78,7 +78,7 @@ public class MutVar extends TypeExp
         }
         else if (b instanceof MutVar)
         {
-            @Nullable TypeError maybeError = b.requireTypeClasses(typeClassesOrPointer.getLeft("Internal variable should be TCR when pruned"));
+            TypeError maybeError = b.requireTypeClasses(typeClassesOrPointer.getLeft("Internal variable should be TCR when pruned"));
             if (maybeError != null)
                 return Either.left(maybeError);
             typeClassesOrPointer = Either.right(b);
@@ -96,7 +96,7 @@ public class MutVar extends TypeExp
             else
             {
                 // Check that the item we are pointing to is a member of the needed type-classes:
-                @Nullable TypeError maybeError = b.requireTypeClasses(typeClassesOrPointer.getLeft("Internal variable should be TCR when pruned"));
+                TypeError maybeError = b.requireTypeClasses(typeClassesOrPointer.getLeft("Internal variable should be TCR when pruned"));
                 if (maybeError != null)
                     return Either.left(maybeError);
                 typeClassesOrPointer = Either.right(b);
@@ -126,12 +126,12 @@ public class MutVar extends TypeExp
     }
 
     @Override
-    public @Nullable TypeError requireTypeClasses(TypeClassRequirements typeClasses, IdentityHashSet<MutVar> visited)
+    public TypeError requireTypeClasses(TypeClassRequirements typeClasses, IdentityHashSet<MutVar> visited)
     {
         if (visited.contains(this))
             return new TypeError(StyledString.s("Cyclic type found"), ImmutableList.of(this));
         
-        return typeClassesOrPointer.<@Nullable TypeError>either(t -> {
+        return typeClassesOrPointer.<TypeError>either(t -> {
             typeClassesOrPointer = Either.left(TypeClassRequirements.union(t, typeClasses));
             return null;
         }, p -> {

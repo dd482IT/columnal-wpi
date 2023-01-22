@@ -33,18 +33,15 @@ import xyz.columnal.utility.gui.GUI;
  */
 abstract class RowOperation
 {
-    @OnThread(Tag.Any)
-    private final @LocalizableKey String nameKey;
+    private final String nameKey;
 
-    protected RowOperation(@LocalizableKey String nameKey)
+    protected RowOperation(String nameKey)
     {
         this.nameKey = nameKey;
     }
 
-    @OnThread(Tag.Simulation)
     public abstract void execute();
 
-    @OnThread(Tag.FXPlatform)
     public MenuItem makeMenuItem()
     {
         return GUI.menuItem(nameKey, () -> Workers.onWorkerThread(nameKey, Priority.SAVE, this::execute));

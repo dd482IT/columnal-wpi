@@ -53,34 +53,33 @@ public final class QuickFix<EXPRESSION extends StyledShowable>
 {
     private final StyledString title;
     // Identified by reference, not by contents/hashCode.
-    private final @Recorded EXPRESSION replacementTarget;
-    private final Either<QuickFixAction, QuickFixReplace<@UnknownIfRecorded EXPRESSION>> actionOrMakeReplacement;
+    private final EXPRESSION replacementTarget;
+    private final Either<QuickFixAction, QuickFixReplace<EXPRESSION>> actionOrMakeReplacement;
     private final FXPlatformSupplier<ImmutableList<String>> cssClasses;
 
-    public QuickFix(@LocalizableKey String titleKey, @Recorded EXPRESSION replacementTarget, QuickFixReplace<@NonNull @UnknownIfRecorded EXPRESSION> makeReplacement)
+    public QuickFix(String titleKey, EXPRESSION replacementTarget, QuickFixReplace<EXPRESSION> makeReplacement)
     {
         this(StyledString.s(TranslationUtility.getString(titleKey)),
             ImmutableList.of(),
             replacementTarget, makeReplacement);
     }
 
-    public QuickFix(StyledString title, ImmutableList<String> cssClasses, @Recorded EXPRESSION replacementTarget, QuickFixReplace<@UnknownIfRecorded EXPRESSION> makeReplacement)
+    public QuickFix(StyledString title, ImmutableList<String> cssClasses, EXPRESSION replacementTarget, QuickFixReplace<EXPRESSION> makeReplacement)
     {
         this(title, cssClasses, replacementTarget, Either.right(makeReplacement));
     }
 
-    public QuickFix(StyledString title, ImmutableList<String> cssClasses, @Recorded EXPRESSION replacementTarget, QuickFixAction action)
+    public QuickFix(StyledString title, ImmutableList<String> cssClasses, EXPRESSION replacementTarget, QuickFixAction action)
     {
         this(title, Utility.prependToList("quick-fix-action", cssClasses), replacementTarget, Either.left(action));
     }
 
-    private QuickFix(StyledString title, ImmutableList<String> cssClasses, @Recorded EXPRESSION replacementTarget, Either<QuickFixAction, QuickFixReplace<@UnknownIfRecorded EXPRESSION>> actionOrMakeReplacement)
+    private QuickFix(StyledString title, ImmutableList<String> cssClasses, EXPRESSION replacementTarget, Either<QuickFixAction, QuickFixReplace<EXPRESSION>> actionOrMakeReplacement)
     {
         this.title = title;
         this.cssClasses = new FXPlatformSupplier<ImmutableList<String>>()
         {
             @Override
-            @OnThread(Tag.FXPlatform)
             public ImmutableList<String> get()
             {
                 try
@@ -98,25 +97,22 @@ public final class QuickFix<EXPRESSION extends StyledShowable>
         this.actionOrMakeReplacement = actionOrMakeReplacement;
     }
 
-    @OnThread(Tag.Any)
     public StyledString getTitle()
     {
         return title;
     }
     
-    @OnThread(Tag.FXPlatform)
     // Gets the replacement, or action to perform
-    public Either<QuickFixAction, QuickFixReplace<@UnknownIfRecorded EXPRESSION>> getActionOrReplacement()
+    public Either<QuickFixAction, QuickFixReplace<EXPRESSION>> getActionOrReplacement()
     {
         return actionOrMakeReplacement;
     }
 
-    public @Recorded EXPRESSION getReplacementTarget()
+    public EXPRESSION getReplacementTarget()
     {
         return replacementTarget;
     }
 
-    @OnThread(Tag.FXPlatform)
     public ImmutableList<String> getCssClasses()
     {
         return cssClasses.get();
@@ -126,8 +122,7 @@ public final class QuickFix<EXPRESSION extends StyledShowable>
     {
         // Will only be called once.  If non-null return, force-close expression editor
         // and then run the item on the simulation thread.
-        @OnThread(Tag.FXPlatform)
-        public @Nullable SimulationConsumer<Pair<@Nullable ColumnId, Expression>> doAction(TypeManager typeManager, ObjectExpression<Scene> editorSceneProperty);
+        public SimulationConsumer<Pair<ColumnId, Expression>> doAction(TypeManager typeManager, ObjectExpression<Scene> editorSceneProperty);
     }
     
     public static interface QuickFixReplace<EXPRESSION>

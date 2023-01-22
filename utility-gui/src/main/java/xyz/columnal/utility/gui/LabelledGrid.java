@@ -39,13 +39,12 @@ import xyz.columnal.utility.TranslationUtility;
  * A GridPane with three columns (label, help box, and content) and
  * a variable number of rows.  
  */
-@OnThread(Tag.FXPlatform)
 public final class LabelledGrid extends GridPane
 {
     // Count of the number of rows that have been added.
     private int rows = 0;
 
-    public static Row radioGridRow(@LocalizableKey String labelKey, @HelpKey String helpId, ToggleGroup toggleGroup, String... radioStyleClasses)
+    public static Row radioGridRow(String labelKey, String helpId, ToggleGroup toggleGroup, String... radioStyleClasses)
     {
         RadioButton radioButton = GUI.addIdClass(new RadioButton(TranslationUtility.getString(labelKey)), labelKey);
         radioButton.setToggleGroup(toggleGroup);
@@ -54,13 +53,13 @@ public final class LabelledGrid extends GridPane
         return new Row(radioButton, GUI.helpBox(helpId, radioButton), null);
     }
 
-    public static Row labelledGridRow(@LocalizableKey String labelKey, @HelpKey String helpId, Node node, String... labelStyleClasses)
+    public static Row labelledGridRow(String labelKey, String helpId, Node node, String... labelStyleClasses)
     {
         return classicRow(GUI.label(labelKey, labelStyleClasses), GUI.helpBox(helpId, node), node);
     }
 
     // A grid row with no help button
-    public static Row unhelpfulGridRow(@LocalizableKey String labelKey, Node node)
+    public static Row unhelpfulGridRow(String labelKey, Node node)
     {
         Node label = GUI.label(labelKey);
         setHalignment(label, HPos.RIGHT);
@@ -68,7 +67,7 @@ public final class LabelledGrid extends GridPane
         return new Row(label, null, node);
     }
 
-    public static Pair<CheckBox, Row> tickGridRow(@LocalizableKey String labelKey, @HelpKey String helpId, Node node, String... tickBoxStyleClasses)
+    public static Pair<CheckBox, Row> tickGridRow(String labelKey, String helpId, Node node, String... tickBoxStyleClasses)
     {
         CheckBox checkBox = new CheckBox(TranslationUtility.getString(labelKey));
         GUI.addIdClass(checkBox, labelKey);
@@ -76,7 +75,7 @@ public final class LabelledGrid extends GridPane
         return new Pair<>(checkBox, classicRow(checkBox, GUI.helpBox(helpId, node), node));
     }
 
-    public static Row labelledGridRow(AlignedLabels alignedLabels, @LocalizableKey String labelKey, @HelpKey String helpId, Node node, String... labelStyleClasses)
+    public static Row labelledGridRow(AlignedLabels alignedLabels, String labelKey, String helpId, Node node, String... labelStyleClasses)
     {
         return classicRow(alignedLabels.addLabel(labelKey, labelStyleClasses), GUI.helpBox(helpId, node), node);
     }
@@ -106,11 +105,11 @@ public final class LabelledGrid extends GridPane
 
     public static final class Row
     {
-        private final @Nullable Node lhs;
-        private final @Nullable HelpBox helpBox;
-        private final @Nullable Node rhs;
+        private final Node lhs;
+        private final HelpBox helpBox;
+        private final Node rhs;
 
-        private Row(@Nullable Node lhs, @Nullable HelpBox helpBox, @Nullable Node rhs)
+        private Row(Node lhs, HelpBox helpBox, Node rhs)
         {
             this.lhs = lhs;
             this.helpBox = helpBox;

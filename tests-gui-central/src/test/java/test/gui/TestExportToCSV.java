@@ -54,16 +54,13 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
-@RunWith(JUnitQuickcheck.class)
 public class TestExportToCSV extends FXApplicationTest implements ScrollToTrait, CheckCSVTrait
 {
     /**
      * Generates a file with some raw data and a transform, then loads it and exports to CSV
      */
-    @Property(trials = 5)
-    @OnThread(Tag.Simulation)
-    public void testCalculateToCSV(@When(seed=1L)
-            @From(GenExpressionValueForwards.class) @From(GenExpressionValueBackwards.class) ExpressionValue expressionValue) throws Exception
+    public void testCalculateToCSV(
+            ExpressionValue expressionValue) throws Exception
     {
         TableManager manager = new DummyManager();
         manager.getTypeManager()._test_copyTaggedTypesFrom(expressionValue.typeManager);

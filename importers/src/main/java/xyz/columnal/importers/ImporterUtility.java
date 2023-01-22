@@ -88,11 +88,10 @@ public class ImporterUtility
         }
     }
 
-    @OnThread(Tag.Simulation)
     public static EditableRecordSet makeEditableRecordSet(TypeManager mgr, List<? extends List<String>> vals, ImmutableList<ColumnInfo> columnTypes) throws InternalException, UserException
     {
         @SuppressWarnings({"keyfor", "units"})
-        @KeyForBottom @UnitsBottom List<SimulationFunction<RecordSet, EditableColumn>> columns = new ArrayList<>();
+        @UnitsBottom List<SimulationFunction<RecordSet, EditableColumn>> columns = new ArrayList<>();
         for (int i = 0; i < columnTypes.size(); i++)
         {
             ColumnInfo columnInfo = columnTypes.get(i);
@@ -130,18 +129,18 @@ public class ImporterUtility
                 OrBlankColumnType or = (OrBlankColumnType) columnType;
                 NumericColumnType inner = (NumericColumnType) or.getInner();
                 DataType numberType = DataType.number(new NumberInfo(inner.unit));
-                @Nullable DataType type = mgr.getMaybeType().instantiate(
+                DataType type = mgr.getMaybeType().instantiate(
                     ImmutableList.of(Either.<Unit, DataType>right(numberType)), mgr
                 );
-                @NonNull DataType typeFinal = type;
+                DataType typeFinal = type;
                 columns.add(rs -> new MemoryTaggedColumn(rs, columnInfo.title, DataTypeUtility.getTaggedTypeName(typeFinal), ImmutableList.of(Either.<Unit, DataType>right(numberType)), DataTypeUtility.getTagTypes(typeFinal), Utility.mapListEx(slice, (String item) -> {
                     if (item.isEmpty() || item.trim().equals(or.getBlankString()))
                         return Either.<String, TaggedValue>right(new TaggedValue(0, null, mgr.getMaybeType()));
                     else
-                        return Utility.parseNumberOpt(inner.removePrefixAndSuffix(item)).map(new Function<@ImmediateValue Number, Either<String, TaggedValue>>()
+                        return Utility.parseNumberOpt(inner.removePrefixAndSuffix(item)).map(new Function<Number, Either<String, TaggedValue>>()
                         {
                             @Override
-                            public Either<String, TaggedValue> apply(@ImmediateValue Number n)
+                            public Either<String, TaggedValue> apply(Number n)
                             {
                                 return Either.<String, TaggedValue>right(new TaggedValue(1, n, mgr.getMaybeType()));
                             }
@@ -156,7 +155,7 @@ public class ImporterUtility
             // Maybe if it has title?                }
         }
 
-        @Initialized int len = vals.size() - (int)vals.stream().filter(r -> r.stream().allMatch(String::isEmpty)).count();
+        int len = vals.size() - (int)vals.stream().filter(r -> r.stream().allMatch(String::isEmpty)).count();
 
         return new EditableRecordSet(columns, () -> len);
     }

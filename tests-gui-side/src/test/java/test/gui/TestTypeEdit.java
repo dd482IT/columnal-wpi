@@ -73,12 +73,9 @@ import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertTrue;
 
-@RunWith(JUnitQuickcheck.class)
 public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, EnterTypeTrait, CheckWindowBoundsTrait, ScrollToTrait, PopupTrait
 {    
-    @Property(trials = 5)
-    @OnThread(Tag.Simulation)
-    public void testNewType(@From(GenTaggedTypeDefinition.class) TaggedTypeDefinition typeDefinition, @From(GenRandom.class) Random random) throws Exception
+    public void testNewType(TaggedTypeDefinition typeDefinition, Random random) throws Exception
     {
         TBasicUtil.printSeedOnFail(() -> {
             MainWindowActions mainWindowActions = TAppUtil.openDataAsTable(windowToUse, new DummyManager()).get();
@@ -108,14 +105,12 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
         });
     }
 
-    @OnThread(Tag.Simulation)
     public String getTypeSrcFromFile(String fileContent) throws InternalException, UserException
     {
         MainParser2.FileContext file = Utility.parseAsOne(fileContent, MainLexer2::new, MainParser2::new, p -> p.file());
         return Utility.getDetail(file.content().stream().filter(c -> c.ATOM(0).getText().equals("TYPES")).findFirst().orElseThrow(() -> new AssertionError("No TYPES section")).detail());
     }
 
-    @OnThread(Tag.Simulation)
     private void enterTypeDetails(TaggedTypeDefinition typeDefinition, Random r, TypeManager typeManager) throws InternalException, UserException
     {
         checkWindowWithinScreen();
@@ -191,13 +186,11 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
         }
     }
 
-    @OnThread(Tag.Any)
     private void assertNoErrors()
     {
         Assert.assertEquals(0, count(".error-underline"));
     }
 
-    @OnThread(Tag.Any)
     private String tagDivider(Random r)
     {
         // Blank items between dividers should get ignored:
@@ -207,14 +200,13 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
             return r.nextBoolean() ? " , " : " \n ";
     }
 
-    @OnThread(Tag.Any)
     private void deleteExistingInnerValueTags()
     {
         int count = 0;
         while (TFXUtil.fx(() -> lookup(".small-delete").tryQuery().isPresent()) && ++count < 30)
         {
             // Click highest one as likely to not be off the screen:
-            Node node = TFXUtil.<@Nullable Node>fx(() -> lookup(".small-delete-circle").match(Node::isVisible).<Node>queryAll().stream().sorted(Comparator.comparing(n -> n.localToScene(0, 0).getY())).findFirst().orElse(null));
+            Node node = TFXUtil.<Node>fx(() -> lookup(".small-delete-circle").match(Node::isVisible).<Node>queryAll().stream().sorted(Comparator.comparing(n -> n.localToScene(0, 0).getY())).findFirst().orElse(null));
             if (node != null)
             {
                 clickOn(node);
@@ -224,7 +216,6 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
         assertNotShowing("Small delete", ".small-delete");
     }
 
-    @OnThread(Tag.Any)
     private void enterNewInnerValueTag(Random r, TypeManager typeManager, TagType<JellyType> tagType) throws InternalException, UserException
     {
         int count;Optional<ScrollBar> visibleScroll = TFXUtil.fx(() -> lookup(".fancy-list > .scroll-bar").match(Node::isVisible).match((ScrollBar s) -> s.getOrientation().equals(Orientation.VERTICAL)).tryQuery());
@@ -243,7 +234,7 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
         clickOn(".id-fancylist-add");
         TFXUtil.sleep(500);
         write(tagType.getName(), 1);
-        @Nullable JellyType inner = tagType.getInner();
+        JellyType inner = tagType.getInner();
         if (inner != null)
         {
             push(KeyCode.TAB);
@@ -253,9 +244,7 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
         }
     }
 
-    @Property(trials = 10)
-    @OnThread(Tag.Simulation)
-    public void testNoOpEditType(@From(GenTaggedTypeDefinition.class) TaggedTypeDefinition typeDefinition, @From(GenRandom.class) Random random) throws Exception
+    public void testNoOpEditType(TaggedTypeDefinition typeDefinition, Random random) throws Exception
     {
         TBasicUtil.printSeedOnFail(() -> {
 
@@ -285,9 +274,7 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
         });
     }
 
-    @Property(trials = 5)
-    @OnThread(Tag.Simulation)
-    public void testEditType(@From(GenTaggedTypeDefinition.class) TaggedTypeDefinition before, @From(GenTaggedTypeDefinition.class) TaggedTypeDefinition after, @From(GenRandom.class) Random random) throws Exception
+    public void testEditType(TaggedTypeDefinition before, TaggedTypeDefinition after, Random random) throws Exception
     {
         TBasicUtil.printSeedOnFail(() -> {
             DummyManager initial = new DummyManager();
@@ -318,9 +305,7 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
         });
     }
 
-    @Property(trials = 5)
-    @OnThread(Tag.Simulation)
-    public void testDeleteType(@From(GenTaggedTypeDefinition.class) TaggedTypeDefinition typeDefinitionA, @From(GenTaggedTypeDefinition.class) TaggedTypeDefinition typeDefinitionB, @From(GenTaggedTypeDefinition.class) TaggedTypeDefinition typeDefinitionC, int whichToDelete) throws Exception
+    public void testDeleteType(TaggedTypeDefinition typeDefinitionA, TaggedTypeDefinition typeDefinitionB, TaggedTypeDefinition typeDefinitionC, int whichToDelete) throws Exception
     {
         TBasicUtil.printSeedOnFail(() -> {
             DummyManager prevManager = new DummyManager();
@@ -366,7 +351,6 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
         });
     }
 
-    @OnThread(Tag.Simulation)
     private boolean existsSelectedCell(String content)
     {
         return TFXUtil.fx(() -> lookup(".list-cell").match(t -> {

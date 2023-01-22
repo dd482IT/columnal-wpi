@@ -101,41 +101,37 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Optional;
 
-@OnThread(Tag.FXPlatform)
 public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<FORMAT>>
 {
     // Just for testing:
-    private static @Nullable ImportChoicesDialog<?, ?> currentlyShowing;
+    private static ImportChoicesDialog<?, ?> currentlyShowing;
     
 
-    public static @Nullable ImportChoicesDialog<?, ?> _test_getCurrentlyShowing()
+    public static ImportChoicesDialog<?, ?> _test_getCurrentlyShowing()
     {
         return currentlyShowing;
     }
 
-    @OnThread(Tag.Any)
     private final RecordSetDataDisplay destData;
-    private final SimpleObjectProperty<@Nullable RecordSet> destRecordSet;
-    private @Nullable FORMAT destFormat;
+    private final SimpleObjectProperty<RecordSet> destRecordSet;
+    private FORMAT destFormat;
     private final Import<SRC_FORMAT, FORMAT> importer;
     private final Label curSelectionDescription;
     // Does not include the current trim.  New items are added as last:
     private final Deque<TrimChoice> mostRecentTrimSelections = new ArrayDeque<>(32);
-    private @Nullable TrimChoice curGuessTrim;
+    private TrimChoice curGuessTrim;
     
     // These two are only stored as fields for testing purposes:
-    @OnThread(Tag.Any)
     private final SrcDataDisplay srcDataDisplay;
-    @OnThread(Tag.Any)
     private final VirtualGrid srcGrid;
 
     // Window should only be null in test code
-    public ImportChoicesDialog(@Nullable Window parentWindow, String suggestedName, Import<SRC_FORMAT, FORMAT> importer)
+    public ImportChoicesDialog(Window parentWindow, String suggestedName, Import<SRC_FORMAT, FORMAT> importer)
     {
         if (parentWindow != null)
             initOwner(parentWindow);
         this.importer = importer;
-        SimpleObjectProperty<@Nullable RecordSet> srcRecordSet = new SimpleObjectProperty<>(null);
+        SimpleObjectProperty<RecordSet> srcRecordSet = new SimpleObjectProperty<>(null);
         destRecordSet = new SimpleObjectProperty<>(null);
         VirtualGrid destGrid = new VirtualGrid(null, 0, 0);
             //new MessageWhenEmpty("import.noColumnsDest", "import.noRowsDest"));
@@ -176,7 +172,7 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
         FXUtility.addChangeListenerPlatformAndCallNow(this.importer.currentSrcFormat(), srcFormat -> {
             if (srcFormat != null)
             {
-                @NonNull SRC_FORMAT formatNonNull = srcFormat;
+                SRC_FORMAT formatNonNull = srcFormat;
                 Workers.onWorkerThread("Previewing data", Priority.LOAD_FROM_DISK, () -> {
                     try
                     {
@@ -201,7 +197,7 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
                             Utility.later(this).updateDestPreview();
                             ImmutableList<ColumnDetails> columnDetailsOrigLabels = TableDisplayUtility.makeStableViewColumns(loadedSrc.recordSet, new Pair<>(Display.ALL, c -> true), c -> null, makeGetDataPosition(), null, null);
                             ImmutableList.Builder<ColumnDetails> columnsWithDisplayNames = ImmutableList.builderWithExpectedSize(columnDetailsOrigLabels.size());
-                            ImmutableList<@Localized String> columnNameOverrides = loadedSrc.columnNameOverrides;
+                            ImmutableList<String> columnNameOverrides = loadedSrc.columnNameOverrides;
                             if (columnNameOverrides != null && columnNameOverrides.size() == columnDetailsOrigLabels.size())
                             {
                                 for (int i = 0; i < columnDetailsOrigLabels.size(); i++)
@@ -255,13 +251,13 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
         setResultConverter(bt -> {
             if (bt == ButtonType.OK && destFormat != null)
             {
-                @NonNull FORMAT f = destFormat;
+                FORMAT f = destFormat;
                 return new ImportInfo<FORMAT>(IdentifierUtility.fixExpressionIdentifier(suggestedName, "Table")/*, linkCopyButtons.valueProperty().get()*/, f);
             }
             return null;
         });
         setResizable(true);
-        @Nullable Dimension2D size = parentWindow == null ? null: FXUtility.sizeOfBiggestScreen(parentWindow);
+        Dimension2D size = parentWindow == null ? null: FXUtility.sizeOfBiggestScreen(parentWindow);
         getDialogPane().setPrefSize(size == null ? 800.0 : size.getWidth() - 100.0, size == null ? 600.0 : size.getHeight() - 100.0);
 
 
@@ -289,19 +285,19 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
             srcDataDisplay.setTrim(curGuessTrim, true);
     }
 
-    private GetDataPosition makeGetDataPosition(@UnknownInitialization(Object.class) ImportChoicesDialog<SRC_FORMAT, FORMAT> this)
+    private GetDataPosition makeGetDataPosition(ImportChoicesDialog<SRC_FORMAT, FORMAT> this)
     {
         return new GetDataPosition()
         {
             @Override
-            public @OnThread(Tag.FXPlatform) CellPosition getDataPosition(@TableDataRowIndex int rowIndex, @TableDataColIndex int columnIndex)
+            public CellPosition getDataPosition(int rowIndex, int columnIndex)
             {
                 return CellPosition.ORIGIN.offsetByRowCols(1, 1);
             }
 
             @SuppressWarnings("units")
             @Override
-            public @OnThread(Tag.FXPlatform) @TableDataRowIndex int getFirstVisibleRowIncl()
+            public int getFirstVisibleRowIncl()
             {
                 // TODO return proper value
                 return -1;
@@ -309,7 +305,7 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
 
             @SuppressWarnings("units")
             @Override
-            public @OnThread(Tag.FXPlatform) @TableDataRowIndex int getLastVisibleRowIncl()
+            public int getLastVisibleRowIncl()
             {
                 // TODO return proper value
                 return -1;
@@ -317,14 +313,13 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
         };
     }
 
-    @OnThread(Tag.FXPlatform)
     public void updateDestPreview()
     {
-        @Nullable SRC_FORMAT srcFormat = importer.currentSrcFormat().get();
+        SRC_FORMAT srcFormat = importer.currentSrcFormat().get();
         
         if (srcFormat == null)
             return;
-        @NonNull SRC_FORMAT formatNonNull = srcFormat;
+        SRC_FORMAT formatNonNull = srcFormat;
         
         TrimChoice trim = srcDataDisplay.getTrim();
         Workers.onWorkerThread("Previewing data", Priority.LOAD_FROM_DISK, () -> {
@@ -351,19 +346,16 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
         });
     }
 
-    @OnThread(Tag.Any)
     public SrcDataDisplay _test_getSrcDataDisplay()
     {
         return srcDataDisplay;
     }
 
-    @OnThread(Tag.Any)
     public VirtualGrid _test_getSrcGrid()
     {
         return srcGrid;
     }
 
-    @OnThread(Tag.Any)
     public RecordSetDataDisplay _test_getDestDataDisplay()
     {
         return destData;
@@ -372,10 +364,9 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
     // public for testing
     public static class RecordSetDataDisplay extends DataDisplay
     {
-        private final ObjectExpression<@Nullable RecordSet> recordSetProperty;
+        private final ObjectExpression<RecordSet> recordSetProperty;
 
-        @OnThread(Tag.FXPlatform)
-        public RecordSetDataDisplay(String suggestedName, VirtualGridSupplierFloating destColumnHeaderSupplier, boolean showColumnTypes, ObjectExpression<@Nullable RecordSet> recordSetProperty)
+        public RecordSetDataDisplay(String suggestedName, VirtualGridSupplierFloating destColumnHeaderSupplier, boolean showColumnTypes, ObjectExpression<RecordSet> recordSetProperty)
         {
             super(new TableId(IdentifierUtility.fixExpressionIdentifier(suggestedName, "Table")), destColumnHeaderSupplier, true, showColumnTypes);
             setPosition(CellPosition.ORIGIN.offsetByRowCols(0, 1));
@@ -395,16 +386,16 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
         }
 
         @Override
-        public @OnThread(Tag.FXPlatform) void updateKnownRows(@GridAreaRowIndex int checkUpToRowInclGrid, FXPlatformRunnable updateSizeAndPositions)
+        public void updateKnownRows(int checkUpToRowInclGrid, FXPlatformRunnable updateSizeAndPositions)
         {
             RecordSet recordSet = recordSetProperty.get();
             if (recordSet == null)
                 return;
-            @NonNull RecordSet recordSetFinal = recordSet;
+            RecordSet recordSetFinal = recordSet;
             Workers.onWorkerThread("Fetching row size", Priority.FETCH, () -> {
                 try
                 {
-                    @TableDataRowIndex int len = recordSetFinal.getLength();
+                    int len = recordSetFinal.getLength();
                     Platform.runLater(() -> {
                         if (currentKnownRows != len)
                         {
@@ -422,31 +413,30 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
             });
         }
 
-        @OnThread(Tag.FXPlatform)
         protected void numRowsChanged()
         {
         }
 
         @Override
-        protected @TableDataRowIndex int getCurrentKnownRows()
+        protected int getCurrentKnownRows()
         {
             return currentKnownRows;
         }
 
         @Override
-        protected CellPosition getDataPosition(@TableDataRowIndex int rowIndex, @TableDataColIndex int columnIndex)
+        protected CellPosition getDataPosition(int rowIndex, int columnIndex)
         {
             return getPosition().offsetByRowCols(2 + rowIndex, columnIndex);
         }
 
         @Override
-        protected @Nullable FXPlatformConsumer<TableId> renameTableOperation(Table table)
+        protected FXPlatformConsumer<TableId> renameTableOperation(Table table)
         {
             return null;
         }
 
         @Override
-        public void doCopy(@Nullable RectangleBounds rectangleBounds)
+        public void doCopy(RectangleBounds rectangleBounds)
         {
             // We don't currently support copy on this table
         }
@@ -457,8 +447,7 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
             // Not supported
         }
 
-        @OnThread(Tag.FXPlatform)
-        public @Nullable RecordSet _test_getRecordSet()
+        public RecordSet _test_getRecordSet()
         {
             return recordSetProperty.get();
         }
@@ -469,19 +458,13 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
     {
         private final RectangleOverlayItem selectionRectangle;
         private final GridArea destData;
-        @OnThread(Tag.FXPlatform)
         private RectangleBounds curSelectionBounds;
-        @OnThread(Tag.FXPlatform)
         private TrimChoice trim = new TrimChoice(0, 0, 0, 0);
-        @OnThread(Tag.FXPlatform)
         private BoundingBox curBoundingBox;
-        @OnThread(Tag.FXPlatform)
         private CellPosition mousePressed = CellPosition.ORIGIN;
-        @OnThread(Tag.FXPlatform)
         private final Pane mousePane;
         
-        @OnThread(Tag.FXPlatform)
-        public SrcDataDisplay(String suggestedName, VirtualGridSupplierFloating srcColumnHeaderSupplier, ObjectExpression<@Nullable RecordSet> recordSetProperty, GridArea destData)
+        public SrcDataDisplay(String suggestedName, VirtualGridSupplierFloating srcColumnHeaderSupplier, ObjectExpression<RecordSet> recordSetProperty, GridArea destData)
         {
             super(suggestedName, srcColumnHeaderSupplier, false, recordSetProperty);
             this.destData = destData;
@@ -519,7 +502,7 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
                 withParent_(g -> g.handlePossibleNudgeEvent(e));
                 e.consume();
             });
-            @Nullable TrimChoice[] pendingTrim = new TrimChoice[]{null};
+            TrimChoice[] pendingTrim = new TrimChoice[]{null};
             mousePane.setOnMouseReleased(e -> {
                 withParent_(g -> g.setNudgeScroll(false));
                 mousePane.setCursor(FXUtility.mouse(this).calculateCursor(e.getX(), e.getY()));
@@ -552,16 +535,16 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
                 //Log.debug("Mouse dragged while cursor: " + c);
                 withParent(p -> p.getVisibleBounds()).ifPresent(visibleBounds  -> {
                     //Log.debug("We have bounds");
-                    @Nullable CellPosition pos = visibleBounds.getNearestTopLeftToScreenPos(new Point2D(e.getScreenX(), e.getScreenY()), HPos.LEFT, VPos.TOP).orElse(null);
+                    CellPosition pos = visibleBounds.getNearestTopLeftToScreenPos(new Point2D(e.getScreenX(), e.getScreenY()), HPos.LEFT, VPos.TOP).orElse(null);
                     //Log.debug("Nearest pos: " + pos);
                     boolean resizingTop = FXUtility.isResizingTop(c);
                     boolean resizingBottom = FXUtility.isResizingBottom(c);
                     boolean resizingLeft = FXUtility.isResizingLeft(c);
                     boolean resizingRight = FXUtility.isResizingRight(c);
-                    @AbsRowIndex int newTop;
-                    @AbsRowIndex int newBottom;
-                    @AbsColIndex int newLeft;
-                    @AbsColIndex int newRight;
+                    int newTop;
+                    int newBottom;
+                    int newLeft;
+                    int newRight;
                     if (resizingTop || resizingBottom || resizingLeft || resizingRight)
                     {
                         newTop = curSelectionBounds.topLeftIncl.rowIndex;
@@ -676,13 +659,11 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
             return mousePane;
         }
 
-        @OnThread(Tag.FXPlatform)
         public TrimChoice getTrim()
         {
             return trim;
         }
         
-        @OnThread(Tag.FXPlatform)
         public void setTrim(TrimChoice trim, boolean addToUndoChain)
         {
             // Add old trim:
@@ -700,7 +681,6 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
             updateDescription(curSelectionBounds);
         }
 
-        @OnThread(Tag.FXPlatform)
         private void updateDescription(RectangleBounds selectionBounds)
         {
             // Update description:
@@ -715,7 +695,6 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
         }
 
         @Override
-        @OnThread(Tag.FXPlatform)
         protected void numRowsChanged()
         {
             // Update the trim:
@@ -724,13 +703,12 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
         }
 
         @Override
-        public @OnThread(Tag.FXPlatform) void setColumns(@UnknownInitialization(DataDisplay.class) SrcDataDisplay this, ImmutableList<ColumnDetails> columns, @Nullable TableOperations operations, @Nullable FXPlatformFunction<ColumnId, ColumnHeaderOps> columnActions)
+        public void setColumns(SrcDataDisplay this, ImmutableList<ColumnDetails> columns, TableOperations operations, FXPlatformFunction<ColumnId, ColumnHeaderOps> columnActions)
         {
             super.setColumns(columns, operations, columnActions);
             FXUtility.runAfter(() -> Utility.later(this).numRowsChanged());
         }
 
-        @OnThread(Tag.FXPlatform)
         public RectangleBounds _test_getCurSelectionBounds()
         {
             return curSelectionBounds;

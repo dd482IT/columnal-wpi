@@ -62,7 +62,6 @@ import java.util.Map.Entry;
 /**
  * Created by neil on 22/01/2017.
  */
-@OnThread(Tag.Simulation)
 public abstract class GenValueBase<T> extends Generator<T>
 {
     // Easier than passing parameters around:
@@ -76,13 +75,12 @@ public abstract class GenValueBase<T> extends Generator<T>
         super(type);
     }
 
-    protected @Value Object makeValue(DataType t) throws UserException, InternalException
+    protected Object makeValue(DataType t) throws UserException, InternalException
     {
-        return t.apply(new DataTypeVisitor<@Value Object>()
+        return t.apply(new DataTypeVisitor<Object>()
         {
             @Override
-            @OnThread(Tag.Simulation)
-            public @Value Object number(NumberInfo displayInfo) throws InternalException, UserException
+            public Object number(NumberInfo displayInfo) throws InternalException, UserException
             {
                 if (numberOnlyInt)
                     return genInt();
@@ -91,15 +89,13 @@ public abstract class GenValueBase<T> extends Generator<T>
             }
 
             @Override
-            @OnThread(Tag.Simulation)
-            public @Value Object text() throws InternalException, UserException
+            public Object text() throws InternalException, UserException
             {
                 return TBasicUtil.makeStringV(r, gs);
             }
 
             @Override
-            @OnThread(Tag.Simulation)
-            public @Value Object date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
+            public Object date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
                 switch (dateTimeInfo.getType())
                 {
@@ -127,19 +123,17 @@ public abstract class GenValueBase<T> extends Generator<T>
             }
 
             @Override
-            @OnThread(Tag.Simulation)
-            public @Value Object bool() throws InternalException, UserException
+            public Object bool() throws InternalException, UserException
             {
                 return DataTypeUtility.value(r.nextBoolean());
             }
 
             @Override
-            @OnThread(Tag.Simulation)
-            public @Value Object tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+            public Object tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 int tagIndex = r.nextInt(0, tags.size() - 1);
-                @Nullable @Value Object o;
-                @Nullable DataType inner = tags.get(tagIndex).getInner();
+                Object o;
+                DataType inner = tags.get(tagIndex).getInner();
                 if (inner != null)
                     o = makeValue(inner);
                 else
@@ -148,36 +142,33 @@ public abstract class GenValueBase<T> extends Generator<T>
             }
 
             @Override
-            @OnThread(Tag.Simulation)
-            public @Value Object record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, UserException
+            public Object record(ImmutableMap<String, DataType> fields) throws InternalException, UserException
             {
-                return DataTypeUtility.value(new RecordMap(Utility.<@ExpressionIdentifier String, DataType, @Value Object>mapValuesEx(fields, t -> makeValue(t))));
+                return DataTypeUtility.value(new RecordMap(Utility.<String, DataType, Object>mapValuesEx(fields, t -> makeValue(t))));
             }
 
             @Override
-            @OnThread(Tag.Simulation)
-            public @Value Object array(@Nullable DataType inner) throws InternalException, UserException
+            public Object array(DataType inner) throws InternalException, UserException
             {
                 if (inner == null)
-                    return DataTypeUtility.<@Value Object>value(Collections.<@Value Object>emptyList());
-                @NonNull DataType innerFinal = inner;
-                return DataTypeUtility.value(TBasicUtil.<@Value Object>makeList(r, 1, 4, () -> makeValue(innerFinal)));
+                    return DataTypeUtility.<Object>value(Collections.<Object>emptyList());
+                DataType innerFinal = inner;
+                return DataTypeUtility.value(TBasicUtil.<Object>makeList(r, 1, 4, () -> makeValue(innerFinal)));
             }
 
             @Override
-            @OnThread(Tag.Simulation)
-            public @Value Object function(ImmutableList<DataType> argTypes, DataType resultType) throws InternalException, UserException
+            public Object function(ImmutableList<DataType> argTypes, DataType resultType) throws InternalException, UserException
             {
                 if (resultType.equals(DataType.BOOLEAN) && argTypes.size() == 1)
                 {
                     return ValueFunction.value(argTypes.get(0).apply(new DataTypeVisitor<ValueFunction>()
                     {
-                        private <T> ValueFunction f(Class<T> type, SimulationFunction<@Value T, Boolean> predicate)
+                        private <T> ValueFunction f(Class<T> type, SimulationFunction<T, Boolean> predicate)
                         {
                             return new ValueFunction()
                             {
                                 @Override
-                                public @OnThread(Tag.Simulation) @Value Object _call() throws InternalException, UserException
+                                public Object _call() throws InternalException, UserException
                                 {
                                     return DataTypeUtility.value(predicate.apply(arg(0, type)));
                                 }
@@ -225,12 +216,12 @@ public abstract class GenValueBase<T> extends Generator<T>
                         }
 
                         @Override
-                        public ValueFunction record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, UserException
+                        public ValueFunction record(ImmutableMap<String, DataType> fields) throws InternalException, UserException
                         {
-                            Entry<@ExpressionIdentifier String, DataType> entry = fields.entrySet().iterator().next();
+                            Entry<String, DataType> entry = fields.entrySet().iterator().next();
                             // Choose once outside function invocation:
                             ValueFunction innerFunc = entry.getValue().apply(this);
-                            return f(Record.class, o -> Utility.cast(innerFunc.call(new @Value Object[] {o.getField(entry.getKey())}), Boolean.class));
+                            return f(Record.class, o -> Utility.cast(innerFunc.call(new Object[] {o.getField(entry.getKey())}), Boolean.class));
                         }
 
                         @Override
@@ -245,9 +236,9 @@ public abstract class GenValueBase<T> extends Generator<T>
         });
     }
 
-    protected @Value long genInt()
+    protected long genInt()
     {
-        @Value Number n;
+        Number n;
         do
         {
             n = TBasicUtil.generateNumberV(r, gs);

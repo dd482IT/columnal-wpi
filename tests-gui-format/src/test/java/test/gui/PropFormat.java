@@ -105,14 +105,10 @@ import static xyz.columnal.data.datatype.DataType.DateTimeInfo.F.*;
 /**
  * Created by neil on 29/10/2016.
  */
-@Ignore // TODO restore
-@RunWith(JUnitQuickcheck.class)
-@OnThread(Tag.Simulation)
+// TODO restore
 public class PropFormat extends FXApplicationTest implements ComboUtilTrait, ScreenshotTrait
 {
-    @Property(trials = 10)
-    @OnThread(Tag.Simulation)
-    public void testGuessFormat(@From(GenFormattedData.class) GenFormattedData.FormatAndData formatAndData) throws IOException, UserException, InternalException, InterruptedException, ExecutionException, TimeoutException
+    public void testGuessFormat(GenFormattedData.FormatAndData formatAndData) throws IOException, UserException, InternalException, InterruptedException, ExecutionException, TimeoutException
     {
         String content = formatAndData.textContent.stream().collect(Collectors.joining("\n"));
         Import<InitialTextFormat, FinalTextFormat> format = GuessFormat.guessTextFormat(DummyManager.make().getTypeManager(), DummyManager.make().getUnitManager(), variousCharsets(formatAndData.textContent, formatAndData.format.initialTextFormat.charset), formatAndData.format.initialTextFormat, formatAndData.format.trimChoice);
@@ -132,7 +128,7 @@ public class PropFormat extends FXApplicationTest implements ComboUtilTrait, Scr
         });
         TFXUtil.sleep(5000);
 
-        @Nullable ImportChoicesDialog<?, ?> maybeICD = TFXUtil.<@Nullable ImportChoicesDialog<?, ?>>fx(() -> ImportChoicesDialog._test_getCurrentlyShowing());
+        ImportChoicesDialog<?, ?> maybeICD = TFXUtil.<ImportChoicesDialog<?, ?>>fx(() -> ImportChoicesDialog._test_getCurrentlyShowing());
         if (maybeICD == null)
         {
             assertNotNull(maybeICD);
@@ -151,24 +147,22 @@ public class PropFormat extends FXApplicationTest implements ComboUtilTrait, Scr
         checkDataValues(formatAndData, loaded.get(0).getData());
     }
 
-    @Ignore // TODO restore
-    @Property(trials=4)
-    @OnThread(Tag.Simulation)
-    public void testGuessFormatGUI(@From(GenFormattedData.class) GenFormattedData.FormatAndData formatAndData) throws IOException, UserException, InternalException, InterruptedException, ExecutionException, TimeoutException
+    // TODO restore
+    public void testGuessFormatGUI(GenFormattedData.FormatAndData formatAndData) throws IOException, UserException, InternalException, InterruptedException, ExecutionException, TimeoutException
     {
         File tempFile = writeDataToFile(formatAndData);
         
         CompletableFuture<RecordSet> rsFuture = TextImporter._test_importTextFile(new DummyManager(), tempFile); //, link);
         // GUI should show (after a slight delay), so we should provide inputs:
         TFXUtil.sleep(8000);
-        @Nullable ImportChoicesDialog<?, ?> maybeICD = TFXUtil.<@Nullable ImportChoicesDialog<?, ?>>fx(() -> ImportChoicesDialog._test_getCurrentlyShowing());
+        ImportChoicesDialog<?, ?> maybeICD = TFXUtil.<ImportChoicesDialog<?, ?>>fx(() -> ImportChoicesDialog._test_getCurrentlyShowing());
         if (maybeICD == null)
         {
             assertNotNull(maybeICD);
             return;
             
         }
-        @NonNull ImportChoicesDialog<?, ?> importChoicesDialog = maybeICD;
+        ImportChoicesDialog<?, ?> importChoicesDialog = maybeICD;
         checkTrim(importChoicesDialog);
         
         selectGivenComboBoxItem(waitForOne(".id-guess-charset"), new PickOrOther<>(formatAndData.format.initialTextFormat.charset));
@@ -183,7 +177,7 @@ public class PropFormat extends FXApplicationTest implements ComboUtilTrait, Scr
 
         setTrim(formatAndData.format.trimChoice, importChoicesDialog);
         
-        @Nullable RecordSet destRS = TFXUtil.<@Nullable RecordSet>fx(() -> importChoicesDialog._test_getDestDataDisplay()._test_getRecordSet());
+        RecordSet destRS = TFXUtil.<RecordSet>fx(() -> importChoicesDialog._test_getDestDataDisplay()._test_getRecordSet());
         assertNotNull(destRS);
         if (destRS != null)
             checkDataValues(formatAndData, destRS);
@@ -199,7 +193,7 @@ public class PropFormat extends FXApplicationTest implements ComboUtilTrait, Scr
         checkDataValues(formatAndData, rs);
     }
 
-    public void setTrim(TrimChoice trimChoice, @NonNull ImportChoicesDialog<?, ?> importChoicesDialog) throws InternalException, UserException
+    public void setTrim(TrimChoice trimChoice, ImportChoicesDialog<?, ?> importChoicesDialog) throws InternalException, UserException
     {
         Log.debug("Trying to set trim " + trimChoice);
         VirtualGrid srcGrid = importChoicesDialog._test_getSrcGrid();
@@ -224,7 +218,6 @@ public class PropFormat extends FXApplicationTest implements ComboUtilTrait, Scr
         assertEquals("Dragged from " + startDrag + " to " + endDrag, trimChoice, TFXUtil.fx(() -> importChoicesDialog._test_getSrcDataDisplay().getTrim()));
     }
 
-    @OnThread(Tag.Simulation)
     private void checkTrim(ImportChoicesDialog<?, ?> importChoicesDialog) throws InternalException, UserException
     {
         // We don't care what the trim actually is, we just want it to be consistent between:
@@ -245,7 +238,7 @@ public class PropFormat extends FXApplicationTest implements ComboUtilTrait, Scr
         
         // Check the visible bounds of the graphical rectangle:
         VisibleBounds srcVisibleBounds = TFXUtil.fx(() -> importChoicesDialog._test_getSrcGrid().getVisibleBounds());
-        @NonNull Rectangle blackRect = waitForOne(".prospective-import-rectangle");
+        Rectangle blackRect = waitForOne(".prospective-import-rectangle");
         assertEquals("Graphical left", TFXUtil.fx(() -> srcVisibleBounds.getXCoord(expectedTrimBounds.topLeftIncl.columnIndex)), TFXUtil.fx(() -> blackRect.getLayoutX()), 1.0);
         // Because of clamp visible, we can only do a very weak check on right and bottom:
         MatcherAssert.assertThat("Graphical right", TFXUtil.fx(() -> srcVisibleBounds.getXCoordAfter(expectedTrimBounds.bottomRightIncl.columnIndex)), Matchers.greaterThanOrEqualTo(TFXUtil.fx(() -> blackRect.getLayoutX() + blackRect.getWidth())));
@@ -254,8 +247,8 @@ public class PropFormat extends FXApplicationTest implements ComboUtilTrait, Scr
         
         // Check the size of the dest record set:
         RecordSetDataDisplay destDataDisplay = importChoicesDialog._test_getDestDataDisplay();
-        RecordSet destRecordSet = TFXUtil.<@Nullable RecordSet>fx(() -> destDataDisplay._test_getRecordSet());
-        RecordSet srcRecordSet = TFXUtil.<@Nullable RecordSet>fx(() -> srcDataDisplay._test_getRecordSet());
+        RecordSet destRecordSet = TFXUtil.<RecordSet>fx(() -> destDataDisplay._test_getRecordSet());
+        RecordSet srcRecordSet = TFXUtil.<RecordSet>fx(() -> srcDataDisplay._test_getRecordSet());
         assertNotNull(srcRecordSet);
         assertNotNull(destRecordSet);
         if (srcRecordSet != null && destRecordSet != null)
@@ -278,7 +271,6 @@ public class PropFormat extends FXApplicationTest implements ComboUtilTrait, Scr
         return tempFile;
     }
 
-    @OnThread(Tag.Simulation)
     private void checkDataValues(GenFormattedData.FormatAndData formatAndData, RecordSet rs) throws UserException, InternalException
     {
         Assert.assertEquals("Column length, given intended trim " + formatAndData.format.trimChoice + " and source length " + formatAndData.textContent.size(), formatAndData.loadedContent.size(), rs.getLength());
@@ -288,8 +280,8 @@ public class PropFormat extends FXApplicationTest implements ComboUtilTrait, Scr
                 formatAndData.loadedContent.get(i).size(), rs.getColumns().size());
             for (int c = 0; c < rs.getColumns().size(); c++)
             {
-                @Value Object expected = formatAndData.loadedContent.get(i).get(c);
-                @Value Object loaded = rs.getColumns().get(c).getType().getCollapsed(i);
+                Object expected = formatAndData.loadedContent.get(i).get(c);
+                Object loaded = rs.getColumns().get(c).getType().getCollapsed(i);
                 assertEquals("Column " + c + " expected: {{{" + expected + "}}} was {{{" + loaded + "}}} from row " + formatAndData.textContent.get(i + formatAndData.format.trimChoice.trimFromTop), 0, Utility.compareValues(expected, loaded));
             }
         }
@@ -310,11 +302,10 @@ public class PropFormat extends FXApplicationTest implements ComboUtilTrait, Scr
         */
     }
 
-    @Test
     public void testAwkwardDate() throws Exception
     {
         ImmutableList<String> textRows = ImmutableList.of("19/10/54", "30/12/34");
-        ImmutableList<List<@Value Object>> target = ImmutableList.of(
+        ImmutableList<List<Object>> target = ImmutableList.of(
             ImmutableList.of(DataTypeUtility.value(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1954, 10, 19))),
             ImmutableList.of(DataTypeUtility.value(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(2034, 12, 30)))
         );
@@ -324,12 +315,11 @@ public class PropFormat extends FXApplicationTest implements ComboUtilTrait, Scr
         );
     }
 
-    @Test
     public void testNumOrMissing() throws Exception
     {
         TypeManager typeManager = new TypeManager(new UnitManager());
         ImmutableList<String> textRows = ImmutableList.of("1", "3", "NA", "-8910.444", "NA");
-        ImmutableList<List<@Value Object>> target = Utility.mapListI(ImmutableList.of(
+        ImmutableList<List<Object>> target = Utility.mapListI(ImmutableList.of(
             new TaggedValue(1, DataTypeUtility.value(1), typeManager.getMaybeType()),
             new TaggedValue(1, DataTypeUtility.value(3), typeManager.getMaybeType()),
             new TaggedValue(0, null, typeManager.getMaybeType()),

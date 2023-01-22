@@ -111,8 +111,6 @@ import java.util.stream.IntStream;
 
 import static org.junit.Assert.*;
 
-@RunWith(JUnitQuickcheck.class)
-@OnThread(Tag.Simulation)
 public class TestCreateEditTransformation extends FXApplicationTest implements CreateDataTableTrait, ClickOnTableHeaderTrait, EnterExpressionTrait, ComboUtilTrait
 {
     private static class AggCalculation
@@ -121,9 +119,9 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
         private final Expression expression;
         private final DataType dataType;
         // One per split value.  If null, UserException expected
-        private final List<@Nullable @Value Object> expectedResult;
+        private final List<Object> expectedResult;
 
-        private AggCalculation(ColumnId columnName, Expression expression, DataType dataType, List<@Nullable @Value Object> expectedResult)
+        private AggCalculation(ColumnId columnName, Expression expression, DataType dataType, List<Object> expectedResult)
         {
             this.columnName = columnName;
             this.expression = expression;
@@ -138,7 +136,6 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
         private final ColumnDetails sourceColumn;
         private final List<AggCalculation> calculations;
 
-        @OnThread(Tag.Any)
         private AggColumns(ColumnDetails sourceColumn, List<AggCalculation> calculations)
         {
             this.sourceColumn = sourceColumn;
@@ -146,8 +143,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
         }
     }
     
-    @Property(trials = 3)
-    public void testAggregate(@From(GenRandom.class) Random r) throws Exception
+    public void testAggregate(Random r) throws Exception
     {
         TBasicUtil.printSeedOnFail(() -> {
             GenTypeAndValueGen genTypeAndValueGen = new GenTypeAndValueGen(false);
@@ -160,14 +156,14 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
             // First add split variable:
             TypeAndValueGen splitType = genTypeAndValueGen.generate(r);
             mainWindowActions._test_getTableManager().getTypeManager()._test_copyTaggedTypesFrom(splitType.getTypeManager());
-            List<@Value Object> distinctSplitValues = makeDistinctSortedList(splitType);
+            List<Object> distinctSplitValues = makeDistinctSortedList(splitType);
             // Now make random duplication count for each:
             List<Integer> replicationCounts = Utility.mapList(distinctSplitValues, _s -> 1 + r.nextInt(10));
             int totalLength = replicationCounts.stream().mapToInt(n -> n).sum();
             columns.add(new ColumnDetails(new ColumnId("Split Col"), splitType.getType(),
                     IntStream.range(0, distinctSplitValues.size()).mapToObj(i -> i)
-                            .<Either<String, @Value Object>>flatMap(i -> Utility.<Either<String, @Value Object>>replicate(replicationCounts.get(i), Either.right(distinctSplitValues.get(i))).stream())
-                            .collect(ImmutableList.<Either<String, @Value Object>>toImmutableList())));
+                            .<Either<String, Object>>flatMap(i -> Utility.<Either<String, Object>>replicate(replicationCounts.get(i), Either.right(distinctSplitValues.get(i))).stream())
+                            .collect(ImmutableList.<Either<String, Object>>toImmutableList())));
 
             // Then add source column for aggregate calculations (summing etc):
             List<AggColumns> aggColumns = makeSourceAndCalculations(mainWindowActions._test_getTableManager().getTypeManager(), splitType.getType(), distinctSplitValues, replicationCounts, genTypeAndValueGen, r);
@@ -182,7 +178,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
             {
                 TypeAndValueGen extraType = genTypeAndValueGen.generate(r);
                 mainWindowActions._test_getTableManager().getTypeManager()._test_copyTaggedTypesFrom(extraType.getTypeManager());
-                columns.add(r.nextInt(columns.size() + 1), new ColumnDetails(new ColumnId(IdentifierUtility.identNum("Extra", i)), extraType.getType(), Utility.<Either<String, @Value Object>>replicateM_Ex(totalLength, () -> r.nextInt(10) == 1 ? Either.<String, @Value Object>left("@") : Either.<String, @Value Object>right(extraType.makeValue()))));
+                columns.add(r.nextInt(columns.size() + 1), new ColumnDetails(new ColumnId(IdentifierUtility.identNum("Extra", i)), extraType.getType(), Utility.<Either<String, Object>>replicateM_Ex(totalLength, () -> r.nextInt(10) == 1 ? Either.<String, Object>left("@") : Either.<String, Object>right(extraType.makeValue()))));
             }
 
             for (ColumnDetails column : columns)
@@ -257,7 +253,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
             // Should be one column at the moment, with the distinct split values, and maybe the first calculation:
             Aggregate aggTable = (Aggregate) mainWindowActions._test_getTableManager().getAllTables().stream().filter(t -> !t.getId().equals(new TableId("Src Data"))).findFirst().orElseThrow(RuntimeException::new);
             assertEquals(ImmutableList.of(new ColumnId("Split Col")), aggTable.getSplitBy());
-            @ExpressionIdentifier String aggId = aggTable.getId().getRaw();
+            String aggId = aggTable.getId().getRaw();
             ImmutableList<LoadedColumnInfo> initialAgg = copyTableData(mainWindowActions, aggId);
             //TestUtil.assertValueListEitherEqual("Table " + aggId, Utility.<@Value Object, Either<String, @Value Object>>mapList(distinctSplitValues, v -> Either.right(v)), initialAgg.get(0).dataValues);
 
@@ -298,7 +294,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
                     assertEquals(calculation.columnName.getRaw(), calculation.dataType, calcCol.dataType);
 
                     TBasicUtil.assertValueListEitherEqual(calculation.columnName.getRaw(),
-                            calculation.expectedResult.stream().<Either<String, @Value Object>>map(x -> x == null ? Either.<String, @Value Object>left("") : Either.<String, @Value Object>right(x)).collect(ImmutableList.toImmutableList()),
+                            calculation.expectedResult.stream().<Either<String, Object>>map(x -> x == null ? Either.<String, Object>left("") : Either.<String, Object>right(x)).collect(ImmutableList.toImmutableList()),
                             calcCol.dataValues
                     );
                 }
@@ -306,7 +302,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
         });
     }
 
-    private List<AggColumns> makeSourceAndCalculations(TypeManager copyTypesTo, DataType splitColumnType, List<@Value Object> distinctSplitValues, List<Integer> replicationCounts, GenTypeAndValueGen genTypeAndValueGen, Random r) throws UserException, InternalException
+    private List<AggColumns> makeSourceAndCalculations(TypeManager copyTypesTo, DataType splitColumnType, List<Object> distinctSplitValues, List<Integer> replicationCounts, GenTypeAndValueGen genTypeAndValueGen, Random r) throws UserException, InternalException
     {
         int numColumns = 1 + r.nextInt(4);
         int totalLength = replicationCounts.stream().mapToInt(n -> n).sum();
@@ -316,7 +312,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
         {
             TypeAndValueGen typeAndValueGen = genTypeAndValueGen.generate(r);
             copyTypesTo._test_copyTaggedTypesFrom(typeAndValueGen.getTypeManager());
-            ImmutableList<Either<String, @Value Object>> sourceData = Utility.<Either<String, @Value Object>>replicateM_Ex(totalLength, () -> Either.right(typeAndValueGen.makeValue()));
+            ImmutableList<Either<String, Object>> sourceData = Utility.<Either<String, Object>>replicateM_Ex(totalLength, () -> Either.right(typeAndValueGen.makeValue()));
             ColumnDetails columnDetails = new ColumnDetails(new ColumnId(IdentifierUtility.identNum("Source", i)), typeAndValueGen.getType(), sourceData);
             List<AggCalculation> calculations = makeCalculations(splitColumnType, distinctSplitValues, typeAndValueGen.getTypeManager().getUnitManager(), columnDetails, replicationCounts, r);
             aggColumns.add(new AggColumns(columnDetails, calculations));
@@ -324,10 +320,9 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
         return aggColumns;
     }
 
-    @OnThread(Tag.Simulation)
-    private List<AggCalculation> makeCalculations(DataType splitColumnType, List<@Value Object> distinctSplitValues, UnitManager unitManager, ColumnDetails columnDetails, List<Integer> replicationCounts, Random random) throws InternalException
+    private List<AggCalculation> makeCalculations(DataType splitColumnType, List<Object> distinctSplitValues, UnitManager unitManager, ColumnDetails columnDetails, List<Integer> replicationCounts, Random random) throws InternalException
     {
-        List<List<Either<String, @Value Object>>> groups = new ArrayList<>();
+        List<List<Either<String, Object>>> groups = new ArrayList<>();
         int start = 0;
         for (Integer count : replicationCounts)
         {
@@ -335,9 +330,9 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
             start += count;
         }
         
-        FunctionInt<FunctionInt<List<Either<String, @Value Object>>, @Nullable @Value Object>, List<@Value @Nullable Object>> perGroup = (FunctionInt<List<Either<String, @Value Object>>, @Nullable @Value Object> f) -> {
-            ArrayList<@Nullable @Value Object> r = new ArrayList<>();
-            for (List<Either<String, @Value Object>> group : groups)
+        FunctionInt<FunctionInt<List<Either<String, Object>>, Object>, List<Object>> perGroup = (FunctionInt<List<Either<String, Object>>, Object> f) -> {
+            ArrayList<Object> r = new ArrayList<>();
+            for (List<Either<String, Object>> group : groups)
             {
                 r.add(f.apply(group));
             }
@@ -348,7 +343,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
         @SuppressWarnings("identifier")
         Function<String, ColumnId> name = s -> new ColumnId(columnDetails.name.getRaw() + " " + s);
 
-        Comparator<@Value Object> valueComparator = DataTypeUtility.getValueComparator();
+        Comparator<Object> valueComparator = DataTypeUtility.getValueComparator();
         
         return columnDetails.dataType.apply(new DataTypeVisitorEx<List<AggCalculation>, InternalException>()
         {
@@ -419,15 +414,15 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
                     calculations.add(new AggCalculation(name.apply("Split"),
                         IdentExpression.column(new ColumnId("Split Col")),
                         splitColumnType,
-                            distinctSplitValues.stream().<@Nullable @Value Object>map(x -> x).collect(Collectors.<@Nullable @Value Object>toList())
+                            distinctSplitValues.stream().<Object>map(x -> x).collect(Collectors.<Object>toList())
                     ));
                 }
                 return calculations;
             }
 
-            private @Nullable @Value Object withEithers(List<Either<String, @Value Object>> src, FunctionInt<List<@Value Object>, @Nullable @Value Object> withList) throws InternalException
+            private Object withEithers(List<Either<String, Object>> src, FunctionInt<List<Object>, Object> withList) throws InternalException
             {
-                return Either.<String, @Value Object, Either<String, @Value Object>>mapMInt(src, x -> x).<@Nullable @Value Object>mapInt(withList).leftToNull();
+                return Either.<String, Object, Either<String, Object>>mapMInt(src, x -> x).<Object>mapInt(withList).leftToNull();
             }
 
             @Override
@@ -461,7 +456,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
             }
 
             @Override
-            public List<AggCalculation> record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, InternalException
+            public List<AggCalculation> record(ImmutableMap<String, DataType> fields) throws InternalException, InternalException
             {
                 return usual();
             }
@@ -500,7 +495,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
         }
         
         return Utility.mapList(columns, c -> {
-            List<Either<String, @Value Object>> scrambledData = new ArrayList<>();
+            List<Either<String, Object>> scrambledData = new ArrayList<>();
             for (Integer oldIndex : oldIndexes)
             {
                 scrambledData.add(c.data.get(oldIndex));
@@ -509,7 +504,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
         });
     }
 
-    public ImmutableList<LoadedColumnInfo> copyTableData(MainWindowActions mainWindowActions, @ExpressionIdentifier String tableName) throws UserException
+    public ImmutableList<LoadedColumnInfo> copyTableData(MainWindowActions mainWindowActions, String tableName) throws UserException
     {
         triggerTableHeaderContextMenu(mainWindowActions._test_getVirtualGrid(), mainWindowActions._test_getTableManager(), new TableId(tableName))
                 .clickOn(".id-tableDisplay-menu-copyValues");
@@ -520,16 +515,16 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
     }
 
     // Makes a list containing no duplicate values, using the given type.
-    private List<@Value Object> makeDistinctSortedList(TypeAndValueGen splitType) throws UserException, InternalException
+    private List<Object> makeDistinctSortedList(TypeAndValueGen splitType) throws UserException, InternalException
     {
         int targetAmount = 12;
         int attempts = 50;
-        ArrayList<@Value Object> r = new ArrayList<>();
+        ArrayList<Object> r = new ArrayList<>();
         nextAttempt: for (int i = 0; i < attempts && r.size() < targetAmount; i++)
         {
-            @Value Object newVal = splitType.makeValue();
+            Object newVal = splitType.makeValue();
             // This is O(N^2) but it's only test code, and small N:
-            for (@Value Object existing : r)
+            for (Object existing : r)
             {
                 if (Utility.compareValues(newVal, existing) == 0)
                     continue nextAttempt;
@@ -542,8 +537,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
         return r;
     }
     
-    @Property(trials = 5)
-    public void testCheck(@From(GenImmediateData.class) ImmediateData_Mgr srcImmedData, @From(GenRandom.class) Random r) throws Exception
+    public void testCheck(ImmediateData_Mgr srcImmedData, Random r) throws Exception
     {
         MainWindowActions details = TAppUtil.openDataAsTable(windowToUse, srcImmedData.mgr).get();
         TFXUtil.sleep(1000);
@@ -562,7 +556,7 @@ public class TestCreateEditTransformation extends FXApplicationTest implements C
         if (srcColumn.getLength() == 0)
             return;
         
-        @Value Object containedItem = srcColumn.getType().getCollapsed(r.nextInt(srcColumn.getLength()));
+        Object containedItem = srcColumn.getType().getCollapsed(r.nextInt(srcColumn.getLength()));
         boolean allEqualToContained = true;
         for (int row = 0; row < srcColumn.getLength(); row++)
         {

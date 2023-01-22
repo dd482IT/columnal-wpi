@@ -38,7 +38,7 @@ public class BoolColumnType extends ColumnType
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -58,7 +58,7 @@ public class BoolColumnType extends ColumnType
         return "Boolean[" + lowerCaseTrue + "]";
     }
 
-    public Either<String, Boolean> parse(@NonNull String s)
+    public Either<String, Boolean> parse(String s)
     {
         if (s.trim().equalsIgnoreCase(lowerCaseTrue))
             return Either.right(Boolean.TRUE);

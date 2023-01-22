@@ -47,7 +47,7 @@ abstract class ImportPlainTable implements Import<UnitType, PlainImportInfo>
     private final int numSrcColumns;
     private final TableManager mgr;
     private final List<List<String>> vals;
-    protected final SimpleObjectProperty<@Nullable UnitType> format = new SimpleObjectProperty<>(UnitType.UNIT);
+    protected final SimpleObjectProperty<UnitType> format = new SimpleObjectProperty<>(UnitType.UNIT);
 
     // vals must be rectangular
     public ImportPlainTable(int numSrcColumns, TableManager mgr, List<? extends List<String>> vals)
@@ -59,7 +59,7 @@ abstract class ImportPlainTable implements Import<UnitType, PlainImportInfo>
     }
 
     @Override
-    public ObjectExpression<@Nullable UnitType> currentSrcFormat()
+    public ObjectExpression<UnitType> currentSrcFormat()
     {
         return format;
     }
@@ -69,10 +69,10 @@ abstract class ImportPlainTable implements Import<UnitType, PlainImportInfo>
     {
         TrimChoice trimChoice = GuessFormat.guessTrim(vals);
         ImmutableList.Builder<ColumnInfo> columns = ImmutableList.builder();
-        ImmutableList.Builder<@Localized String> columnDisplayNames = ImmutableList.builder();
+        ImmutableList.Builder<String> columnDisplayNames = ImmutableList.builder();
         for (int i = 0; i < numSrcColumns; i++)
         {
-            Pair<ColumnId, @Localized String> name = srcColumnName(i);
+            Pair<ColumnId, String> name = srcColumnName(i);
             columns.add(new ColumnInfo(new TextColumnType(), name.getFirst()));
             columnDisplayNames.add(name.getSecond());
         }
@@ -81,7 +81,7 @@ abstract class ImportPlainTable implements Import<UnitType, PlainImportInfo>
     }
 
     // Gets internal column name, and name to display in GUI for src table
-    public abstract Pair<ColumnId, @Localized String> srcColumnName(int index);
+    public abstract Pair<ColumnId, String> srcColumnName(int index);
 
     public ColumnId destColumnName(TrimChoice trimChoice, int index)
     {
@@ -96,7 +96,6 @@ abstract class ImportPlainTable implements Import<UnitType, PlainImportInfo>
     }
 
     // Allows for String trim()ing in subclass
-    @OnThread(Tag.Simulation)
     public List<? extends List<String>> processTrimmed(List<List<String>> trimmed)
     {
         return trimmed;

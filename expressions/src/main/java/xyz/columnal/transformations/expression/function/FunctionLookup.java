@@ -30,7 +30,7 @@ public interface FunctionLookup
     /**
      * Name can be unscoped, or scoped with backslashes
      */
-    public @Nullable StandardFunctionDefinition lookup(String functionName) throws InternalException;
+    public StandardFunctionDefinition lookup(String functionName) throws InternalException;
 
     public ImmutableList<StandardFunctionDefinition> getAllFunctions() throws InternalException;
 }

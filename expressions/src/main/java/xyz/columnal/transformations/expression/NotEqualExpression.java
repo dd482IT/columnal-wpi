@@ -43,7 +43,7 @@ import java.util.Optional;
  */
 public class NotEqualExpression extends BinaryOpExpression
 {    
-    public NotEqualExpression(@Recorded Expression lhs, @Recorded Expression rhs)
+    public NotEqualExpression(Expression lhs, Expression rhs)
     {
         super(lhs, rhs);
     }
@@ -55,8 +55,7 @@ public class NotEqualExpression extends BinaryOpExpression
     }
 
     @Override
-    @RequiresNonNull({"lhsType", "rhsType"})
-    public @Nullable CheckedExp checkBinaryOp(@Recorded NotEqualExpression this, ColumnLookup data, TypeState state, ExpressionKind kind, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public CheckedExp checkBinaryOp(NotEqualExpression this, ColumnLookup data, TypeState state, ExpressionKind kind, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         // TODO add this as a quick fix
         //onError.recordError(this, StyledString.s("Patterns not allowed in <>  Use not(... =~ ...) instead"));
@@ -80,14 +79,13 @@ public class NotEqualExpression extends BinaryOpExpression
     }
 
     @Override
-    @OnThread(Tag.Simulation)
-    public @Value Object getValueBinaryOp(ValueResult lhsValue, ValueResult rhsValue) throws UserException, InternalException
+    public Object getValueBinaryOp(ValueResult lhsValue, ValueResult rhsValue) throws UserException, InternalException
     {
         return DataTypeUtility.value(0 != Utility.compareValues(lhsValue.value, rhsValue.value));
     }
 
     @Override
-    public BinaryOpExpression copy(@Nullable @Recorded Expression replaceLHS, @Nullable @Recorded Expression replaceRHS)
+    public BinaryOpExpression copy(Expression replaceLHS, Expression replaceRHS)
     {
         return new NotEqualExpression(replaceLHS == null ? lhs : replaceLHS, replaceRHS == null ? rhs : replaceRHS);
     }

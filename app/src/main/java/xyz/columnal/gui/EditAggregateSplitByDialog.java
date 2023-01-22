@@ -38,13 +38,12 @@ import xyz.columnal.utility.gui.FXUtility;
 
 import java.util.Objects;
 
-@OnThread(Tag.FXPlatform)
 public class EditAggregateSplitByDialog extends ErrorableLightDialog<ImmutableList<ColumnId>>
 {
-    private final @Nullable Table srcTable;
+    private final Table srcTable;
     private final AggregateSplitByPane splitList;
 
-    public EditAggregateSplitByDialog(View parent, @Nullable Point2D lastScreenPos, @Nullable Table srcTable, @Nullable Pair<ColumnId, ImmutableList<String>> example, ImmutableList<ColumnId> originalSplitBy)
+    public EditAggregateSplitByDialog(View parent, Point2D lastScreenPos, Table srcTable, Pair<ColumnId, ImmutableList<String>> example, ImmutableList<ColumnId> originalSplitBy)
     {
         super(parent, true);
         setResizable(true);
@@ -74,9 +73,9 @@ public class EditAggregateSplitByDialog extends ErrorableLightDialog<ImmutableLi
     }
 
     @Override
-    protected @OnThread(Tag.FXPlatform) Either<@Localized String, ImmutableList<ColumnId>> calculateResult()
+    protected Either<String, ImmutableList<ColumnId>> calculateResult()
     {
-        @Nullable ImmutableList<ColumnId> items = splitList.getItems();
+        ImmutableList<ColumnId> items = splitList.getItems();
         if (items == null)
             return Either.left(TranslationUtility.getString("edit.column.invalid.column.name"));
         else

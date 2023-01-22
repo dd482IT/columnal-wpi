@@ -80,8 +80,6 @@ import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
 
-@RunWith(JUnitQuickcheck.class)
-@OnThread(Tag.Simulation)
 public class BaseTestQuickFix extends FXApplicationTest implements EnterExpressionTrait, ScrollToTrait, ComboUtilTrait, ListUtilTrait, ClickTableLocationTrait, PopupTrait
 {
     void testSimpleFix(String original, String fixFieldContent, String fixed)
@@ -151,14 +149,14 @@ public class BaseTestQuickFix extends FXApplicationTest implements EnterExpressi
             clickOn(".ok-button");
             
             EditorDisplay targetField = waitForOne(".editor-display");
-            @NonNull Node targetFinal = targetField;
+            Node targetFinal = targetField;
             if (!TFXUtil.fx(() -> targetFinal.isFocused()))
             {
                 Log.debug("Focusing target field: " + targetFinal);
                 // Get rid of any popups in the way:
                 moveAndDismissPopupsAtPos(point(targetField));
                 clickOn(point(targetField));
-                assertTrue("Clicked " + point(targetField).toString() + " focus is: " + TFXUtil.<@Nullable Node>fx(() -> getFocusOwner()), TFXUtil.fx(() -> targetFinal.isFocused()));
+                assertTrue("Clicked " + point(targetField).toString() + " focus is: " + TFXUtil.<Node>fx(() -> getFocusOwner()), TFXUtil.fx(() -> targetFinal.isFocused()));
             }
             // Now need to move to right position:
             int moveDist = TFXUtil.fx(() -> targetField._test_getCaretMoveDistance(fixFieldContent));
@@ -178,7 +176,7 @@ public class BaseTestQuickFix extends FXApplicationTest implements EnterExpressi
 
             TFXUtil.sleep(2000);
             List<Window> windows = TFXUtil.fx(() -> listWindows());
-            @Nullable Window errorPopup = windows.stream().filter(w -> w instanceof PopOver).findFirst().orElse(null);
+            Window errorPopup = windows.stream().filter(w -> w instanceof PopOver).findFirst().orElse(null);
             assertNotNull(Utility.listToString(windows), errorPopup);
             assertEquals(TFXUtil.fx(() -> lookup(".expression-info-error").queryAll().stream().map(n -> textFlowToString(n)).collect(Collectors.joining(" /// "))),
                 1L, TFXUtil.fx(() -> lookup(".expression-info-error").queryAll().stream().filter(Node::isVisible).count()).longValue());
@@ -203,7 +201,7 @@ public class BaseTestQuickFix extends FXApplicationTest implements EnterExpressi
             TFXUtil.doubleOk(this);
             TFXUtil.sleep(1000);
             FxThreadUtils.waitForFxEvents();
-            @Nullable Calculate calculate = Utility.filterClass(tableManager.getAllTables().stream(), Calculate.class).findFirst().orElse(null);
+            Calculate calculate = Utility.filterClass(tableManager.getAllTables().stream(), Calculate.class).findFirst().orElse(null);
             assertNotNull(calculate);
             if (calculate == null)
                 return;
@@ -225,7 +223,6 @@ public class BaseTestQuickFix extends FXApplicationTest implements EnterExpressi
         }
     }
 
-    @OnThread(Tag.Any)
     private static String showId(String fixId)
     {
         int munge = fixId.indexOf("munged-");
@@ -242,7 +239,6 @@ public class BaseTestQuickFix extends FXApplicationTest implements EnterExpressi
         return TFXUtil.fx(() -> lookup(".expression-info-popup.error").tryQuery().isPresent());
     }
 
-    @OnThread(Tag.FXPlatform)
     private static String textFlowToString(Node n)
     {
         return n.toString() + " " + n.localToScreen(n.getBoundsInLocal().getMinX(), n.getBoundsInLocal().getMinY()) + ((TextFlow)n).getChildren().stream().map(c -> ((Text)c).getText()).collect(Collectors.joining(";"));

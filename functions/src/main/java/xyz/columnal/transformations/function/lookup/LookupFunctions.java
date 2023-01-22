@@ -50,12 +50,12 @@ public class LookupFunctions
             new FunctionDefinition("lookup:lookup")
             {
                 @Override
-                public @OnThread(Tag.Simulation) ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
+                public ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
                 {
                     return ValueFunction.value(new ValueFunction()
                     {
                         @Override
-                        public @OnThread(Tag.Simulation) @Value Object _call() throws InternalException, UserException
+                        public Object _call() throws InternalException, UserException
                         {
                             ListEx listA = arg(0, ListEx.class);
                             ListEx listB = arg(2, ListEx.class);
@@ -72,12 +72,12 @@ public class LookupFunctions
             new FunctionDefinition("lookup:lookup all")
             {
                 @Override
-                public @OnThread(Tag.Simulation) ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
+                public ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
                 {
                     return ValueFunction.value(new ValueFunction()
                     {
                         @Override
-                        public @OnThread(Tag.Simulation) @Value Object _call() throws InternalException, UserException
+                        public Object _call() throws InternalException, UserException
                         {
                             ListEx listA = arg(0, ListEx.class);
                             ListEx listB = arg(2, ListEx.class);
@@ -95,7 +95,7 @@ public class LookupFunctions
                                 }
                                 
                                 @Override
-                                public @Value Object get(int index) throws InternalException, UserException
+                                public Object get(int index) throws InternalException, UserException
                                 {
                                     return listB.get(indexes.get(index));
                                 }
@@ -107,7 +107,6 @@ public class LookupFunctions
         );
     }
 
-    @OnThread(Tag.Simulation)
     private static List<Integer> getAllItems(SimulationSupplier<OptionalInt> nextIndex) throws UserException, InternalException
     {
         ArrayList<Integer> r = new ArrayList<>();
@@ -121,8 +120,7 @@ public class LookupFunctions
         return r;
     }
 
-    @OnThread(Tag.Simulation)
-    private static int getSingleItem(SimulationSupplier<OptionalInt> nextIndex, @Value Object target) throws InternalException, UserException
+    private static int getSingleItem(SimulationSupplier<OptionalInt> nextIndex, Object target) throws InternalException, UserException
     {
         // Check that there's one:
         OptionalInt first = nextIndex.get();
@@ -135,8 +133,7 @@ public class LookupFunctions
     }
 
     // Gets the next index, or empty if successfully reached end of list and found no more:
-    @OnThread(Tag.Simulation)
-    private static SimulationSupplier<OptionalInt> lookupIndexes(ListEx targetList, @Value Object item)
+    private static SimulationSupplier<OptionalInt> lookupIndexes(ListEx targetList, Object item)
     {
         return new SimulationSupplier<OptionalInt>()
         {

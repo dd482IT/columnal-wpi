@@ -28,14 +28,13 @@ import threadchecker.Tag;
 import java.util.Objects;
 
 // A semantic error matches an expression which may span multiple children.
-@OnThread(Tag.Any)
 public final class CanonicalSpan implements Comparable<CanonicalSpan>
 {
     // Start is inclusive char index, end is exclusive char index
-    public final @CanonicalLocation int start;
-    public final @CanonicalLocation int end;
+    public final int start;
+    public final int end;
     
-    public CanonicalSpan(@CanonicalLocation int start, @CanonicalLocation int end)
+    public CanonicalSpan(int start, int end)
     {
         this.start = start;
         this.end = end;
@@ -49,7 +48,7 @@ public final class CanonicalSpan implements Comparable<CanonicalSpan>
             return new CanonicalSpan(start.start, start.start);
     }
     
-    public CanonicalSpan offsetBy(@CanonicalLocation int offsetBy)
+    public CanonicalSpan offsetBy(int offsetBy)
     {
         return new CanonicalSpan(start + offsetBy, end + offsetBy);
     }
@@ -60,7 +59,7 @@ public final class CanonicalSpan implements Comparable<CanonicalSpan>
     // Even though end is typically exclusive, this checks
     // if <= end because for errors etc we still want to display
     // if we touch the extremity.
-    public boolean touches(@CanonicalLocation int position)
+    public boolean touches(int position)
     {
         return start <= position && position <= end;
     }
@@ -72,7 +71,7 @@ public final class CanonicalSpan implements Comparable<CanonicalSpan>
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;

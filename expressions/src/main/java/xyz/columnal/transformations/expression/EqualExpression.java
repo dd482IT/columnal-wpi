@@ -50,14 +50,14 @@ public class EqualExpression extends NaryOpShortCircuitExpression
     // Is the last item in the operators a pattern?  If so, last operator is =~ rather than =
     private final boolean lastIsPattern;
     
-    public EqualExpression(List<@Recorded Expression> operands, boolean lastIsPattern)
+    public EqualExpression(List<Expression> operands, boolean lastIsPattern)
     {
         super(operands);
         this.lastIsPattern = lastIsPattern;
     }
 
     @Override
-    public NaryOpExpression copyNoNull(List<@Recorded Expression> replacements)
+    public NaryOpExpression copyNoNull(List<Expression> replacements)
     {
         return new EqualExpression(replacements, lastIsPattern);
     }
@@ -72,7 +72,7 @@ public class EqualExpression extends NaryOpShortCircuitExpression
     }
 
     @Override
-    public @Nullable CheckedExp checkNaryOp(@Recorded EqualExpression this, ColumnLookup dataLookup, TypeState typeState, ExpressionKind expressionKind, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public CheckedExp checkNaryOp(EqualExpression this, ColumnLookup dataLookup, TypeState typeState, ExpressionKind expressionKind, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         if (lastIsPattern && expressions.size() > 2)
         {
@@ -96,8 +96,8 @@ public class EqualExpression extends NaryOpShortCircuitExpression
         for (int i = 0; i < expressions.size(); i++)
         {
             boolean invalid = false;
-            @Recorded Expression expression = expressions.get(i);
-            @Nullable CheckedExp checked = expression.check(dataLookup, typeState, (lastIsPattern && i == expressions.size() - 1) ? ExpressionKind.PATTERN : ExpressionKind.EXPRESSION, LocationInfo.UNIT_CONSTRAINED, onError);
+            Expression expression = expressions.get(i);
+            CheckedExp checked = expression.check(dataLookup, typeState, (lastIsPattern && i == expressions.size() - 1) ? ExpressionKind.PATTERN : ExpressionKind.EXPRESSION, LocationInfo.UNIT_CONSTRAINED, onError);
             expressionTypes.add(Optional.ofNullable(checked).map(c -> c.typeExp));
             if (checked == null)
             {
@@ -149,10 +149,10 @@ public class EqualExpression extends NaryOpShortCircuitExpression
         else
         {
             ImmutableList.Builder<ValueResult> values = ImmutableList.builderWithExpectedSize(expressions.size());
-            @Value Object first = fetchSubExpression(expressions.get(0), state, values).value;
+            Object first = fetchSubExpression(expressions.get(0), state, values).value;
             for (int i = 1; i < expressions.size(); i++)
             {
-                @Value Object rhsVal = fetchSubExpression(expressions.get(i), state, values).value;
+                Object rhsVal = fetchSubExpression(expressions.get(i), state, values).value;
                 try
                 {
                     if (0 != Utility.compareValues(first, rhsVal))
@@ -171,7 +171,7 @@ public class EqualExpression extends NaryOpShortCircuitExpression
     }
 
     @Override
-    public @Nullable Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
+    public Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
     {
         return null;
     }
@@ -182,7 +182,7 @@ public class EqualExpression extends NaryOpShortCircuitExpression
         return visitor.equal(this, expressions, lastIsPattern);
     }
     
-    public ImmutableList<@Recorded Expression> getOperands()
+    public ImmutableList<Expression> getOperands()
     {
         return expressions;
     }

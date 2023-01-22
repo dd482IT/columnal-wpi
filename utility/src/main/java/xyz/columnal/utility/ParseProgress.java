@@ -40,7 +40,7 @@ public class ParseProgress
         return new ParseProgress(text, 0);
     }
 
-    public @Nullable ParseProgress consumeNext(String match)
+    public ParseProgress consumeNext(String match)
     {
         int next = match.codePoints().anyMatch(Character::isWhitespace) ? curCharIndex : skipSpaces().curCharIndex;
         if (src.startsWith(match, next))
@@ -50,7 +50,7 @@ public class ParseProgress
     }
     
     // Consumes all text until the terminator, and returns it, and consumes the terminator.
-    public @Nullable Pair<String, ParseProgress> consumeUpToAndIncluding(String terminator)
+    public Pair<String, ParseProgress> consumeUpToAndIncluding(String terminator)
     {
         int index = src.indexOf(terminator, curCharIndex);
         if (index == -1)
@@ -73,7 +73,7 @@ public class ParseProgress
     }
 
     // Ignore case
-    public @Nullable ParseProgress consumeNextIC(String match)
+    public ParseProgress consumeNextIC(String match)
     {
         int next = skipSpaces().curCharIndex;
         if (src.regionMatches(true, next, match, 0, match.length()))

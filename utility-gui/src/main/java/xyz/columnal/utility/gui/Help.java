@@ -62,11 +62,11 @@ class Help
         // Don't understand why I need all here.  Surely i18n should be enough?
 
         @SuppressWarnings("all") // Because we assert that the loaded XML is localized
-        @LocalizableKey String titleKey = id + ".title";
+        String titleKey = id + ".title";
         @SuppressWarnings("all")
-        @LocalizableKey String shortKey = id;
+        String shortKey = id;
         @SuppressWarnings("all")
-        @LocalizableKey String fullKey = id + ".full";
+        String fullKey = id + ".full";
         @SuppressWarnings("i18n")
         ImmutableList<@Localized String> split = ImmutableList.copyOf(GrammarUtility.collapseSpaces(resourceBundle.getString(fullKey)).split("£££££"));
         return new HelpInfo(resourceBundle.getString(titleKey), resourceBundle.getString(shortKey), split);
@@ -74,11 +74,11 @@ class Help
 
     static class HelpInfo
     {
-        final @Localized String title;
-        final @Localized String shortText;
-        final List<@Localized String> fullParas;
+        final String title;
+        final String shortText;
+        final List<String> fullParas;
 
-        private HelpInfo(@Localized String title, @Localized String shortText, List<@Localized String> fullParas)
+        private HelpInfo(String title, String shortText, List<String> fullParas)
         {
             this.title = title;
             this.shortText = shortText;
@@ -86,7 +86,7 @@ class Help
         }
     }
 
-    static @Nullable HelpInfo getHelpInfo(@HelpKey String helpKey)
+    static HelpInfo getHelpInfo(String helpKey)
     {
         String[] rootAndEntry = helpKey.split("/");
         try

@@ -78,7 +78,6 @@ import java.util.stream.Collectors;
 
 public class TFXUtil
 {
-    @OnThread(Tag.Any)
     public static <T> T fx(FXPlatformSupplierEx<T> action)
     {
         try
@@ -92,7 +91,6 @@ public class TFXUtil
     }
 
     // Note: also waits for the queue to be empty
-    @OnThread(Tag.Any)
     public static void fx_(FXPlatformRunnable action)
     {
         try
@@ -107,13 +105,11 @@ public class TFXUtil
     }
 
     // Doesn't wait for action to complete
-    @OnThread(Tag.Any)
     public static void asyncFx_(FXPlatformRunnable action)
     {
         FxThreadUtils.asyncFx(action::run);
     }
 
-    @OnThread(Tag.Any)
     public static void fxTest_(FXPlatformRunnable action)
     {
         try
@@ -121,7 +117,6 @@ public class TFXUtil
             FxThreadUtils.<Optional<Throwable>>asyncFx(new Callable<Optional<Throwable>>()
             {
                 @Override
-                @OnThread(value = Tag.FXPlatform, ignoreParent = true)
                 public Optional<Throwable> call() throws Exception
                 {
                     try
@@ -142,7 +137,6 @@ public class TFXUtil
         }
     }
 
-    @OnThread(Tag.Any)
     public static <T> T sim(SimulationSupplier<T> action)
     {
         try
@@ -170,7 +164,6 @@ public class TFXUtil
         }
     }
 
-    @OnThread(Tag.Any)
     public static void sim_(SimulationRunnable action)
     {
         try
@@ -199,7 +192,6 @@ public class TFXUtil
         }
     }
 
-    @OnThread(Tag.Any)
     public static void sleep(int millis)
     {
         try
@@ -212,13 +204,12 @@ public class TFXUtil
         }
     }
 
-    @OnThread(Tag.Any)
     public static KeyCode ctrlCmd()
     {
         return SystemUtils.IS_OS_MAC_OSX ? KeyCode.COMMAND : KeyCode.CONTROL;
     }
 
-    public @OnThread(Tag.Any)
+    public 
     static CellPosition tablePosition(TableManager tableManager, TableId srcId) throws UserException
     {
         Table table = tableManager.getSingleTableOrThrow(srcId);
@@ -235,8 +226,7 @@ public class TFXUtil
     }
 
     // Finds the first parent (starting at given one and going upwards via getParent) that satisfies the given predicate
-    @OnThread(Tag.FXPlatform)
-    public static @Nullable Parent findParent(@Nullable Parent parent, Predicate<Node> check)
+    public static Parent findParent(Parent parent, Predicate<Node> check)
     {
         while (parent != null && !check.test(parent))
         {
@@ -245,7 +235,6 @@ public class TFXUtil
         return parent;
     }
 
-    @OnThread(Tag.Simulation)
     public static void collapseAllTableHats(TableManager tableManager, VirtualGrid virtualGrid)
     {
         for (Table table : tableManager.getAllTables())
@@ -266,8 +255,7 @@ public class TFXUtil
      * and tracks which if any receive the given event type
      * while executing during.
      */
-    @OnThread(Tag.Any)
-    public static <E extends Event> void debugEventRecipient_(FxRobotInterface robot, @Nullable Point2D target, EventType<E> eventType, Runnable during)
+    public static <E extends Event> void debugEventRecipient_(FxRobotInterface robot, Point2D target, EventType<E> eventType, Runnable during)
     {
         Set<Node> allNodes = robot.lookup(n -> {
             Bounds screen = fx(() -> n.localToScreen(n.getBoundsInLocal()));
@@ -320,7 +308,6 @@ public class TFXUtil
         Toolkit.getToolkit().enterNestedEventLoop(finish);
     }
 
-    @OnThread(Tag.FXPlatform)
     public static void copySnapshotToClipboard(Node node)
     {
         WritableImage img = node.snapshot(null, null);
@@ -338,7 +325,6 @@ public class TFXUtil
 
     public static interface FXPlatformSupplierEx<T> extends Callable<T>
     {
-        @OnThread(value = Tag.FXPlatform, ignoreParent = true)
         public T call() throws InternalException, UserException;
     }
 }

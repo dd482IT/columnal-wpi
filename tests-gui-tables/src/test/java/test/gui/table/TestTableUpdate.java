@@ -78,7 +78,6 @@ import java.util.Random;
 
 import static org.junit.Assert.*;
 
-@RunWith(JUnitQuickcheck.class)
 public class TestTableUpdate extends FXApplicationTest implements ScrollToTrait, FocusOwnerTrait, EnterStructuredValueTrait, ClickOnTableHeaderTrait
 {    
     /**
@@ -90,15 +89,13 @@ public class TestTableUpdate extends FXApplicationTest implements ScrollToTrait,
      *  - C: the two transformations have altered graphical content
      *  - D: copying the two transformations gets the altered content.
      */
-    @Property(trials = 10)
-    @OnThread(Tag.Simulation)
     public void propUpdate(
-            @From(GenTypeAndValueGen.class) TypeAndValueGen colA,
-            @From(GenTypeAndValueGen.class) TypeAndValueGen colB,
-            @From(GenRandom.class) Random r) throws Exception
+            TypeAndValueGen colA,
+            TypeAndValueGen colB,
+            Random r) throws Exception
     {
         TBasicUtil.printSeedOnFail(() -> {
-            final @Initialized int tableLength = 1 + r.nextInt(20);
+            final int tableLength = 1 + r.nextInt(20);
             MainWindowActions details = createTables(colA, colB, r, tableLength);
             
             int changes = 3;
@@ -107,7 +104,7 @@ public class TestTableUpdate extends FXApplicationTest implements ScrollToTrait,
                 int targetColumn = r.nextInt(2);
                 int targetRow = r.nextInt(tableLength);
                 TypeAndValueGen colType = targetColumn == 0 ? colA : colB;
-                @Value Object newVal = colType.makeValue();
+                Object newVal = colType.makeValue();
 
                 keyboardMoveTo(details._test_getVirtualGrid(), CellPosition.ORIGIN.offsetByRowCols(targetRow + 4, targetColumn + 1));
                 push(KeyCode.ENTER);
@@ -115,23 +112,21 @@ public class TestTableUpdate extends FXApplicationTest implements ScrollToTrait,
                 push(KeyCode.ENTER);
                 TFXUtil.sleep(2000);
 
-                List<List<@Nullable String>> latestDataA = getDataViaGraphics(details, 0);
+                List<List<String>> latestDataA = getDataViaGraphics(details, 0);
                 checkAllMatch(colA.getType(), latestDataA);
-                List<List<@Nullable String>> latestDataB = getDataViaGraphics(details, 1);
+                List<List<String>> latestDataB = getDataViaGraphics(details, 1);
                 checkAllMatch(colB.getType(), latestDataB);
             }
         });
     }
 
-    @Property(trials = 5)
-    @OnThread(Tag.Simulation)
     public void propDelete(
-        @From(GenTypeAndValueGen.class) TypeAndValueGen colA,
-        @From(GenTypeAndValueGen.class) TypeAndValueGen colB,
-        @From(GenRandom.class) Random r) throws Exception
+        TypeAndValueGen colA,
+        TypeAndValueGen colB,
+        Random r) throws Exception
     {
         TBasicUtil.printSeedOnFail(() -> {
-            final @Initialized int tableLength = 1 + r.nextInt(20);
+            final int tableLength = 1 + r.nextInt(20);
             MainWindowActions details = createTables(colA, colB, r, tableLength);
 
             // We try deleting a random table in the chain, and check that its cells are gone
@@ -156,8 +151,8 @@ public class TestTableUpdate extends FXApplicationTest implements ScrollToTrait,
             {
                 case 0:
                     EditableRecordSet origRecordSet = new EditableRecordSet(ImmutableList.<SimulationFunction<RecordSet, EditableColumn>>of(
-                        ColumnUtility.makeImmediateColumn(colA.getType(), new ColumnId("A"), Utility.<Either<String, @Value Object>>replicateM_Ex(tableLength, () -> Either.right(colA.makeValue())), colA.makeValue()),
-                        ColumnUtility.makeImmediateColumn(colB.getType(), new ColumnId("B"), Utility.<Either<String, @Value Object>>replicateM_Ex(tableLength, () -> Either.right(colB.makeValue())), colB.makeValue())
+                        ColumnUtility.makeImmediateColumn(colA.getType(), new ColumnId("A"), Utility.<Either<String, Object>>replicateM_Ex(tableLength, () -> Either.right(colA.makeValue())), colA.makeValue()),
+                        ColumnUtility.makeImmediateColumn(colB.getType(), new ColumnId("B"), Utility.<Either<String, Object>>replicateM_Ex(tableLength, () -> Either.right(colB.makeValue())), colB.makeValue())
                     ), () -> tableLength);
                     details._test_getTableManager().record(new ImmediateDataSource(details._test_getTableManager(), new InitialLoadDetails(new TableId("Src"), null, CellPosition.ORIGIN.offsetByRowCols(1, 1), null), origRecordSet));
                     break;
@@ -179,9 +174,9 @@ public class TestTableUpdate extends FXApplicationTest implements ScrollToTrait,
             }
 
             // Check data matches:
-            List<List<@Nullable String>> latestDataA = getDataViaGraphics(details, 0);
+            List<List<String>> latestDataA = getDataViaGraphics(details, 0);
             checkAllMatch(colA.getType(), latestDataA);
-            List<List<@Nullable String>> latestDataB = getDataViaGraphics(details, 1);
+            List<List<String>> latestDataB = getDataViaGraphics(details, 1);
             checkAllMatch(colB.getType(), latestDataB);
 
             // Check changes are properly linked up:
@@ -191,7 +186,7 @@ public class TestTableUpdate extends FXApplicationTest implements ScrollToTrait,
                 int targetColumn = r.nextInt(2);
                 int targetRow = r.nextInt(tableLength);
                 TypeAndValueGen colType = targetColumn == 0 ? colA : colB;
-                @Value Object newVal = colType.makeValue();
+                Object newVal = colType.makeValue();
 
                 keyboardMoveTo(details._test_getVirtualGrid(), CellPosition.ORIGIN.offsetByRowCols(targetRow + 4, targetColumn + 1));
                 push(KeyCode.ENTER);
@@ -207,16 +202,15 @@ public class TestTableUpdate extends FXApplicationTest implements ScrollToTrait,
         });
     }
 
-    @OnThread(Tag.Simulation)
-    private MainWindowActions createTables(@From(GenTypeAndValueGen.class) GenTypeAndValueGen.TypeAndValueGen colA, @From(GenTypeAndValueGen.class) GenTypeAndValueGen.TypeAndValueGen colB, @From(GenRandom.class) Random r, @Initialized int tableLength) throws Exception
+    private MainWindowActions createTables(GenTypeAndValueGen.TypeAndValueGen colA, GenTypeAndValueGen.TypeAndValueGen colB, Random r, int tableLength) throws Exception
     {
         TableManager dummy = new DummyManager();
         dummy.getTypeManager()._test_copyTaggedTypesFrom(colA.getTypeManager());
         dummy.getTypeManager()._test_copyTaggedTypesFrom(colB.getTypeManager());
 
         EditableRecordSet origRecordSet = new EditableRecordSet(ImmutableList.<SimulationFunction<RecordSet, EditableColumn>>of(
-                ColumnUtility.makeImmediateColumn(colA.getType(), new ColumnId("A"), Utility.<Either<String, @Value Object>>replicateM_Ex(tableLength, () -> Either.right(colA.makeValue())), colA.makeValue()),
-                ColumnUtility.makeImmediateColumn(colB.getType(), new ColumnId("B"), Utility.<Either<String, @Value Object>>replicateM_Ex(tableLength, () -> Either.right(colB.makeValue())), colB.makeValue())
+                ColumnUtility.makeImmediateColumn(colA.getType(), new ColumnId("A"), Utility.<Either<String, Object>>replicateM_Ex(tableLength, () -> Either.right(colA.makeValue())), colA.makeValue()),
+                ColumnUtility.makeImmediateColumn(colB.getType(), new ColumnId("B"), Utility.<Either<String, Object>>replicateM_Ex(tableLength, () -> Either.right(colB.makeValue())), colB.makeValue())
         ), () -> tableLength);
         dummy.record(new ImmediateDataSource(dummy, new InitialLoadDetails(new TableId("Src"), null, CellPosition.ORIGIN.offsetByRowCols(1, 1), null), origRecordSet));
         // Now add two transformations:
@@ -226,18 +220,17 @@ public class TestTableUpdate extends FXApplicationTest implements ScrollToTrait,
         MainWindowActions details = TAppUtil.openDataAsTable(windowToUse, dummy).get();
         TFXUtil.sleep(1000);
         // First check that the data is valid to begin with:
-        List<List<@Nullable String>> origDataA = getDataViaGraphics(details, 0);
+        List<List<String>> origDataA = getDataViaGraphics(details, 0);
         checkAllMatch(colA.getType(), origDataA);
-        List<List<@Nullable String>> origDataB = getDataViaGraphics(details, 1);
+        List<List<String>> origDataB = getDataViaGraphics(details, 1);
         checkAllMatch(colB.getType(), origDataB);
         return details;
     }
 
-    @OnThread(Tag.Any)
-    private List<List<@Nullable String>> getDataViaGraphics(MainWindowActions details, int columnIndex) throws UserException
+    private List<List<String>> getDataViaGraphics(MainWindowActions details, int columnIndex) throws UserException
     {
-        List<List<@Nullable String>> r = new ArrayList<>();
-        for (@ExpressionIdentifier String tableName : ImmutableList.<@ExpressionIdentifier String>of("Src", "T1", "T2"))
+        List<List<String>> r = new ArrayList<>();
+        for (String tableName : ImmutableList.<String>of("Src", "T1", "T2"))
         {
             @SuppressWarnings("nullness") // Will just throw if it turns out to be null, which is fine
             TableDisplay tableDisplay = (TableDisplay) TFXUtil.fx(() -> details._test_getTableManager().getSingleTableOrThrow(new TableId(tableName)).getDisplay());
@@ -247,29 +240,27 @@ public class TestTableUpdate extends FXApplicationTest implements ScrollToTrait,
                 if (r.size() <= i)
                     r.add(new ArrayList<>());
                 int iFinal = i;
-                r.get(i).add(TFXUtil.<@Nullable String>fx(() -> getGraphicalValue(details, tableDisplay, columnIndex, iFinal)));
+                r.get(i).add(TFXUtil.<String>fx(() -> getGraphicalValue(details, tableDisplay, columnIndex, iFinal)));
             }
         }
         return r;
     }
     
-    @OnThread(Tag.FXPlatform)
-    private @Nullable String getGraphicalValue(MainWindowActions details, TableDisplay tableDisplay, int columnIndex, int row)
+    private String getGraphicalValue(MainWindowActions details, TableDisplay tableDisplay, int columnIndex, int row)
     {
-        @Nullable VersionedSTF cell = details._test_getDataCell(tableDisplay.getPosition().offsetByRowCols(tableDisplay.getHeaderRowCount() + row, columnIndex));
+        VersionedSTF cell = details._test_getDataCell(tableDisplay.getPosition().offsetByRowCols(tableDisplay.getHeaderRowCount() + row, columnIndex));
         if (cell != null)
             return cell._test_getGraphicalText().replace(", ", ",");
         else
             return null;
     }
 
-    @OnThread(Tag.Simulation)
-    private final void checkAllMatch(DataType dataType, List<List<@Nullable String>> data)
+    private final void checkAllMatch(DataType dataType, List<List<String>> data)
     {
         for (int row = 0; row < data.size(); row++)
         {
-            @Nullable String first = data.get(row).get(0);
-            List<@Nullable String> valsForRow = data.get(row);
+            String first = data.get(row).get(0);
+            List<String> valsForRow = data.get(row);
             for (int column = 0; column < valsForRow.size(); column++)
             {
                 String value = valsForRow.get(column);
@@ -291,8 +282,7 @@ public class TestTableUpdate extends FXApplicationTest implements ScrollToTrait,
         }
     }
 
-    @OnThread(Tag.Simulation)
-    private static void addTransformation(TableManager mgr, @ExpressionIdentifier String srcTable, @ExpressionIdentifier String destTable, CellPosition position, Random r) throws InternalException
+    private static void addTransformation(TableManager mgr, String srcTable, String destTable, CellPosition position, Random r) throws InternalException
     {
         // We choose between Sort (original order), Calculate(empty list) and Filter (true)
         switch (r.nextInt(3))

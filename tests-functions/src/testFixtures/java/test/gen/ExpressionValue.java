@@ -40,14 +40,14 @@ public class ExpressionValue extends SingleTableLookup implements ColumnLookup
     public final DataType type;
     // Number of values  in list will equal number of rows
     // in recordSet.  Will be 1 for GenBackwards and N for GenForwards.
-    public final List<@Value Object> value;
+    public final List<Object> value;
     public final TableId tableId;
     public final RecordSet recordSet;
     public final Expression expression;
     public final TypeManager typeManager;
-    public final @Nullable GenExpressionValueBase generator;
+    public final GenExpressionValueBase generator;
 
-    public ExpressionValue(DataType type, List<@Value Object> value, TypeManager typeManager, TableId tableId, RecordSet recordSet, Expression expression, @Nullable GenExpressionValueBase generator)
+    public ExpressionValue(DataType type, List<Object> value, TypeManager typeManager, TableId tableId, RecordSet recordSet, Expression expression, GenExpressionValueBase generator)
     {
         super(tableId, recordSet);
         this.tableId = tableId;

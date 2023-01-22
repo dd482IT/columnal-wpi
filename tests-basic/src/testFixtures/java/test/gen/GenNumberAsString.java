@@ -52,7 +52,7 @@ public class GenNumberAsString extends Generator<String>
     }
 
     @Override
-    public String generate(SourceOfRandomness sourceOfRandomness, @Nullable GenerationStatus generationStatus)
+    public String generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
     {
         if (sourceOfRandomness.nextBoolean())
         {

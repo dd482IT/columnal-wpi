@@ -29,18 +29,17 @@ import threadchecker.Tag;
 /**
  * Created by neil on 14/11/2016.
  */
-@OnThread(Tag.Any)
 public class TypeId implements Comparable<TypeId>
 {
-    private final @ExpressionIdentifier String typeId;
+    private final String typeId;
 
-    public TypeId(@ExpressionIdentifier String typeId)
+    public TypeId(String typeId)
     {
         this.typeId = typeId;
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -69,7 +68,7 @@ public class TypeId implements Comparable<TypeId>
     }
 
     @SuppressWarnings("i18n")
-    public @Localized @ExpressionIdentifier String getRaw()
+    public @Localized String getRaw()
     {
         return typeId;
     }

@@ -29,7 +29,7 @@ import xyz.columnal.error.InternalException;
  */
 public abstract class SingleNumericSummaryFunction extends FunctionDefinition
 {
-    public SingleNumericSummaryFunction(@FuncDocKey String funcDocKey) throws InternalException
+    public SingleNumericSummaryFunction(String funcDocKey) throws InternalException
     {
         super(funcDocKey);
     }

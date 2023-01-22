@@ -50,20 +50,20 @@ public class AddDays extends FunctionDefinition
     }
 
     @Override
-    public @OnThread(Tag.Simulation) ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
+    public ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
     {
         return new ValueFunction()
         {
             @Override
-            public @OnThread(Tag.Simulation) @Value Object _call() throws InternalException, UserException
+            public Object _call() throws InternalException, UserException
             {
-                @Value Temporal lhs = arg(0, Temporal.class);
-                @Value Number rhs = arg(1, Number.class);
+                Temporal lhs = arg(0, Temporal.class);
+                Number rhs = arg(1, Number.class);
                 if (!Utility.isIntegral(rhs))
                     throw new UserException("Cannot add " + rhs.toString() + " days; number must be an integer (whole number)");
                 try
                 {
-                    @Value TemporalAccessor value = DataTypeUtility.value(new DateTimeInfo(DateTimeType.YEARMONTHDAY), lhs.plus(rhs.longValue(), ChronoUnit.DAYS));
+                    TemporalAccessor value = DataTypeUtility.value(new DateTimeInfo(DateTimeType.YEARMONTHDAY), lhs.plus(rhs.longValue(), ChronoUnit.DAYS));
                     if (value != null)
                         return value;
                     else

@@ -57,7 +57,7 @@ public class Unit
     {
         Unit u = new Unit();
         u.units.putAll(units);
-        for (Entry<@KeyFor("rhs.units") SingleUnit, Integer> rhsUnit : rhs.units.entrySet())
+        for (Entry<SingleUnit, Integer> rhsUnit : rhs.units.entrySet())
         {
             u.units.merge(rhsUnit.getKey(), rhsUnit.getValue(), (l, r) -> {
                 // Suppress null warning when we're removing key (fine with contract of method):
@@ -88,7 +88,7 @@ public class Unit
     public Unit rootedBy(int root) throws UserException
     {
         Unit u = new Unit();
-        for (Entry<@KeyFor("this.units") SingleUnit, Integer> entry : units.entrySet())
+        for (Entry<SingleUnit, Integer> entry : units.entrySet())
         {
             if (entry.getValue() % root != 0)
             {
@@ -103,7 +103,7 @@ public class Unit
     {
         if (units.size() == 1)
         {
-            Entry<@KeyFor("this.units") SingleUnit, Integer> only = units.entrySet().iterator().next();
+            Entry<SingleUnit, Integer> only = units.entrySet().iterator().next();
             if (only.getValue() == 1)
                 return only.getKey().getPrefix();
         }
@@ -114,7 +114,7 @@ public class Unit
     {
         if (units.size() == 1)
         {
-            Entry<@KeyFor("this.units") SingleUnit, Integer> only = units.entrySet().iterator().next();
+            Entry<SingleUnit, Integer> only = units.entrySet().iterator().next();
             if (only.getValue() == 1)
                 return only.getKey().getSuffix();
         }
@@ -172,7 +172,7 @@ public class Unit
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -191,7 +191,7 @@ public class Unit
     public Unit reciprocal()
     {
         Unit u = new Unit();
-        for (Entry<@KeyFor("this.units") SingleUnit, Integer> entry : units.entrySet())
+        for (Entry<SingleUnit, Integer> entry : units.entrySet())
         {
             u.units.put(entry.getKey(), - entry.getValue());
         }

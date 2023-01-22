@@ -90,29 +90,25 @@ import java.util.stream.Stream;
 /**
  * Created by neil on 21/10/2016.
  */
-@OnThread(Tag.Simulation)
 public class Aggregate extends VisitableTransformation implements SingleSourceTransformation
 {
     public static final String NAME = "aggregate";
-    private final @Nullable Table src;
+    private final Table src;
     private final TableId srcTableId;
     // ColumnId here is the destination column, not source column:
-    @OnThread(Tag.Any)
     private final ImmutableList<Pair<ColumnId, Expression>> summaries;
 
     // Columns to split by:
-    @OnThread(Tag.Any)
     private final ImmutableList<ColumnId> splitBy;
-    @OnThread(Tag.Any)
     private final String error;
-    private final @Nullable TransformationRecordSet result;
+    private final TransformationRecordSet result;
     private final JoinedSplit splits;
 
     // A BitSet, with a cached array of int indexes indicating the set bits 
     public static class Occurrences
     {
         private final BitSet bitSet;
-        private int @MonotonicNonNull [] indexes; // The indexes of the set bits
+        private int[] indexes; // The indexes of the set bits
 
         public Occurrences(BitSet bitSet)
         {
@@ -134,13 +130,12 @@ public class Aggregate extends VisitableTransformation implements SingleSourceTr
         }
     }
     
-    @OnThread(Tag.Simulation)
     private static class JoinedSplit
     {
         private final ImmutableList<Column> columns;
         // This list is in sorted order of the value list,
         // because of the way it is constructed
-        private final ImmutableList<Pair<List<@Value Object>, Occurrences>> valuesAndOccurrences;
+        private final ImmutableList<Pair<List<Object>, Occurrences>> valuesAndOccurrences;
 
         // Creates an empty split, which has one occurrence at all indexes
         public JoinedSplit(int length)
@@ -148,21 +143,21 @@ public class Aggregate extends VisitableTransformation implements SingleSourceTr
             columns = ImmutableList.of();
             BitSet bitSet = new BitSet();
             bitSet.set(0, length);
-            valuesAndOccurrences = ImmutableList.of(new Pair<List<@Value Object>, Occurrences>(ImmutableList.<@Value Object>of(), new Occurrences(bitSet)));
+            valuesAndOccurrences = ImmutableList.of(new Pair<List<Object>, Occurrences>(ImmutableList.<Object>of(), new Occurrences(bitSet)));
         }
 
         public JoinedSplit(Column column, TreeMap<ComparableValue, BitSet> valuesAndOccurrences)
         {
             this.columns = ImmutableList.of(column);
-            ImmutableList.Builder<Pair<List<@Value Object>, Occurrences>> valOccBuilder = ImmutableList.builderWithExpectedSize(valuesAndOccurrences.size());
+            ImmutableList.Builder<Pair<List<Object>, Occurrences>> valOccBuilder = ImmutableList.builderWithExpectedSize(valuesAndOccurrences.size());
             valuesAndOccurrences.forEach((ComparableValue k, BitSet v) ->
             {
-                valOccBuilder.add(new Pair<>(ImmutableList.<@Value Object>of(k.getValue()), new Occurrences(v)));
+                valOccBuilder.add(new Pair<>(ImmutableList.<Object>of(k.getValue()), new Occurrences(v)));
             });
             this.valuesAndOccurrences = valOccBuilder.build();
         }
         
-        public JoinedSplit(ImmutableList<Column> columns, ImmutableList<Pair<List<@Value Object>, Occurrences>> valuesAndOccurrences)
+        public JoinedSplit(ImmutableList<Column> columns, ImmutableList<Pair<List<Object>, Occurrences>> valuesAndOccurrences)
         {
             this.columns = columns;
             this.valuesAndOccurrences = valuesAndOccurrences;
@@ -234,7 +229,7 @@ public class Aggregate extends VisitableTransformation implements SingleSourceTr
 
             @Override
             @SuppressWarnings("units")
-            public @TableDataRowIndex int getLength() throws UserException
+            public int getLength() throws UserException
             {
                 return summaries.isEmpty() && splitBy.isEmpty() ? 0 : splits.valuesAndOccurrences.size();
             }
@@ -250,7 +245,7 @@ public class Aggregate extends VisitableTransformation implements SingleSourceTr
                     int splitColumnIndex = i;
                     theResult.buildColumn(rs -> new Column(rs, orig.getName())
                     {
-                        private @Value Object getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
+                        private Object getWithProgress(int index, ProgressListener progressListener) throws UserException, InternalException
                         {
                             return Utility.getI(Utility.getI(splits.valuesAndOccurrences, index).getFirst(), splitColumnIndex);
                         }
@@ -262,7 +257,7 @@ public class Aggregate extends VisitableTransformation implements SingleSourceTr
                         }
 
                         @Override
-                        public @OnThread(Tag.Any) AlteredState getAlteredState()
+                        public AlteredState getAlteredState()
                         {
                             return AlteredState.OVERWRITTEN;
                         }
@@ -283,11 +278,11 @@ public class Aggregate extends VisitableTransformation implements SingleSourceTr
                 try
                 {
                     @SuppressWarnings("recorded")
-                    @Nullable TypeExp type = expression.checkExpression(columnLookup, makeTypeState(mgr), errors);
-                    @Nullable DataType concrete = type == null ? null : errors.recordLeftError(mgr.getTypeManager(), FunctionList.getFunctionLookup(mgr.getUnitManager()), expression, type.toConcreteType(mgr.getTypeManager()));
+                    TypeExp type = expression.checkExpression(columnLookup, makeTypeState(mgr), errors);
+                    DataType concrete = type == null ? null : errors.recordLeftError(mgr.getTypeManager(), FunctionList.getFunctionLookup(mgr.getUnitManager()), expression, type.toConcreteType(mgr.getTypeManager()));
                     if (type == null || concrete == null)
-                        throw new UserException((@NonNull StyledString) errors.getAllErrors().findFirst().orElse(StyledString.s("Unknown type error")));
-                    @NonNull DataType typeFinal = concrete;
+                        throw new UserException((StyledString) errors.getAllErrors().findFirst().orElse(StyledString.s("Unknown type error")));
+                    DataType typeFinal = concrete;
                     column = rs -> ColumnUtility.makeCalculatedColumn(typeFinal, rs, e.getFirst(), i -> expression.calculateValue(makeEvaluateState(splits, mgr.getTypeManager(), i, false)).value, t -> addManualEditSet(e.getFirst(), t));
                     
                 }
@@ -315,12 +310,11 @@ public class Aggregate extends VisitableTransformation implements SingleSourceTr
     }
     
     // For re-running expressions for explanations:
-    public EvaluateState recreateEvaluateState(TypeManager typeManager, @TableDataRowIndex int rowIndex, boolean recordExplanation) throws InternalException
+    public EvaluateState recreateEvaluateState(TypeManager typeManager, int rowIndex, boolean recordExplanation) throws InternalException
     {
         return makeEvaluateState(splits, typeManager, rowIndex, recordExplanation);
     }
 
-    @OnThread(Tag.Any)
     public static TypeState makeTypeState(TableManager mgr) throws InternalException
     {
         TypeState typeState = new TypeState(mgr.getTypeManager(), FunctionList.getFunctionLookup(mgr.getUnitManager()));
@@ -334,9 +328,9 @@ public class Aggregate extends VisitableTransformation implements SingleSourceTr
     private static class SingleSplit
     {
         private final Column column;
-        private final TreeMap<@NonNull ComparableValue, BitSet> valuesAndOccurrences;
+        private final TreeMap<ComparableValue, BitSet> valuesAndOccurrences;
 
-        public SingleSplit(Column column, TreeMap<@NonNull ComparableValue, BitSet> valuesAndOccurrences)
+        public SingleSplit(Column column, TreeMap<ComparableValue, BitSet> valuesAndOccurrences)
         {
             this.column = column;
             this.valuesAndOccurrences = valuesAndOccurrences;
@@ -412,14 +406,14 @@ public class Aggregate extends VisitableTransformation implements SingleSourceTr
         // Recurse to get cross product of the rest:
         JoinedSplit rest = crossProduct(allDistincts.subList(1, allDistincts.size()), srcLength);
         // Don't know size in advance because not all combinations will occur:
-        ImmutableList.Builder<Pair<List<@Value Object>, Occurrences>> valuesAndOccurrences = ImmutableList.builder();
+        ImmutableList.Builder<Pair<List<Object>, Occurrences>> valuesAndOccurrences = ImmutableList.builder();
         // Important that the first list is outermost, so that
         // we add all the items with earliest value of first, thus
         // keeping the result in order of first column foremost,
         // then going by order of rest.
         first.valuesAndOccurrences.forEach((firstVal, firstOcc) ->
         {
-            for (Pair<List<@Value Object>, Occurrences> restPair : rest.valuesAndOccurrences)
+            for (Pair<List<Object>, Occurrences> restPair : rest.valuesAndOccurrences)
             {
                 // BitSet is mutable, so important to clone:
                 BitSet jointOccurrence = (BitSet)firstOcc.clone();
@@ -455,7 +449,6 @@ public class Aggregate extends VisitableTransformation implements SingleSourceTr
 
 
     @Override
-    @OnThread(Tag.Any)
     public RecordSet getData() throws UserException
     {
         if (result == null)
@@ -464,28 +457,26 @@ public class Aggregate extends VisitableTransformation implements SingleSourceTr
     }
 
     @Override
-    protected @OnThread(Tag.Any) String getTransformationName()
+    protected String getTransformationName()
     {
         return NAME;
     }
 
-    @OnThread(Tag.FXPlatform)
     public static class Info extends SingleSourceTransformationInfo
     {
-        @OnThread(Tag.Any)
         public Info()
         {
             super(NAME, "transform.aggregate", "preview-aggregate.png", "aggregate.explanation.short",Arrays.asList("min", "max"));
         }
 
         @Override
-        public @OnThread(Tag.Simulation) Transformation makeWithSource(TableManager mgr, CellPosition destination, Table srcTable) throws InternalException
+        public Transformation makeWithSource(TableManager mgr, CellPosition destination, Table srcTable) throws InternalException
         {
             return new Aggregate(mgr, new InitialLoadDetails(null, null, destination, null), srcTable.getId(), ImmutableList.of(), ImmutableList.of());
         }
 
         @Override
-        public @OnThread(Tag.Simulation) Transformation loadSingle(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, String detail, ExpressionVersion expressionVersion) throws InternalException, UserException
+        public Transformation loadSingle(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, String detail, ExpressionVersion expressionVersion) throws InternalException, UserException
         {
             SummaryContext loaded = Utility.parseAsOne(detail, TransformationLexer::new, TransformationParser::new, TransformationParser::summary);
 
@@ -503,7 +494,7 @@ public class Aggregate extends VisitableTransformation implements SingleSourceTr
     }
 
     @Override
-    protected @OnThread(Tag.Any) List<String> saveDetail(@Nullable File destination, TableAndColumnRenames renames)
+    protected List<String> saveDetail(File destination, TableAndColumnRenames renames)
     {
         OutputBuilder b = new OutputBuilder();
         for (Pair<ColumnId, Expression> entry : summaries)
@@ -521,39 +512,34 @@ public class Aggregate extends VisitableTransformation implements SingleSourceTr
         return b.toLines();
     }
     
-    @OnThread(Tag.Any)
     public TableId getSrcTableId()
     {
         return srcTableId;
     }
 
     @Override
-    public @OnThread(Tag.Simulation) Transformation withNewSource(TableId newSrcTableId) throws InternalException
+    public Transformation withNewSource(TableId newSrcTableId) throws InternalException
     {
         return new Aggregate(getManager(), getDetailsForCopy(getId()), newSrcTableId, summaries, splitBy);
     }
 
     @Override
-    @OnThread(Tag.Any)
     public Stream<TableId> getPrimarySources()
     {
         return Stream.of(srcTableId);
     }
 
     @Override
-    @OnThread(Tag.Any)
     public Stream<TableId> getSourcesFromExpressions()
     {
         return ExpressionUtil.tablesFromExpressions(summaries.stream().map(p -> p.getSecond()));
     }
 
-    @OnThread(Tag.Any)
     public ImmutableList<Pair<ColumnId, Expression>> getColumnExpressions()
     {
         return summaries;
     }
 
-    @OnThread(Tag.Any)
     public ImmutableList<ColumnId> getSplitBy()
     {
         return splitBy;
@@ -902,7 +888,6 @@ public class Aggregate extends VisitableTransformation implements SingleSourceTr
         return result;
     }
     
-    @OnThread(Tag.Any)
     public ColumnLookup getColumnLookup()
     {
         if (result != null)
@@ -911,13 +896,13 @@ public class Aggregate extends VisitableTransformation implements SingleSourceTr
             return new ColumnLookup()
         {
             @Override
-            public @Nullable FoundColumn getColumn(Expression expression, @Nullable TableId tableId, ColumnId columnId)
+            public FoundColumn getColumn(Expression expression, TableId tableId, ColumnId columnId)
             {
                 return null;
             }
 
             @Override
-            public Stream<Pair<@Nullable TableId, ColumnId>> getAvailableColumnReferences()
+            public Stream<Pair<TableId, ColumnId>> getAvailableColumnReferences()
             {
                 return Stream.empty();
             }
@@ -929,7 +914,7 @@ public class Aggregate extends VisitableTransformation implements SingleSourceTr
             }
 
             @Override
-            public @Nullable FoundTable getTable(@Nullable TableId tableName) throws UserException, InternalException
+            public FoundTable getTable(TableId tableName) throws UserException, InternalException
             {
                 return null;
             }
@@ -942,16 +927,14 @@ public class Aggregate extends VisitableTransformation implements SingleSourceTr
         };
     }
 
-    @RequiresNonNull({"splitBy", "splits", "srcTableId"})
-    @OnThread(Tag.Any)
-    private ColumnLookup getColumnLookup(@UnknownInitialization(Transformation.class) Aggregate this, RecordSet thisRecordSet)
+    private ColumnLookup getColumnLookup(Aggregate this, RecordSet thisRecordSet)
     {
         return new ColumnLookup()
         {
             private final TableManager tableManager = getManager();
 
             @Override
-            public @Nullable FoundColumn getColumn(Expression expression, @Nullable TableId tableId, ColumnId columnId)
+            public FoundColumn getColumn(Expression expression, TableId tableId, ColumnId columnId)
             {
                 boolean grouped = false;
                 if (tableId == null || tableId.equals(getId()) || tableId.equals(srcTableId))
@@ -967,7 +950,7 @@ public class Aggregate extends VisitableTransformation implements SingleSourceTr
                         table = new Pair<>(getId(), thisRecordSet);
                     else
                     {
-                        @Nullable Table found = tableManager.getSingleTableOrNull(tableId == null ? srcTableId : tableId);
+                        Table found = tableManager.getSingleTableOrNull(tableId == null ? srcTableId : tableId);
                         if (found != null)
                             table = new Pair<>(found.getId(), found.getData());
                         else
@@ -988,11 +971,11 @@ public class Aggregate extends VisitableTransformation implements SingleSourceTr
                     if (column == null)
                         throw new UserException("Could not find column: " + columnId.getRaw());
     
-                    @NonNull Column columnFinal = column;
+                    Column columnFinal = column;
                     if (grouped)
                     {
                         return new FoundColumn(table.getFirst(), srcTableId.equals(tableId), DataTypeValue.array(column.getType().getType(), (i, prog) -> {
-                            Pair<List<@Value Object>, Occurrences> splitInfo = splits.valuesAndOccurrences.get(i);
+                            Pair<List<Object>, Occurrences> splitInfo = splits.valuesAndOccurrences.get(i);
                             return DataTypeUtility.value(new ListExDTV(splitInfo.getSecond().getIndexes().length, columnFinal.getType().getType().fromCollapsed((j, prog2) -> columnFinal.getType().getCollapsed(splitInfo.getSecond().getIndexes()[j]))));
                         }), null);
                     }
@@ -1014,7 +997,7 @@ public class Aggregate extends VisitableTransformation implements SingleSourceTr
             }
 
             @Override
-            public Stream<Pair<@Nullable TableId, ColumnId>> getAvailableColumnReferences()
+            public Stream<Pair<TableId, ColumnId>> getAvailableColumnReferences()
             {
                 return getAvailableColumnReferences(true);
             }
@@ -1032,20 +1015,20 @@ public class Aggregate extends VisitableTransformation implements SingleSourceTr
                 });
             }
 
-            public Stream<Pair<@Nullable TableId, ColumnId>> getAvailableColumnReferences(boolean nullIds)
+            public Stream<Pair<TableId, ColumnId>> getAvailableColumnReferences(boolean nullIds)
             {
                 return
                     tableManager.getAllTablesAvailableTo(getId(), false).stream()
-                        .<Pair<@Nullable TableId, ColumnId>>flatMap(new Function<Table, Stream<Pair<@Nullable TableId, ColumnId>>>()
+                        .<Pair<TableId, ColumnId>>flatMap(new Function<Table, Stream<Pair<TableId, ColumnId>>>()
                         {
                             @Override
-                            public Stream<Pair<@Nullable TableId, ColumnId>> apply(Table t)
+                            public Stream<Pair<TableId, ColumnId>> apply(Table t)
                             {
                                 try
                                 {
-                                    @Nullable TableId tableId = (t.getId().equals(getId()) || t.getId().equals(srcTableId)) && nullIds ? null : t.getId();
+                                    TableId tableId = (t.getId().equals(getId()) || t.getId().equals(srcTableId)) && nullIds ? null : t.getId();
                                     return t.getData().getColumns().stream()
-                                            .<Pair<@Nullable TableId, ColumnId>>map(c -> new Pair<@Nullable TableId, ColumnId>(tableId, c.getName()));
+                                            .<Pair<TableId, ColumnId>>map(c -> new Pair<TableId, ColumnId>(tableId, c.getName()));
                                 }
                                 catch (UserException e)
                                 {
@@ -1061,7 +1044,7 @@ public class Aggregate extends VisitableTransformation implements SingleSourceTr
             }
 
             @Override
-            public @Nullable FoundTable getTable(@Nullable TableId tableName) throws UserException, InternalException
+            public FoundTable getTable(TableId tableName) throws UserException, InternalException
             {
                 return Utility.onNullable(tableManager.getSingleTableOrNull(tableName == null ? getId() : tableName), FoundTableActual::new);
             }
@@ -1075,7 +1058,6 @@ public class Aggregate extends VisitableTransformation implements SingleSourceTr
     }
 
     @Override
-    @OnThread(Tag.Any)
     public <T> T visit(TransformationVisitor<T> visitor)
     {
         return visitor.aggregate(this);
@@ -1083,7 +1065,7 @@ public class Aggregate extends VisitableTransformation implements SingleSourceTr
     
     public static TableId suggestedName(ImmutableList<ColumnId> splitBy, ImmutableList<Pair<ColumnId, Expression>> summaries)
     {
-        ImmutableList.Builder<@ExpressionIdentifier String> parts = ImmutableList.builder();
+        ImmutableList.Builder<String> parts = ImmutableList.builder();
         parts.add("Agg");
         if (summaries.isEmpty())
             parts.add("none");

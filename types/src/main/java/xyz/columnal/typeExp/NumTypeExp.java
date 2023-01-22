@@ -44,7 +44,7 @@ public class NumTypeExp extends TypeExp
     
     public final UnitExp unit;
 
-    public NumTypeExp(@Nullable ExpressionBase src, UnitExp unit)
+    public NumTypeExp(ExpressionBase src, UnitExp unit)
     {
         super(src);
         this.unit = unit;
@@ -75,7 +75,7 @@ public class NumTypeExp extends TypeExp
     @Override
     protected Either<TypeConcretisationError, DataType> _concrete(TypeManager typeManager, boolean substituteDefaultIfPossible)
     {
-        @Nullable Unit concreteUnit = this.unit.toConcreteUnit();
+        Unit concreteUnit = this.unit.toConcreteUnit();
         if (concreteUnit == null)
         {
             if (this.unit.isOnlyVars() || substituteDefaultIfPossible)
@@ -88,13 +88,13 @@ public class NumTypeExp extends TypeExp
     }
 
     @Override
-    public @Nullable TypeError requireTypeClasses(TypeClassRequirements typeClasses, IdentityHashSet<MutVar> visited)
+    public TypeError requireTypeClasses(TypeClassRequirements typeClasses, IdentityHashSet<MutVar> visited)
     {
         return typeClasses.checkIfSatisfiedBy(StyledString.s("Number"), NATURAL_TYPE_CLASSES, this);
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;

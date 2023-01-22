@@ -47,12 +47,12 @@ public class StringSplit extends FunctionDefinition
     }
     
     @Override
-    public @OnThread(Tag.Simulation) ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
+    public ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
     {
         return new ValueFunction2<String, String>(String.class, String.class) {
 
             @Override
-            public @OnThread(Tag.Simulation) @Value Object call2(@Value String text, @Value String separator) throws InternalException, UserException
+            public Object call2(String text, String separator) throws InternalException, UserException
             {
                 String[] split;
                 if (separator.isEmpty())
@@ -68,7 +68,7 @@ public class StringSplit extends FunctionDefinition
                     }
 
                     @Override
-                    public @Value Object get(int index) throws InternalException, UserException
+                    public Object get(int index) throws InternalException, UserException
                     {
                         if (index < 0 || index >= split.length)
                             throw new UserException("Invalid list index: " + index);

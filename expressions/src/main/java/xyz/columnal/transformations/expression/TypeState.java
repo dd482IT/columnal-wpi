@@ -52,8 +52,8 @@ import java.util.function.Consumer;
 public final class TypeState
 {
     // In-built variables:
-    public static final @ExpressionIdentifier String GROUP_COUNT = "group count";
-    public static final @ExpressionIdentifier String ROW_NUMBER = "row";
+    public static final String GROUP_COUNT = "group count";
+    public static final String ROW_NUMBER = "row";
     
     // Doesn't change in modified TypeStates, but is passed through unchanged from initial TypeState.
     private final FunctionLookup functionLookup;
@@ -92,7 +92,7 @@ public final class TypeState
             throw new InternalException("Could not add row number variable");
     }
 
-    public @Nullable TypeState add(@ExpressionIdentifier String varName, TypeExp type, Consumer<StyledString> error) throws InternalException
+    public TypeState add(String varName, TypeExp type, Consumer<StyledString> error) throws InternalException
     {
         if (variables.containsKey(varName))
         {
@@ -101,7 +101,7 @@ public final class TypeState
         }
         ImmutableMap.Builder<String, ImmutableList<TypeExp>> copy = ImmutableMap.builder();
         copy.putAll(variables);
-        @Nullable TypeExp preType = variablePreTypes.get(varName);
+        TypeExp preType = variablePreTypes.get(varName);
         if (preType != null)
         {
             Either<TypeError, TypeExp> unified = TypeExp.unifyTypes(type, preType);
@@ -113,7 +113,7 @@ public final class TypeState
         return new TypeState(ImmutableMap.<String, TypeExp>copyOf(Maps.<String, TypeExp>filterEntries(variablePreTypes, (Entry<String, TypeExp> e) -> e != null && !e.getKey().equals(varName))), copy.build(), typeManager, unitManager, functionLookup);
     }
 
-    public TypeState addImplicitLambdas(ImmutableList<@Recorded ImplicitLambdaArg> lambdaArgs, ImmutableList<TypeExp> argTypes) throws InternalException
+    public TypeState addImplicitLambdas(ImmutableList<ImplicitLambdaArg> lambdaArgs, ImmutableList<TypeExp> argTypes) throws InternalException
     {
         TypeState typeState = this;
         for (int i = 0; i < lambdaArgs.size(); i++)
@@ -151,7 +151,7 @@ public final class TypeState
         for (int i = 1; i < typeStates.size(); i++)
         {
             Map<String, ImmutableList<TypeExp>> variables = typeStates.get(i).variables;
-            for (Entry<@KeyFor("variables") String, ImmutableList<TypeExp>> entry : variables.entrySet())
+            for (Entry<String, ImmutableList<TypeExp>> entry : variables.entrySet())
             {
                 // If it's present in both sets, only keep if same type, otherwise mask:
                 mergedVars.merge(entry.getKey(), entry.getValue(), (a, b) -> Utility.concatI(a, b));
@@ -161,7 +161,7 @@ public final class TypeState
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -179,7 +179,7 @@ public final class TypeState
 
     // If it's null, it's totally unknown
     // If it's > size 1, it should count as masked because it has different types in different guards
-    public @Nullable ImmutableList<TypeExp> findVarType(String varName)
+    public ImmutableList<TypeExp> findVarType(String varName)
     {
         return variables.get(varName);
     }
@@ -254,7 +254,7 @@ public final class TypeState
         return functionLookup;
     }
 
-    public @Nullable TypeState addPreType(String varName, TypeExp typeExp, Consumer<StyledString> onError)
+    public TypeState addPreType(String varName, TypeExp typeExp, Consumer<StyledString> onError)
     {
         if (variablePreTypes.containsKey(varName))
         {

@@ -70,10 +70,10 @@ import java.util.stream.Stream;
  */
 public class CallExpression extends Expression
 {
-    private final @Recorded Expression function;
-    private final ImmutableList<@Recorded Expression> arguments;
+    private final Expression function;
+    private final ImmutableList<Expression> arguments;
 
-    public CallExpression(@Recorded Expression function, ImmutableList<@Recorded Expression> args)
+    public CallExpression(Expression function, ImmutableList<Expression> args)
     {
         this.function = function;
         this.arguments = args;
@@ -103,7 +103,7 @@ public class CallExpression extends Expression
     }
 
     @Override
-    public @Nullable CheckedExp check(@Recorded CallExpression this, ColumnLookup dataLookup, TypeState state, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public CheckedExp check(CallExpression this, ColumnLookup dataLookup, TypeState state, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         ImmutableList.Builder<CheckedExp> paramTypesBuilder = ImmutableList.builderWithExpectedSize(arguments.size());
         
@@ -112,15 +112,15 @@ public class CallExpression extends Expression
             onError.recordError(this, StyledString.concat(StyledString.s("Invalid call target: "), function.toStyledString()));
         }
 
-        @Nullable CheckedExp functionType = function.check(dataLookup, state, ExpressionKind.EXPRESSION, LocationInfo.UNIT_DEFAULT, onError);
+        CheckedExp functionType = function.check(dataLookup, state, ExpressionKind.EXPRESSION, LocationInfo.UNIT_DEFAULT, onError);
         if (functionType == null)
             return null;
         
-        for (@Recorded Expression argument : arguments)
+        for (Expression argument : arguments)
         {
             // Pattern can go through constructors, but arguments of functions must be expressions:
             ExpressionKind argKind = ((IdentExpression)function).getResolvedConstructor() != null ? kind : ExpressionKind.EXPRESSION;
-            @Nullable CheckedExp checkedExp = argument.check(dataLookup, state, argKind, LocationInfo.UNIT_DEFAULT, onError);
+            CheckedExp checkedExp = argument.check(dataLookup, state, argKind, LocationInfo.UNIT_DEFAULT, onError);
             if (checkedExp == null)
                 return null;
             state = checkedExp.typeState;
@@ -131,7 +131,7 @@ public class CallExpression extends Expression
         
         TypeExp returnType = new MutVar(this);
 
-        @Nullable TypeExp checked = null;
+        TypeExp checked = null;
         
         boolean doneIndivCheck = false;
         
@@ -139,13 +139,13 @@ public class CallExpression extends Expression
         // we can individually compare the parameters to give more localised type errors on each parameter:
         if (TypeExp.isFunction(functionType.typeExp))
         {
-            @Nullable ImmutableList<TypeExp> functionArgTypeExp = TypeExp.getFunctionArg(functionType.typeExp);
+            ImmutableList<TypeExp> functionArgTypeExp = TypeExp.getFunctionArg(functionType.typeExp);
             if (functionArgTypeExp != null)
             {
                 if (functionArgTypeExp.size() == paramTypes.size())
                 {
                     // Set to null if any fail
-                    @Nullable ArrayList<@NonNull TypeExp> paramTypeExps = new ArrayList<>();
+                    ArrayList<TypeExp> paramTypeExps = new ArrayList<>();
                     for (int i = 0; i < paramTypes.size(); i++)
                     {
                         Either<TypeError, TypeExp> paramOutcome = TypeExp.unifyTypes(functionArgTypeExp.get(i), paramTypes.get(i).typeExp);
@@ -157,7 +157,7 @@ public class CallExpression extends Expression
                         // We don't short circuit, so that the user sees all type errors in params.
                     }
 
-                    @Nullable TypeExp functionResultTypeExp = TypeExp.getFunctionResult(functionType.typeExp);
+                    TypeExp functionResultTypeExp = TypeExp.getFunctionResult(functionType.typeExp);
                     if (functionResultTypeExp != null)
                     {
                         // Can't fail because unifying with blank MutVar:
@@ -192,16 +192,16 @@ public class CallExpression extends Expression
         {
             // Check after unification attempted, because that will have constrained
             // to list if possible (and not, if not)
-            @Nullable ImmutableList<TypeExp> functionArgTypeExp = TypeExp.getFunctionArg(functionType.typeExp);
+            ImmutableList<TypeExp> functionArgTypeExp = TypeExp.getFunctionArg(functionType.typeExp);
             boolean takesList = functionArgTypeExp != null && functionArgTypeExp.size() == 1 && TypeExp.isList(functionArgTypeExp.get(0));
             if (takesList && arguments.size() == 1)
             {
-                @Recorded Expression param = arguments.get(0);
+                Expression param = arguments.get(0);
                 TypeExp prunedParam = paramTypes.get(0).typeExp.prune();
 
                 if (!TypeExp.isList(prunedParam))
                 {
-                    @Nullable Pair<@Nullable TableId, ColumnId> columnDetails = getColumn(param);
+                    Pair<TableId, ColumnId> columnDetails = getColumn(param);
                     if (columnDetails != null)
                     {
                         FoundTable table = dataLookup.getTable(columnDetails.getFirst());
@@ -240,18 +240,18 @@ public class CallExpression extends Expression
         return onError.recordType(this, state, returnType);
     }
 
-    private @Nullable Pair<@Nullable TableId, ColumnId> getColumn(@Recorded Expression expression)
+    private Pair<TableId, ColumnId> getColumn(Expression expression)
     {
-        return expression.visit(new ExpressionVisitorFlat<@Nullable Pair<@Nullable TableId, ColumnId>>()
+        return expression.visit(new ExpressionVisitorFlat<Pair<TableId, ColumnId>>()
         {
             @Override
-            protected @Nullable Pair<@Nullable TableId, ColumnId> makeDef(Expression expression)
+            protected Pair<TableId, ColumnId> makeDef(Expression expression)
             {
                 return null;
             }
 
             @Override
-            public @Nullable Pair<@Nullable TableId, ColumnId> ident(IdentExpression self, @Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents, boolean isVariable)
+            public Pair<TableId, ColumnId> ident(IdentExpression self, String namespace, ImmutableList<String> idents, boolean isVariable)
             {
                 if (Objects.equals(namespace, "column"))
                 {
@@ -272,10 +272,10 @@ public class CallExpression extends Expression
         ValueFunction functionValue = Utility.cast(fetchSubExpression(function, state, ImmutableList.builder()).value, ValueFunction.class);
 
         ImmutableList.Builder<ValueResult> paramValueResultsBuilder = ImmutableList.builderWithExpectedSize(arguments.size()); 
-        @Value Object[] paramValues = new Object[arguments.size()];
+        Object[] paramValues = new Object[arguments.size()];
         for (int i = 0; i < arguments.size(); i++)
         {
-            @Recorded Expression arg = arguments.get(i);
+            Expression arg = arguments.get(i);
             paramValues[i] = fetchSubExpression(arg, state, paramValueResultsBuilder).value;
         }
         ImmutableList<ValueResult> paramValueResults = paramValueResultsBuilder.build();
@@ -285,19 +285,17 @@ public class CallExpression extends Expression
             for (int i = 0; i < arguments.size(); i++)
             {
                 int iFinal = i;
-                @Recorded Expression arg = arguments.get(i);
+                Expression arg = arguments.get(i);
                 paramLocations.add(new ArgumentExplanation()
                 {
                     @Override
-                    @OnThread(Tag.Simulation)
                     public Explanation getValueExplanation() throws InternalException
                     {
                         return paramValueResults.get(iFinal).makeExplanation(null);
                     }
 
                     @Override
-                    @OnThread(Tag.Simulation)
-                    public @Nullable ExplanationLocation getListElementLocation(int index) throws InternalException
+                    public ExplanationLocation getListElementLocation(int index) throws InternalException
                     {
                         ExplanationLocation details = paramValueResults.get(iFinal).makeExplanation(null).getResultIsLocation();
                         if (details != null && details.rowIndex == null)
@@ -331,7 +329,7 @@ public class CallExpression extends Expression
     }
 
     @Override
-    public @OnThread(Tag.Simulation) ValueResult matchAsPattern(@Value Object value, EvaluateState state) throws InternalException, EvaluationException
+    public ValueResult matchAsPattern(Object value, EvaluateState state) throws InternalException, EvaluationException
     {
         if (!(function instanceof IdentExpression))
             throw new InternalException("Matching invalid call target as pattern: " + function.toString());
@@ -339,16 +337,16 @@ public class CallExpression extends Expression
         if (tag != null)
         {
             
-            @Value TaggedValue taggedValue = Utility.cast(value, TaggedValue.class);
+            TaggedValue taggedValue = Utility.cast(value, TaggedValue.class);
             if (taggedValue.getTagIndex() != tag.tagIndex)
                 return explanation(DataTypeUtility.value(false), ExecutionType.MATCH, state, ImmutableList.of(), ImmutableList.of(), false);
             // If we do match, go to the inner:
-            @Nullable @Value Object inner = taggedValue.getInner();
+            Object inner = taggedValue.getInner();
             if (inner == null)
                 throw new InternalException("Matching missing value against tag with inner pattern");
             if (value instanceof Object[])
             {
-                @Value Object[] tuple = Utility.castTuple(value, arguments.size());
+                Object[] tuple = Utility.castTuple(value, arguments.size());
                 EvaluateState curState = state;
                 ImmutableList.Builder<ValueResult> argResults = ImmutableList.builderWithExpectedSize(arguments.size());
                 for (int i = 0; i < arguments.size(); i++)
@@ -414,7 +412,7 @@ public class CallExpression extends Expression
 
     @SuppressWarnings("recorded")
     @Override
-    public @Nullable Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
+    public Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
     {
         int paramIndex = r.nextInt(arguments.size());
         Expression badParam = arguments.get(paramIndex)._test_typeFailure(r, newExpressionOfDifferentType, unitManager);
@@ -426,7 +424,7 @@ public class CallExpression extends Expression
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -450,7 +448,7 @@ public class CallExpression extends Expression
         return function;
     }
 
-    public ImmutableList<@Recorded Expression> getParams()
+    public ImmutableList<Expression> getParams()
     {
         return arguments;
     }

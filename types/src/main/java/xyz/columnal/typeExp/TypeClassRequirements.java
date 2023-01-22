@@ -45,7 +45,7 @@ public class TypeClassRequirements
     }
 
     // Returns null if given set satisfies this requirement, or error if not.
-    public @Nullable TypeError checkIfSatisfiedBy(StyledString typeName, ImmutableSet<String> typeClasses, TypeExp involvedType)
+    public TypeError checkIfSatisfiedBy(StyledString typeName, ImmutableSet<String> typeClasses, TypeExp involvedType)
     {
         if (typeClasses.containsAll(this.typeClasses.keySet()))
             return null;

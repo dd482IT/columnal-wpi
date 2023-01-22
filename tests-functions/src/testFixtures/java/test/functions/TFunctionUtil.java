@@ -98,15 +98,13 @@ public class TFunctionUtil
 {
     public static final InitialLoadDetails ILD = new InitialLoadDetails(null, null, null, null);
 
-    @OnThread(Tag.Simulation)
-    public static @Nullable Pair<ValueFunction, DataType> typeCheckFunction(FunctionDefinition function, ImmutableList<DataType> paramTypes) throws InternalException, UserException
+    public static Pair<ValueFunction, DataType> typeCheckFunction(FunctionDefinition function, ImmutableList<DataType> paramTypes) throws InternalException, UserException
     {
         return typeCheckFunction(function, paramTypes, null);
     }
 
     // Returns the function and the return type of the function
-    @OnThread(Tag.Simulation)
-    public static @Nullable Pair<ValueFunction,DataType> typeCheckFunction(FunctionDefinition function, ImmutableList<DataType> paramTypes, @Nullable TypeManager overrideTypeManager) throws InternalException, UserException
+    public static Pair<ValueFunction,DataType> typeCheckFunction(FunctionDefinition function, ImmutableList<DataType> paramTypes, TypeManager overrideTypeManager) throws InternalException, UserException
     {
         ErrorAndTypeRecorder onError = TFunctionUtil.excOnError();
         TypeManager typeManager = overrideTypeManager != null ? overrideTypeManager : TFunctionUtil.managerWithTestTypes().getFirst().getTypeManager();
@@ -124,8 +122,7 @@ public class TFunctionUtil
         return null;
     }
 
-    @OnThread(Tag.Simulation)
-    public static @Nullable Pair<ValueFunction,DataType> typeCheckFunction(FunctionDefinition function, DataType expectedReturnType, ImmutableList<DataType> paramTypes, @Nullable TypeManager overrideTypeManager) throws InternalException, UserException
+    public static Pair<ValueFunction,DataType> typeCheckFunction(FunctionDefinition function, DataType expectedReturnType, ImmutableList<DataType> paramTypes, TypeManager overrideTypeManager) throws InternalException, UserException
     {
         ErrorAndTypeRecorder onError = TFunctionUtil.excOnError();
         TypeManager typeManager = overrideTypeManager != null ? overrideTypeManager : DummyManager.make().getTypeManager();
@@ -154,7 +151,7 @@ public class TFunctionUtil
             throw new InternalException("Var " + s + " not found");
         return var.mapBothEx(
             u -> {
-                @Nullable Unit concrete = u.toConcreteUnit();
+                Unit concrete = u.toConcreteUnit();
                 if (concrete == null)
                     throw new InternalException("Could not concrete unit: " + u);
                 return concrete;
@@ -173,7 +170,7 @@ public class TFunctionUtil
             }
 
             @Override
-            public <EXPRESSION extends StyledShowable> void recordInformation(EXPRESSION src, Pair<StyledString, @Nullable QuickFix<EXPRESSION>> informaton)
+            public <EXPRESSION extends StyledShowable> void recordInformation(EXPRESSION src, Pair<StyledString, QuickFix<EXPRESSION>> informaton)
             {
             }
 
@@ -184,7 +181,7 @@ public class TFunctionUtil
 
             @SuppressWarnings("recorded")
             @Override
-            public @Recorded @NonNull TypeExp recordTypeNN(Expression expression, @NonNull TypeExp typeExp)
+            public TypeExp recordTypeNN(Expression expression, TypeExp typeExp)
             {
                 return typeExp;
             }
@@ -197,9 +194,9 @@ public class TFunctionUtil
         {
             DummyManager dummyManager = new DummyManager();
             
-            dummyManager.getUnitManager().addUserUnit(new Pair<>("myUnit", Either.<@UnitIdentifier String, UnitDeclaration>right(new UnitDeclaration(new SingleUnit("myUnit", "Custom unit for testing", "", ""), null, "New Category"))));
-            dummyManager.getUnitManager().addUserUnit(new Pair<>("myAlias", Either.<@UnitIdentifier String, UnitDeclaration>left("myUnit")));
-            dummyManager.getUnitManager().addUserUnit(new Pair<>("hogshead", Either.<@UnitIdentifier String, UnitDeclaration>right(new UnitDeclaration(new SingleUnit("hogshead", "An English wine cask hogshead", "", ""), new Pair<>(Rational.ofLongs(2387, 10), dummyManager.getUnitManager().loadUse("l")), "Volume"))));
+            dummyManager.getUnitManager().addUserUnit(new Pair<>("myUnit", Either.<String, UnitDeclaration>right(new UnitDeclaration(new SingleUnit("myUnit", "Custom unit for testing", "", ""), null, "New Category"))));
+            dummyManager.getUnitManager().addUserUnit(new Pair<>("myAlias", Either.<String, UnitDeclaration>left("myUnit")));
+            dummyManager.getUnitManager().addUserUnit(new Pair<>("hogshead", Either.<String, UnitDeclaration>right(new UnitDeclaration(new SingleUnit("hogshead", "An English wine cask hogshead", "", ""), new Pair<>(Rational.ofLongs(2387, 10), dummyManager.getUnitManager().loadUse("l")), "Volume"))));
             
             // TODO add more higher-order types
             TypeManager typeManager = dummyManager.getTypeManager();
@@ -267,8 +264,7 @@ public class TFunctionUtil
         }
     }
 
-    @OnThread(Tag.Simulation)
-    public static @Value Object runExpression(String expressionSrc) throws UserException, InternalException
+    public static Object runExpression(String expressionSrc) throws UserException, InternalException
     {
         DummyManager mgr = managerWithTestTypes().getFirst();
         Expression expression = parseExpression(expressionSrc, mgr.getTypeManager(), FunctionList.getFunctionLookup(mgr.getUnitManager()));
@@ -297,19 +293,19 @@ public class TFunctionUtil
         return new ColumnLookup()
         {
             @Override
-            public @Nullable FoundColumn getColumn(Expression expression, @Nullable TableId tableId, ColumnId columnId)
+            public FoundColumn getColumn(Expression expression, TableId tableId, ColumnId columnId)
             {
                 return null;
             }
 
             @Override
-            public @Nullable FoundTable getTable(@Nullable TableId tableName) throws UserException, InternalException
+            public FoundTable getTable(TableId tableName) throws UserException, InternalException
             {
                 return null;
             }
 
             @Override
-            public Stream<Pair<@Nullable TableId, ColumnId>> getAvailableColumnReferences()
+            public Stream<Pair<TableId, ColumnId>> getAvailableColumnReferences()
             {
                 return Stream.empty();
             }
@@ -336,7 +332,7 @@ public class TFunctionUtil
     // Used for testing
     // Creates a call to a tag constructor
     @SuppressWarnings("recorded")
-    public static Expression tagged(UnitManager unitManager, TagInfo constructor, @Nullable Expression arg, DataType destType, boolean canAddAsType) throws InternalException
+    public static Expression tagged(UnitManager unitManager, TagInfo constructor, Expression arg, DataType destType, boolean canAddAsType) throws InternalException
     {
         IdentExpression constructorExpression = IdentExpression.tag(constructor.getTypeName().getRaw(), constructor.getTagInfo().getName());
         Expression r;
@@ -388,7 +384,7 @@ public class TFunctionUtil
         return false;
     }
 
-    private static boolean containsTypeVar(@Nullable JellyType jellyType, Pair<TypeVariableKind, String> var)
+    private static boolean containsTypeVar(JellyType jellyType, Pair<TypeVariableKind, String> var)
     {
         if (jellyType == null)
             return false;
@@ -428,7 +424,7 @@ public class TFunctionUtil
                 }
 
                 @Override
-                public Boolean record(ImmutableMap<@ExpressionIdentifier String, Field> fields, boolean complete) throws InternalException, InternalException
+                public Boolean record(ImmutableMap<String, Field> fields, boolean complete) throws InternalException, InternalException
                 {
                     return fields.values().stream().anyMatch(t -> containsTypeVar(t.getJellyType(), var));
                 }

@@ -44,9 +44,9 @@ public abstract class BackwardsProvider
         this.parent = parent;
     }
     
-    public abstract List<ExpressionMaker> terminals(DataType targetType, @Value Object targetValue) throws InternalException, UserException;
+    public abstract List<ExpressionMaker> terminals(DataType targetType, Object targetValue) throws InternalException, UserException;
 
-    public abstract List<ExpressionMaker> deep(int maxLevels, DataType targetType, @Value Object targetValue) throws InternalException, UserException;
+    public abstract List<ExpressionMaker> deep(int maxLevels, DataType targetType, Object targetValue) throws InternalException, UserException;
 
     protected final CallExpression call(String name, Expression... args)
     {

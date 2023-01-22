@@ -16,8 +16,7 @@ import static org.junit.Assert.assertTrue;
 
 public interface QueryTrait extends FxRobotInterface
 {
-    @OnThread(Tag.Any)
-    public default <T extends Node> @NonNull T waitForOne(String query)
+    public default <T extends Node> T waitForOne(String query)
     {
         Optional<T> r;
         int count = 80;
@@ -31,13 +30,11 @@ public interface QueryTrait extends FxRobotInterface
         return r.orElseThrow(() -> new RuntimeException("Nothing found for \"" + query + "\""));
     }
     
-    @OnThread(Tag.Any)
     public default void waitClickOn(String query)
     {
         clickOn(this.<Node>waitForOne(query));
     }
 
-    @OnThread(Tag.Any)
     public default void assertShowing(String message, String query)
     {
         Optional<Node> r;
@@ -52,7 +49,6 @@ public interface QueryTrait extends FxRobotInterface
         assertTrue(message, r.isPresent());
     }
 
-    @OnThread(Tag.Any)
     public default void assertNotShowing(String message, String query)
     {
         Optional<Node> r;
@@ -67,21 +63,18 @@ public interface QueryTrait extends FxRobotInterface
         assertFalse(message, r.isPresent());
     }
     
-    @OnThread(Tag.Any)
     @SuppressWarnings("threadchecker") // The from method is actually thread-safe, having looked at the source code
     public default NodeQuery fromNode(Node node)
     {
         return from(node);
     }
 
-    @OnThread(Tag.Any)
     @SuppressWarnings("threadchecker") // The from method is actually thread-safe, having looked at the source code
     public default NodeQuery fromNodes(Collection<Node> nodes)
     {
         return from(nodes.toArray(Node[]::new));
     }
     
-    @OnThread(Tag.Any)
     public default int count(String nodeQuery)
     {
         return TFXUtil.fx(() -> lookup(nodeQuery).queryAll().size());

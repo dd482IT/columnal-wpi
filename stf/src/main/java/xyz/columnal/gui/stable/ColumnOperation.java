@@ -33,15 +33,13 @@ import xyz.columnal.utility.gui.GUI;
  */
 public abstract class ColumnOperation
 {
-    @OnThread(Tag.Any)
-    protected final @LocalizableKey String nameKey;
+    protected final String nameKey;
 
-    protected ColumnOperation(@LocalizableKey String nameKey)
+    protected ColumnOperation(String nameKey)
     {
         this.nameKey = nameKey;
     }
 
-    @OnThread(Tag.FXPlatform)
     public final MenuItem makeMenuItem()
     {
         return GUI.menuItem(nameKey, () -> executeFX(), getStyleClasses());
@@ -52,6 +50,5 @@ public abstract class ColumnOperation
         return new String[0];
     }
 
-    @OnThread(Tag.FXPlatform)
     public abstract void executeFX();
 }

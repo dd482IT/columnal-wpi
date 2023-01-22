@@ -28,10 +28,7 @@ import xyz.columnal.id.TableId;
 
 public interface SingleSourceTransformation
 {
-    @OnThread(Tag.Any)
-    @Pure
     TableId getSrcTableId();
     
-    @OnThread(Tag.Simulation)
     Transformation withNewSource(TableId newSrcTableId) throws InternalException;
 }

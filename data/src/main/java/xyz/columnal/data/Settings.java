@@ -27,23 +27,22 @@ import threadchecker.Tag;
 import java.io.File;
 import java.util.Objects;
 
-@OnThread(Tag.Any)
 public class Settings
 {
     // IMPORTANT: if you add a field, you must redefine equals and hash code!
     
     // Can be null, in which case use PATH  (effectively just "R", but appears blank in settings)
-    public final @Nullable File pathToRExecutable;
+    public final File pathToRExecutable;
     public final boolean useColumnalRLibs;
 
-    public Settings(@Nullable File pathToRExecutable, boolean useColumnalRLibs)
+    public Settings(File pathToRExecutable, boolean useColumnalRLibs)
     {
         this.pathToRExecutable = pathToRExecutable;
         this.useColumnalRLibs = useColumnalRLibs;
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;

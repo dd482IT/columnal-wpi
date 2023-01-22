@@ -28,7 +28,6 @@ import threadchecker.Tag;
 /**
  * An interface for keywords and operators, to get their content and their styled representation.
  */
-@OnThread(Tag.Any)
 public interface ExpressionToken extends StyledShowable
 {
     // Gets the actual content for the expression

@@ -48,7 +48,6 @@ import xyz.columnal.utility.TranslationUtility;
 import java.util.Optional;
 
 // Shows an editable list of table ids
-@OnThread(Tag.FXPlatform)
 public class TableListDialog extends ErrorableLightDialog<ImmutableList<TableId>>
 {
     private final View parent;
@@ -91,12 +90,12 @@ public class TableListDialog extends ErrorableLightDialog<ImmutableList<TableId>
     }
 
     @Override
-    protected @OnThread(Tag.FXPlatform) Either<@Localized String, ImmutableList<TableId>> calculateResult()
+    protected Either<String, ImmutableList<TableId>> calculateResult()
     {
         ImmutableList.Builder<TableId> r = ImmutableList.builder();
         for (String item : tableList.getItems())
         {
-            @Nullable @ExpressionIdentifier String s = IdentifierUtility.asExpressionIdentifier(item);
+            String s = IdentifierUtility.asExpressionIdentifier(item);
             if (s != null)
                 r.add(new TableId(s));
             else
@@ -105,7 +104,6 @@ public class TableListDialog extends ErrorableLightDialog<ImmutableList<TableId>
         return Either.right(r.build());
     }
 
-    @OnThread(Tag.FXPlatform)
     private class TableList extends FancyList<String, PickTablePane>
     {
         public TableList(ImmutableList<TableId> originalItems)

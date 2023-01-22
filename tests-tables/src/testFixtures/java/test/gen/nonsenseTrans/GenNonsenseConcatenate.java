@@ -49,7 +49,6 @@ public class GenNonsenseConcatenate extends GenValueBase<Transformation_Mgr>
     }
 
     @Override
-    @OnThread(value = Tag.Simulation, ignoreParent = true)
     public Transformation_Mgr generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
     {
         this.r = sourceOfRandomness;

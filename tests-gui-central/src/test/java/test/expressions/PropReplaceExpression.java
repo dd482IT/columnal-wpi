@@ -39,25 +39,21 @@ import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 
-@RunWith(JUnitQuickcheck.class)
 public class PropReplaceExpression
 {
-    @Property
-    public void testReplaceNothing(@From(GenNonsenseExpression.class) Expression expression)
+    public void testReplaceNothing(Expression expression)
     {
         // Test that replacing an expression not present does nothing.
         assertEquals(expression, expression.replaceSubExpression(new MatchAnythingExpression(), new NumericLiteral(0, null)));
     }
     
-    @Property
-    public void testReplaceNothingV(@From(GenExpressionValueBackwards.class) @From(GenExpressionValueForwards.class) ExpressionValue expressionValue)
+    public void testReplaceNothingV(ExpressionValue expressionValue)
     {
         testReplaceNothing(expressionValue.expression);
     }
     
     // We probably shouldn't have two methods doing similar things, but since we do, we can test them against each other:
-    @Property
-    public void testReplaceRandom(@From(GenNonsenseExpression.class) Expression expression)
+    public void testReplaceRandom(Expression expression)
     {
         List<Pair<Expression, Function<Expression, Expression>>> mutationPoints = expression._test_allMutationPoints().collect(Collectors.toList());
         for (Pair<Expression, Function<Expression, Expression>> mutationPoint : mutationPoints)
@@ -66,8 +62,7 @@ public class PropReplaceExpression
         }
     }
 
-    @Property
-    public void testReplaceRandomV(@From(GenExpressionValueBackwards.class) @From(GenExpressionValueForwards.class) ExpressionValue expressionValue)
+    public void testReplaceRandomV(ExpressionValue expressionValue)
     {
         testReplaceRandom(expressionValue.expression);
     }

@@ -48,14 +48,13 @@ import xyz.columnal.utility.gui.FXUtility;
 import xyz.columnal.utility.gui.LabelledGrid;
 
 // Edit column name and expression for that column
-@OnThread(Tag.FXPlatform)
 public class EditCheckExpressionDialog extends DoubleOKLightDialog<Pair<CheckType, Expression>>
 {
     private final ExpressionEditor expressionEditor;
     private Expression curValue;
     private final ComboBox<CheckType> combo;
 
-    public EditCheckExpressionDialog(View parent, @Nullable Table srcTable, CheckType initialCheckType, @Nullable Expression initialExpression, boolean selectAll, FXPlatformFunction<CheckType, ColumnLookup> columnLookup)
+    public EditCheckExpressionDialog(View parent, Table srcTable, CheckType initialCheckType, Expression initialExpression, boolean selectAll, FXPlatformFunction<CheckType, ColumnLookup> columnLookup)
     {
         super(parent, new DialogPaneWithSideButtons());
         setResizable(true);
@@ -65,14 +64,14 @@ public class EditCheckExpressionDialog extends DoubleOKLightDialog<Pair<CheckTyp
         combo.getStyleClass().add("check-type-combo");
         combo.getItems().setAll(CheckType.values());
         combo.getSelectionModel().select(initialCheckType);
-        ReadOnlyObjectWrapper<@Nullable Table> srcTableWrapper = new ReadOnlyObjectWrapper<@Nullable Table>(srcTable);
+        ReadOnlyObjectWrapper<Table> srcTableWrapper = new ReadOnlyObjectWrapper<Table>(srcTable);
         SimpleObjectProperty<ColumnLookup> columnLookupProperty = new SimpleObjectProperty<>(columnLookup.apply(initialCheckType));
         FXUtility.addChangeListenerPlatform(combo.getSelectionModel().selectedItemProperty(), ct -> columnLookupProperty.set(columnLookup.apply(ct == null ? initialCheckType : ct)));
         expressionEditor = new ExpressionEditor(initialExpression, srcTableWrapper, columnLookupProperty, DataType.BOOLEAN, parent, parent.getManager().getTypeManager(), () -> Check.makeTypeState(parent.getManager().getTypeManager(), combo.getSelectionModel().getSelectedItem()), FunctionList.getFunctionLookup(parent.getManager().getUnitManager()), e -> {curValue = e;}) {
             @Override
             protected void parentFocusRightOfThis(Either<Focus, Integer> side, boolean becauseOfTab)
             {
-                @Nullable Node button = getDialogPane().lookupButton(ButtonType.OK);
+                Node button = getDialogPane().lookupButton(ButtonType.OK);
                 if (button != null && becauseOfTab)
                     button.requestFocus();
             }
@@ -139,9 +138,9 @@ public class EditCheckExpressionDialog extends DoubleOKLightDialog<Pair<CheckTyp
     }
 
     @Override
-    protected @Nullable Pair<CheckType, Expression> calculateResult()
+    protected Pair<CheckType, Expression> calculateResult()
     {
-        @Nullable CheckType checkType = combo.getSelectionModel().getSelectedItem();
+        CheckType checkType = combo.getSelectionModel().getSelectedItem();
         if (checkType != null)
             return new Pair<>(checkType, curValue);
         else

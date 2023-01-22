@@ -59,14 +59,12 @@ import static org.junit.Assert.assertThrows;
 @SuppressWarnings("initialization")
 public class TestUnit
 {
-    private @NonNull UnitManager mgr;
-    @Before
+    private UnitManager mgr;
     public void init() throws UserException, InternalException
     {
         mgr = new UnitManager();
     }
 
-    @Test
     public void unitToString() throws InternalException
     {
         SingleUnit m = mgr.getDeclared("m");
@@ -87,7 +85,6 @@ public class TestUnit
         assertEquals("1/(USD*g^3*s^2)", Unit._test_make(g, -3, s, -2, d, -1).toString());
     }
     
-    @Test
     public void parse() throws InternalException, UserException
     {
         SingleUnit m = mgr.getDeclared("m");
@@ -125,7 +122,6 @@ public class TestUnit
         assertEquals(Unit._test_make(m, 1, s, -2, l, -1, g, -3), mgr.loadUse("m/(g * l * g^2*s * s)"));
     }
 
-    @Test
     public void testCanon() throws InternalException, UserException
     {
         SingleUnit m = mgr.getDeclared("m");
@@ -145,7 +141,6 @@ public class TestUnit
         assertEquals(new Pair<>(Rational.of("1"), Unit._test_make(m ,1)), mgr.canonicalise(mgr.loadUse("m^3/(m^2)")));
     }
 
-    @Test
     public void parseFail()
     {
         // This is both parse failures and unknown unit failures
@@ -160,8 +155,6 @@ public class TestUnit
         assertThrows(UserException.class, () -> mgr.loadUse("m^-0.5"));
     }
 
-    @Test
-    @OnThread(Tag.Simulation)
     public void testAs() throws Throwable
     {
         test("3.2808399", "foot", "1", "m");
@@ -177,8 +170,6 @@ public class TestUnit
 
         //TODO add failure tests, like converting scalar to/from units, or unrelated units, or m/s to m/s^2 etc
     }
-    @Test
-    @OnThread(Tag.Simulation)
     public void testAsFail()
     {
         assertThrows(UserException.class, () -> test_("1", "m", "1", "s"));
@@ -189,7 +180,6 @@ public class TestUnit
         assertThrows(UserException.class, () -> test_("1", "m", "1", "1"));
     }
 
-    @OnThread(Tag.Simulation)
     private void test(String expected, String destUnit, String src, String srcUnit) throws Throwable
     {
         test_(expected, destUnit, src, srcUnit);
@@ -197,7 +187,6 @@ public class TestUnit
     }
 
     @SuppressWarnings("nullness")
-    @OnThread(Tag.Simulation)
     private void test_(String expected, String destUnit, String src, String srcUnit) throws InternalException, UserException, Throwable
     {
         try
@@ -209,7 +198,7 @@ public class TestUnit
                 )
             );
             assertNotNull(instance);
-            Object num = instance.getFirst().call(new @Value Object[]{null, d(src)});
+            Object num = instance.getFirst().call(new Object[]{null, d(src)});
             MatcherAssert.assertThat(num, numberMatch(d(expected)));
         }
         catch (RuntimeException e)
@@ -235,7 +224,7 @@ public class TestUnit
         };
     }
 
-    private @Value BigDecimal d(String s)
+    private BigDecimal d(String s)
     {
         return DataTypeUtility.value(new BigDecimal(s));
     }

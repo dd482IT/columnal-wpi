@@ -37,7 +37,7 @@ import xyz.columnal.styled.StyledString;
 public class StringLiteral extends Literal
 {
     // The actual String value, without any remaining escapes.
-    private final @Value String value;
+    private final String value;
     private final String rawUnprocessed;
 
     public StringLiteral(String rawUnprocessed)
@@ -47,7 +47,7 @@ public class StringLiteral extends Literal
     }
 
     @Override
-    protected @Nullable TypeExp checkType(TypeState typeState, LocationInfo locationInfo, ErrorAndTypeRecorder onError)
+    protected TypeExp checkType(TypeState typeState, LocationInfo locationInfo, ErrorAndTypeRecorder onError)
     {
         return TypeExp.text(this);
     }
@@ -71,7 +71,7 @@ public class StringLiteral extends Literal
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;

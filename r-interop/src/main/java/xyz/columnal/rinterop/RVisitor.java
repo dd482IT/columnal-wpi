@@ -37,11 +37,11 @@ public interface RVisitor<T>
 {
     public static class PairListEntry
     {
-        public final @Nullable RValue attributes;
-        public final @Nullable RValue tag;
+        public final RValue attributes;
+        public final RValue tag;
         public final RValue item;
 
-        public PairListEntry(@Nullable RValue attributes, @Nullable RValue tag, RValue item)
+        public PairListEntry(RValue attributes, RValue tag, RValue item)
         {
             this.attributes = attributes;
             this.tag = tag;
@@ -49,14 +49,14 @@ public interface RVisitor<T>
         }
     }
     
-    public T visitString(@Nullable @Value String s, boolean isSymbol) throws InternalException, UserException;
+    public T visitString(String s, boolean isSymbol) throws InternalException, UserException;
     // If attributes reveal this is a factor, it won't be called; visitFactorList will be instead
-    public T visitIntList(int[] values, @Nullable RValue attributes) throws InternalException, UserException;
-    public T visitDoubleList(double[] values, @Nullable RValue attributes) throws InternalException, UserException;
-    public T visitLogicalList(boolean[] values, boolean @Nullable [] isNA, @Nullable RValue attributes) throws InternalException, UserException;
-    public T visitStringList(ImmutableList<Optional<@Value String>> values, @Nullable RValue attributes) throws InternalException, UserException;
-    public T visitTemporalList(DateTimeType dateTimeType, ImmutableList<Optional<@Value TemporalAccessor>> values, @Nullable RValue attributes) throws InternalException, UserException;
-    public T visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes, boolean isObject) throws InternalException, UserException;
+    public T visitIntList(int[] values, RValue attributes) throws InternalException, UserException;
+    public T visitDoubleList(double[] values, RValue attributes) throws InternalException, UserException;
+    public T visitLogicalList(boolean[] values, boolean[] isNA, RValue attributes) throws InternalException, UserException;
+    public T visitStringList(ImmutableList<Optional<String>> values, RValue attributes) throws InternalException, UserException;
+    public T visitTemporalList(DateTimeType dateTimeType, ImmutableList<Optional<TemporalAccessor>> values, RValue attributes) throws InternalException, UserException;
+    public T visitGenericList(ImmutableList<RValue> values, RValue attributes, boolean isObject) throws InternalException, UserException;
     public T visitPairList(ImmutableList<PairListEntry> items) throws InternalException, UserException;
     public T visitFactorList(int[] values, ImmutableList<String> levelNames) throws InternalException, UserException;
     public T visitNil() throws  InternalException, UserException;

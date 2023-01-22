@@ -38,11 +38,11 @@ public class ColumnMaker<C extends EditableColumn, V> implements SimulationFunct
     private final ExBiConsumer<C, Either<String, V>> addToColumn;
     private final ExFunction<DataParser, Either<String, V>> parseValue1;
     private final ExFunction<DataParser2, Either<String, V>> parseValue;
-    private final BiFunctionInt<RecordSet, @Value V, C> makeColumn;
-    private final @Value V defaultValue;
-    private @MonotonicNonNull C column;
+    private final BiFunctionInt<RecordSet, V, C> makeColumn;
+    private final V defaultValue;
+    private C column;
 
-    ColumnMaker(@Value Object defaultValue, Class<V> valueClass, BiFunctionInt<RecordSet, @Value V, C> makeColumn, ExBiConsumer<C, Either<String, V>> addToColumn, ExFunction<DataParser, Either<String, V>> parseValue1, ExFunction<DataParser2, Either<String, V>> parseValue) throws UserException, InternalException
+    ColumnMaker(Object defaultValue, Class<V> valueClass, BiFunctionInt<RecordSet, V, C> makeColumn, ExBiConsumer<C, Either<String, V>> addToColumn, ExFunction<DataParser, Either<String, V>> parseValue1, ExFunction<DataParser2, Either<String, V>> parseValue) throws UserException, InternalException
     {
         this.makeColumn = makeColumn;
         this.addToColumn = addToColumn;

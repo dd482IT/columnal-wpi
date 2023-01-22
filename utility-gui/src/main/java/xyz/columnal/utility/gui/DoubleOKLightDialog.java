@@ -41,7 +41,6 @@ import xyz.columnal.utility.Utility;
  * the values, it is returned anyway.
  * @param <R>
  */
-@OnThread(Tag.FXPlatform)
 public abstract class DoubleOKLightDialog<R> extends LightDialog<R>
 {
     private final PopOver clickOkAgainPrompt;
@@ -55,7 +54,7 @@ public abstract class DoubleOKLightDialog<R> extends LightDialog<R>
         NO_ERRORS
     }
     
-    protected DoubleOKLightDialog(DimmableParent parent, @Nullable DialogPane customDialogPane)
+    protected DoubleOKLightDialog(DimmableParent parent, DialogPane customDialogPane)
     {
         super(parent, customDialogPane);
         
@@ -110,7 +109,7 @@ public abstract class DoubleOKLightDialog<R> extends LightDialog<R>
         lastOKPress = System.currentTimeMillis();
     }
 
-    protected void notifyModified(@UnknownInitialization(DoubleOKLightDialog.class) DoubleOKLightDialog<R> this)
+    protected void notifyModified(DoubleOKLightDialog<R> this)
     {
         modifiedSinceLastOK = true;
     }
@@ -119,5 +118,5 @@ public abstract class DoubleOKLightDialog<R> extends LightDialog<R>
     
     protected abstract void showAllErrors();
     
-    protected abstract @Nullable R calculateResult();
+    protected abstract R calculateResult();
 }

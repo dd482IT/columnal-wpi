@@ -55,28 +55,28 @@ import java.util.stream.Stream;
 // Not a BinaryOpExpression because the field name by itself does not have a valid type.
 public class FieldAccessExpression extends Expression
 {
-    private final @Recorded Expression lhsRecord;
-    private final @ExpressionIdentifier String fieldName;
+    private final Expression lhsRecord;
+    private final String fieldName;
 
-    public FieldAccessExpression(@Recorded Expression lhsRecord, @ExpressionIdentifier String fieldName)
+    public FieldAccessExpression(Expression lhsRecord, String fieldName)
     {
         this.lhsRecord = lhsRecord;
         this.fieldName = fieldName;
     }
 
     @SuppressWarnings("recorded")
-    public static @Recorded Expression fromBinary(@Recorded Expression lhs, @Recorded Expression rhs)
+    public static Expression fromBinary(Expression lhs, Expression rhs)
     {
         return rhs.visit(new ExpressionVisitorFlat<Expression>()
         {
             @Override
             protected Expression makeDef(Expression rhs)
             {
-                return new InvalidOperatorExpression(ImmutableList.<@Recorded Expression>of(lhs, new InvalidIdentExpression("#"), rhs));
+                return new InvalidOperatorExpression(ImmutableList.<Expression>of(lhs, new InvalidIdentExpression("#"), rhs));
             }
 
             @Override
-            public Expression ident(IdentExpression self, @Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents, boolean isVariable)
+            public Expression ident(IdentExpression self, String namespace, ImmutableList<String> idents, boolean isVariable)
             {
                 return new FieldAccessExpression(lhs, idents.get(idents.size() - 1));
             }
@@ -84,9 +84,9 @@ public class FieldAccessExpression extends Expression
     }
 
     @Override
-    public @Nullable CheckedExp check(@Recorded FieldAccessExpression this, ColumnLookup dataLookup, TypeState typeState, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public CheckedExp check(FieldAccessExpression this, ColumnLookup dataLookup, TypeState typeState, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        Pair<@Nullable UnaryOperator<@Recorded TypeExp>, TypeState> lambda = ImplicitLambdaArg.detectImplicitLambda(this, ImmutableList.of(lhsRecord), typeState, onError);
+        Pair<UnaryOperator<TypeExp>, TypeState> lambda = ImplicitLambdaArg.detectImplicitLambda(this, ImmutableList.of(lhsRecord), typeState, onError);
         typeState = lambda.getSecond();
         
         CheckedExp lhsChecked = lhsRecord.check(dataLookup, typeState, ExpressionKind.EXPRESSION, locationInfo, onError);
@@ -99,8 +99,8 @@ public class FieldAccessExpression extends Expression
             return null;
         }
         
-        @Recorded TypeExp fieldType = onError.recordTypeNN(this, new MutVar(this));
-        TypeExp recordType = TypeExp.record(this, ImmutableMap.<@ExpressionIdentifier String, TypeExp>of(fieldName, fieldType), false);
+        TypeExp fieldType = onError.recordTypeNN(this, new MutVar(this));
+        TypeExp recordType = TypeExp.record(this, ImmutableMap.<String, TypeExp>of(fieldName, fieldType), false);
         
         if (onError.recordError(this, TypeExp.unifyTypes(recordType, lhsChecked.typeExp)) == null)
             return null;
@@ -109,24 +109,24 @@ public class FieldAccessExpression extends Expression
     }
 
     @Override
-    public @OnThread(Tag.Simulation) ValueResult calculateValue(EvaluateState state) throws EvaluationException, InternalException
+    public ValueResult calculateValue(EvaluateState state) throws EvaluationException, InternalException
     {
         ImmutableList.Builder<ValueResult> subResults = ImmutableList.builderWithExpectedSize(1);
         ValueResult lhsResult = fetchSubExpression(lhsRecord, state, subResults);
-        @Value Record record = Utility.cast(lhsResult.value, Record.class);
+        Record record = Utility.cast(lhsResult.value, Record.class);
 
         if (fieldName == null)
             throw new InternalException("Field is not single name despite being after type-check: " + fieldName.toString());
-        @Value Object result = record.getField(fieldName);
+        Object result = record.getField(fieldName);
         return new ValueResult(result, state)
         {
             @Override
-            public Explanation makeExplanation(Explanation.@Nullable ExecutionType overrideExecutionType) throws InternalException
+            public Explanation makeExplanation(Explanation.ExecutionType overrideExecutionType) throws InternalException
             {
                 Explanation lhsExplanation = lhsResult.makeExplanation(overrideExecutionType);
                 ExplanationLocation lhsIsLoc = lhsExplanation.getResultIsLocation();
                 ImmutableList<ExplanationLocation> directLocs;
-                @Nullable ExplanationLocation usIsLoc;
+                ExplanationLocation usIsLoc;
                 if (lhsIsLoc != null && lhsIsLoc.columnId == null)
                 {
                     // If it's a table...
@@ -142,14 +142,12 @@ public class FieldAccessExpression extends Expression
                 return new Explanation(FieldAccessExpression.this, overrideExecutionType != null ? overrideExecutionType : ExecutionType.VALUE, state, result, directLocs, usIsLoc)
                 {
                     @Override
-                    @OnThread(Tag.Simulation)
-                    public @Nullable StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation, ExpressionStyler expressionStyler, ImmutableList<ExplanationLocation> extraLocations, boolean skipIfTrivial) throws InternalException, UserException
+                    public StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation, ExpressionStyler expressionStyler, ImmutableList<ExplanationLocation> extraLocations, boolean skipIfTrivial) throws InternalException, UserException
                     {
                         return FieldAccessExpression.this.describe(value,this.executionType, evaluateState, hyperlinkLocation, expressionStyler, Utility.concatI(directLocs, extraLocations), skipIfTrivial);
                     }
 
                     @Override
-                    @OnThread(Tag.Simulation)
                     public ImmutableList<Explanation> getDirectSubExplanations() throws InternalException
                     {
                         return ImmutableList.of(lhsExplanation);
@@ -188,13 +186,13 @@ public class FieldAccessExpression extends Expression
     }
 
     @Override
-    public @Nullable Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
+    public Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
     {
         return null;
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -227,7 +225,7 @@ public class FieldAccessExpression extends Expression
             }
 
             @Override
-            public Boolean ident(IdentExpression self, @Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents, boolean isVariable)
+            public Boolean ident(IdentExpression self, String namespace, ImmutableList<String> idents, boolean isVariable)
             {
                 return Objects.equals(namespace,"table");
             }

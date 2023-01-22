@@ -31,7 +31,6 @@ import static java.lang.annotation.ElementType.TYPE_PARAMETER;
 import static java.lang.annotation.ElementType.TYPE_USE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-@SubtypeOf(value=UnknownUnits.class)
 @Documented
 @Retention(value=RUNTIME)
 @Target(value={TYPE_USE,TYPE_PARAMETER})

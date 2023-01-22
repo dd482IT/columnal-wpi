@@ -77,21 +77,16 @@ import java.util.Random;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-@RunWith(JUnitQuickcheck.class)
 public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrait, FocusOwnerTrait, EnterStructuredValueTrait, ClickTableLocationTrait, ClipboardTrait
 {
-    @OnThread(Tag.Any)
     @SuppressWarnings("nullness")
     private VirtualGrid virtualGrid;
-    @OnThread(Tag.Any)
     @SuppressWarnings("nullness")
     private TableManager tableManager;
 
-    @Property(trials = 3)
-    @OnThread(Tag.Simulation)
     public void propCheckDataRead(
-            @NumTables(minTables = 2, maxTables = 4) @From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr src,
-            @From(GenRandom.class) Random r) throws Exception
+            GenImmediateData.ImmediateData_Mgr src,
+            Random r) throws Exception
     {
         System.out.println("propCheckDataRead: opening table");
         System.out.flush();
@@ -108,11 +103,11 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
             Table table = pickRandomTable(r, allTables);
             System.out.println("Copying from table: " + table.getId());
             // Random location in table:
-            @TableDataColIndex int column = DataItemPosition.col(r.nextInt(table.getData().getColumns().size()));
+            int column = DataItemPosition.col(r.nextInt(table.getData().getColumns().size()));
             int tableLen = table.getData().getLength();
             if (tableLen == 0)
                 continue;
-            @TableDataRowIndex int row = DataItemPosition.row(r.nextInt(tableLen));
+            int row = DataItemPosition.row(r.nextInt(tableLen));
             CellPosition pos = keyboardMoveTo(virtualGrid, tableManager, table.getId(), row, column);
             String copiedFromTable = copyToClipboard();
             DataTypeValue columnDTV = table.getData().getColumns().get(column).getType();
@@ -121,11 +116,9 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
         }
     }
 
-    @Property(trials = 3)
-    @OnThread(Tag.Simulation)
     public void propCheckDataDelete(
-            @NumTables(minTables = 2, maxTables = 4) @From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr src,
-            @From(GenRandom.class) Random r) throws Exception
+            GenImmediateData.ImmediateData_Mgr src,
+            Random r) throws Exception
     {
 
         MainWindowActions details = TAppUtil.openDataAsTable(windowToUse, src.mgr).get();
@@ -140,11 +133,11 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
             // Random table:
             Table table = pickRandomTable(r, allTables);
             // Random location in table:
-            @TableDataColIndex int column = DataItemPosition.col(r.nextInt(table.getData().getColumns().size()));
+            int column = DataItemPosition.col(r.nextInt(table.getData().getColumns().size()));
             int tableLen = table.getData().getLength();
             if (tableLen == 0)
                 continue;
-            @TableDataRowIndex int row = DataItemPosition.row(r.nextInt(tableLen));
+            int row = DataItemPosition.row(r.nextInt(tableLen));
             CellPosition pos = keyboardMoveTo(virtualGrid, tableManager, table.getId(), row, column);
             push(r.nextBoolean() ? KeyCode.BACK_SPACE : KeyCode.DELETE);
             sleep(200);
@@ -156,12 +149,10 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
         }
     }
 
-    @Property(trials = 3)
-    @OnThread(Tag.Simulation)
     public void propCheckDataWrite(
-            @NumTables(minTables = 3, maxTables = 5) @From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr src,
-            @From(GenRandom.class) Random r,
-            @From(GenValueSpecifiedType.class) GenValueSpecifiedType.ValueGenerator valueGenerator) throws Exception
+            GenImmediateData.ImmediateData_Mgr src,
+            Random r,
+            GenValueSpecifiedType.ValueGenerator valueGenerator) throws Exception
     {
 
         MainWindowActions details = TAppUtil.openDataAsTable(windowToUse, src.mgr).get();
@@ -170,14 +161,13 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
         virtualGrid = details._test_getVirtualGrid();
         List<Table> allTables = tableManager.getAllTables();
         
-        @OnThread(Tag.Any)
         class Location
         {
             private final TableId tableId;
-            private final @TableDataRowIndex int row;
-            private final @TableDataColIndex int col;
+            private final int row;
+            private final int col;
 
-            public Location(TableId tableId, @TableDataRowIndex int row, @TableDataColIndex int col)
+            public Location(TableId tableId, int row, int col)
             {
                 this.tableId = tableId;
                 this.row = row;
@@ -185,7 +175,7 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
             }
 
             @Override
-            public boolean equals(@Nullable Object o)
+            public boolean equals(Object o)
             {
                 if (this == o) return true;
                 if (o == null || getClass() != o.getClass()) return false;
@@ -220,17 +210,17 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
             // Random table:
             Table table = pickRandomTable(r, allTables);
             // Random location in table:
-            @TableDataColIndex int column = DataItemPosition.col(r.nextInt(table.getData().getColumns().size()));
+            int column = DataItemPosition.col(r.nextInt(table.getData().getColumns().size()));
             int tableLen = table.getData().getLength();
             if (tableLen == 0)
                 continue;
-            @TableDataRowIndex int row = DataItemPosition.row(r.nextInt(tableLen));
+            int row = DataItemPosition.row(r.nextInt(tableLen));
             // Move to the location and edit:
             CellPosition target = keyboardMoveTo(virtualGrid, tableManager, table.getId(), row, column);
             push(KeyCode.ENTER);
             DataTypeValue columnDTV = table.getData().getColumns().get(column).getType();
             Log.debug("Making value for type " + columnDTV);
-            Either<String, @Value Object> value;
+            Either<String, Object> value;
             DataType type = table.getData().getColumns().get(column).getType().getType();
             if (r.nextInt(5) == 1 && !type.equals(DataType.TEXT))
             {
@@ -275,11 +265,9 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
         });
     }
 
-    @Property(trials = 3)
-    @OnThread(Tag.Simulation)
     public void propCheckDataUndo(
-            @NumTables(minTables = 2, maxTables = 4) @From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr src,
-            @From(GenRandom.class) Random r) throws Exception
+            GenImmediateData.ImmediateData_Mgr src,
+            Random r) throws Exception
     {
         MainWindowActions details = TAppUtil.openDataAsTable(windowToUse, src.mgr).get();
         TFXUtil.sleep(1000);
@@ -293,12 +281,12 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
             // Random table:
             Table table = pickRandomTable(r, allTables);
             // Random location in table:
-            @TableDataColIndex int column = DataItemPosition.col(r.nextInt(table.getData().getColumns().size()));
+            int column = DataItemPosition.col(r.nextInt(table.getData().getColumns().size()));
             int tableLen = table.getData().getLength();
             if (tableLen == 0)
                 continue;
             Column col = table.getData().getColumns().get(column);
-            @TableDataRowIndex int row = DataItemPosition.row(r.nextInt(tableLen));
+            int row = DataItemPosition.row(r.nextInt(tableLen));
             CellPosition pos = keyboardMoveTo(virtualGrid, tableManager, table.getId(), row, column);
             String valueFromData = DataTypeUtility.valueToString(col.getType().getCollapsed(row));
             String copiedFromTable = copyToClipboard();
@@ -326,14 +314,12 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
         }
     }
 
-    @OnThread(Tag.Any)
     private void assertErrorShowing(CellPosition cellPos, boolean expectError)
     {
         Node field = withItemInBounds(".document-text-field", virtualGrid, new RectangleBounds(cellPos, cellPos), (n, p) -> {});
         Assert.assertEquals(expectError, TFXUtil.fx(() -> FXUtility.hasPseudoclass(field, "has-error")));
     }
 
-    @OnThread(Tag.Any)
     public Table pickRandomTable(Random r, List<Table> allTables)
     {
         allTables = new ArrayList<>(allTables);
@@ -341,7 +327,6 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
         return allTables.get(r.nextInt(allTables.size()));
     }
 
-    @OnThread(Tag.Any)
     public void pushCopy()
     {
         if (SystemUtils.IS_OS_MAC_OSX)

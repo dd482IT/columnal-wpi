@@ -104,14 +104,11 @@ import static org.junit.Assert.*;
 /**
  * Created by neil on 10/06/2017.
  */
-@OnThread(value = Tag.FXPlatform, ignoreParent = true)
-@RunWith(JUnitQuickcheck.class)
 public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilTrait, ScrollToTrait, ClickTableLocationTrait, EnterTypeTrait, EnterStructuredValueTrait, FocusOwnerTrait, TextFieldTrait, PopupTrait
 {
     public static final CellPosition NEW_TABLE_POS = new CellPosition(CellPosition.row(1), CellPosition.col(1));
     
     @SuppressWarnings("nullness")
-    @OnThread(Tag.Any)
     private @NonNull MainWindowActions mainWindowActions;
 
     @Override
@@ -123,8 +120,6 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         mainWindowActions = MainWindow.show(windowToUse, dest, null, null);
     }
 
-    @After
-    @OnThread(Tag.Any)
     public void hide()
     {
         Platform.runLater(() -> {
@@ -134,8 +129,6 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
     }
 
     // Both a test, and used as utility method.
-    @Test
-    @OnThread(Tag.Any)
     public void testStartState()
     {
         assertTrue(TFXUtil.fx(() -> windowToUse.isShowing()));
@@ -144,8 +137,6 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         assertEquals(1, (int) TFXUtil.fx(() -> listWindows().size()));
     }
 
-    @Test
-    @OnThread(Tag.Any)
     public void testNewClick()
     {
         testStartState();
@@ -154,8 +145,6 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         assertTrue(TFXUtil.fx(() -> MainWindow._test_getViews()).values().stream().allMatch(Stage::isShowing));
     }
 
-    @Test
-    @OnThread(Tag.Any)
     public void testCloseMenu()
     {
         testStartState();
@@ -165,8 +154,6 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         assertTrue(TFXUtil.fx(() -> MainWindow._test_getViews()).isEmpty());
     }
 
-    @Test
-    @OnThread(Tag.Any)
     public void testNewEntryTable() throws InternalException, UserException
     {
         testStartState();
@@ -179,14 +166,12 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         assertEquals(1, mainWindowActions._test_getTableManager().getAllTables().get(0).getData().getColumns().size());
     }
 
-    @OnThread(Tag.Any)
     private void makeNewDataEntryTable(CellPosition targetPos) throws InternalException, UserException
     {
         makeNewDataEntryTable(null, targetPos, null);
     }
 
-    @OnThread(Tag.Any)
-    private void makeNewDataEntryTable(@Nullable String tableName, CellPosition targetPos, @Nullable Pair<DataType, @Value Object> dataTypeAndDefault) throws UserException, InternalException
+    private void makeNewDataEntryTable(String tableName, CellPosition targetPos, Pair<DataType, Object> dataTypeAndDefault) throws UserException, InternalException
     {
         keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), targetPos);
         // Only need to click once as already selected by keyboard:
@@ -218,8 +203,6 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         TFXUtil.sleep(200);
     }
 
-    @Test
-    @OnThread(Tag.Any)
     public void testUndoNewEntryTable() throws InternalException, UserException
     {
         testStartState();
@@ -232,9 +215,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         assertEquals(0, count(".table-display-table-title"));
     }
 
-    @Property(trials = 2)
-    @OnThread(Tag.Any)
-    public void propUndoNewEntryTable(@From(GenRandom.class) Random r) throws InternalException, UserException
+    public void propUndoNewEntryTable(Random r) throws InternalException, UserException
     {
         // We make new tables and undo them at random, with
         // slight preference for making.
@@ -245,7 +226,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         {
             if (r.nextInt(5) <= 2 || tableIds.isEmpty())
             {
-                @ExpressionIdentifier String name = IdentifierUtility.identNum("Table", i);
+                String name = IdentifierUtility.identNum("Table", i);
                 //System.out.println("###\n# Adding " + name + " " + Instant.now() + "\n###\n");
                 makeNewDataEntryTable(name, NEW_TABLE_POS.offsetByRowCols(4 * tableIds.size(), 0), null);
                 tableIds.add(new TableId(name));
@@ -262,8 +243,6 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         }
     }
 
-    @Test
-    @OnThread(Tag.Simulation)
     public void testUndoAddRow() throws InternalException, UserException
     {
         testStartState();
@@ -287,14 +266,12 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         assertEquals(0, TFXUtil.fx(() -> lookup(".document-text-field").match(Node::isVisible).queryAll().size()).intValue());
     }
 
-    @Ignore // TODO re-enable
-    @Property(trials = 5)
-    @OnThread(Tag.Simulation)
-    public void propUndoAddAndEditData(@From(GenRandom.class) Random r) throws InternalException, UserException
+    // TODO re-enable
+    public void propUndoAddAndEditData(Random r) throws InternalException, UserException
     {
         GenNumber gen = new GenNumber();
-        Supplier<@Value Number> makeNumber = () -> gen.generate(new SourceOfRandomness(r), null);
-        @Value Number def = makeNumber.get();
+        Supplier<Number> makeNumber = () -> gen.generate(new SourceOfRandomness(r), null);
+        Number def = makeNumber.get();
         makeNewDataEntryTable(null, NEW_TABLE_POS, new Pair<>(DataType.NUMBER, def));
         TFXUtil.sleep(200);
         TableManager tableManager = mainWindowActions._test_getTableManager();
@@ -302,11 +279,11 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         
         // We make new rows and edit the data, and undo at random.
 
-        ArrayList<ArrayList<@Value Number>> dataHistory = new ArrayList<ArrayList<@Value Number>>(ImmutableList.of(new ArrayList<@Value Number>()));
+        ArrayList<ArrayList<Number>> dataHistory = new ArrayList<ArrayList<Number>>(ImmutableList.of(new ArrayList<Number>()));
 
         for (int i = 0; i < 10; i++)
         {
-            ArrayList<@Value Number> latest = new ArrayList<>(dataHistory.get(dataHistory.size() - 1));
+            ArrayList<Number> latest = new ArrayList<>(dataHistory.get(dataHistory.size() - 1));
             int choice = r.nextInt(10); //0 - 9
             if (choice <= 2 || latest.isEmpty()) // 0 - 2
             {
@@ -334,7 +311,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
             {
                 // Edit a random row
                 int row = r.nextInt(latest.size());
-                @Value Number newVal;
+                Number newVal;
                 int attempts = 0;
                 do
                 {
@@ -342,7 +319,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
                 }
                 while (Utility.compareNumbers(latest.get(row), newVal) == 0 && ++attempts < 100);
                 Log.debug("@@@ Editing row " + row + " to be: " + newVal + " attempts: " + attempts);
-                enterValue(NEW_TABLE_POS.offsetByRowCols(3 + row, 0), Either.right(new Pair<DataType, @Value Object>(DataType.NUMBER, newVal)), r);
+                enterValue(NEW_TABLE_POS.offsetByRowCols(3 + row, 0), Either.right(new Pair<DataType, Object>(DataType.NUMBER, newVal)), r);
                 latest.set(row, newVal);
                 TFXUtil.sleep(4000);
             }
@@ -359,24 +336,20 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         }
     }
 
-    @Property(trials = 5)
-    @OnThread(Tag.Any)
-    public void propAddColumnToEntryTable(@From(GenDataTypeMaker.class) @MustHaveValues GenDataTypeMaker.DataTypeMaker dataTypeMaker) throws UserException, InternalException, Exception
+    public void propAddColumnToEntryTable(GenDataTypeMaker.DataTypeMaker dataTypeMaker) throws UserException, InternalException, Exception
     {
         TBasicUtil.printSeedOnFail(() -> {
             addColumnToEntryTable(dataTypeMaker.getTypeManager(), dataTypeMaker.makeType().getDataType());
         });
     }
 
-    @OnThread(Tag.Any)
     private void addColumnToEntryTable(TypeManager typeManager, DataType dataType) throws InternalException, UserException
     {
         mainWindowActions._test_getTableManager().getTypeManager()._test_copyTaggedTypesFrom(typeManager);
         addNewTableWithColumn(dataType, null);
     }
 
-    @OnThread(Tag.Any)
-    private void addNewTableWithColumn(DataType dataType, @Nullable @Value Object value) throws InternalException, UserException
+    private void addNewTableWithColumn(DataType dataType, Object value) throws InternalException, UserException
     {
         testNewEntryTable();
         Node expandRight = TFXUtil.fx(() -> lookup(".expand-arrow").match(n -> FXUtility.hasPseudoclass(n, "expand-right")).<Node>query());
@@ -412,21 +385,19 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
     private void clickOnSub(Node root, String subQuery)
     {
         assertTrue(subQuery.startsWith("."));
-        @Nullable Node sub = from(root).lookup(subQuery).<Node>query();
+        Node sub = from(root).lookup(subQuery).<Node>query();
         assertNotNull(subQuery, sub);
         if (sub != null)
             clickOn(sub);
     }
 
-    @Property(trials = 5)
-    @OnThread(Tag.Any)
-    public void propDefaultValue(@From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws InternalException, UserException, Exception
+    public void propDefaultValue(TypeAndValueGen typeAndValueGen) throws InternalException, UserException, Exception
     {
         TBasicUtil.printSeedOnFail(() -> {
             mainWindowActions._test_getTableManager().getTypeManager()._test_copyTaggedTypesFrom(typeAndValueGen.getTypeManager());
-            @Value Object initialVal = typeAndValueGen.makeValue();
+            Object initialVal = typeAndValueGen.makeValue();
             addNewTableWithColumn(typeAndValueGen.getType(), initialVal);
-            List<@Value Object> values = new ArrayList<>();
+            List<Object> values = new ArrayList<>();
             for (int i = 0; i < 3; i++)
             {
                 addNewRow();
@@ -438,30 +409,28 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
                 for (int j = 0; j < values.size(); j++)
                 {
                     int jFinal = j;
-                    TBasicUtil.assertValueEqual("Index " + j, values.get(j), TFXUtil.<@Value Object>sim(() -> column.getCollapsed(jFinal)));
+                    TBasicUtil.assertValueEqual("Index " + j, values.get(j), TFXUtil.<Object>sim(() -> column.getCollapsed(jFinal)));
                 }
             }
         });
     }
 
-    @Property(trials = 3)
-    @OnThread(Tag.Simulation)
-    public void propEnterColumn(@From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen, @From(GenRandom.class) Random r) throws InternalException, UserException, Exception
+    public void propEnterColumn(TypeAndValueGen typeAndValueGen, Random r) throws InternalException, UserException, Exception
     {
         addColumnToEntryTable(typeAndValueGen.getTypeManager(), typeAndValueGen.getType());
         // Now set the values
-        List<Either<String, @Value Object>> values = new ArrayList<>();
+        List<Either<String, Object>> values = new ArrayList<>();
         for (int i = 0; i < 10;i ++)
         {
             addNewRow();
             TFXUtil.sleep(500);
-            Either<String, Pair<DataType, @Value Object>> entry;
+            Either<String, Pair<DataType, Object>> entry;
             final String invalidChar;
             final int invalidPos;
             if (r.nextInt(8) != 1 || typeAndValueGen.getType().equals(DataType.TEXT))
             {
-                @Value Object value = typeAndValueGen.makeValue();
-                entry = Either.right(new Pair<DataType, @Value Object>(typeAndValueGen.getType(), value));
+                Object value = typeAndValueGen.makeValue();
+                entry = Either.right(new Pair<DataType, Object>(typeAndValueGen.getType(), value));
                 invalidPos = - 1;
                 invalidChar = "";
             }
@@ -494,7 +463,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
                 }
             }
 
-            values.add(entry.<@Value Object>map(p -> p.getSecond()));
+            values.add(entry.<Object>map(p -> p.getSecond()));
             DocumentTextField field = enterValue(NEW_TABLE_POS.offsetByRowCols(3 + i, 1), entry, r);
             if (entry.isLeft())
                 MatcherAssert.assertThat(TFXUtil.fx(() -> field._test_getStyleSpans(invalidPos, invalidPos + invalidChar.length())), Matchers.everyItem(MatcherUtil.matcherOn(Matchers.hasItem("input-error"), s -> s.getFirst())));
@@ -506,7 +475,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         for (int i = 0; i < values.size(); i++)
         {
             int iFinal = i;
-            TBasicUtil.assertValueEitherEqual("Index " + i, values.get(i), TFXUtil.<Either<String, @Value Object>>sim(() -> {
+            TBasicUtil.assertValueEitherEqual("Index " + i, values.get(i), TFXUtil.<Either<String, Object>>sim(() -> {
                 try
                 {
                     return Either.right(column.getCollapsed(iFinal));
@@ -520,14 +489,13 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         }
     }
 
-    @OnThread(Tag.Simulation)
-    private DocumentTextField enterValue(CellPosition position, Either<String, Pair<DataType, @Value Object>> value, Random random) throws UserException, InternalException
+    private DocumentTextField enterValue(CellPosition position, Either<String, Pair<DataType, Object>> value, Random random) throws UserException, InternalException
     {
         // Make sure we aren't already selecting that cell:
         push(KeyCode.ESCAPE);
         push(KeyCode.ESCAPE);
         push(KeyCode.SHORTCUT, KeyCode.HOME);
-        final @NonNull DocumentTextField textField = (DocumentTextField) clickOnItemInBounds(".document-text-field", mainWindowActions._test_getVirtualGrid(), new RectangleBounds(position, position));
+        final DocumentTextField textField = (DocumentTextField) clickOnItemInBounds(".document-text-field", mainWindowActions._test_getVirtualGrid(), new RectangleBounds(position, position));
         // Three ways to enter value:
         // click twice, click once and press enter, click once and start typing
         int choice = random.nextInt(3);
@@ -569,7 +537,6 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         return textField;
     }
 
-    @OnThread(Tag.Any)
     private boolean hasNumber(DataType type) throws InternalException
     {
         return type.apply(new FlatDataTypeVisitor<Boolean>(false) {
@@ -591,7 +558,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
             }
 
             @Override
-            public Boolean record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, InternalException
+            public Boolean record(ImmutableMap<String, DataType> fields) throws InternalException, InternalException
             {
                 for (DataType dataType : fields.values())
                 {
@@ -609,8 +576,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         });
     }
 
-    @OnThread(Tag.Any)
-    private void assertFocusOwner(String description, @NonNull DocumentTextField textField)
+    private void assertFocusOwner(String description, DocumentTextField textField)
     {
         Node focused = getFocusOwner();
         assertNotNull(focused);
@@ -619,7 +585,6 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         assertTrue(description + " focus not STF: " + focused.getClass().toString() + "; " + focused, focused instanceof DocumentTextField);
     }
 
-    @OnThread(Tag.Any)
     private void addNewRow()
     {
         Node expandDown = TFXUtil.fx(() -> lookup(".expand-arrow").match(n -> FXUtility.hasPseudoclass(n, "expand-down")).<Node>query());

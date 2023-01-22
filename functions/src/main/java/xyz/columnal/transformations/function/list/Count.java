@@ -60,7 +60,7 @@ public class Count extends FunctionDefinition
     private static class Instance extends ValueFunction
     {
         @Override
-        public @Value Object _call() throws UserException, InternalException
+        public Object _call() throws UserException, InternalException
         {
             return DataTypeUtility.value(arg(0, ListEx.class).size());
         }

@@ -65,7 +65,7 @@ import java.util.stream.Stream;
  * A ListView which allows deletion of selected items using a little cross to the right (or pressing backspace/delete), which is
  * animated by sliding out the items.
  */
-public abstract class FancyList<T extends @NonNull Object, CELL_CONTENT extends Node>
+public abstract class FancyList<T extends Object, CELL_CONTENT extends Node>
 {
     private final VBox children = GUI.vbox("fancy-list-children");
     private final ObservableList<Cell> cells = FXCollections.observableArrayList();
@@ -76,7 +76,7 @@ public abstract class FancyList<T extends @NonNull Object, CELL_CONTENT extends 
     private final boolean allowDeleting;
     private final ScrollPaneFill scrollPane = new FancyListScrollPane(children);
     private final BorderPane bottomPane = new BorderPane();
-    private final @Nullable Button addButton;
+    private final Button addButton;
 
     /**
      * 
@@ -176,7 +176,7 @@ public abstract class FancyList<T extends @NonNull Object, CELL_CONTENT extends 
     }
 
     // If null is passed, we are not dragging, so turn off preview
-    private void updateDragPreview(@Nullable Point2D childrenPoint)
+    private void updateDragPreview(Point2D childrenPoint)
     {
         if (children.getChildren().isEmpty())
             return;
@@ -207,7 +207,7 @@ public abstract class FancyList<T extends @NonNull Object, CELL_CONTENT extends 
         return -1;
     }
 
-    public ObservableList<String> getStyleClass(@UnknownInitialization(FancyList.class) FancyList<T, CELL_CONTENT> this)
+    public ObservableList<String> getStyleClass(FancyList<T, CELL_CONTENT> this)
     {
         return scrollPane.getStyleClass();
     }
@@ -229,7 +229,6 @@ public abstract class FancyList<T extends @NonNull Object, CELL_CONTENT extends 
      * can be called in future to get the latest value from the
      * graphical component.
      */
-    @OnThread(Tag.FXPlatform)
     protected abstract Pair<CELL_CONTENT, FXPlatformSupplier<T>> makeCellContent(Optional<T> initialContent, boolean editImmediately);
 
     private void deleteCells(List<Cell> selectedCells)
@@ -263,7 +262,7 @@ public abstract class FancyList<T extends @NonNull Object, CELL_CONTENT extends 
     }
 
     //@RequiresNonNull({"bottomPane", "children", "cells", "scrollPane"})
-    private void updateChildren(@UnknownInitialization(FancyList.class) FancyList<T, CELL_CONTENT> this)
+    private void updateChildren(FancyList<T, CELL_CONTENT> this)
     {
         for (int i = 0; i < cells.size(); i++)
         {
@@ -282,7 +281,7 @@ public abstract class FancyList<T extends @NonNull Object, CELL_CONTENT extends 
         return cells.stream().map(c -> c.value.get()).collect(ImmutableList.<T>toImmutableList());
     }
     
-    protected Stream<Cell> streamCells(@UnknownInitialization(FancyList.class) FancyList<T, CELL_CONTENT> this)
+    protected Stream<Cell> streamCells(FancyList<T, CELL_CONTENT> this)
     {
         return cells.stream();
     }
@@ -298,7 +297,7 @@ public abstract class FancyList<T extends @NonNull Object, CELL_CONTENT extends 
         updateSelectionState();
     }
 
-    public void resetItems(List<@NonNull T> newItems)
+    public void resetItems(List<T> newItems)
     {
         cleanup(cells);
         cells.clear();
@@ -306,7 +305,7 @@ public abstract class FancyList<T extends @NonNull Object, CELL_CONTENT extends 
         updateChildren();
     }
 
-    public @Nullable Node _test_scrollToItem(T scrollTo)
+    public Node _test_scrollToItem(T scrollTo)
     {
         // Find the item:
         Node content = cells.stream().filter(cell -> Objects.equals(cell.value.get(), scrollTo)).findFirst().orElse(null);
@@ -365,14 +364,13 @@ public abstract class FancyList<T extends @NonNull Object, CELL_CONTENT extends 
             return new Pair<>(nearestAbove.getSecond(), nearestBelow.getSecond());
     }*/
 
-    @OnThread(Tag.FXPlatform)
     protected class Cell extends BorderPane
     {
         protected final SmallDeleteButton deleteButton;
         protected final CELL_CONTENT content;
         private final FXPlatformSupplier<T> value;
         
-        public Cell(@Nullable T initialContent, boolean editImmediately)
+        public Cell(T initialContent, boolean editImmediately)
         {
             getStyleClass().add("fancy-list-cell");
             deleteButton = new SmallDeleteButton();
@@ -456,12 +454,11 @@ public abstract class FancyList<T extends @NonNull Object, CELL_CONTENT extends 
             }
         }
 
-        private int getIndex(@UnknownInitialization Cell this)
+        private int getIndex(Cell this)
         {
             return Utility.indexOfRef(cells, this);
         }
 
-        @OnThread(Tag.FXPlatform)
         private void updateHoverState(boolean hovering)
         {
             pseudoClassStateChanged(PseudoClass.getPseudoClass("my_hover_sel"), hovering);
@@ -481,25 +478,25 @@ public abstract class FancyList<T extends @NonNull Object, CELL_CONTENT extends 
         }
     }
 
-    private boolean isSelected(@UnknownInitialization Cell cell)
+    private boolean isSelected(Cell cell)
     {
         int index = Utility.indexOfRef(cells, cell);
         return index < 0 ? false : selection.get(index);
     }
     
-    public void addToEnd(@UnknownInitialization(FancyList.class) FancyList<T, CELL_CONTENT> this, @Nullable T content, boolean editImmediately)
+    public void addToEnd(FancyList<T, CELL_CONTENT> this, T content, boolean editImmediately)
     {
         cells.add(new Cell(content, editImmediately));
         updateChildren();
     }
     
-    public void setAddButtonText(@UnknownInitialization(FancyList.class) FancyList<T, CELL_CONTENT> this, @Localized String text)
+    public void setAddButtonText(FancyList<T, CELL_CONTENT> this, String text)
     {
         if (addButton != null)
             addButton.setText(text);
     }
     
-    protected void listenForCellChange(@UnknownInitialization(FancyList.class) FancyList<T, CELL_CONTENT> this, FXPlatformConsumer<Change<? extends Cell>> listener)
+    protected void listenForCellChange(FancyList<T, CELL_CONTENT> this, FXPlatformConsumer<Change<? extends Cell>> listener)
     {
         FXUtility.listen(cells, listener);
     }
@@ -518,8 +515,6 @@ public abstract class FancyList<T extends @NonNull Object, CELL_CONTENT extends 
             super(content);
         }
         
-        @OnThread(Tag.Any)
-        @Pure
         public FancyList<T, CELL_CONTENT> _test_getList()
         {
             return FancyList.this;

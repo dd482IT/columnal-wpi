@@ -157,7 +157,7 @@ public class FunctionList
         })).collect(ImmutableList.<FunctionDefinition>toImmutableList());
     }
 
-    public static @Nullable FunctionDefinition lookup(UnitManager mgr, String functionName) throws InternalException
+    public static FunctionDefinition lookup(UnitManager mgr, String functionName) throws InternalException
     {
         for (FunctionDefinition functionDefinition : getAllFunctions(mgr))
         {
@@ -172,7 +172,7 @@ public class FunctionList
         return new FunctionLookup()
         {
             @Override
-            public @Nullable StandardFunctionDefinition lookup(String functionName) throws InternalException
+            public StandardFunctionDefinition lookup(String functionName) throws InternalException
             {
                 return FunctionList.lookup(unitManager, functionName);
             }

@@ -60,7 +60,7 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionLexer
 {
     public static final DataFormat EXPRESSION_CLIPBOARD_TYPE = FXUtility.getDataFormat("application/records-expression");
     
-    public ExpressionEditor(@Nullable Expression startingValue, ObjectExpression<@Nullable Table> srcTable, ObservableObjectValue<ColumnLookup> columnLookup, @Nullable DataType expectedType, @Nullable ColumnPicker columnPicker, TypeManager typeManager, FXPlatformSupplierInt<TypeState> makeTypeState, FunctionLookup functionLookup, FXPlatformConsumer<@NonNull @Recorded Expression> onChangeHandler)
+    public ExpressionEditor(Expression startingValue, ObjectExpression<Table> srcTable, ObservableObjectValue<ColumnLookup> columnLookup, DataType expectedType, ColumnPicker columnPicker, TypeManager typeManager, FXPlatformSupplierInt<TypeState> makeTypeState, FunctionLookup functionLookup, FXPlatformConsumer<Expression> onChangeHandler)
     {
         super(startingValue == null ? null : startingValue.save(SaveDestination.toExpressionEditor(typeManager, columnLookup.get(), functionLookup), BracketedStatus.DONT_NEED_BRACKETS, new TableAndColumnRenames(ImmutableMap.of())), new ExpressionLexer(columnLookup, typeManager, functionLookup, makeTypeState, expectedType), typeManager, onChangeHandler, "expression-editor");
         
@@ -94,15 +94,14 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionLexer
     }
 
     @Override
-    protected Dimension2D getEditorDimension(@UnknownInitialization(Object.class) ExpressionEditor this)
+    protected Dimension2D getEditorDimension(ExpressionEditor this)
     {
         return new Dimension2D(450.0, 130.0);
     }
 
-    @OnThread(Tag.FXPlatform)
     public static interface ColumnPicker
     {
-        public void enableColumnPickingMode(@Nullable Point2D screenPos, ObjectExpression<@PolyNull Scene> sceneProperty, Predicate<Pair<Table, ColumnId>> includeColumn, FXPlatformConsumer<Pair<Table, ColumnId>> onPick);
+        public void enableColumnPickingMode(Point2D screenPos, ObjectExpression<Scene> sceneProperty, Predicate<Pair<Table, ColumnId>> includeColumn, FXPlatformConsumer<Pair<Table, ColumnId>> onPick);
         
         public void disablePickingMode();
     }

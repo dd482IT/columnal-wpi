@@ -34,13 +34,11 @@ public final record Pair<A, B>(A first, B second)
 {
     // TODO remove these methods in favour of first() and second() once the checker framework bug https://github.com/typetools/checker-framework/issues/5360 is fixed in November
     // Also potentially relevant: https://bugs.openjdk.org/browse/JDK-8288130
-    @Pure
     public A getFirst()
     {
         return first;
     }
 
-    @Pure
     public B getSecond()
     {
         return second;

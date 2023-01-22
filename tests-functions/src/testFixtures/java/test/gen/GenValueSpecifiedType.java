@@ -52,6 +52,6 @@ public class GenValueSpecifiedType extends GenValueBase<ValueGenerator>
     
     public interface ValueGenerator
     {
-        public @Value Object makeValue(DataType t) throws InternalException, UserException;
+        public Object makeValue(DataType t) throws InternalException, UserException;
     }
 }

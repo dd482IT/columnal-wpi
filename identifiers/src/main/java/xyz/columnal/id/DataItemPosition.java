@@ -30,21 +30,20 @@ import threadchecker.Tag;
  * of any individual table bounds.
  */
 /* package-visible */
-@OnThread(Tag.Any)
 public class DataItemPosition
 {
     // Both are zero-based:
-    public final @TableDataRowIndex int rowIndex;
-    public final @TableDataColIndex int columnIndex;
+    public final int rowIndex;
+    public final int columnIndex;
 
-    public DataItemPosition(@TableDataRowIndex int rowIndex, @TableDataColIndex int columnIndex)
+    public DataItemPosition(int rowIndex, int columnIndex)
     {
         this.rowIndex = rowIndex;
         this.columnIndex = columnIndex;
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -77,13 +76,13 @@ public class DataItemPosition
     */
     
     @SuppressWarnings("units")
-    public static @TableDataRowIndex int row(int row)
+    public static int row(int row)
     {
         return row;
     }
 
     @SuppressWarnings("units")
-    public static @TableDataColIndex int col(int col)
+    public static int col(int col)
     {
         return col;
     }

@@ -31,7 +31,7 @@ public class ExpressionCompletionContext extends CodeCompletionContext
         super(completions);
     }
 
-    public ExpressionCompletionContext(CodeCompletionContext nestedCompletions, @CanonicalLocation int offsetBy)
+    public ExpressionCompletionContext(CodeCompletionContext nestedCompletions, int offsetBy)
     {
         super(nestedCompletions, offsetBy);
     }

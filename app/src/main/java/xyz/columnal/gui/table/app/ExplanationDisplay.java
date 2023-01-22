@@ -72,10 +72,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
 
-@OnThread(Tag.FXPlatform)
 public class ExplanationDisplay extends FloatingItem<ExplanationDisplay.ExplanationPane>
 {
-    @OnThread(Tag.Any)
     private final Explanation explanation;
     private final CellPosition attachedTo;
     private final TableId srcTableId;
@@ -123,7 +121,6 @@ public class ExplanationDisplay extends FloatingItem<ExplanationDisplay.Explanat
     }
 
     // Returns any locations which were not shown in skipped children
-    @OnThread(Tag.Simulation)
     private ImmutableList<ExplanationLocation> makeString(Explanation explanation, HashMap<Explanation, Boolean> alreadyExplained, Multimap<Expression, HighlightExpression> expressionStyles, ImmutableList.Builder<StyledString> lines, boolean skipIfTrivial) throws UserException, InternalException
     {
         if (explanation.isValue() && alreadyExplained.containsKey(explanation))
@@ -139,7 +136,7 @@ public class ExplanationDisplay extends FloatingItem<ExplanationDisplay.Explanat
         ImmutableList<ExplanationLocation> skippedLocations = skippedLocationsBuilder.build();
         @SuppressWarnings("keyfor")
         Set<Explanation> alreadyDescribed = alreadyExplained.keySet();
-        @Nullable StyledString description = explanation.describe(alreadyDescribed, this::hyperlinkLocation, (s, e) -> s.withStyle(new HighlightExpression(expressionStyles, e, () -> alreadyExplained.entrySet().stream().filter(x -> x.getKey().isDescribing(e)).map(x -> x.getValue()).reduce((a, b) -> a || b).orElse(false))), skippedLocations, skipIfTrivial);
+        StyledString description = explanation.describe(alreadyDescribed, this::hyperlinkLocation, (s, e) -> s.withStyle(new HighlightExpression(expressionStyles, e, () -> alreadyExplained.entrySet().stream().filter(x -> x.getKey().isDescribing(e)).map(x -> x.getValue()).reduce((a, b) -> a || b).orElse(false))), skippedLocations, skipIfTrivial);
         alreadyExplained.put(explanation, description != null);
         if (description != null)
         {
@@ -169,7 +166,7 @@ public class ExplanationDisplay extends FloatingItem<ExplanationDisplay.Explanat
         Clickable click = new Clickable("click.to.view")
         {
             @Override
-            protected @OnThread(Tag.FXPlatform) void onClick(MouseButton mouseButton, Point2D screenPoint)
+            protected void onClick(MouseButton mouseButton, Point2D screenPoint)
             {
                 jumpTo.consume(explanationLocation);
             }
@@ -179,7 +176,7 @@ public class ExplanationDisplay extends FloatingItem<ExplanationDisplay.Explanat
     }
 
     @Override
-    public @Nullable Pair<ItemState, @Nullable StyledString> getItemState(CellPosition cellPosition, Point2D screenPos)
+    public Pair<ItemState, StyledString> getItemState(CellPosition cellPosition, Point2D screenPos)
     {
         Node node = getNode();
         if (node != null)
@@ -196,7 +193,6 @@ public class ExplanationDisplay extends FloatingItem<ExplanationDisplay.Explanat
         // No keyboard activation via cells
     }
     
-    @OnThread(Tag.FXPlatform)
     final class ExplanationPane extends StackPane
     {
         private final TextFlow textFlow;
@@ -262,7 +258,6 @@ public class ExplanationDisplay extends FloatingItem<ExplanationDisplay.Explanat
         // of this expression in the AST.
         private final LinkedHashSet<HighlightExpression> parents = new LinkedHashSet<>();
 
-        @OnThread(Tag.Simulation)
         public HighlightExpression(Multimap<Expression, HighlightExpression> allExpressionStyles, Expression e, Supplier<Boolean> isExplainedDirectly)
         {
             super(HighlightExpression.class);
@@ -276,7 +271,7 @@ public class ExplanationDisplay extends FloatingItem<ExplanationDisplay.Explanat
         }
 
         @Override
-        protected @OnThread(Tag.FXPlatform) void style(Text t)
+        protected void style(Text t)
         {
             t.getStyleClass().add("explained-expression");
             FXUtility.addChangeListenerPlatformNN(t.hoverProperty(), hovering -> {
@@ -302,7 +297,6 @@ public class ExplanationDisplay extends FloatingItem<ExplanationDisplay.Explanat
             });
         }
 
-        @OnThread(Tag.FXPlatform)
         private void calculateHover(boolean hovering)
         {
             Collection<HighlightExpression> allAppearances = allExpressionStyles.get(expression);
@@ -311,7 +305,6 @@ public class ExplanationDisplay extends FloatingItem<ExplanationDisplay.Explanat
             });
         }
 
-        @OnThread(Tag.FXPlatform)
         private void setHover(boolean hovering)
         {
             highlight.set(hovering);

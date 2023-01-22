@@ -63,11 +63,9 @@ import java.util.stream.IntStream;
  */
 public abstract class RecordSet
 {
-    @OnThread(Tag.Any)
     protected final ArrayList<Column> columns;
 
-    @OnThread(Tag.FXPlatform)
-    protected @MonotonicNonNull RecordSetListener listener;
+    protected RecordSetListener listener;
 
     protected RecordSet()
     {
@@ -200,7 +198,6 @@ public abstract class RecordSet
     }
 */
 
-    @OnThread(Tag.Any)
     public final Column getColumn(ColumnId name) throws UserException
     {
         for (Column c : columns)
@@ -211,8 +208,7 @@ public abstract class RecordSet
         throw new UserException("Column not found: {{{" + name.getRaw() + "}}}");
     }
 
-    @OnThread(Tag.Any)
-    public final @Nullable Column getColumnOrNull(ColumnId name)
+    public final Column getColumnOrNull(ColumnId name)
     {
         for (Column c : columns)
         {
@@ -228,7 +224,7 @@ public abstract class RecordSet
     // Only use when you really need to know the length!
     // Override in subclasses if you can do it faster
     @SuppressWarnings("units")
-    public @TableDataRowIndex int getLength() throws UserException, InternalException
+    public int getLength() throws UserException, InternalException
     {
         int i = 0;
         while (indexValid(i))
@@ -238,8 +234,7 @@ public abstract class RecordSet
         return i;
     }
 
-    @OnThread(Tag.Any)
-    public final List<Column> getColumns(@UnknownInitialization(RecordSet.class) RecordSet this)
+    public final List<Column> getColumns(RecordSet this)
     {
         return Collections.unmodifiableList(columns);
     }
@@ -281,14 +276,13 @@ public abstract class RecordSet
         }).collect(Collectors.joining(", "));
     }
 
-    @OnThread(Tag.Any)
     public final ImmutableList<ColumnId> getColumnIds()
     {
         return Utility.<Column, ColumnId>mapListI(columns, Column::getName);
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || !(o instanceof RecordSet)) return false;
@@ -309,8 +303,8 @@ public abstract class RecordSet
                     return false;
                 for (int i = 0; i < length; i++)
                 {
-                    Either<String, @Value Object> ax = getCollapsedErr(us, i);
-                    Either<String, @Value Object> bx = getCollapsedErr(them, i);
+                    Either<String, Object> ax = getCollapsedErr(us, i);
+                    Either<String, Object> bx = getCollapsedErr(them, i);
                     boolean same = ax.eitherEx(aerr -> bx.eitherEx(berr -> aerr.equals(berr), _bv -> false), av -> bx.eitherEx(_ae -> false, bv -> Utility.compareValues(av, bv) == 0));
                     if (!same)
                         return false;
@@ -326,8 +320,7 @@ public abstract class RecordSet
         return true;
     }
 
-    @OnThread(Tag.Simulation)
-    private Either<String, @Value Object> getCollapsedErr(DataTypeValue dataTypeValue, int index) throws InternalException, UserException
+    private Either<String, Object> getCollapsedErr(DataTypeValue dataTypeValue, int index) throws InternalException, UserException
     {
         try
         {
@@ -348,14 +341,12 @@ public abstract class RecordSet
         return result;
     }
 
-    @OnThread(Tag.FXPlatform)
     public void setListener(RecordSetListener listener)
     {
         this.listener = listener;
     }
 
-    @OnThread(Tag.Simulation)
-    public void modified(@Nullable ColumnId columnId, @Nullable Integer rowIndex)
+    public void modified(ColumnId columnId, Integer rowIndex)
     {
         Platform.runLater(() -> {
             if (listener != null)
@@ -363,22 +354,17 @@ public abstract class RecordSet
         });
     }
 
-    @OnThread(Tag.FXPlatform)
     public static interface RecordSetListener
     {
         // Range of rows modified.  -1 for both params means all rows
-        @OnThread(Tag.FXPlatform)
         public void modifiedDataItems(int startRowIncl, int endRowIncl);
 
         // Starting at startRowIncl, removedRowsCount (>= 0) was removed,
         // and in its place was added addedRowsCount (>= 0).
-        @OnThread(Tag.FXPlatform)
         public void removedAddedRows(int startRowIncl, int removedRowsCount, int addedRowsCount);
 
-        @OnThread(Tag.FXPlatform)
         public void addedColumn(Column newColumn);
 
-        @OnThread(Tag.FXPlatform)
         public void removedColumn(ColumnId oldColumnId);
     }
 }

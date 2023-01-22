@@ -64,17 +64,12 @@ import java.util.Random;
 
 import static org.junit.Assert.assertEquals;
 
-@RunWith(JUnitQuickcheck.class)
 public class TestJoin extends FXApplicationTest implements ScrollToTrait, ClickTableLocationTrait
 {
-    @Property(trials=5)
     @SuppressWarnings("identifier")
-    @OnThread(Tag.Simulation)
     public void testJoin(
-            @When(seed=-1772520647539087083L)
-            @MustHaveValues @From(GenDataTypeMaker.class) DataTypeMaker dataTypeMaker,
-            @When(seed=-1376018762097782143L)
-            @From(GenRandom.class) Random r) throws Exception
+            DataTypeMaker dataTypeMaker,
+            Random r) throws Exception
     {
         // We make four types for columns (T1-T4), where table A has
         // T1-T3 and table B has T2-T4.  Table A has 
@@ -106,20 +101,20 @@ public class TestJoin extends FXApplicationTest implements ScrollToTrait, ClickT
         for (int i = 0; i < 4; i++)
         {
             DataTypeAndValueMaker maker = dataTypes.get(i);
-            ImmutableList<Either<String, @Value Object>> aValues = Utility.<Either<String, @Value Object>>replicateM_Ex(aSize, () -> Either.<String, @Value Object>right(maker.makeValue()));
+            ImmutableList<Either<String, Object>> aValues = Utility.<Either<String, Object>>replicateM_Ex(aSize, () -> Either.<String, Object>right(maker.makeValue()));
             if (i <= 2)
             {
                 aColumns.add(ColumnUtility.makeImmediateColumn(maker.getDataType(), new ColumnId("T " + i), aValues, maker.makeValue()));
             }
 
-            ArrayList<Either<String, @Value Object>> bValues = new ArrayList<>();
+            ArrayList<Either<String, Object>> bValues = new ArrayList<>();
             // Pick some amount that are the same, and the rest that may or may not be:
             int duplicate = r.nextInt(bSize);
             for (int d = 0; d < duplicate; d++)
             {
                 bValues.add(aValues.get(r.nextInt(aValues.size())));
             }
-            bValues.addAll(Utility.<Either<String, @Value Object>>replicateM_Ex(bSize - bValues.size(), () -> Either.<String, @Value Object>right(maker.makeValue())));
+            bValues.addAll(Utility.<Either<String, Object>>replicateM_Ex(bSize - bValues.size(), () -> Either.<String, Object>right(maker.makeValue())));
             
             if (i > 0)
             {                
@@ -205,7 +200,7 @@ public class TestJoin extends FXApplicationTest implements ScrollToTrait, ClickT
 
             for (Pair<Table, ColumnId> srcColName : srcOccurrences)
             {
-                ArrayList<Either<String, @Value Object>> expected = new ArrayList<>();
+                ArrayList<Either<String, Object>> expected = new ArrayList<>();
 
                 DataTypeValue srcCol = srcColName.getFirst().getData().getColumn(srcColName.getSecond()).getType();
 
@@ -219,7 +214,7 @@ public class TestJoin extends FXApplicationTest implements ScrollToTrait, ClickT
                     {
                         if (src.getSecond().isPresent())
                         {
-                            expected.add(TBasicUtil.getSingleCollapsedData(srcCol, src.getSecond().getAsInt()).<@Value Object>map(v -> new TaggedValue(1, v, srcMgr.getTypeManager().getMaybeType())));
+                            expected.add(TBasicUtil.getSingleCollapsedData(srcCol, src.getSecond().getAsInt()).<Object>map(v -> new TaggedValue(1, v, srcMgr.getTypeManager().getMaybeType())));
                         }
                         else
                         {

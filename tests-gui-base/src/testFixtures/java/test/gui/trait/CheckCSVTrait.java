@@ -52,7 +52,6 @@ import static org.junit.Assert.assertEquals;
 
 public interface CheckCSVTrait extends FxRobotInterface, ScrollToTrait, ClickOnTableHeaderTrait, FocusOwnerTrait
 {
-    @OnThread(Tag.Any)
     default void exportToCSVAndCheck(VirtualGrid virtualGrid, TableManager tableManager, String prefix, List<Pair<String, List<String>>> expected, TableId tableId) throws IOException, UserException, InternalException
     {
         triggerTableHeaderContextMenu(virtualGrid, tableManager, tableId);
@@ -91,7 +90,6 @@ public interface CheckCSVTrait extends FxRobotInterface, ScrollToTrait, ClickOnT
         TBasicUtil.assertEqualsText(prefix, toCSV(expected), actualCSV);
     }
 
-    @OnThread(Tag.Any)
     static String toCSV(List<Pair<String, List<String>>> csvColumns)
     {
         Set<Integer> columnLengths = csvColumns.stream().map(p -> p.getSecond().size()).collect(Collectors.toSet());
@@ -124,14 +122,12 @@ public interface CheckCSVTrait extends FxRobotInterface, ScrollToTrait, ClickOnT
         return s.toString();
     }
 
-    @OnThread(Tag.Any)
     static String quoteCSV(String original)
     {
         return "\"" + original.replace("\"", "\"\"\"") + "\"";
     }
 
 
-    @OnThread(Tag.Simulation)
     static List<String> collapse(int length, DataTypeValue type, int... excluding) throws UserException, InternalException
     {
         List<String> r = new ArrayList<>();

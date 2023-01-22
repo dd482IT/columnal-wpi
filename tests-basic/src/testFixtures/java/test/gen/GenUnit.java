@@ -38,7 +38,7 @@ import java.util.List;
  */
 public class GenUnit extends Generator<Unit>
 {
-    private @MonotonicNonNull List<SingleUnit> units;
+    private List<SingleUnit> units;
 
     public GenUnit()
     {

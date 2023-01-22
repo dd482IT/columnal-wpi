@@ -77,7 +77,6 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 // Like a ListView, but with customisations to allow pinned "related" section
-@OnThread(Tag.FXPlatform)
 final class LexCompletionList extends Region
 {
     private static final double PIXELS_PER_SECOND = 350.0;
@@ -98,13 +97,13 @@ final class LexCompletionList extends Region
     // are relative to the pane.  Due to the pinning, it is possible
     // that the next group begins before the previous one ends.
     // These will change as scrolling happens
-    private @DisplayPixels double[] groupTopY = new double[0];
+    private double[] groupTopY = new double[0];
     
     // This is the canonical scroll position.  Scroll ranges from 0 up to max(0, sum(group heights) - list display height),
     // where each group height is (number of items + (has header ? 1 : 0)) * ITEM_HEIGHT.
     // This scroll can be affected by keyboard movement, scroll events, or scroll bar use.  We guard
     // against recursive update using the flag.
-    private @VirtualPixels double canonicalScrollPosition;
+    private double canonicalScrollPosition;
     private boolean inScrollUpdate;
     
     private static enum GroupNodeType { HEADER, FADE }
@@ -115,9 +114,9 @@ final class LexCompletionList extends Region
     private final ObservableMap<Either<Pair<LexCompletionGroup, LexCompletion>, Pair<LexCompletionGroup, GroupNodeType>>, Node> visible = FXCollections.observableHashMap();
     
     // Group index, index within that group
-    private @Nullable Pair<Integer, Integer> selectionIndex;
+    private Pair<Integer, Integer> selectionIndex;
     // Holds a mirror of selectionIndex, in effect:
-    private final ObjectProperty<@Nullable LexCompletion> selectedItem = new SimpleObjectProperty<>(null);
+    private final ObjectProperty<LexCompletion> selectedItem = new SimpleObjectProperty<>(null);
     
     private final int ITEM_HEIGHT = 24;
     
@@ -161,14 +160,14 @@ final class LexCompletionList extends Region
         getChildren().addAll(scrollBar, borderRect);
     }
 
-    public void updateScroll(@VirtualPixels double toY, boolean animate)
+    public void updateScroll(double toY, boolean animate)
     {
         if (!inScrollUpdate)
         {
             inScrollUpdate = true;
-            @VirtualPixels double maxScroll = (curCompletionGroups.stream().mapToDouble(g -> ITEM_HEIGHT * (g.completions.size() + (g.header != null ? 1 : 0))).sum() - getHeightMinusInsets()) * VirtualPixels.ONE;
+            double maxScroll = (curCompletionGroups.stream().mapToDouble(g -> ITEM_HEIGHT * (g.completions.size() + (g.header != null ? 1 : 0))).sum() - getHeightMinusInsets()) * VirtualPixels.ONE;
             @SuppressWarnings("units")
-            @VirtualPixels double clamped = Math.max(0, Math.min(toY, maxScroll));
+            double clamped = Math.max(0, Math.min(toY, maxScroll));
             canonicalScrollPosition = clamped;
             FXUtility.mouse(this).recalculateChildren(animate);
             scrollBar.setMax(maxScroll);
@@ -235,14 +234,14 @@ final class LexCompletionList extends Region
         return total;
     }
     
-    private @VirtualPixels double calcGroupHeight(int groupIndex)
+    private double calcGroupHeight(int groupIndex)
     {
         LexCompletionGroup group = curCompletionGroups.get(groupIndex);
         int rows = group.completions.size() + (group.header != null ? 1 : 0);
         return rows * ITEM_HEIGHT * VirtualPixels.ONE;
     }
 
-    private @DisplayPixels double calcMinGroupHeight(int groupIndex)
+    private double calcMinGroupHeight(int groupIndex)
     {
         LexCompletionGroup group = curCompletionGroups.get(groupIndex);
         int rows = group.completions.isEmpty() ? 0 : (Math.min(group.minCollapsed, group.completions.size()) + (group.header != null ? 1 : 0));
@@ -250,14 +249,12 @@ final class LexCompletionList extends Region
     }
 
     @Override
-    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     protected double computePrefHeight(double width)
     {
         return Math.min(calcDisplayRows() * ITEM_HEIGHT + 2 /* border */, 400.0);
     }
 
     @Override
-    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     protected void layoutChildren()
     {
         Insets insets = getInsets();
@@ -269,7 +266,7 @@ final class LexCompletionList extends Region
         for (int groupIndex = 0; groupIndex < curCompletionGroups.size(); groupIndex++)
         {
             LexCompletionGroup group = curCompletionGroups.get(groupIndex);
-            @DisplayPixels double y = groupTopY[groupIndex];
+            double y = groupTopY[groupIndex];
             if (group.header != null)
             {
                 // Special case for header:
@@ -284,7 +281,7 @@ final class LexCompletionList extends Region
             }
 
             boolean selected = selectionIndex == null ? groupIndex == 0 : selectionIndex.getFirst() == groupIndex;
-            @DisplayPixels double maxY = groupIndex + 1 < groupTopY.length ? groupTopY[groupIndex + 1] : getHeightMinusInsets() * DisplayPixels.ONE;
+            double maxY = groupIndex + 1 < groupTopY.length ? groupTopY[groupIndex + 1] : getHeightMinusInsets() * DisplayPixels.ONE;
             for (int i = 0; i < group.completions.size() && y < maxY + ITEM_HEIGHT + MAX_PENDING_SCROLL; i++)
             {
                 if (y >= groupTopY[groupIndex] - ITEM_HEIGHT - MAX_PENDING_SCROLL)
@@ -349,17 +346,17 @@ final class LexCompletionList extends Region
         double extraSpaceAvailable = computePrefHeight(-1) - getInsets().getTop() - getInsets().getBottom() - Arrays.stream(groupIdealHeight).sum();
         double minExtraSpace = computePrefHeight(-1) - getInsets().getTop() - getInsets().getBottom() - Arrays.stream(groupMinHeight).sum();
         
-        @VirtualPixels double internalY = VirtualPixels.ZERO;
+        double internalY = VirtualPixels.ZERO;
         for (int groupIndex = 0; groupIndex < curCompletionGroups.size(); groupIndex++)
         {
             LexCompletionGroup group = curCompletionGroups.get(groupIndex);
-            @VirtualPixels double internalGroupEnd = internalY + calcGroupHeight(groupIndex);
+            double internalGroupEnd = internalY + calcGroupHeight(groupIndex);
             double height = Math.max(groupMinHeight[groupIndex], internalGroupEnd - internalY);
             double minHeightInclLater = IntStream.range(groupIndex, curCompletionGroups.size()).mapToDouble(i -> groupMinHeight[i]).sum();
             groupTopY[groupIndex] = Math.min(getInsets().getTop() + internalY - canonicalScrollPosition, getHeight() - getInsets().getBottom() - minHeightInclLater) * DisplayPixels.ONE;
 
-            @DisplayPixels double y = groupTopY[groupIndex];
-            @DisplayPixels double maxY = y + height * DisplayPixels.ONE;
+            double y = groupTopY[groupIndex];
+            double maxY = y + height * DisplayPixels.ONE;
             
             if (group.header != null)
             {
@@ -393,7 +390,7 @@ final class LexCompletionList extends Region
                     Node item = visible.computeIfAbsent(key, this::makeFlow);
                     item.translateYProperty().bind(groupAnimatedTranslate.get(groupIndex));
                     // Note -- deliberate use of == to compare for reference equality, as completions can be equal according to .equals() by appearing in normal and related sections:
-                    FXUtility.setPseudoclass(item, "selected", sel != null && sel == key.<@Nullable LexCompletion>either(c -> c.getSecond(), g -> null));
+                    FXUtility.setPseudoclass(item, "selected", sel != null && sel == key.<LexCompletion>either(c -> c.getSecond(), g -> null));
                     toKeep.add(key);
                 }
             }
@@ -492,21 +489,20 @@ final class LexCompletionList extends Region
         // Need to update internal heights as select() will try to keep in view:
         recalculateChildren(headersMatch);
         // Keep same item selected, if still present:
-        @Nullable LexCompletion sel = selectedItem.get();
-        @Nullable Pair<Integer, Integer> target = sel == null ? null : completionIndexes.get(sel);
+        LexCompletion sel = selectedItem.get();
+        Pair<Integer, Integer> target = sel == null ? null : completionIndexes.get(sel);
         select(target);
         // TODO should we try to maintain scroll position -- but how to calculate this? 
         updateScroll(VirtualPixels.ZERO, false);
     }
 
     @Override
-    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     public void requestFocus()
     {
         // Can't be focused
     }
     
-    public void select(@Nullable Pair<Integer, Integer> target)
+    public void select(Pair<Integer, Integer> target)
     {
         selectionIndex = target;
         selectedItem.setValue(target == null ? null : curCompletionGroups.get(target.getFirst()).completions.get(target.getSecond()));
@@ -515,17 +511,17 @@ final class LexCompletionList extends Region
         if (target != null)
         {
             // This is in terms of internal virtual height:
-            @VirtualPixels double selectedTopY = (IntStream.range(0, target.getFirst()).mapToDouble(this::calcGroupHeight).sum()
+            double selectedTopY = (IntStream.range(0, target.getFirst()).mapToDouble(this::calcGroupHeight).sum()
                 + (ITEM_HEIGHT * (target.getSecond() + (curCompletionGroups.get(target.getFirst()).header != null ? 1 : 0)))) * VirtualPixels.ONE;
-            @VirtualPixels double selectedBottomY = selectedTopY + ITEM_HEIGHT * VirtualPixels.ONE;
+            double selectedBottomY = selectedTopY + ITEM_HEIGHT * VirtualPixels.ONE;
             // This is in terms of display pixels:
-            @DisplayPixels double nextY = target.getFirst() + 1 < groupTopY.length ? groupTopY[target.getFirst() + 1] : getHeightMinusInsets() * DisplayPixels.ONE;
+            double nextY = target.getFirst() + 1 < groupTopY.length ? groupTopY[target.getFirst() + 1] : getHeightMinusInsets() * DisplayPixels.ONE;
             
             // Need to calculate the last visible pixel (in internal virtual height) before
             // the min height of the groups below it.  The last pixel if no groups are below is
             // canonicalScrollPosition + getHeightMinusInsets().
             double viewableToBottomOfGroup = (getHeightMinusInsets() - IntStream.range(target.getFirst() + 1, curCompletionGroups.size()).mapToDouble(this::calcMinGroupHeight).sum());
-            @VirtualPixels double lastVisibleYInGroup = canonicalScrollPosition + viewableToBottomOfGroup * VirtualPixels.ONE;
+            double lastVisibleYInGroup = canonicalScrollPosition + viewableToBottomOfGroup * VirtualPixels.ONE;
             
             if (selectedBottomY > lastVisibleYInGroup)
             { 
@@ -546,7 +542,7 @@ final class LexCompletionList extends Region
         }
     }
     
-    public @Nullable LexCompletion getSelectedItem()
+    public LexCompletion getSelectedItem()
     {
         return selectedItem.get();
     }
@@ -624,7 +620,7 @@ final class LexCompletionList extends Region
         return curCompletionGroups.stream().flatMap(c -> c.completions.stream());
     }
 
-    public ObjectExpression<@Nullable LexCompletion> selectedItemProperty()
+    public ObjectExpression<LexCompletion> selectedItemProperty()
     {
         return selectedItem;
     }
@@ -641,7 +637,6 @@ final class LexCompletionList extends Region
         return listInset + parentInset + itemInset;
     }
     
-    @OnThread(Tag.FXPlatform)
     private final class CompletionRow extends Region
     {
         private final HelpfulTextFlow mainText;
@@ -671,7 +666,6 @@ final class LexCompletionList extends Region
         }
 
         @Override
-        @OnThread(value = Tag.FXPlatform, ignoreParent = true)
         protected void layoutChildren()
         {
             mainText.resizeRelocate(getInsets().getLeft(), 0, getWidth() - getInsets().getLeft() - getInsets().getRight(), getHeight());

@@ -48,19 +48,18 @@ import java.util.Optional;
 /**
  * Edit an expression by itself, used primarily for filter.
  */
-@OnThread(Tag.FXPlatform)
 public class EditExpressionDialog extends DoubleOKLightDialog<Expression>
 {
     private final ExpressionEditor expressionEditor;
     private Expression curValue;
 
-    public EditExpressionDialog(View parent, @Nullable Table srcTable, @Nullable Expression initialExpression, boolean selectAll, ColumnLookup columnLookup, FXPlatformSupplierInt<TypeState> makeTypeState, @Nullable DataType expectedType, @Nullable @LocalizableKey String topMessageKey)
+    public EditExpressionDialog(View parent, Table srcTable, Expression initialExpression, boolean selectAll, ColumnLookup columnLookup, FXPlatformSupplierInt<TypeState> makeTypeState, DataType expectedType, String topMessageKey)
     {
         super(parent, new DialogPaneWithSideButtons());
         setResizable(true);
         initModality(Modality.NONE);
 
-        expressionEditor = new ExpressionEditor(initialExpression, new ReadOnlyObjectWrapper<@Nullable Table>(srcTable), new ReadOnlyObjectWrapper<>(columnLookup), expectedType, parent, parent.getManager().getTypeManager(), makeTypeState, FunctionList.getFunctionLookup(parent.getManager().getUnitManager()), e -> {curValue = e;});
+        expressionEditor = new ExpressionEditor(initialExpression, new ReadOnlyObjectWrapper<Table>(srcTable), new ReadOnlyObjectWrapper<>(columnLookup), expectedType, parent, parent.getManager().getTypeManager(), makeTypeState, FunctionList.getFunctionLookup(parent.getManager().getUnitManager()), e -> {curValue = e;});
         curValue = expressionEditor.save(true);
 
         BorderPane borderPane = new BorderPane(expressionEditor.getContainer(), topMessageKey == null ? null : GUI.label(topMessageKey), null, null, null);
@@ -105,7 +104,7 @@ public class EditExpressionDialog extends DoubleOKLightDialog<Expression>
     }
 
     @Override
-    protected @Nullable Expression calculateResult()
+    protected Expression calculateResult()
     {
         return curValue;
     }

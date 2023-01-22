@@ -35,13 +35,12 @@ import xyz.columnal.utility.function.fx.FXPlatformConsumer;
 
 import java.util.Collection;
 
-@OnThread(Tag.FXPlatform)
 public interface ColumnHandler extends RecordSetListener
 {
     // Called to fetch a value.  Once available, receiver should be called.
     // Until then it will be blank.  You can call receiver multiple times though,
     // so you can just call it with a placeholder before returning.
-    public void fetchValue(@TableDataRowIndex int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformBiConsumer<KeyCode, CellPosition> relinquishFocus, EditorKitCallback setCellContent);
+    public void fetchValue(int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformBiConsumer<KeyCode, CellPosition> relinquishFocus, EditorKitCallback setCellContent);
 
     // Called when the column gets resized (graphically).  Width is in pixels
     public void columnResized(double width);
@@ -63,8 +62,7 @@ public interface ColumnHandler extends RecordSetListener
     //public boolean editHasFocus(int rowIndex);
     
     // Used for doing a copy-to-clipboard of table content:
-    @OnThread(Tag.Simulation)
-    public @Value Object getValue(int index) throws InternalException, UserException;
+    public Object getValue(int index) throws InternalException, UserException;
 
     void styleTogether(Collection<? extends DocumentTextField> cellsInColumn, double columnSize);
 }

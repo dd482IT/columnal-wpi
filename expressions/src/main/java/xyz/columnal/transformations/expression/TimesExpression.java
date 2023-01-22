@@ -46,13 +46,13 @@ import java.util.Random;
  */
 public class TimesExpression extends NaryOpTotalExpression
 {
-    public TimesExpression(List<@Recorded Expression> expressions)
+    public TimesExpression(List<Expression> expressions)
     {
         super(expressions);
     }
 
     @Override
-    public NaryOpExpression copyNoNull(List<@Recorded Expression> replacements)
+    public NaryOpExpression copyNoNull(List<Expression> replacements)
     {
         return new TimesExpression(replacements);
     }
@@ -79,14 +79,14 @@ public class TimesExpression extends NaryOpTotalExpression
     }
 
     @Override
-    public @Nullable CheckedExp checkNaryOp(@Recorded TimesExpression this, ColumnLookup dataLookup, TypeState state, ExpressionKind kind, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public CheckedExp checkNaryOp(TimesExpression this, ColumnLookup dataLookup, TypeState state, ExpressionKind kind, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         UnitExp runningUnit = UnitExp.SCALAR;
-        for (@Recorded Expression expression : expressions)
+        for (Expression expression : expressions)
         {
             UnitExp unitVar = UnitExp.makeVariable();
             TypeExp expectedType = new NumTypeExp(this, unitVar);
-            @Nullable CheckedExp inferredType = expression.check(dataLookup, state, ExpressionKind.EXPRESSION, LocationInfo.UNIT_MODIFYING, onError);
+            CheckedExp inferredType = expression.check(dataLookup, state, ExpressionKind.EXPRESSION, LocationInfo.UNIT_MODIFYING, onError);
             if (inferredType == null)
                 return null;
             
@@ -100,10 +100,9 @@ public class TimesExpression extends NaryOpTotalExpression
     }
 
     @Override
-    @OnThread(Tag.Simulation)
     public ValueResult getValueNaryOp(ImmutableList<ValueResult> values, EvaluateState state) throws InternalException
     {
-        @Value Number n = Utility.cast(values.get(0).value, Number.class);
+        Number n = Utility.cast(values.get(0).value, Number.class);
         for (int i = 1; i < expressions.size(); i++)
             n = Utility.multiplyNumbers(n, Utility.cast(values.get(i).value, Number.class));
         return result(n, state, values);

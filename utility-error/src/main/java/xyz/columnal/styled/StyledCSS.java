@@ -47,7 +47,7 @@ public class StyledCSS extends Style<StyledCSS>
     }
 
     @Override
-    protected @OnThread(Tag.FXPlatform) void style(Text t)
+    protected void style(Text t)
     {
         t.getStyleClass().addAll(styles);
     }

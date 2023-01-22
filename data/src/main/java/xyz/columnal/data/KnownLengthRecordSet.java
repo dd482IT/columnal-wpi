@@ -48,7 +48,7 @@ public class KnownLengthRecordSet extends RecordSet
 
     @Override
     @SuppressWarnings("units")
-    public @TableDataRowIndex int getLength() throws UserException, InternalException
+    public int getLength() throws UserException, InternalException
     {
         return length;
     }

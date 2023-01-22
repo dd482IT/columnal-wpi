@@ -57,19 +57,15 @@ import java.util.stream.Stream;
  * Keeps all data as-is, but hides a given set of columns from the resulting
  * data set.  Hidden is decided by black-list.
  */
-@OnThread(Tag.Simulation)
 public class HideColumns extends VisitableTransformation implements SingleSourceTransformation
 {
     public static final String NAME = "drop.columns";
-    @OnThread(Tag.Any)
     private final TableId srcTableId;
-    private final @Nullable Table src;
-    private final @Nullable RecordSet result;
-    @OnThread(Tag.Any)
+    private final Table src;
+    private final RecordSet result;
     private final ImmutableList<ColumnId> hideIds;
     // The list of columns from the source table which are not hidden:
     private final List<Column> shownColumns = new ArrayList<>();
-    @OnThread(Tag.Any)
     private String error;
 
     public HideColumns(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, ImmutableList<ColumnId> toHide) throws InternalException
@@ -87,7 +83,7 @@ public class HideColumns extends VisitableTransformation implements SingleSource
         }
 
 
-        @Nullable RecordSet theResult = null;
+        RecordSet theResult = null;
         try
         {
             ArrayList<ColumnId> stillToHide = new ArrayList<>(toHide);
@@ -109,13 +105,13 @@ public class HideColumns extends VisitableTransformation implements SingleSource
             theResult = new <Column>RecordSet(Utility.<Column, SimulationFunction<RecordSet, Column>>mapList(shownColumns, c -> (SimulationFunction<RecordSet, Column>)(rs -> new Column(rs, c.getName())
             {
                 @Override
-                public @OnThread(Tag.Any) DataTypeValue getType() throws InternalException, UserException
+                public DataTypeValue getType() throws InternalException, UserException
                 {
                     return addManualEditSet(getName(), c.getType());
                 }
 
                 @Override
-                public @OnThread(Tag.Any) AlteredState getAlteredState()
+                public AlteredState getAlteredState()
                 {
                     return AlteredState.UNALTERED;
                 }
@@ -128,7 +124,7 @@ public class HideColumns extends VisitableTransformation implements SingleSource
                 }
 
                 @Override
-                public @TableDataRowIndex int getLength() throws UserException, InternalException
+                public int getLength() throws UserException, InternalException
                 {
                     return srcRecordSet.getLength();
                 }
@@ -145,26 +141,25 @@ public class HideColumns extends VisitableTransformation implements SingleSource
     }
     
     @Override
-    @OnThread(Tag.Any)
     public Stream<TableId> getPrimarySources()
     {
         return Stream.of(srcTableId);
     }
 
     @Override
-    protected @OnThread(Tag.Any) Stream<TableId> getSourcesFromExpressions()
+    protected Stream<TableId> getSourcesFromExpressions()
     {
         return Stream.empty();
     }
 
     @Override
-    protected @OnThread(Tag.Any) String getTransformationName()
+    protected String getTransformationName()
     {
         return NAME;
     }
 
     @Override
-    protected @OnThread(Tag.Any) List<String> saveDetail(@Nullable File destination, TableAndColumnRenames renames)
+    protected List<String> saveDetail(File destination, TableAndColumnRenames renames)
     {
         renames.useColumnsFromTo(srcTableId, getId());
         OutputBuilder b = new OutputBuilder();
@@ -174,26 +169,24 @@ public class HideColumns extends VisitableTransformation implements SingleSource
     }
 
     @Override
-    public @OnThread(Tag.Any) RecordSet getData() throws UserException, InternalException
+    public RecordSet getData() throws UserException, InternalException
     {
         if (result == null)
             throw new UserException(error);
         return result;
     }
 
-    @OnThread(Tag.Any)
     public TableId getSrcTableId()
     {
         return srcTableId;
     }
 
     @Override
-    public @OnThread(Tag.Simulation) Transformation withNewSource(TableId newSrcTableId) throws InternalException
+    public Transformation withNewSource(TableId newSrcTableId) throws InternalException
     {
         return new HideColumns(getManager(), getDetailsForCopy(getId()), newSrcTableId, hideIds);
     }
 
-    @OnThread(Tag.Any)
     public ImmutableList<ColumnId> getHiddenColumns()
     {
         return hideIds;
@@ -208,7 +201,7 @@ public class HideColumns extends VisitableTransformation implements SingleSource
 
         @Override
         @SuppressWarnings("identifier")
-        protected @OnThread(Tag.Simulation) Transformation loadSingle(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, String detail, ExpressionVersion expressionVersion) throws InternalException, UserException
+        protected Transformation loadSingle(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, String detail, ExpressionVersion expressionVersion) throws InternalException, UserException
         {
             HideColumnsContext loaded = Utility.parseAsOne(detail, TransformationLexer::new, TransformationParser::new, TransformationParser::hideColumns);
 
@@ -216,7 +209,7 @@ public class HideColumns extends VisitableTransformation implements SingleSource
         }
 
         @Override
-        protected @OnThread(Tag.Simulation) Transformation makeWithSource(TableManager mgr, CellPosition destination, Table srcTable) throws InternalException
+        protected Transformation makeWithSource(TableManager mgr, CellPosition destination, Table srcTable) throws InternalException
         {
             return new HideColumns(mgr, new InitialLoadDetails(null, null, destination, null), srcTable.getId(), ImmutableList.of());
         }
@@ -240,7 +233,6 @@ public class HideColumns extends VisitableTransformation implements SingleSource
     }
 
     @Override
-    @OnThread(Tag.Any)
     public <T> T visit(TransformationVisitor<T> visitor)
     {
         return visitor.hideColumns(this);

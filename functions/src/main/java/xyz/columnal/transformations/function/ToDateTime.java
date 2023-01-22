@@ -49,7 +49,7 @@ import java.time.temporal.TemporalAccessor;
 public class ToDateTime extends ToTemporalFunction
 {
 
-    public static final @FuncDocKey String DATETIME_FROM_DATETIMEZONED = "datetime:datetime from datetimezoned";
+    public static final String DATETIME_FROM_DATETIMEZONED = "datetime:datetime from datetimezoned";
 
     @Override
     public ImmutableList<FunctionDefinition> getTemporalFunctions(UnitManager mgr) throws InternalException
@@ -63,7 +63,7 @@ public class ToDateTime extends ToTemporalFunction
         r.add(new FunctionDefinition("datetime:datetime from dt")
         {
             @Override
-            public @OnThread(Tag.Simulation) ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
+            public ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
             {
                 return new DateAndTimeInstance();
             }
@@ -79,7 +79,7 @@ public class ToDateTime extends ToTemporalFunction
     }
 
     @Override
-    @Value Temporal fromTemporal(TemporalAccessor temporalAccessor)
+    Temporal fromTemporal(TemporalAccessor temporalAccessor)
     {
         return LocalDateTime.from(temporalAccessor);
     }
@@ -87,7 +87,7 @@ public class ToDateTime extends ToTemporalFunction
     private class DateAndTimeInstance extends ValueFunction
     {
         @Override
-        public @Value Object _call() throws UserException, InternalException
+        public Object _call() throws UserException, InternalException
         {
             return LocalDateTime.of(arg(0, LocalDate.class), arg(1, LocalTime.class));
         }

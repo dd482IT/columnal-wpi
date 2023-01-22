@@ -33,9 +33,9 @@ import xyz.columnal.utility.Workers.Priority;
 public abstract class SimpleColumnOperation extends ColumnOperation
 {
     private final TableManager tableManager;
-    private final @Nullable TableId toRightOf;
+    private final TableId toRightOf;
     
-    protected SimpleColumnOperation(TableManager tableManager, @Nullable TableId toRightOf, @LocalizableKey String nameKey)
+    protected SimpleColumnOperation(TableManager tableManager, TableId toRightOf, String nameKey)
     {
         super(nameKey);
         this.tableManager = tableManager;
@@ -43,11 +43,10 @@ public abstract class SimpleColumnOperation extends ColumnOperation
     }
 
     // insertPosition is where you could put a new table.
-    @OnThread(Tag.Simulation)
     public abstract void execute(CellPosition insertPosition);
 
     @Override
-    public @OnThread(Tag.FXPlatform) void executeFX()
+    public void executeFX()
     {
         CellPosition insertPosition = tableManager.getNextInsertPosition(toRightOf);
         Workers.onWorkerThread(nameKey, Priority.SAVE, () -> execute(insertPosition));

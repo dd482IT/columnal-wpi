@@ -33,7 +33,7 @@ public class TypeConcretisationError
     private final StyledString errorText;
     private final boolean couldBeFixedByManuallySpecifyingType;
     // If non-null, a suggested type for the fix:
-    private final @Nullable DataType suggestedTypeFix;
+    private final DataType suggestedTypeFix;
 
     public TypeConcretisationError(StyledString errorText)
     {
@@ -42,7 +42,7 @@ public class TypeConcretisationError
         this.suggestedTypeFix = null;
     }
     
-    public TypeConcretisationError(StyledString errorText, @Nullable DataType suggestedTypeFix)
+    public TypeConcretisationError(StyledString errorText, DataType suggestedTypeFix)
     {
         this.errorText = errorText;
         this.couldBeFixedByManuallySpecifyingType = true;
@@ -54,7 +54,7 @@ public class TypeConcretisationError
         return errorText;
     }
 
-    public @Nullable DataType getSuggestedTypeFix()
+    public DataType getSuggestedTypeFix()
     {
         return suggestedTypeFix;
     }

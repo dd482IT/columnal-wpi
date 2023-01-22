@@ -52,7 +52,7 @@ public abstract class TransformationInfo
     /**
      * The name, as will be shown in the search bar and display.
      */
-    protected final @LocalizableKey String displayNameKey;
+    protected final String displayNameKey;
 
     private final String imageFileName;
 
@@ -64,11 +64,10 @@ public abstract class TransformationInfo
     /**
      * The key for the text explaining this transformation
      */
-    private final @LocalizableKey String explanationKey;
+    private final String explanationKey;
 
 
-    @OnThread(Tag.Any)
-    public TransformationInfo(String canonicalName, @LocalizableKey String displayNameKey, String imageFileName, @LocalizableKey String explanationKey, List<String> keywords)
+    public TransformationInfo(String canonicalName, String displayNameKey, String imageFileName, String explanationKey, List<String> keywords)
     {
         this.canonicalName = canonicalName;
         this.displayNameKey = displayNameKey;
@@ -82,16 +81,14 @@ public abstract class TransformationInfo
         return canonicalName;
     }
 
-    public final @LocalizableKey String getDisplayNameKey()
+    public final String getDisplayNameKey()
     {
         return displayNameKey;
     }
 
-    @OnThread(Tag.Simulation)
     public abstract Transformation load(TableManager mgr, InitialLoadDetails initialLoadDetails, List<TableId> source, String detail, ExpressionVersion expressionVersion) throws InternalException, UserException;
 
-    @OnThread(Tag.FXPlatform)
-    public abstract @Nullable SimulationSupplier<Transformation> make(TableManager mgr, CellPosition destination, FXPlatformSupplier<Optional<Table>> askForSingleSrcTable);
+    public abstract SimulationSupplier<Transformation> make(TableManager mgr, CellPosition destination, FXPlatformSupplier<Optional<Table>> askForSingleSrcTable);
     
     public final String getImageFileName()
     {
@@ -107,12 +104,12 @@ public abstract class TransformationInfo
     }
 
     @Override
-    public final boolean equals(@Nullable Object obj)
+    public final boolean equals(Object obj)
     {
         return obj instanceof TransformationInfo && obj != null && getCanonicalName().equals(((TransformationInfo)obj).getCanonicalName());
     }
 
-    public final @LocalizableKey String getExplanationKey()
+    public final String getExplanationKey()
     {
         return explanationKey;
     }

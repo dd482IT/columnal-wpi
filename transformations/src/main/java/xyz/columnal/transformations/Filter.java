@@ -80,25 +80,22 @@ import java.util.stream.Stream;
 /**
  * Created by neil on 23/11/2016.
  */
-@OnThread(Tag.Simulation)
 public class Filter extends VisitableTransformation implements SingleSourceTransformation
 {
     private static final String PREFIX = "KEEPIF";
     public static final String NAME = "filter";
     private final TableId srcTableId;
-    private final @Nullable Table src;
+    private final Table src;
     // Not actually a column by itself, but holds a list of integers so reasonable to re-use:
     // Each item is a source index in the original list
     private final NumericColumnStorage indexMap;
     // Maps original row indexes to errors:
-    private final HashMap<Integer, @Localized String> errorsDuringFilter = new HashMap<>();
-    private final @Nullable RecordSet recordSet;
-    @OnThread(Tag.Any)
+    private final HashMap<Integer, String> errorsDuringFilter = new HashMap<>();
+    private final RecordSet recordSet;
     private String error;
     private int nextIndexToExamine = 0;
-    @OnThread(Tag.Any)
     private final Expression filterExpression;
-    private @MonotonicNonNull DataType type;
+    private DataType type;
     private boolean typeChecked = false;
 
     public Filter(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, Expression filterExpression) throws InternalException
@@ -110,7 +107,7 @@ public class Filter extends VisitableTransformation implements SingleSourceTrans
         this.filterExpression = filterExpression;
         this.error = "Unknown error";
 
-        @Nullable RecordSet theRecordSet = null;
+        RecordSet theRecordSet = null;
         try
         {
             if (src != null)
@@ -124,12 +121,12 @@ public class Filter extends VisitableTransformation implements SingleSourceTrans
                     {
                         @Override
                         @SuppressWarnings({"nullness", "initialization"})
-                        public @OnThread(Tag.Any) DataTypeValue getType() throws InternalException, UserException
+                        public DataTypeValue getType() throws InternalException, UserException
                         {
                             return addManualEditSet(getName(), c.getType().copyReorder(i ->
                             {
                                 fillIndexMapTo(i, columnLookup, data);
-                                @Nullable @Localized String error = errorsDuringFilter.get(i);
+                                @Nullable String error = errorsDuringFilter.get(i);
                                 if (error != null)
                                     throw new UserException(error);
                                 return DataTypeUtility.value(indexMap.getInt(i));
@@ -137,7 +134,7 @@ public class Filter extends VisitableTransformation implements SingleSourceTrans
                         }
                         
                         @Override
-                        public @OnThread(Tag.Any) AlteredState getAlteredState()
+                        public AlteredState getAlteredState()
                         {
                             return AlteredState.FILTERED_OR_REORDERED;
                         }
@@ -177,8 +174,8 @@ public class Filter extends VisitableTransformation implements SingleSourceTrans
                 // Must set it before, in case it throws:
                 typeChecked = true;
                 @SuppressWarnings("recorded")
-                @Nullable TypeExp checked = filterExpression.checkExpression(data, makeTypeState(getManager().getTypeManager()), typeRecorder);
-                @Nullable DataType typeFinal = null;
+                TypeExp checked = filterExpression.checkExpression(data, makeTypeState(getManager().getTypeManager()), typeRecorder);
+                DataType typeFinal = null;
                 if (checked != null)
                     typeFinal = typeRecorder.recordLeftError(getManager().getTypeManager(), FunctionList.getFunctionLookup(getManager().getUnitManager()), filterExpression, checked.toConcreteType(getManager().getTypeManager()));
                 
@@ -186,7 +183,6 @@ public class Filter extends VisitableTransformation implements SingleSourceTrans
                     throw new ExpressionErrorException(typeRecorder.getAllErrors().findFirst().orElse(StyledString.s("Unknown type error")), new EditableExpression(filterExpression, srcTableId, data, () -> makeTypeState(getManager().getTypeManager()), DataType.BOOLEAN)
                     {
                         @Override
-                        @OnThread(Tag.Simulation)
                         public Table replaceExpression(Expression changed) throws InternalException
                         {
                             return new Filter(getManager(), getDetailsForCopy(getId()), Filter.this.srcTableId, changed);
@@ -225,8 +221,7 @@ public class Filter extends VisitableTransformation implements SingleSourceTrans
     
     // Given a row in this table, gets the index of the row in the source table that it came from.  Null if invalid or not yet available
     @SuppressWarnings("units")
-    @OnThread(Tag.Simulation)
-    public @Nullable @TableDataRowIndex Integer getSourceRowFor(@TableDataRowIndex int rowInThisTable) throws InternalException, UserException
+    public Integer getSourceRowFor(int rowInThisTable) throws InternalException, UserException
     {
         if (rowInThisTable >=0 && rowInThisTable < indexMap.filled())
         {
@@ -235,34 +230,31 @@ public class Filter extends VisitableTransformation implements SingleSourceTrans
         return null;
     }
 
-    @OnThread(Tag.Any)
     public static TypeState makeTypeState(TypeManager typeManager) throws InternalException
     {
         return TypeState.withRowNumber(typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
     }
 
     @Override
-    @OnThread(Tag.Any)
     public Stream<TableId> getPrimarySources()
     {
         return Stream.of(srcTableId);
     }
 
     @Override
-    @OnThread(Tag.Any)
     public Stream<TableId> getSourcesFromExpressions()
     {
         return ExpressionUtil.tablesFromExpression(filterExpression);
     }
 
     @Override
-    protected @OnThread(Tag.Any) String getTransformationName()
+    protected String getTransformationName()
     {
         return NAME;
     }
 
     @Override
-    protected @OnThread(Tag.Any) List<String> saveDetail(@Nullable File destination, TableAndColumnRenames renames)
+    protected List<String> saveDetail(File destination, TableAndColumnRenames renames)
     {
         renames.useColumnsFromTo(srcTableId, getId());
         
@@ -270,27 +262,25 @@ public class Filter extends VisitableTransformation implements SingleSourceTrans
     }
 
     @Override
-    public @OnThread(Tag.Any) RecordSet getData() throws UserException
+    public RecordSet getData() throws UserException
     {
         if (recordSet == null)
             throw new UserException(error);
         return recordSet;
     }
 
-    @OnThread(Tag.Any)
     public Expression getFilterExpression()
     {
         return filterExpression;
     }
 
-    @OnThread(Tag.Any)
     public TableId getSrcTableId()
     {
         return srcTableId;
     }
 
     @Override
-    public @OnThread(Tag.Simulation) Transformation withNewSource(TableId newSrcTableId) throws InternalException
+    public Transformation withNewSource(TableId newSrcTableId) throws InternalException
     {
         return new Filter(getManager(), getDetailsForCopy(getId()), newSrcTableId, filterExpression);
     }
@@ -303,13 +293,12 @@ public class Filter extends VisitableTransformation implements SingleSourceTrans
         }
 
         @Override
-        public @OnThread(Tag.Simulation) Transformation loadSingle(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, String detail, ExpressionVersion expressionVersion) throws InternalException, UserException
+        public Transformation loadSingle(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, String detail, ExpressionVersion expressionVersion) throws InternalException, UserException
         {
             return new Filter(mgr, initialLoadDetails, srcTableId, ExpressionUtil.parse(PREFIX, detail, expressionVersion, mgr.getTypeManager(), FunctionList.getFunctionLookup(mgr.getUnitManager())));
         }
 
         @Override
-        @OnThread(Tag.Simulation)
         public Transformation makeWithSource(TableManager mgr, CellPosition destination, Table srcTable) throws InternalException
         {
             return new Filter(mgr, new InitialLoadDetails(null, null, destination, new Pair<>(Display.ALL, ImmutableList.of())), srcTable.getId(), new BooleanLiteral(true));
@@ -334,7 +323,6 @@ public class Filter extends VisitableTransformation implements SingleSourceTrans
     }
 
     @Override
-    @OnThread(Tag.Any)
     public <T> T visit(TransformationVisitor<T> visitor)
     {
         return visitor.filter(this);
@@ -352,15 +340,15 @@ public class Filter extends VisitableTransformation implements SingleSourceTrans
     }
 
     @SuppressWarnings("recorded")
-    public static Optional<@ExpressionIdentifier String> guessFirstColumnReference(Expression expression)
+    public static Optional<String> guessFirstColumnReference(Expression expression)
     {
-        return expression.visit(new ExpressionVisitorStream<@ExpressionIdentifier String>() {
+        return expression.visit(new ExpressionVisitorStream<String>() {
             @Override
-            public Stream<@ExpressionIdentifier String> ident(@Recorded IdentExpression self, @Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents, boolean isVariable)
+            public Stream<String> ident(IdentExpression self, String namespace, ImmutableList<String> idents, boolean isVariable)
             {
                 // Bit of a hacky guess, but we'll assume any non-variable single ident is a column:
                 if (idents.size() == 1 && !isVariable && (namespace == null || namespace.equals(IdentExpression.NAMESPACE_COLUMN)))
-                    return Stream.<@ExpressionIdentifier String>of(idents.get(0));
+                    return Stream.<String>of(idents.get(0));
                 return super.ident(self, namespace, idents, isVariable);
             }
         }).findFirst();

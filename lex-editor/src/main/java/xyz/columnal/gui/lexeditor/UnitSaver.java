@@ -64,35 +64,35 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
         new OperatorExpressionInfo(UnitOp.RAISE, UnitSaver::makeRaise)
     );
     
-    private static UnitExpression makeTimes(ImmutableList<@Recorded UnitExpression> expressions, List<Pair<UnitOp, CanonicalSpan>> operators)
+    private static UnitExpression makeTimes(ImmutableList<UnitExpression> expressions, List<Pair<UnitOp, CanonicalSpan>> operators)
     {
         return new UnitTimesExpression(expressions);
     }
 
-    private static UnitExpression makeDivide(@Recorded UnitExpression lhs, CanonicalSpan opNode, @Recorded UnitExpression rhs)
+    private static UnitExpression makeDivide(UnitExpression lhs, CanonicalSpan opNode, UnitExpression rhs)
     {
         return new UnitDivideExpression(lhs, rhs);
     }
 
-    private static UnitExpression makeRaise(@Recorded UnitExpression lhs, CanonicalSpan opNode, @Recorded UnitExpression rhs)
+    private static UnitExpression makeRaise(UnitExpression lhs, CanonicalSpan opNode, UnitExpression rhs)
     {
         return new UnitRaiseExpression(lhs, rhs);
     }
 
     @Override
-    public BracketAndNodes<UnitExpression, UnitSaver, Void, UnitExpression> expectSingle(@UnknownInitialization(Object.class)UnitSaver this, EditorLocationAndErrorRecorder locationRecorder, CanonicalSpan location)
+    public BracketAndNodes<UnitExpression, UnitSaver, Void, UnitExpression> expectSingle(UnitSaver this, EditorLocationAndErrorRecorder locationRecorder, CanonicalSpan location)
     {
         return new BracketAndNodes<>(new ApplyBrackets<Void, UnitExpression, UnitExpression>()
         {
             @Override
-            public @Nullable @Recorded UnitExpression apply(@NonNull Void items)
+            public UnitExpression apply(Void items)
             {
                 // Should not be possible anyway
                 throw new IllegalStateException();
             }
 
             @Override
-            public @NonNull @Recorded UnitExpression applySingle(@NonNull @Recorded UnitExpression singleItem)
+            public UnitExpression applySingle(UnitExpression singleItem)
             {
                 return singleItem;
             }
@@ -108,7 +108,7 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
     }
 
     @Override
-    protected <R extends StyledShowable> @Recorded R makeExpression(List<Either<@Recorded UnitExpression, OpAndNode>> content, BracketAndNodes<UnitExpression, UnitSaver, Void, R> brackets, @CanonicalLocation int innerContentLocation, @Nullable String terminatorDescription)
+    protected <R extends StyledShowable> R makeExpression(List<Either<UnitExpression, OpAndNode>> content, BracketAndNodes<UnitExpression, UnitSaver, Void, R> brackets, int innerContentLocation, String terminatorDescription)
     {
         if (content.isEmpty())
         {
@@ -122,7 +122,7 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
 
         if (collectedItems.isValid())
         {
-            ArrayList<@Recorded UnitExpression> validOperands = collectedItems.getValidOperands();
+            ArrayList<UnitExpression> validOperands = collectedItems.getValidOperands();
             ArrayList<OpAndNode> validOperators = collectedItems.getValidOperators();
             
             // Single expression?
@@ -137,7 +137,7 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
                     if (validOperands.get(i) instanceof SingleUnitExpression && i + 1 < validOperands.size() && validOperands.get(i + 1) instanceof UnitExpressionIntLiteral)
                     {
                         validOperators.remove(i);
-                        @Recorded UnitExpressionIntLiteral power = (UnitExpressionIntLiteral) validOperands.remove(i + 1);
+                        UnitExpressionIntLiteral power = (UnitExpressionIntLiteral) validOperands.remove(i + 1);
                         CanonicalSpan recorder = locationRecorder.recorderFor(validOperands.get(i));
                         validOperands.set(i, record(CanonicalSpan.fromTo(recorder, locationRecorder.recorderFor(power)), new UnitRaiseExpression(validOperands.get(i), power)));
                     }
@@ -145,7 +145,7 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
             }
             
             // Now we need to check the operators can work together as one group:
-            @Nullable @Recorded R e = makeExpressionWithOperators(ImmutableList.of(OPERATORS), locationRecorder, (ImmutableList<Either<OpAndNode, @Recorded UnitExpression>> arg) ->
+            R e = makeExpressionWithOperators(ImmutableList.of(OPERATORS), locationRecorder, (ImmutableList<Either<OpAndNode, UnitExpression>> arg) ->
                     brackets.applyBrackets.applySingle(makeInvalidOp(brackets.location, arg))
                 , ImmutableList.copyOf(validOperands), ImmutableList.copyOf(validOperators), brackets);
             if (e != null)
@@ -165,18 +165,18 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
     }
 
     @Override
-    protected @Nullable Supplier<@Recorded UnitExpression> canBeUnary(OpAndNode operator, UnitExpression followingOperand)
+    protected Supplier<UnitExpression> canBeUnary(OpAndNode operator, UnitExpression followingOperand)
     {
         return null;
     }
 
     @Override
-    protected @Recorded UnitExpression makeInvalidOp(CanonicalSpan location, ImmutableList<Either<OpAndNode, @Recorded UnitExpression>> items)
+    protected UnitExpression makeInvalidOp(CanonicalSpan location, ImmutableList<Either<OpAndNode, UnitExpression>> items)
     {
-        return locationRecorder.record(location, new InvalidOperatorUnitExpression(Utility.<Either<OpAndNode, @Recorded UnitExpression>, @Recorded UnitExpression>mapListI(items, x -> x.<@Recorded UnitExpression>either(op -> locationRecorder.record(op.sourceNode, new InvalidSingleUnitExpression(op.op.getContent())), y -> y))));
+        return locationRecorder.record(location, new InvalidOperatorUnitExpression(Utility.<Either<OpAndNode, UnitExpression>, UnitExpression>mapListI(items, x -> x.<UnitExpression>either(op -> locationRecorder.record(op.sourceNode, new InvalidSingleUnitExpression(op.op.getContent())), y -> y))));
     }
 
-    private static Pair<UnitOp, @Localized String> opD(UnitOp op, @LocalizableKey String key)
+    private static Pair<UnitOp, String> opD(UnitOp op, String key)
     {
         return new Pair<>(op, TranslationUtility.getString(key));
     }
@@ -188,13 +188,13 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
             currentScopes.push(new Scope(errorDisplayer, new Terminator(")")
             {
                 @Override
-                public boolean terminate(FetchContent<UnitExpression, UnitSaver, Void> makeContent, @Nullable UnitBracket terminator, CanonicalSpan keywordErrorDisplayer)
+                public boolean terminate(FetchContent<UnitExpression, UnitSaver, Void> makeContent, UnitBracket terminator, CanonicalSpan keywordErrorDisplayer)
                 {
                     BracketAndNodes<UnitExpression, UnitSaver, Void, UnitExpression> brackets = expectSingle(locationRecorder, CanonicalSpan.fromTo(errorDisplayer, keywordErrorDisplayer));
                     if (terminator == UnitBracket.CLOSE_ROUND)
                     {
                         // All is well:
-                        @Recorded UnitExpression result = makeContent.fetchContent(brackets);
+                        UnitExpression result = makeContent.fetchContent(brackets);
                         currentScopes.peek().items.add(Either.left(result));
                     } 
                     else
@@ -202,12 +202,12 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
                         // Error!
                         locationRecorder.addErrorAndFixes(keywordErrorDisplayer, StyledString.concat(StyledString.s("Missing ) before "), terminator == null ? StyledString.s("end") : terminator.toStyledString()), ImmutableList.of());
                         // Important to call makeContent before adding to scope on the next line:
-                        ImmutableList.Builder<@Recorded UnitExpression> items = ImmutableList.builder();
+                        ImmutableList.Builder<UnitExpression> items = ImmutableList.builder();
                         items.add(record(errorDisplayer, new InvalidSingleUnitExpression(bracket.getContent())));
                         items.add(makeContent.fetchContent(brackets));
                         if (terminator != null)
                             items.add(record(errorDisplayer, new InvalidSingleUnitExpression(terminator.getContent())));
-                        @Recorded UnitExpression invalid = record(CanonicalSpan.fromTo(brackets.location, keywordErrorDisplayer), new InvalidOperatorUnitExpression(items.build()));
+                        UnitExpression invalid = record(CanonicalSpan.fromTo(brackets.location, keywordErrorDisplayer), new InvalidOperatorUnitExpression(items.build()));
                         currentScopes.peek().items.add(Either.left(invalid));
                     }
                     return true;
@@ -224,7 +224,7 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
             cur.terminator.terminate(new FetchContent<UnitExpression, UnitSaver, Void>()
             {
                 @Override
-                public <R extends StyledShowable> @Recorded R fetchContent(BracketAndNodes<UnitExpression, UnitSaver, Void, R> brackets)
+                public <R extends StyledShowable> R fetchContent(BracketAndNodes<UnitExpression, UnitSaver, Void, R> brackets)
                 {
                     return UnitSaver.this.<R>makeExpression(cur.items, brackets, cur.openingNode.end, cur.terminator.terminatorDescription);
                 }
@@ -239,7 +239,7 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
     }
 
     @Override
-    protected CanonicalSpan recorderFor(@Recorded UnitExpression unitExpression)
+    protected CanonicalSpan recorderFor(UnitExpression unitExpression)
     {
         return locationRecorder.recorderFor(unitExpression);
     }
@@ -250,14 +250,14 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
         return new BracketAndNodes<UnitExpression, UnitSaver, Void, UnitExpression>(new ApplyBrackets<Void, UnitExpression, UnitExpression>()
         {
             @Override
-            public @Recorded @Nullable UnitExpression apply(@NonNull Void items)
+            public UnitExpression apply(Void items)
             {
                 // Can't happen
                 throw new IllegalStateException();
             }
 
             @Override
-            public @Recorded UnitExpression applySingle(@NonNull @Recorded UnitExpression singleItem)
+            public UnitExpression applySingle(UnitExpression singleItem)
             {
                 return singleItem;
             }

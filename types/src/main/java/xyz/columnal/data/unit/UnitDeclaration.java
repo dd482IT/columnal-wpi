@@ -33,11 +33,11 @@ import java.util.Objects;
 public class UnitDeclaration
 {
     private final SingleUnit definedUnit;
-    private final @Nullable Pair<Rational, Unit> equivalentTo;
+    private final Pair<Rational, Unit> equivalentTo;
     private final Unit cachedSingleUnit;
     private final String category;
 
-    public UnitDeclaration(SingleUnit definedUnit, @Nullable Pair<Rational, Unit> equivalentTo, String category)
+    public UnitDeclaration(SingleUnit definedUnit, Pair<Rational, Unit> equivalentTo, String category)
     {
         this.definedUnit = definedUnit;
         this.equivalentTo = equivalentTo;
@@ -55,15 +55,14 @@ public class UnitDeclaration
         return cachedSingleUnit;
     }
 
-    @Pure
-    public @Nullable Pair<Rational, Unit> getEquivalentTo()
+    public Pair<Rational, Unit> getEquivalentTo()
     {
         return equivalentTo;
     }
 
     // Needed for testing:
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;

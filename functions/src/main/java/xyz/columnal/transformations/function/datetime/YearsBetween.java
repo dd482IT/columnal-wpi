@@ -49,15 +49,15 @@ public class YearsBetween extends FunctionDefinition
     }
 
     @Override
-    public @OnThread(Tag.Simulation) ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
+    public ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
     {
         return new ValueFunction()
         {
             @Override
-            public @OnThread(Tag.Simulation) @Value Object _call() throws InternalException, UserException
+            public Object _call() throws InternalException, UserException
             {
-                @Value Temporal lhs = arg(0, Temporal.class);
-                @Value Temporal rhs = arg(1, Temporal.class);
+                Temporal lhs = arg(0, Temporal.class);
+                Temporal rhs = arg(1, Temporal.class);
                 long wholeYears = ChronoUnit.YEARS.between(lhs, rhs);
                 LocalDate lhsMDInRhsYear = LocalDate.of(rhs.get(ChronoField.YEAR), lhs.get(ChronoField.MONTH_OF_YEAR), lhs.get(ChronoField.DAY_OF_MONTH));
                 LocalDate lhsMDInRhsYearPlusOne = LocalDate.of(rhs.get(ChronoField.YEAR) + 1, lhs.get(ChronoField.MONTH_OF_YEAR), lhs.get(ChronoField.DAY_OF_MONTH));

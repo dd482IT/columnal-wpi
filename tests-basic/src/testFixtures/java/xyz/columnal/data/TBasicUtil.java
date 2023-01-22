@@ -74,11 +74,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
-@OnThread(Tag.Any)
 public class TBasicUtil
 {
-    @OnThread(Tag.Any)
-    public static void assertValueEitherEqual(String prefix, @Nullable Either<String, @Value Object> a, @Nullable Either<String, @Value Object> b) throws UserException, InternalException
+    public static void assertValueEitherEqual(String prefix, Either<String, Object> a, Either<String, Object> b) throws UserException, InternalException
     {
         if (a == null && b == null)
             return;
@@ -88,8 +86,8 @@ public class TBasicUtil
             Assert.fail(prefix + " Expected " + a + " but found " + b);
             return;
         }
-        @NonNull Either<String, @Value Object> aNN = a;
-        @NonNull Either<String, @Value Object> bNN = b;
+        Either<String, Object> aNN = a;
+        Either<String, Object> bNN = b;
         
         aNN.either_(aErr -> bNN.either_(
             bErr -> {
@@ -103,8 +101,7 @@ public class TBasicUtil
         ));
     }
 
-    @OnThread(Tag.Any)
-    public static void assertValueEqual(String prefix, @Nullable @Value Object a, @Nullable @Value Object b)
+    public static void assertValueEqual(String prefix, Object a, Object b)
     {
         try
         {
@@ -113,8 +110,8 @@ public class TBasicUtil
             
             if (a != null && b != null)
             {
-                @NonNull @Value Object aNN = a;
-                @NonNull @Value Object bNN = b;
+                Object aNN = a;
+                Object bNN = b;
                 CompletableFuture<Either<Throwable,  Integer>> f = new CompletableFuture<>();
                 Workers.onWorkerThread("Comparison", Priority.FETCH, () -> f.complete(exceptionToEither(() -> Utility.compareValues(aNN, bNN))));
                 int compare = f.get().either(e -> {throw new RuntimeException(e);}, x -> x);
@@ -130,8 +127,7 @@ public class TBasicUtil
         }
     }
 
-    @OnThread(Tag.Any)
-    public static void assertValueListEqual(String prefix, List<@Value Object> a, @Nullable List<@Value Object> b) throws UserException, InternalException
+    public static void assertValueListEqual(String prefix, List<Object> a, List<Object> b) throws UserException, InternalException
     {
         Assert.assertNotNull(prefix + " not null", b);
         if (b != null)
@@ -144,8 +140,7 @@ public class TBasicUtil
         }
     }
 
-    @OnThread(Tag.Any)
-    public static void assertValueListEitherEqual(String prefix, List<Either<String, @Value Object>> a, @Nullable List<Either<String, @Value Object>> b) throws UserException, InternalException
+    public static void assertValueListEitherEqual(String prefix, List<Either<String, Object>> a, List<Either<String, Object>> b) throws UserException, InternalException
     {
         Assert.assertNotNull(prefix + " not null", b);
         if (b != null)
@@ -170,8 +165,7 @@ public class TBasicUtil
         }
     }
 
-    @OnThread(Tag.Simulation)
-    public static @Value Number generateNumberV(SourceOfRandomness r, GenerationStatus gs)
+    public static Number generateNumberV(SourceOfRandomness r, GenerationStatus gs)
     {
         return new GenNumber().generate(r, gs);
     }
@@ -181,7 +175,7 @@ public class TBasicUtil
     private static LocalDate MIN_CLOSE_DATE = LocalDate.of(1900, 1, 1);
     private static LocalDate MAX_CLOSE_DATE = LocalDate.of(2050, 12, 31);
 
-    public static @Value LocalDate generateDate(SourceOfRandomness r, GenerationStatus gs)
+    public static LocalDate generateDate(SourceOfRandomness r, GenerationStatus gs)
     {
         // Usually, generate dates in sensible range (1900->2050)
         if (r.nextInt(4) != 0)
@@ -190,8 +184,7 @@ public class TBasicUtil
             return DataTypeUtility.valueDate(LocalDate.ofEpochDay(r.nextLong(MIN_DATE.toEpochDay(), MAX_DATE.toEpochDay())));
     }
 
-    @OnThread(Tag.Simulation)
-    public static @Value LocalTime generateTime(SourceOfRandomness r, GenerationStatus gs)
+    public static LocalTime generateTime(SourceOfRandomness r, GenerationStatus gs)
     {
         LocalTime localTime = (LocalTime) DataTypeUtility.valueTime(new LocalTimeGenerator().generate(r, gs));
         // Produce half the dates without partial seconds (and perhaps seconds set to zero): common case
@@ -202,23 +195,20 @@ public class TBasicUtil
                 localTime = localTime.minusSeconds(localTime.getSecond());
         }
         @SuppressWarnings("valuetype")
-        @Value LocalTime ret = localTime;
+        LocalTime ret = localTime;
         return ret;
     }
 
-    @OnThread(Tag.Simulation)
-    public static @Value LocalDateTime generateDateTime(SourceOfRandomness r, GenerationStatus gs)
+    public static LocalDateTime generateDateTime(SourceOfRandomness r, GenerationStatus gs)
     {
         return LocalDateTime.of(generateDate(r, gs), generateTime(r, gs));
     }
 
-    @OnThread(Tag.Simulation)
-    public static @Value ZonedDateTime generateDateTimeZoned(SourceOfRandomness r, GenerationStatus gs)
+    public static ZonedDateTime generateDateTimeZoned(SourceOfRandomness r, GenerationStatus gs)
     {
         return DataTypeUtility.valueZonedDateTime(ZonedDateTime.of(generateDateTime(r, gs), r.nextBoolean() ? generateZone(r, gs) : generateZoneOffset(r, gs)));
     }
 
-    @OnThread(Tag.Simulation)
     public static ZoneId generateZone(SourceOfRandomness r, GenerationStatus gs)
     {
         return new GenZoneId().generate(r, gs);
@@ -230,14 +220,13 @@ public class TBasicUtil
         return ZoneOffset.ofTotalSeconds(r.nextInt(-12*60, 12*60) * 60);
     }
 
-    @OnThread(Tag.Simulation)
     public static String generateZoneString(SourceOfRandomness r, GenerationStatus gs)
     {
         return generateZone(r, gs).toString();
     }
 
     @SuppressWarnings("identifier")
-    public static @ExpressionIdentifier String generateExpressionIdentifier(SourceOfRandomness sourceOfRandomness)
+    public static String generateExpressionIdentifier(SourceOfRandomness sourceOfRandomness)
     {
         return IdentifierUtility.fixExpressionIdentifier(generateIdent(sourceOfRandomness), "Exp " + sourceOfRandomness.nextInt(1000000));
     }
@@ -284,7 +273,7 @@ public class TBasicUtil
         else
         {
             // These should be escaped, but would be blown away on load: "\n", "\r", "\t"
-            String trimmed = GrammarUtility.collapseSpaces("" + sourceOfRandomness.nextChar('a', 'z') + TBasicUtil.<@NonNull String>makeList(sourceOfRandomness, 1, 10, () -> sourceOfRandomness.<@NonNull String>choose(Arrays.<String>asList(
+            String trimmed = GrammarUtility.collapseSpaces("" + sourceOfRandomness.nextChar('a', 'z') + TBasicUtil.<String>makeList(sourceOfRandomness, 1, 10, () -> sourceOfRandomness.<String>choose(Arrays.<String>asList(
                     "a", "r", "n", " ", "Z", "0", "9"
             ))).stream().collect(Collectors.joining()));
             if (trimmed.isEmpty())
@@ -311,14 +300,12 @@ public class TBasicUtil
         }
     }
 
-    @OnThread(Tag.Simulation)
-    public static @Value String makeStringV(SourceOfRandomness r, GenerationStatus gs)
+    public static String makeStringV(SourceOfRandomness r, GenerationStatus gs)
     {
         return DataTypeUtility.value(makeString(r, gs).replaceAll("\"", ""));
     }
 
-    @OnThread(Tag.Simulation)
-    public static String makeString(SourceOfRandomness r, @Nullable GenerationStatus gs)
+    public static String makeString(SourceOfRandomness r, GenerationStatus gs)
     {
         // Makes either totally random String from generator, or "awkward" string
         // with things likely to trip up parser
@@ -351,10 +338,9 @@ public class TBasicUtil
             return generateIdent(r);
     }
 
-    @OnThread(Tag.Simulation)
-    public static List<Either<String, @Value Object>> getAllCollapsedData(DataTypeValue type, int size) throws UserException, InternalException
+    public static List<Either<String, Object>> getAllCollapsedData(DataTypeValue type, int size) throws UserException, InternalException
     {
-        List<Either<String, @Value Object>> r = new ArrayList<>();
+        List<Either<String, Object>> r = new ArrayList<>();
         for (int i = 0; i < size; i++)
         {
             try
@@ -369,10 +355,9 @@ public class TBasicUtil
         return r;
     }
 
-    @OnThread(Tag.Simulation)
-    public static List<@Value Object> getAllCollapsedDataValid(DataTypeValue type, int size) throws UserException, InternalException
+    public static List<Object> getAllCollapsedDataValid(DataTypeValue type, int size) throws UserException, InternalException
     {
-        List<@Value Object> r = new ArrayList<>();
+        List<Object> r = new ArrayList<>();
         for (int i = 0; i < size; i++)
         {
             r.add(type.getCollapsed(i));
@@ -380,7 +365,6 @@ public class TBasicUtil
         return r;
     }
 
-    @OnThread(Tag.Simulation)
     public static void assertUserException(SimulationEx simulationRunnable)
     {
         try
@@ -400,7 +384,6 @@ public class TBasicUtil
         }
     }
 
-    @OnThread(Tag.Simulation)
     public static <T> ImmutableList<T> makeList(int len, Generator<? extends T> gen, SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
     {
         return Stream.generate(() -> gen.generate(sourceOfRandomness, generationStatus)).limit(len).collect(ImmutableList.toImmutableList());
@@ -461,9 +444,9 @@ public class TBasicUtil
         return new Pair<>(us, src);
     }
 
-    public static @ExpressionIdentifier String generateVarName(SourceOfRandomness r)
+    public static String generateVarName(SourceOfRandomness r)
     {
-        @ExpressionIdentifier String s;
+        String s;
         do
         {
             s = IdentifierUtility.asExpressionIdentifier(generateIdent(r));
@@ -472,7 +455,6 @@ public class TBasicUtil
         return s;
     }
 
-    @OnThread(Tag.Simulation)
     public static String makeNonEmptyString(SourceOfRandomness r, GenerationStatus gs)
     {
         String s;
@@ -520,7 +502,6 @@ public class TBasicUtil
         }
     }
 
-    @OnThread(Tag.Any)
     public static void checkedToRuntime_(ExRunnable runnable)
     {
         try
@@ -563,8 +544,7 @@ public class TBasicUtil
         return str.chars().mapToObj(c -> Integer.toHexString(c) + (c == 10 ? "\n" : "")).collect(Collectors.joining(" "));
     }
 
-    @OnThread(Tag.Simulation)
-    public static Either<String, @Value Object> getSingleCollapsedData(DataTypeValue type, int index) throws UserException, InternalException
+    public static Either<String, Object> getSingleCollapsedData(DataTypeValue type, int index) throws UserException, InternalException
     {
         try
         {

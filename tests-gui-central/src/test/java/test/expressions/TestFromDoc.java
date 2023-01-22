@@ -85,15 +85,12 @@ import java.util.stream.Stream;
 
 import static org.junit.Assert.*;
 
-@RunWith(JUnitQuickcheck.class)
 public class TestFromDoc
 {
-    @Property(trials=100)
-    @OnThread(Tag.Simulation)
     @SuppressWarnings("identifier")
     public void testFromDoc(
-        @From(GenValueSpecifiedType.class) ValueGenerator valueGen,
-        @From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws IOException, InternalException, UserException
+        ValueGenerator valueGen,
+        TypeAndValueGen typeAndValueGen) throws IOException, InternalException, UserException
     {
         TypeManager typeManager = typeAndValueGen.getTypeManager();
         for (File file : FileUtils.listFiles(new File(System.getProperty("user.dir") + "/../app/build/resources/main"), new String[]{"test"}, false))
@@ -185,8 +182,8 @@ public class TestFromDoc
                     for (int c = 0; c < columnNames.length; c++)
                     {
                         DataType dataType = typeManager.loadTypeUse(columnTypes[c]);
-                        List<Either<String, @Value Object>> loadedValues = Utility.<String, Either<String, @Value Object>>mapListEx(columnValues.get(c), unparsed -> {
-                            return Utility.<Either<String, @Value Object>, DataParser2>parseAsOne(unparsed, DataLexer2::new, DataParser2::new, p -> 
+                        List<Either<String, Object>> loadedValues = Utility.<String, Either<String, Object>>mapListEx(columnValues.get(c), unparsed -> {
+                            return Utility.<Either<String, Object>, DataParser2>parseAsOne(unparsed, DataLexer2::new, DataParser2::new, p -> 
                                 DataType.loadSingleItem(dataType, p, false));
                         });
                         if (length == -1)
@@ -238,7 +235,7 @@ public class TestFromDoc
                     if (errorOrType.isLeft())
                         fail(errorOrType.getLeft("").toString());
                     DataType concreteVarType = errorOrType.getRight("");
-                    @Nullable Pair<@Value Object, @Value Object> parsedMinMax = null;
+                    Pair<Object, Object> parsedMinMax = null;
                     if (minMax.containsKey(e.getKey()))
                     {
                         Pair<String, String> unparsed = minMax.get(e.getKey());
@@ -248,7 +245,7 @@ public class TestFromDoc
                         );
                     }
 
-                    @Value Object value;
+                    Object value;
                     do
                     {
                         value = valueGen.makeValue(concreteVarType);
@@ -306,7 +303,7 @@ public class TestFromDoc
         }
 
         @Override
-        public @Nullable FoundTable getTable(@Nullable TableId tableName) throws UserException, InternalException
+        public FoundTable getTable(TableId tableName) throws UserException, InternalException
         {
             if (tableName == null || !tables.containsKey(tableName))
                 return null;
@@ -340,7 +337,7 @@ public class TestFromDoc
         }
 
         @Override
-        public Stream<Pair<@Nullable TableId, ColumnId>> getAvailableColumnReferences()
+        public Stream<Pair<TableId, ColumnId>> getAvailableColumnReferences()
         {
             return Stream.empty();
         }

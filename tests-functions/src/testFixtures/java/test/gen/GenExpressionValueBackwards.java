@@ -54,7 +54,6 @@ import java.util.List;
  * not quite crack it).
  */
 @SuppressWarnings("recorded")
-@OnThread(Tag.Simulation)
 public class GenExpressionValueBackwards extends GenExpressionValueBase implements RequestBackwardsExpression
 {
 
@@ -67,7 +66,6 @@ public class GenExpressionValueBackwards extends GenExpressionValueBase implemen
     private ImmutableList<BackwardsProvider> providers;
 
     @Override
-    @OnThread(value = Tag.Simulation, ignoreParent = true)
     public ExpressionValue generate()
     {
         this.numberOnlyInt = true;
@@ -88,7 +86,7 @@ public class GenExpressionValueBackwards extends GenExpressionValueBase implemen
         try
         {
             DataType type = makeType(r);
-            Pair<@Value Object, Expression> p = makeOfType(type);
+            Pair<Object, Expression> p = makeOfType(type);
             return new ExpressionValue(type, Collections.singletonList(p.getFirst()), getTypeManager(), new TableId("Backwards"), getRecordSet(), p.getSecond(), this);
         }
         catch (InternalException | UserException e)
@@ -103,7 +101,6 @@ public class GenExpressionValueBackwards extends GenExpressionValueBase implemen
         return dummyManager.getTypeManager();
     }
 
-    @OnThread(Tag.Simulation)
     public KnownLengthRecordSet getRecordSet() throws InternalException, UserException
     {
         List<SimulationFunction<RecordSet, Column>> columns = columnProvider.getColumns();
@@ -113,10 +110,9 @@ public class GenExpressionValueBackwards extends GenExpressionValueBase implemen
     }
 
     // Only valid after calling generate
-    @OnThread(value = Tag.Simulation, ignoreParent = true)
-    public Pair<@Value Object, Expression> makeOfType(DataType type) throws UserException, InternalException
+    public Pair<Object, Expression> makeOfType(DataType type) throws UserException, InternalException
     {
-        @Value Object value = makeValue(type);
+        Object value = makeValue(type);
         Expression expression = make(type, value, 4);
         return new Pair<>(value, expression);
     }
@@ -140,7 +136,6 @@ public class GenExpressionValueBackwards extends GenExpressionValueBase implemen
         return Arrays.asList(suppliers);
     }
 
-    @OnThread(Tag.Simulation)
     private Expression termDeep(int maxLevels, DataType type, List<ExpressionMaker> terminals, List<ExpressionMaker> deeper) throws UserException, InternalException
     {
         if (!terminals.isEmpty() && (maxLevels <= 1 || deeper.isEmpty() || r.nextInt(0, 2) == 0))
@@ -151,8 +146,7 @@ public class GenExpressionValueBackwards extends GenExpressionValueBase implemen
     
     // Turn makeValue public:
     @Override
-    @OnThread(value = Tag.Simulation, ignoreParent = true)
-    public @Value Object makeValue(DataType t) throws UserException, InternalException
+    public Object makeValue(DataType t) throws UserException, InternalException
     {
         return super.makeValue(t);
     }
@@ -166,8 +160,7 @@ public class GenExpressionValueBackwards extends GenExpressionValueBase implemen
     // Make public:
 
     @Override
-    @OnThread(value = Tag.Simulation, ignoreParent = true)
-    public @Value long genInt()
+    public long genInt()
     {
         return super.genInt();
     }

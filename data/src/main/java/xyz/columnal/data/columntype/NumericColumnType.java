@@ -35,10 +35,10 @@ public class NumericColumnType extends ColumnType
 {
     public final Unit unit;
     public final NumberDisplayInfo displayInfo;
-    private final @Nullable String commonPrefix;
-    private final @Nullable String commonSuffix;
+    private final String commonPrefix;
+    private final String commonSuffix;
 
-    public NumericColumnType(Unit unit, int minDP, @Nullable String commonPrefix, @Nullable String commonSuffix)
+    public NumericColumnType(Unit unit, int minDP, String commonPrefix, String commonSuffix)
     {
         this.unit = unit;
         this.displayInfo = new NumberDisplayInfo(minDP, 10, Padding.ZERO);
@@ -67,7 +67,7 @@ public class NumericColumnType extends ColumnType
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;

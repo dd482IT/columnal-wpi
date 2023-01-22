@@ -40,7 +40,6 @@ public class GenInvalidExpressionSource extends Generator<String>
     }
 
     @Override
-    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     public String generate(SourceOfRandomness random, GenerationStatus status)
     {
         ImmutableList<Supplier<String>> tokenMakers = ImmutableList.of(

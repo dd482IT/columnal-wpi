@@ -70,7 +70,7 @@ public class GenTypeAndValueGen extends Generator<TypeAndValueGen>
             return dataTypeAndValueMaker.getTypeManager();
         }
 
-        public @Value Object makeValue() throws InternalException, UserException
+        public Object makeValue() throws InternalException, UserException
         {
             return dataTypeAndValueMaker.makeValue();
         }
@@ -92,7 +92,6 @@ public class GenTypeAndValueGen extends Generator<TypeAndValueGen>
 
 
     @Override
-    @OnThread(value = Tag.Simulation, ignoreParent = true)
     public TypeAndValueGen generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
     {
         try

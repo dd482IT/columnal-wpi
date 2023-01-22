@@ -71,12 +71,11 @@ public class ConvertToR
         // A table is a generic list of columns with class data.frame
         return RUtility.genericVector(Utility.mapListExI(recordSet.getColumns(), c -> convertColumnToR(c, tableType)),
             RUtility.makeClassAttributes(tableType == TableType.DATA_FRAME ? RUtility.CLASS_DATA_FRAME : RUtility.CLASS_TIBBLE, ImmutableMap.<String, RValue>of(
-                "names", RUtility.stringVector(Utility.<Column, Optional<@Value String>>mapListExI(recordSet.getColumns(), c -> Optional.of(DataTypeUtility.value(usToRColumn(c.getName(), tableType, false)))), null),
+                "names", RUtility.stringVector(Utility.<Column, Optional<String>>mapListExI(recordSet.getColumns(), c -> Optional.of(DataTypeUtility.value(usToRColumn(c.getName(), tableType, false)))), null),
                 "row.names", RUtility.intVector(new int[] {RUtility.NA_AS_INTEGER, -recordSet.getLength()}, null)
             )), true);
     }
 
-    @OnThread(Tag.Any)
     public static String usToRColumn(ColumnId columnId, TableType tableType, boolean quotesIfNeeded)
     {
         return tableType == TableType.TIBBLE ? (columnId.getRaw().contains(" ") && quotesIfNeeded ? "\""+ columnId.getRaw() + "\"" : columnId.getRaw()) : columnId.getRaw().replace(" ", ".");
@@ -101,7 +100,7 @@ public class ConvertToR
         return dataTypeValue.applyGet(new DataTypeVisitorGet<RValue>()
         {
             @Override
-            public RValue number(GetValue<@Value Number> g, NumberInfo displayInfo) throws InternalException, UserException
+            public RValue number(GetValue<Number> g, NumberInfo displayInfo) throws InternalException, UserException
             {
                 // Need to work out if they are all ints, otherwise must use doubles.
                 // Start with ints and go from there
@@ -109,8 +108,8 @@ public class ConvertToR
                 int i;
                 for (i = 0; i < length; i++)
                 {
-                    @Value Number n = g.get(i);
-                    @Value Integer nInt = getIfInteger(n);
+                    Number n = g.get(i);
+                    Integer nInt = getIfInteger(n);
                     if (nInt != null)
                         ints[i] = nInt;
                     else
@@ -133,9 +132,9 @@ public class ConvertToR
             }
 
             @Override
-            public RValue text(GetValue<@Value String> g) throws InternalException, UserException
+            public RValue text(GetValue<String> g) throws InternalException, UserException
             {
-                ImmutableList.Builder<Optional<@Value String>> list = ImmutableList.builderWithExpectedSize(length);
+                ImmutableList.Builder<Optional<String>> list = ImmutableList.builderWithExpectedSize(length);
                 for (int i = 0; i < length; i++)
                 {
                     list.add(Optional.of(g.get(i)));
@@ -144,7 +143,7 @@ public class ConvertToR
             }
 
             @Override
-            public RValue bool(GetValue<@Value Boolean> g) throws InternalException, UserException
+            public RValue bool(GetValue<Boolean> g) throws InternalException, UserException
             {
                 boolean[] bools = new boolean[length];
                 for (int i = 0; i < length; i++)
@@ -155,19 +154,19 @@ public class ConvertToR
             }
 
             @Override
-            public RValue date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> g) throws InternalException, UserException
+            public RValue date(DateTimeInfo dateTimeInfo, GetValue<TemporalAccessor> g) throws InternalException, UserException
             {
-                ImmutableList.Builder<Optional<@Value TemporalAccessor>> valueBuilder = ImmutableList.builderWithExpectedSize(length);
+                ImmutableList.Builder<Optional<TemporalAccessor>> valueBuilder = ImmutableList.builderWithExpectedSize(length);
                 for (int i = 0; i < length; i++)
                 {
                     valueBuilder.add(Optional.of(g.get(i)));
                 }
-                ImmutableList<Optional<@Value TemporalAccessor>> values = valueBuilder.build();
+                ImmutableList<Optional<TemporalAccessor>> values = valueBuilder.build();
                 return temporalVector(dateTimeInfo, values);
             }
 
             @Override
-            public RValue tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tagTypes, GetValue<@Value TaggedValue> g) throws InternalException, UserException
+            public RValue tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tagTypes, GetValue<TaggedValue> g) throws InternalException, UserException
             {
                 if (tagTypes.size() == 1)
                 {
@@ -176,7 +175,7 @@ public class ConvertToR
                     {
                         // Flatten by ignoring taggedness:
                         return onlyTag.getInner().fromCollapsed((i, prog) -> {
-                            @Value Object inner = g.getWithProgress(i, prog).getInner();
+                            Object inner = g.getWithProgress(i, prog).getInner();
                             if (inner == null)
                                 throw new InternalException("Null inner value on tag with inner type");
                             return inner;
@@ -185,7 +184,7 @@ public class ConvertToR
                 }
                 if (tagTypes.size() == 2)
                 {
-                    @Nullable DataType onlyInner = null;
+                    DataType onlyInner = null;
                     if (tagTypes.get(0).getInner() != null && tagTypes.get(1).getInner() == null)
                         onlyInner = tagTypes.get(0).getInner();
                     else if (tagTypes.get(0).getInner() == null && tagTypes.get(1).getInner() != null)
@@ -193,16 +192,16 @@ public class ConvertToR
                     if (onlyInner != null)
                     {
                         // Can convert to equivalent of maybe; inner plus missing values as NA:
-                        ImmutableList.Builder<Optional<@Value Object>> b = ImmutableList.builderWithExpectedSize(length);
+                        ImmutableList.Builder<Optional<Object>> b = ImmutableList.builderWithExpectedSize(length);
                         for (int i = 0; i < length; i++)
                         {
-                            @Value TaggedValue taggedValue = g.get(i);
+                            TaggedValue taggedValue = g.get(i);
                             if (taggedValue.getInner() != null)
-                                b.add(Optional.<@Value Object>of(taggedValue.getInner()));
+                                b.add(Optional.<Object>of(taggedValue.getInner()));
                             else
                                 b.add(Optional.empty());
                         }
-                        ImmutableList<Optional<@Value Object>> inners = b.build();
+                        ImmutableList<Optional<Object>> inners = b.build();
                         return onlyInner.apply(new DataTypeVisitor<RValue>()
                         {
                             @Override
@@ -214,7 +213,7 @@ public class ConvertToR
                             @Override
                             public RValue text() throws InternalException, UserException
                             {
-                                return RUtility.stringVector(Utility.<Optional<@Value Object>, Optional<@Value String>>mapListI(inners, v -> v.<@Value String>map(o -> (String) o)), null);
+                                return RUtility.stringVector(Utility.<Optional<Object>, Optional<String>>mapListI(inners, v -> v.<String>map(o -> (String) o)), null);
                             }
 
                             @Override
@@ -257,12 +256,12 @@ public class ConvertToR
                                     int[] vals = new int[length];
                                     for (int i = 0; i < length; i++)
                                     {
-                                        @Value TaggedValue val = g.get(i);
+                                        TaggedValue val = g.get(i);
                                         if (val.getTagIndex() == 0)
                                             vals[i] = RUtility.NA_AS_INTEGER;
                                         else
                                         {
-                                            @Value Object valInner = val.getInner();
+                                            Object valInner = val.getInner();
                                             if (valInner == null)
                                                 throw new InternalException("Null inner value of present optional value in row " + i);
                                             vals[i] = Utility.cast(valInner, TaggedValue.class).getTagIndex() + 1;
@@ -284,7 +283,7 @@ public class ConvertToR
                             }
 
                             @Override
-                            public RValue record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, UserException
+                            public RValue record(ImmutableMap<String, DataType> fields) throws InternalException, UserException
                             {
                                 throw new UserException("Records are not supported in R");
                             }
@@ -320,28 +319,28 @@ public class ConvertToR
             }
 
             @Override
-            public RValue record(ImmutableMap<@ExpressionIdentifier String, DataType> types, GetValue<@Value Record> g) throws InternalException, UserException
+            public RValue record(ImmutableMap<String, DataType> types, GetValue<Record> g) throws InternalException, UserException
             {
                 if (allowSubLists)
                 {
                     ImmutableList.Builder<RValue> listOfRecords = ImmutableList.builderWithExpectedSize(length);
                     for (int outer = 0; outer < length; outer++)
                     {
-                        @Value Record outerValue = g.get(outer);
-                        ImmutableMap<@ExpressionIdentifier String, @Value Object> content = outerValue.getFullContent();
+                        Record outerValue = g.get(outer);
+                        ImmutableMap<String, Object> content = outerValue.getFullContent();
                         
-                        ImmutableList.Builder<Optional<@Value String>> fieldNames = ImmutableList.builderWithExpectedSize(content.size());
+                        ImmutableList.Builder<Optional<String>> fieldNames = ImmutableList.builderWithExpectedSize(content.size());
                         ImmutableList.Builder<RValue> fieldValues = ImmutableList.builderWithExpectedSize(content.size());
 
                         @SuppressWarnings("keyfor") // Shouldn't need this; should be fine.s
-                        TreeSet<@KeyFor("content") @ExpressionIdentifier String> orderedKeys = new TreeSet<@KeyFor("content") @ExpressionIdentifier String>(content.keySet());
-                        for (@KeyFor("content") @ExpressionIdentifier String name : orderedKeys)
+                        TreeSet<String> orderedKeys = new TreeSet<String>(content.keySet());
+                        for (String name : orderedKeys)
                         {
                             DataType fieldType = types.get(name);
                             if (fieldType == null)
                                 throw new InternalException("Could not find type for field: \"" + name + "\"");
                             fieldValues.add(RUtility.getListItem(convertListToR(fieldType.fromCollapsed((i, prog) -> content.get(name)), 1, allowSubLists), 0));
-                            fieldNames.add(Optional.<@Value String>of(DataTypeUtility.value(name)));
+                            fieldNames.add(Optional.<String>of(DataTypeUtility.value(name)));
                         }
                         listOfRecords.add(RUtility.genericVector(fieldValues.build(), RUtility.pairListFromMap(ImmutableMap.of("names", RUtility.stringVector(fieldNames.build(), null))), false));
                     }
@@ -351,14 +350,14 @@ public class ConvertToR
             }
 
             @Override
-            public RValue array(DataType inner, GetValue<@Value ListEx> g) throws InternalException, UserException
+            public RValue array(DataType inner, GetValue<ListEx> g) throws InternalException, UserException
             {
                 if (allowSubLists)
                 {
                     ImmutableList.Builder<RValue> listOfLists = ImmutableList.builderWithExpectedSize(length);
                     for (int outer = 0; outer < length; outer++)
                     {
-                        @Value ListEx outerValues = g.get(outer);
+                        ListEx outerValues = g.get(outer);
                         listOfLists.add(convertListToR(inner.fromCollapsed((innerIndex, prog) -> outerValues.get(innerIndex)), outerValues.size(), true));
                     }
                     return RUtility.genericVector(listOfLists.build(), null, false);
@@ -368,7 +367,7 @@ public class ConvertToR
         });
     }
 
-    static RValue temporalVector(DateTimeInfo dateTimeInfo, ImmutableList<Optional<@Value TemporalAccessor>> values)
+    static RValue temporalVector(DateTimeInfo dateTimeInfo, ImmutableList<Optional<TemporalAccessor>> values)
     {
         return new RValue()
         {
@@ -380,7 +379,7 @@ public class ConvertToR
                     // If no non-NA, won't matter:
                     ZoneId zone = values.stream().flatMap(v -> Utility.streamNullable(v.orElse(null))).findFirst().map(t -> ((ZonedDateTime) t).getZone()).orElse(ZoneId.systemDefault());
 
-                    return visitor.visitTemporalList(dateTimeInfo.getType(), Utility.<Optional<@Value TemporalAccessor>, Optional<@Value TemporalAccessor>>mapListI(values, mv -> mv.<@Value TemporalAccessor>map(v -> DataTypeUtility.valueZonedDateTime(((ZonedDateTime) v).withZoneSameInstant(zone)))), RUtility.makeClassAttributes("POSIXct", ImmutableMap.of("tzone", RUtility.stringVector(DataTypeUtility.value(zone.toString())))));
+                    return visitor.visitTemporalList(dateTimeInfo.getType(), Utility.<Optional<TemporalAccessor>, Optional<TemporalAccessor>>mapListI(values, mv -> mv.<TemporalAccessor>map(v -> DataTypeUtility.valueZonedDateTime(((ZonedDateTime) v).withZoneSameInstant(zone)))), RUtility.makeClassAttributes("POSIXct", ImmutableMap.of("tzone", RUtility.stringVector(DataTypeUtility.value(zone.toString())))));
                 }
                 else if (dateTimeInfo.getType() == DateTimeType.TIMEOFDAY)
                     return visitor.visitTemporalList(dateTimeInfo.getType(), values, null);
@@ -390,9 +389,9 @@ public class ConvertToR
         };
     }
 
-    private static @Nullable @Value Integer getIfInteger(@Value Number n) throws InternalException
+    private static Integer getIfInteger(Number n) throws InternalException
     {
-        return Utility.<@Nullable @Value Integer>withNumberInt(n, l -> {
+        return Utility.<Integer>withNumberInt(n, l -> {
             if (l.longValue() != l.intValue())
                 return null;
             return DataTypeUtility.value(l.intValue());

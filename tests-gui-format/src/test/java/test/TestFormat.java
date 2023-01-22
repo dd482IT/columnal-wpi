@@ -68,20 +68,16 @@ public class TestFormat
     private static final ColumnType TIME = new CleanDateColumnType(DateTimeType.TIMEOFDAY, false, m(":", HOUR, MIN, SEC_OPT_FRAC_OPT), LocalTime::from);
     private static final Charset UTF8 = Charset.forName("UTF-8");
 
-    private static ColumnInfo col(ColumnType type, @ExpressionIdentifier String name)
+    private static ColumnInfo col(ColumnType type, String name)
     {
         return new ColumnInfo(type, new ColumnId(name));
     }
     
-    @BeforeClass
-    @OnThread(Tag.Swing)
     public static void _initFX()
     {
         new JFXPanel();
     }
     
-    @Test
-    @OnThread(Tag.Simulation)
     public void testFormat() throws UserException, InternalException, InterruptedException, ExecutionException, TimeoutException
     {
         assertFormatCR(GenFormat.f(1, c(col(NUM, "A"), col(NUM, "B")), ",", "", UTF8),
@@ -100,8 +96,6 @@ public class TestFormat
             "Date, Time, Bool, Text", "3/5/18, 16:45, TRUE, Whatever", "21/6/17, 00:01, FALSE, Something");
     }
 
-    @Test
-    @OnThread(Tag.Simulation)
     public void testCurrency() throws InternalException, UserException, InterruptedException, ExecutionException, TimeoutException
     {
         //assertFormat(GenFormat.f(0, c(col(NUM("USD", "$"), "C1"), col(TEXT, "C2")), ",", "", UTF8),
@@ -112,7 +106,6 @@ public class TestFormat
             "A0, A", "A1, Whatever", "A2, C");
     }
 
-    @OnThread(Tag.Simulation)
     private static void assertFormatCR(FinalTextFormat fmt, String... lines) throws InternalException, UserException, InterruptedException, ExecutionException, TimeoutException
     {
         assertFormat(fmt, lines);
@@ -124,7 +117,6 @@ public class TestFormat
     }
 
     @SuppressWarnings("unchecked")
-    @OnThread(Tag.Simulation)
     private static void assertFormat(FinalTextFormat fmt, String... lines) throws UserException, InternalException, InterruptedException, ExecutionException, TimeoutException
     {
         FinalTextFormat actual = GuessFormat.guessTextFormat(DummyManager.make().getTypeManager(), DummyManager.make().getUnitManager(), ImmutableMap.of(Charset.forName("UTF-8"), Arrays.asList(lines)), null, null)._test_getResultNoGUI();
@@ -139,7 +131,7 @@ public class TestFormat
         return ImmutableList.copyOf(ts);
     }
 
-    private static NumericColumnType NUM(String unit, @Nullable String commonPrefix)
+    private static NumericColumnType NUM(String unit, String commonPrefix)
     {
         try
         {

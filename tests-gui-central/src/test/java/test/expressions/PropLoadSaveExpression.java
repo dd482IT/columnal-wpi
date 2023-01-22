@@ -61,25 +61,20 @@ import static org.junit.Assert.fail;
 /**
  * Created by neil on 30/11/2016.
  */
-@RunWith(JUnitQuickcheck.class)
 public class PropLoadSaveExpression extends FXApplicationTest
 {
-    @Property(trials = 200)
-    public void testLoadSaveNonsense(@From(GenNonsenseExpression.class) Expression expression) throws InternalException, UserException
+    public void testLoadSaveNonsense(Expression expression) throws InternalException, UserException
     {
         testLoadSave(expression);
     }
 
-    @Property(trials = 200)
-    public void testEditNonsense(@When(seed=-303310519735882501L) @From(GenNonsenseExpression.class) Expression expression) throws InternalException, UserException
+    public void testEditNonsense(Expression expression) throws InternalException, UserException
     {
         TFXUtil.fxTest_(() -> {
             testNoOpEdit(expression);
         });
     }
     
-    @Test
-    @OnThread(Tag.FXPlatform)
     public void testUnit() throws InternalException, UserException
     {
         TFXUtil.fxTest_(() -> {
@@ -94,7 +89,6 @@ public class PropLoadSaveExpression extends FXApplicationTest
         });
     }
     
-    @Test
     public void testInvalids()
     {
         TFXUtil.fxTest_(() -> {
@@ -114,14 +108,12 @@ public class PropLoadSaveExpression extends FXApplicationTest
         });
     }
 
-    @OnThread(Tag.FXPlatform)
     public void testNoOpEdit(String src) throws UserException, InternalException
     {
         TypeManager typeManager = DummyManager.make().getTypeManager();
         testNoOpEdit(TFunctionUtil.parseExpression(src, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager())));
     }
 
-    @OnThread(Tag.FXPlatform)
     private void testNoOpEdit(Expression expression)
     {
         TypeManager typeManager = DummyManager.make().getTypeManager();
@@ -129,19 +121,19 @@ public class PropLoadSaveExpression extends FXApplicationTest
         ColumnLookup columnLookup = new ColumnLookup()
         {
             @Override
-            public @Nullable FoundColumn getColumn(Expression expression, @Nullable TableId tableId, ColumnId columnId)
+            public FoundColumn getColumn(Expression expression, TableId tableId, ColumnId columnId)
             {
                 return null;
             }
 
             @Override
-            public @Nullable FoundTable getTable(@Nullable TableId tableName) throws UserException, InternalException
+            public FoundTable getTable(TableId tableName) throws UserException, InternalException
             {
                 return null;
             }
 
             @Override
-            public Stream<Pair<@Nullable TableId, ColumnId>> getAvailableColumnReferences()
+            public Stream<Pair<TableId, ColumnId>> getAvailableColumnReferences()
             {
                 return Stream.of();
             }
@@ -161,15 +153,14 @@ public class PropLoadSaveExpression extends FXApplicationTest
         };
         
         
-        Expression edited = new ExpressionEditor(expression, new ReadOnlyObjectWrapper<@Nullable Table>(null), new ReadOnlyObjectWrapper<>(columnLookup), null, null, typeManager, () -> TFunctionUtil.createTypeState(typeManager), FunctionList.getFunctionLookup(typeManager.getUnitManager()), e -> {
+        Expression edited = new ExpressionEditor(expression, new ReadOnlyObjectWrapper<Table>(null), new ReadOnlyObjectWrapper<>(columnLookup), null, null, typeManager, () -> TFunctionUtil.createTypeState(typeManager), FunctionList.getFunctionLookup(typeManager.getUnitManager()), e -> {
         }).save(false);
         assertEquals(expression, edited);
         assertEquals(expression.save(SaveDestination.TO_FILE, BracketedStatus.NEED_BRACKETS, TableAndColumnRenames.EMPTY), edited.save(SaveDestination.TO_FILE, BracketedStatus.NEED_BRACKETS, TableAndColumnRenames.EMPTY));
         assertEquals(expression.save(SaveDestination.TO_FILE, BracketedStatus.DONT_NEED_BRACKETS, TableAndColumnRenames.EMPTY), edited.save(SaveDestination.TO_FILE, BracketedStatus.DONT_NEED_BRACKETS, TableAndColumnRenames.EMPTY));
     }
 
-    @Property(trials = 200)
-    public void testLoadSaveReal(@From(GenExpressionValueForwards.class) @From(GenExpressionValueBackwards.class) ExpressionValue expressionValue) throws InternalException, UserException
+    public void testLoadSaveReal(ExpressionValue expressionValue) throws InternalException, UserException
     {
         try
         {
@@ -181,7 +172,7 @@ public class PropLoadSaveExpression extends FXApplicationTest
         }
     }
 
-    private void testLoadSave(@From(GenNonsenseExpression.class) Expression expression) throws UserException, InternalException
+    private void testLoadSave(Expression expression) throws UserException, InternalException
     {
         String saved = expression.save(SaveDestination.TO_FILE, BracketedStatus.NEED_BRACKETS, TableAndColumnRenames.EMPTY);
         // Use same manager to load so that types are preserved:

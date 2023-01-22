@@ -49,8 +49,8 @@ public class VirtualGridLineSupplier extends VirtualGridSupplier<Line>
     @Override
     protected void layoutItems(ContainerChildren containerChildren, VisibleBounds visibleBounds, VirtualGrid virtualGrid)
     {
-        @AbsColIndex int drawFirstCol = Utility.maxCol(visibleBounds.firstColumnIncl, CellPosition.col(1));
-        @AbsRowIndex int drawFirstRow = Utility.maxRow(visibleBounds.firstRowIncl, CellPosition.row(1));
+        int drawFirstCol = Utility.maxCol(visibleBounds.firstColumnIncl, CellPosition.col(1));
+        int drawFirstRow = Utility.maxRow(visibleBounds.firstRowIncl, CellPosition.row(1));
         double lowestX = visibleBounds.getXCoord(drawFirstCol);
         double highestX = visibleBounds.getXCoordAfter(visibleBounds.lastColumnIncl);
         double lowestY = visibleBounds.getYCoord(drawFirstRow);
@@ -59,7 +59,7 @@ public class VirtualGridLineSupplier extends VirtualGridSupplier<Line>
         Set<Line> linesToKeep = Sets.newIdentityHashSet();
         
         // Make sure all the intended lines are there:
-        for (@AbsColIndex int i = visibleBounds.firstColumnIncl; i <= visibleBounds.lastColumnIncl; i++)
+        for (int i = visibleBounds.firstColumnIncl; i <= visibleBounds.lastColumnIncl; i++)
         {
             Line line = xLinesInUse.get(i);
             double x = visibleBounds.getXCoordAfter(i) - 1.0;
@@ -77,7 +77,7 @@ public class VirtualGridLineSupplier extends VirtualGridSupplier<Line>
             linesToKeep.add(line);
         }
 
-        for (@AbsRowIndex int i = visibleBounds.firstRowIncl; i <= visibleBounds.lastRowIncl; i++)
+        for (int i = visibleBounds.firstRowIncl; i <= visibleBounds.lastRowIncl; i++)
         {
             Line line = yLinesInUse.get(i);
             double y = visibleBounds.getYCoordAfter(i) - 1.0;
@@ -95,18 +95,18 @@ public class VirtualGridLineSupplier extends VirtualGridSupplier<Line>
             linesToKeep.add(line);
         }
 
-        for (Iterator<Entry<@KeyFor("this.xLinesInUse") Integer, Line>> iterator = xLinesInUse.entrySet().iterator(); iterator.hasNext(); )
+        for (Iterator<Entry<Integer, Line>> iterator = xLinesInUse.entrySet().iterator(); iterator.hasNext(); )
         {
-            Entry<@KeyFor("this.xLinesInUse") Integer, Line> integerLineEntry = iterator.next();
+            Entry<Integer, Line> integerLineEntry = iterator.next();
             if (!linesToKeep.contains(integerLineEntry.getValue()))
             {
                 containerChildren.remove(integerLineEntry.getValue());
                 iterator.remove();
             }
         }
-        for (Iterator<Entry<@KeyFor("this.yLinesInUse") Integer, Line>> iterator = yLinesInUse.entrySet().iterator(); iterator.hasNext(); )
+        for (Iterator<Entry<Integer, Line>> iterator = yLinesInUse.entrySet().iterator(); iterator.hasNext(); )
         {
-            Entry<@KeyFor("this.yLinesInUse") Integer, Line> integerLineEntry = iterator.next();
+            Entry<Integer, Line> integerLineEntry = iterator.next();
             if (!linesToKeep.contains(integerLineEntry.getValue()))
             {
                 containerChildren.remove(integerLineEntry.getValue());
@@ -116,7 +116,7 @@ public class VirtualGridLineSupplier extends VirtualGridSupplier<Line>
     }
 
     @Override
-    protected @Nullable Pair<ItemState, @Nullable StyledString> getItemState(CellPosition cellPosition, Point2D screenPos)
+    protected Pair<ItemState, StyledString> getItemState(CellPosition cellPosition, Point2D screenPos)
     {
         return null;
     }
@@ -128,7 +128,7 @@ public class VirtualGridLineSupplier extends VirtualGridSupplier<Line>
     }
 
     @Override
-    public OptionalDouble getPrefColumnWidth(@AbsColIndex int colIndex)
+    public OptionalDouble getPrefColumnWidth(int colIndex)
     {
         return OptionalDouble.empty();
     }

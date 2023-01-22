@@ -89,12 +89,9 @@ import static org.junit.Assume.assumeTrue;
  * Created by neil on 01/12/2016.
  */
 @SuppressWarnings("recorded")
-@RunWith(JUnitQuickcheck.class)
 public class PropRunTransformation
 {
-    @Property
-    @OnThread(Tag.Simulation)
-    public void testSort(@From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr srcTable, @From(GenRandom.class) Random r) throws UserException, InternalException
+    public void testSort(GenImmediateData.ImmediateData_Mgr srcTable, Random r) throws UserException, InternalException
     {
         // Pick an arbitrary column and sort by it
         RecordSet src = srcTable.data().getData();
@@ -131,9 +128,7 @@ public class PropRunTransformation
         Assert.assertEquals(TTableUtil.getRowFreq(src), TTableUtil.getRowFreq(sort.getData()));
     }
 
-    @Property
-    @OnThread(Tag.Simulation)
-    public void testFilter(@From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr srcTable, @From(GenRandom.class) Random r) throws UserException, InternalException
+    public void testFilter(GenImmediateData.ImmediateData_Mgr srcTable, Random r) throws UserException, InternalException
     {
         // Pick a column to filter on:
         List<Column> columns = srcTable.data().getData().getColumns();
@@ -144,7 +139,7 @@ public class PropRunTransformation
 
         // Pick a random value:
         int targetRowIndex = r.nextInt(target.getLength());
-        @Value Object targetValue = target.getType().getCollapsed(targetRowIndex);
+        Object targetValue = target.getType().getCollapsed(targetRowIndex);
 
         ComparisonOperator op;
         Predicate<Integer> check;
@@ -178,7 +173,7 @@ public class PropRunTransformation
         srcTable.mgr.record(filter);
         for (int row = 0; row < filter.getData().getLength(); row++)
         {
-            @Value Object data = filter.getData().getColumn(target.getName()).getType().getCollapsed(row);
+            Object data = filter.getData().getColumn(target.getName()).getType().getCollapsed(row);
             assertTrue("Value " + targetValue + " should be " + op.saveOp()+ " " + data + " (but wasn't)", check.test(Utility.compareValues(data, targetValue)));
         }
         
@@ -192,8 +187,8 @@ public class PropRunTransformation
         srcTable.mgr.record(invertedFilter);
         
         // Lengths should equal original:
-        @TableDataRowIndex int filterLength = filter.getData().getLength();
-        @TableDataRowIndex int invertedFilterLength = invertedFilter.getData().getLength();
+        int filterLength = filter.getData().getLength();
+        int invertedFilterLength = invertedFilter.getData().getLength();
         Assert.assertEquals(srcTable.data().getData().getLength(), filterLength + invertedFilterLength);
 
         
@@ -208,17 +203,17 @@ public class PropRunTransformation
         assertEquals(srcColNames, concatFilters.getData().getColumnIds());;
 
         // Check that the same set of rows is present:
-        Stream<List<@Value Object>> srcWithSrc = TTableUtil.streamFlattened(srcTable.data().getData()).<List<@Value Object>>map(p -> {
+        Stream<List<Object>> srcWithSrc = TTableUtil.streamFlattened(srcTable.data().getData()).<List<Object>>map(p -> {
             if (!includeSourceColumn)
                 return p.getSecond();
             else
-                return TBasicUtil.<List<@Value Object>>checkedToRuntime(() -> {
+                return TBasicUtil.<List<Object>>checkedToRuntime(() -> {
                     boolean matchesFilter = check.test(Utility.compareValues(p.getSecond().get(targetColumnIndex), targetValue));
                     return Utility.prependToList(DataTypeUtility.value(matchesFilter ? filter.getId().getRaw() : invertedFilter.getId().getRaw()), p.getSecond());
                 });
         });
-        ImmutableList<Entry<List<@Value Object>, Long>> srcData = TTableUtil.getRowFreq(srcWithSrc).entrySet().stream().collect(ImmutableList.toImmutableList());
-        ImmutableList<Entry<List<@Value Object>, Long>> destData = TTableUtil.getRowFreq(concatFilters.getData()).entrySet().stream().collect(ImmutableList.toImmutableList());
+        ImmutableList<Entry<List<Object>, Long>> srcData = TTableUtil.getRowFreq(srcWithSrc).entrySet().stream().collect(ImmutableList.toImmutableList());
+        ImmutableList<Entry<List<Object>, Long>> destData = TTableUtil.getRowFreq(concatFilters.getData()).entrySet().stream().collect(ImmutableList.toImmutableList());
         assertEquals(srcData.size(), destData.size());
         for (int i = 0; i < srcData.size(); i++)
         {
@@ -243,9 +238,7 @@ public class PropRunTransformation
         throw new RuntimeException("Missing case for inverting comparison op");
     }
 
-    @Property
-    @OnThread(Tag.Simulation)
-    public void testSummaryStats(@From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr original) throws InternalException, UserException
+    public void testSummaryStats(GenImmediateData.ImmediateData_Mgr original) throws InternalException, UserException
     {
         Optional<Column> numericColumn = original.data().getData().getColumns().stream().filter(c ->
         {
@@ -274,7 +267,6 @@ public class PropRunTransformation
         MatcherAssert.assertThat(TTableUtil.toString(numericColumn.get()), Utility.toBigDecimal(Utility.valueNumber(summaryRS.getColumns().get(0).getType().getCollapsed(0))), comparesEqualTo(bdSum(numericColumn.get().getLength(), numericColumn.get().getType())));
     }
 
-    @OnThread(Tag.Simulation)
     private BigDecimal bdSum(int length, DataTypeValue type) throws UserException, InternalException
     {
         BigDecimal total = BigDecimal.ZERO;
@@ -283,12 +275,10 @@ public class PropRunTransformation
         return total;
     }
 
-    @Property
-    @OnThread(Tag.Simulation)
-    public void testConcatSelf(@From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr original, boolean includeSource) throws InternalException, UserException
+    public void testConcatSelf(GenImmediateData.ImmediateData_Mgr original, boolean includeSource) throws InternalException, UserException
     {
         List<TableId> ids = new ArrayList<>();
-        @TableDataRowIndex int originalLength = original.data().getData().getLength();
+        int originalLength = original.data().getData().getLength();
         for (int repeats = 1; repeats < 4; repeats++)
         {
             // Add once each time round the loop:
@@ -385,9 +375,7 @@ public class PropRunTransformation
     */
     // TODO test more concat failure cases
 
-    @Property
-    @OnThread(Tag.Simulation)
-    public void testSuccessfulHide(@From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr original) throws InternalException, UserException
+    public void testSuccessfulHide(GenImmediateData.ImmediateData_Mgr original) throws InternalException, UserException
     {
         List<ColumnId> originalIds = original.data().getData().getColumnIds();
 
@@ -412,9 +400,7 @@ public class PropRunTransformation
         }
     }
 
-    @Property
-    @OnThread(Tag.Simulation)
-    public void testTransformAsRename(@From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr original, @From(GenRandom.class) Random r) throws InternalException, UserException
+    public void testTransformAsRename(GenImmediateData.ImmediateData_Mgr original, Random r) throws InternalException, UserException
     {
         // Pick a few new destination columns:
         int numNew = r.nextInt(5);
@@ -445,7 +431,6 @@ public class PropRunTransformation
     // is determined by applying the function to map the column name
     // Note this is not symmetrical between the two data sets!
     // Any columns that are in second param but not first are ignored.
-    @OnThread(Tag.Simulation)
     private void assertDataSame(RecordSet smaller, RecordSet bigger, Function<ColumnId, ColumnId> smallToBig) throws UserException, InternalException
     {
         for (Column a : smaller.getColumns())
@@ -459,9 +444,7 @@ public class PropRunTransformation
         }
     }
 
-    @Property
-    @OnThread(Tag.Simulation)
-    public void testUnsuccessfulHide(@From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr original) throws InternalException, UserException
+    public void testUnsuccessfulHide(GenImmediateData.ImmediateData_Mgr original) throws InternalException, UserException
     {
         // Hiding all should be invalid:
         try

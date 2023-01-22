@@ -56,17 +56,14 @@ import static org.junit.Assert.*;
 /**
  * Created by neil on 13/12/2016.
  */
-@RunWith(JUnitQuickcheck.class)
 public class PropListFunctions
 {
-    @Property
-    @OnThread(Tag.Simulation)
-    public void propMinMax(@From(GenValueList.class) GenValueList.ListAndType src) throws Throwable
+    public void propMinMax(GenValueList.ListAndType src) throws Throwable
     {
         FunctionDefinition minFunction = new Min();
         FunctionDefinition maxFunction = new Max();
-        @Nullable Pair<ValueFunction, DataType> minChecked = TFunctionUtil.typeCheckFunction(minFunction, ImmutableList.of(src.type));
-        @Nullable Pair<ValueFunction, DataType> maxChecked = TFunctionUtil.typeCheckFunction(maxFunction, ImmutableList.of(src.type));
+        Pair<ValueFunction, DataType> minChecked = TFunctionUtil.typeCheckFunction(minFunction, ImmutableList.of(src.type));
+        Pair<ValueFunction, DataType> maxChecked = TFunctionUtil.typeCheckFunction(maxFunction, ImmutableList.of(src.type));
 
         if (minChecked == null || maxChecked == null)
         {
@@ -74,18 +71,18 @@ public class PropListFunctions
         }
         else if (src.list.size() == 0)
         {
-            @NonNull Pair<ValueFunction, DataType> minFinal = minChecked;
-            @NonNull Pair<ValueFunction, DataType> maxFinal = maxChecked;
-            TBasicUtil.assertUserException(() -> minFinal.getFirst().call(new @Value Object[] {DataTypeUtility.value(src.list)}));
-            TBasicUtil.assertUserException(() -> maxFinal.getFirst().call(new @Value Object[] {DataTypeUtility.value(src.list)}));
+            Pair<ValueFunction, DataType> minFinal = minChecked;
+            Pair<ValueFunction, DataType> maxFinal = maxChecked;
+            TBasicUtil.assertUserException(() -> minFinal.getFirst().call(new Object[] {DataTypeUtility.value(src.list)}));
+            TBasicUtil.assertUserException(() -> maxFinal.getFirst().call(new Object[] {DataTypeUtility.value(src.list)}));
         }
         else
         {
-            @Value Object expectedMin = src.list.get(0);
-            @Value Object expectedMax = src.list.get(0);
+            Object expectedMin = src.list.get(0);
+            Object expectedMax = src.list.get(0);
             for (int i = 1; i < src.list.size(); i++)
             {
-                @Value Object x = src.list.get(i);
+                Object x = src.list.get(i);
                 if (Utility.compareValues(x, expectedMin) < 0)
                     expectedMin = x;
                 if (Utility.compareValues(x, expectedMax) > 0)
@@ -94,20 +91,18 @@ public class PropListFunctions
 
             assertEquals(getInnerType(src.type), minChecked.getSecond());
             assertEquals(getInnerType(src.type), maxChecked.getSecond());
-            @Value Object minActual = minChecked.getFirst().call(new @Value Object[] {DataTypeUtility.value(src.list)});
-            @Value Object maxActual = maxChecked.getFirst().call(new @Value Object[] {DataTypeUtility.value(src.list)});
+            Object minActual = minChecked.getFirst().call(new Object[] {DataTypeUtility.value(src.list)});
+            Object maxActual = maxChecked.getFirst().call(new Object[] {DataTypeUtility.value(src.list)});
             TBasicUtil.assertValueEqual("", expectedMin, minActual);
             TBasicUtil.assertValueEqual("", expectedMax, maxActual);
         }
     }
 
 
-    @Property
-    @OnThread(Tag.Simulation)
-    public void propCount(@From(GenValueList.class) GenValueList.ListAndType src) throws Throwable
+    public void propCount(GenValueList.ListAndType src) throws Throwable
     {
         Count function = new Count();
-        @Nullable Pair<ValueFunction, DataType> checked = TFunctionUtil.typeCheckFunction(function, ImmutableList.of(src.type));
+        Pair<ValueFunction, DataType> checked = TFunctionUtil.typeCheckFunction(function, ImmutableList.of(src.type));
         if (checked == null)
         {
             fail("Type check failure");
@@ -115,17 +110,15 @@ public class PropListFunctions
         else
         {
             assertEquals(DataType.NUMBER, checked.getSecond());
-            @Value Object actual = checked.getFirst().call(new @Value Object[] {DataTypeUtility.value(src.list)});
+            Object actual = checked.getFirst().call(new Object[] {DataTypeUtility.value(src.list)});
             assertEquals(src.list.size(), actual);
         }
     }
 
-    @Property
-    @OnThread(Tag.Simulation)
-    public void propElement(@From(GenValueList.class) GenValueList.ListAndType src) throws Throwable
+    public void propElement(GenValueList.ListAndType src) throws Throwable
     {
         GetElement function = new GetElement();
-        @Nullable Pair<ValueFunction, DataType> checked = null;
+        Pair<ValueFunction, DataType> checked = null;
         try
         {
             checked = TFunctionUtil.typeCheckFunction(function, ImmutableList.of(src.type, DataType.NUMBER));
@@ -144,7 +137,7 @@ public class PropListFunctions
             // Try valid values:
             for (int i = 0; i < src.list.size(); i++)
             {
-                @Value Object actual = checked.getFirst().call(new @Value Object[]{DataTypeUtility.value(src.list), DataTypeUtility.<Integer>value(i + 1 /* one-based index */)});
+                Object actual = checked.getFirst().call(new Object[]{DataTypeUtility.value(src.list), DataTypeUtility.<Integer>value(i + 1 /* one-based index */)});
                 assertSame(src.list.get(i), actual);
             }
             // Try invalid integer values:
@@ -152,7 +145,7 @@ public class PropListFunctions
             {
                 try
                 {
-                    checked.getFirst().call(new @Value Object[]{DataTypeUtility.value(src.list), DataTypeUtility.<Integer>value(i)});
+                    checked.getFirst().call(new Object[]{DataTypeUtility.value(src.list), DataTypeUtility.<Integer>value(i)});
                     fail("Expected user exception for index " + i);
                 }
                 catch (UserException e)
@@ -163,9 +156,7 @@ public class PropListFunctions
         }
     }
 
-    @Property
-    @OnThread(Tag.Simulation)
-    public void propAny(@From(GenValueList.class) GenValueList.ListAndType src, @From(GenRandom.class) Random r) throws Throwable
+    public void propAny(GenValueList.ListAndType src, Random r) throws Throwable
     {
         if (src.list.size() == 0)
         {
@@ -174,7 +165,7 @@ public class PropListFunctions
         else
         {
             // Check that random element is found:
-            @Value Object elem = src.list.get(r.nextInt(src.list.size()));
+            Object elem = src.list.get(r.nextInt(src.list.size()));
             assertTrue("" + src.type, Utility.cast(TFunctionUtil.runExpression("@call function\\\\any(" + DataTypeUtility.valueToString(src.list, src.type, false, null) + ", (? = " + DataTypeUtility.valueToString(elem, getInnerType(src.type), false, null) + "))"), Boolean.class));
         }
     }

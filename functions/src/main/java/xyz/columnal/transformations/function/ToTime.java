@@ -51,7 +51,7 @@ import java.util.List;
 public class ToTime extends ToTemporalFunction
 {
 
-    public static final @FuncDocKey String TIME_FROM_DATETIME = "datetime:time from datetime";
+    public static final String TIME_FROM_DATETIME = "datetime:time from datetime";
 
     @Override
     public ImmutableList<FunctionDefinition> getTemporalFunctions(UnitManager mgr) throws InternalException
@@ -61,7 +61,7 @@ public class ToTime extends ToTemporalFunction
         r.add(new FromTemporal("datetime:time from datetimezoned"));
         r.add(new FunctionDefinition("datetime:time from hms") {
             @Override
-            public @OnThread(Tag.Simulation) ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
+            public ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
             {
                 return new FromNumbers();
             }});
@@ -80,7 +80,7 @@ public class ToTime extends ToTemporalFunction
     }
 
     @Override
-    @Value Temporal fromTemporal(TemporalAccessor temporalAccessor)
+    Temporal fromTemporal(TemporalAccessor temporalAccessor)
     {
         return LocalTime.from(temporalAccessor);
     }
@@ -88,11 +88,11 @@ public class ToTime extends ToTemporalFunction
     private class FromNumbers extends ValueFunction
     {
         @Override
-        public @Value Object _call() throws UserException, InternalException
+        public Object _call() throws UserException, InternalException
         {
             int hour = DataTypeUtility.requireInteger(arg(0));
             int minute = DataTypeUtility.requireInteger(arg(1));
-            @Value Number second = arg(2, Number.class);
+            Number second = arg(2, Number.class);
             return LocalTime.of(hour, minute, DataTypeUtility.requireInteger(Utility.getIntegerPart(second)), Utility.getFracPart(second, 9).intValue());
         }
     }

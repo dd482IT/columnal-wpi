@@ -65,7 +65,6 @@ import java.util.stream.Collectors;
  * Useful for testing loading and saving of expressions.
  */
 @SuppressWarnings("recorded")
-@OnThread(Tag.Simulation)
 public class GenNonsenseExpression extends Generator<Expression>
 {
     private final GenUnit genUnit = new GenUnit();
@@ -155,7 +154,7 @@ public class GenNonsenseExpression extends Generator<Expression>
                 () -> new CallExpression(genTerminal(r, gs, true), TBasicUtil.makeList(r, 1, 5, () -> genDepth(true, r, depth + 1, gs))),
                 () -> new MatchExpression(new CanonicalSpan(CanonicalLocation.ZERO, CanonicalLocation.ZERO), genDepth(false, r, depth + 1, gs), TBasicUtil.makeList(r, 1, 5, () -> genClause(r, gs, depth + 1)), new CanonicalSpan(CanonicalLocation.ZERO, CanonicalLocation.ZERO)),
                 () -> new ArrayExpression(ImmutableList.<Expression>copyOf(TBasicUtil.makeList(r, 0, 6, () -> genDepth(r, depth + 1, gs)))),
-                () -> new RecordExpression(TBasicUtil.<Pair<@ExpressionIdentifier String, @Recorded Expression>>makeList(r, 2, 6, () -> new Pair<>("x", genDepth(r, depth + 1, gs))))
+                () -> new RecordExpression(TBasicUtil.<Pair<String, Expression>>makeList(r, 2, 6, () -> new Pair<>("x", genDepth(r, depth + 1, gs))))
                 /*,
                 () ->
                 {
@@ -180,7 +179,7 @@ public class GenNonsenseExpression extends Generator<Expression>
                 () -> {
                     while (true)
                     {
-                        @ExpressionIdentifier String ident = TBasicUtil.generateVarName(r);
+                        String ident = TBasicUtil.generateVarName(r);
                         if (columnReferences.getOrDefault(ident, false))
                         {
                             if (!onlyCallTargets)
@@ -240,7 +239,7 @@ public class GenNonsenseExpression extends Generator<Expression>
             
             for (TagInfo info : vs._test_getTagInfos())
             {
-                Pair<DataType, TagInfo> dataTypeTagInfoPair = new Pair<>(vs.instantiate(Utility.mapListI(vs.getTypeArguments(), p -> p.getFirst() == TypeVariableKind.UNIT ? Either.<@NonNull Unit, @NonNull DataType>left(Unit.SCALAR) : Either.<@NonNull Unit, @NonNull DataType>right(DataType.TEXT)), tableManager.getTypeManager()), info);
+                Pair<DataType, TagInfo> dataTypeTagInfoPair = new Pair<>(vs.instantiate(Utility.mapListI(vs.getTypeArguments(), p -> p.getFirst() == TypeVariableKind.UNIT ? Either.<Unit, DataType>left(Unit.SCALAR) : Either.<Unit, DataType>right(DataType.TEXT)), tableManager.getTypeManager()), info);
                 list.add(dataTypeTagInfoPair);
             }
         }
@@ -271,7 +270,7 @@ public class GenNonsenseExpression extends Generator<Expression>
                 // Variable name for pattern match:
                 while (true)
                 {
-                    @ExpressionIdentifier String ident = TBasicUtil.generateVarName(r);
+                    String ident = TBasicUtil.generateVarName(r);
                     if (!columnReferences.getOrDefault(ident, false))
                     {
                         columnReferences.put(ident, false);
@@ -296,7 +295,6 @@ public class GenNonsenseExpression extends Generator<Expression>
 
     @SuppressWarnings("nullness") // Some problem with Collectors.toList
     @Override
-    @OnThread(Tag.Any)
     public List<Expression> doShrink(SourceOfRandomness random, Expression larger)
     {
         return larger._test_childMutationPoints().map(p -> p.getFirst()).collect(Collectors.<Expression>toList());
@@ -339,7 +337,7 @@ public class GenNonsenseExpression extends Generator<Expression>
             if (indexOfFirstOp < 0)
                 indexOfFirstOp = group;
 
-            return sourceOfRandomness.<@NonNull String>choose(opGroups.get(group));
+            return sourceOfRandomness.<String>choose(opGroups.get(group));
         }
     }
 

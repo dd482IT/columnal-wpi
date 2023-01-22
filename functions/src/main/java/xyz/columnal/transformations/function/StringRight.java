@@ -45,9 +45,9 @@ public class StringRight //extends FunctionDefinition
     {
 
         @Override
-        public @Value Object _call() throws UserException, InternalException
+        public Object _call() throws UserException, InternalException
         {
-            @Value String src = arg(0, String.class);
+            String src = arg(0, String.class);
             int codePointCount = intArg(1);
             if (codePointCount < 0)
                 throw new UserException("Invalid count when calling right function: " + codePointCount);

@@ -42,17 +42,16 @@ import java.util.Map;
  * renames, passes the table id which defined the column, and this is
  * used to propagate renames to later tables, one step at a time.
  */
-@OnThread(Tag.Any)
 public class TableAndColumnRenames
 {
     // Maps an old table id to a pair of:
     //  - possible new table id (null if unchanged)
     //  - map from old column ids to new column ids for that table
     //    if a column id is not present, it means it is unaffected.
-    private final HashMap<TableId, Pair<@Nullable TableId, HashMap<ColumnId, ColumnId>>> renames;
-    private final @Nullable TableId defaultTableId;
+    private final HashMap<TableId, Pair<TableId, HashMap<ColumnId, ColumnId>>> renames;
+    private final TableId defaultTableId;
 
-    private <COLMAP extends @NonNull Map<ColumnId, ColumnId>> TableAndColumnRenames(@Nullable TableId defaultTableId, Map<TableId, Pair<@Nullable TableId, @NonNull COLMAP>> renames)
+    private <COLMAP extends Map<ColumnId, ColumnId>> TableAndColumnRenames(TableId defaultTableId, Map<TableId, Pair<TableId, COLMAP>> renames)
     {
         this.defaultTableId = defaultTableId;
         this.renames = new HashMap<>();
@@ -61,14 +60,14 @@ public class TableAndColumnRenames
         });
     }
     
-    public TableAndColumnRenames(ImmutableMap<TableId, Pair<@Nullable TableId, ImmutableMap<ColumnId, ColumnId>>> renames)
+    public TableAndColumnRenames(ImmutableMap<TableId, Pair<TableId, ImmutableMap<ColumnId, ColumnId>>> renames)
     {
         this(null, renames);
     }
 
     public TableId tableId(TableId tableId)
     {
-        Pair<@Nullable TableId, HashMap<ColumnId, ColumnId>> info = renames.get(tableId);
+        Pair<TableId, HashMap<ColumnId, ColumnId>> info = renames.get(tableId);
         if (info != null && info.getFirst() != null)
             return info.getFirst();
         else
@@ -76,9 +75,9 @@ public class TableAndColumnRenames
     }
 
     // Note: pass the OLD TableId, not the new one.  If you pass null, the default is used (if set)
-    public Pair<@Nullable TableId, ColumnId> columnId(@Nullable TableId oldTableId, ColumnId columnId, @Nullable TableId columnNameOriginatesFromTableId)
+    public Pair<TableId, ColumnId> columnId(TableId oldTableId, ColumnId columnId, TableId columnNameOriginatesFromTableId)
     {
-        final @NonNull TableId tableId;
+        final TableId tableId;
         // If no table id known, no way to locate:
         if (oldTableId == null)
         {
@@ -90,12 +89,12 @@ public class TableAndColumnRenames
         else
             tableId = oldTableId;
         
-        @Nullable Pair<@Nullable TableId, HashMap<ColumnId, ColumnId>> info = renames.get(tableId);
+        Pair<TableId, HashMap<ColumnId, ColumnId>> info = renames.get(tableId);
 
-        Pair<@Nullable TableId, ColumnId> renamed;
+        Pair<TableId, ColumnId> renamed;
         if (info != null)
         {
-            renamed = info.<@Nullable TableId, ColumnId>map(t -> {
+            renamed = info.<TableId, ColumnId>map(t -> {
                 if (oldTableId == null && t != null && t.equals(defaultTableId))
                     return oldTableId;
                 else
@@ -133,19 +132,19 @@ public class TableAndColumnRenames
     // for passing column renames to expressions.
     public TableAndColumnRenames withDefaultTableId(TableId tableId)
     {
-        return new TableAndColumnRenames(tableId, ImmutableMap.<TableId, Pair<@Nullable TableId, @NonNull HashMap<ColumnId, ColumnId>>>copyOf(renames));
+        return new TableAndColumnRenames(tableId, ImmutableMap.<TableId, Pair<TableId, HashMap<ColumnId, ColumnId>>>copyOf(renames));
     }
 
     // Are we renaming the given table, or any of its columns?
     public boolean isRenamingTableId(TableId tableId)
     {
-        Pair<@Nullable TableId, HashMap<ColumnId, ColumnId>> details = renames.get(tableId);
+        Pair<TableId, HashMap<ColumnId, ColumnId>> details = renames.get(tableId);
         return details != null && (details.getFirst() != null || !details.getSecond().isEmpty());
     }
 
     // Copies all renames forward from srcTableId to id
     public void useColumnsFromTo(TableId srcTableId, TableId id)
     {
-        renames.computeIfAbsent(id, t -> new Pair<@Nullable TableId, HashMap<ColumnId, ColumnId>>(null, new HashMap<>())).getSecond().putAll(renames.getOrDefault(srcTableId, new Pair<>(null, new HashMap<>())).getSecond());
+        renames.computeIfAbsent(id, t -> new Pair<TableId, HashMap<ColumnId, ColumnId>>(null, new HashMap<>())).getSecond().putAll(renames.getOrDefault(srcTableId, new Pair<>(null, new HashMap<>())).getSecond());
     }
 }

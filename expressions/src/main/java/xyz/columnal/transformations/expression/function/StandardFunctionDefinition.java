@@ -42,18 +42,17 @@ import java.util.Map;
 
 public interface StandardFunctionDefinition
 {
-    public @ExpressionIdentifier String getName();
+    public String getName();
 
-    public ImmutableList<@ExpressionIdentifier String> getFullName();
+    public ImmutableList<String> getFullName();
 
-    @OnThread(Tag.Simulation)
     public ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException;
 
     public Pair<TypeExp, Map<String, Either<MutUnitVar, MutVar>>> getType(TypeManager typeManager) throws InternalException;
 
-    public @FuncDocKey String getDocKey();
+    public String getDocKey();
 
-    public @Localized String getMiniDescription();
+    public String getMiniDescription();
     
     public ImmutableList<String> getParamNames();
     

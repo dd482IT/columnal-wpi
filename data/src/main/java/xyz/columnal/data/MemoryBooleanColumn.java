@@ -41,8 +41,7 @@ import java.util.stream.Stream;
 public class MemoryBooleanColumn extends EditableColumn
 {
     private final BooleanColumnStorage storage;
-    @OnThread(Tag.Any)
-    private final @Value Boolean defaultValue;
+    private final Boolean defaultValue;
 
     public MemoryBooleanColumn(RecordSet rs, ColumnId title, List<Either<String, Boolean>> list, Boolean defaultValue) throws InternalException
     {
@@ -53,7 +52,6 @@ public class MemoryBooleanColumn extends EditableColumn
     }
 
     @Override
-    @OnThread(Tag.Any)
     public synchronized DataTypeValue getType()
     {
         return storage.getType();
@@ -71,20 +69,19 @@ public class MemoryBooleanColumn extends EditableColumn
     }
 
     @Override
-    public @OnThread(Tag.Simulation) SimulationRunnable insertRows(int index, int count) throws InternalException, UserException
+    public SimulationRunnable insertRows(int index, int count) throws InternalException, UserException
     {
         return storage.insertRows(index, Utility.replicate(count, Either.<String, Boolean>right(defaultValue)));
     }
 
     @Override
-    public @OnThread(Tag.Simulation) SimulationRunnable removeRows(int index, int count) throws InternalException, UserException
+    public SimulationRunnable removeRows(int index, int count) throws InternalException, UserException
     {
         return storage.removeRows(index, count);
     }
 
     @Override
-    @OnThread(Tag.Any)
-    public @Value Object getDefaultValue()
+    public Object getDefaultValue()
     {
         return defaultValue;
     }

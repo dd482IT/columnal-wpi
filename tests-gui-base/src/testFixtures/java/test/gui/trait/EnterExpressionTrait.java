@@ -72,7 +72,6 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
         SUB_EXPRESSION
     }
     
-    @OnThread(Tag.Any)
     public default void enterExpression(TypeManager typeManager, Expression expression, EntryBracketStatus bracketedStatus, Random r, String... qualifiedIdentsToEnterInFull)
     {
         expression.visit(new ExpressionVisitorFlat<UnitType>()
@@ -85,7 +84,7 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
             }
 
             @Override
-            public UnitType record(RecordExpression self, ImmutableList<Pair<@ExpressionIdentifier String, @Recorded Expression>> members)
+            public UnitType record(RecordExpression self, ImmutableList<Pair<String, Expression>> members)
             {
                 if (bracketedStatus != EntryBracketStatus.DIRECTLY_ROUND_BRACKETED)
                 {
@@ -106,7 +105,7 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
             }
 
             @Override
-            public UnitType list(ArrayExpression self, ImmutableList<@Recorded Expression> members)
+            public UnitType list(ArrayExpression self, ImmutableList<Expression> members)
             {
                 write("[");
                 push(KeyCode.DELETE);
@@ -132,7 +131,7 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
             }
 
             @Override
-            public UnitType litNumber(NumericLiteral self, @Value Number value, @Nullable UnitExpression unit)
+            public UnitType litNumber(NumericLiteral self, Number value, UnitExpression unit)
             {
                 write(self.editString());
                 if (unit != null)
@@ -166,7 +165,7 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
             }
 
             @Override
-            public UnitType litBoolean(BooleanLiteral self, @Value Boolean value)
+            public UnitType litBoolean(BooleanLiteral self, Boolean value)
             {
                 write(self.toString(), DELAY);
                 return UnitType.UNIT;
@@ -190,7 +189,7 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
             }
 
             @Override
-            public UnitType litUnit(UnitLiteralExpression self, @Recorded UnitExpression unitExpression)
+            public UnitType litUnit(UnitLiteralExpression self, UnitExpression unitExpression)
             {
                 write("unit{", DELAY);
                 push(KeyCode.DELETE);
@@ -200,7 +199,7 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
             }
 
             @Override
-            public UnitType call(CallExpression self, @Recorded Expression callTarget, ImmutableList<@Recorded Expression> arguments)
+            public UnitType call(CallExpression self, Expression callTarget, ImmutableList<Expression> arguments)
             {
                 enterExpression(typeManager, callTarget, EntryBracketStatus.SUB_EXPRESSION, r, qualifiedIdentsToEnterInFull);
                 write("(");
@@ -270,7 +269,7 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
              */
 
             @Override
-            public UnitType match(MatchExpression self, @Recorded Expression expression, ImmutableList<MatchClause> clauses)
+            public UnitType match(MatchExpression self, Expression expression, ImmutableList<MatchClause> clauses)
             {
                 write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.MATCH), DELAY);
                 enterExpression(typeManager, expression, EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r, qualifiedIdentsToEnterInFull);
@@ -283,7 +282,7 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
                             write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.ORCASE), DELAY);
                         Pattern pattern = matchClause.getPatterns().get(i);
                         enterExpression(typeManager, pattern.getPattern(), EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r, qualifiedIdentsToEnterInFull);
-                        @Nullable Expression guard = pattern.getGuard();
+                        Expression guard = pattern.getGuard();
                         if (guard != null)
                         {
                             write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.CASEGUARD), DELAY);
@@ -299,7 +298,7 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
             }
 
             @Override
-            public UnitType ifThenElse(IfThenElseExpression self, @Recorded Expression condition, @Recorded Expression thenExpression, @Recorded Expression elseExpression)
+            public UnitType ifThenElse(IfThenElseExpression self, Expression condition, Expression thenExpression, Expression elseExpression)
             {
                 write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.IF), DELAY);
                 enterExpression(typeManager, condition, EntryBracketStatus.SURROUNDED_BY_KEYWORDS, r, qualifiedIdentsToEnterInFull);
@@ -326,7 +325,7 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
             }
 
             @Override
-            public UnitType ident(IdentExpression self, @Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents, boolean isVariable)
+            public UnitType ident(IdentExpression self, String namespace, ImmutableList<String> idents, boolean isVariable)
             {
                 /*
                 if (namespace != null)
@@ -364,7 +363,7 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
             }
 
             @Override
-            public UnitType invalidOps(InvalidOperatorExpression self, ImmutableList<@Recorded Expression> items)
+            public UnitType invalidOps(InvalidOperatorExpression self, ImmutableList<Expression> items)
             {
                 for (Expression e : items)
                 {
@@ -374,7 +373,7 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
             }
 
             @Override
-            public UnitType define(DefineExpression self, ImmutableList<DefineItem> defines, @Recorded Expression body)
+            public UnitType define(DefineExpression self, ImmutableList<DefineItem> defines, Expression body)
             {
                 write("@define");
                 boolean first = true;
@@ -419,37 +418,37 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
             }
 
             @Override
-            public UnitType addSubtract(AddSubtractExpression self, ImmutableList<@Recorded Expression> expressions, ImmutableList<AddSubtractOp> ops)
+            public UnitType addSubtract(AddSubtractExpression self, ImmutableList<Expression> expressions, ImmutableList<AddSubtractOp> ops)
             {
                 return enterNary(self);
             }
 
             @Override
-            public UnitType and(AndExpression self, ImmutableList<@Recorded Expression> expressions)
+            public UnitType and(AndExpression self, ImmutableList<Expression> expressions)
             {
                 return enterNary(self);
             }
 
             @Override
-            public UnitType or(OrExpression self, ImmutableList<@Recorded Expression> expressions)
+            public UnitType or(OrExpression self, ImmutableList<Expression> expressions)
             {
                 return enterNary(self);
             }
 
             @Override
-            public UnitType comparison(ComparisonExpression self, ImmutableList<@Recorded Expression> expressions, ImmutableList<ComparisonOperator> operators)
+            public UnitType comparison(ComparisonExpression self, ImmutableList<Expression> expressions, ImmutableList<ComparisonOperator> operators)
             {
                 return enterNary(self);
             }
 
             @Override
-            public UnitType concatText(StringConcatExpression self, ImmutableList<@Recorded Expression> expressions)
+            public UnitType concatText(StringConcatExpression self, ImmutableList<Expression> expressions)
             {
                 return enterNary(self);
             }
 
             @Override
-            public UnitType multiply(TimesExpression self, ImmutableList<@Recorded Expression> expressions)
+            public UnitType multiply(TimesExpression self, ImmutableList<Expression> expressions)
             {
                 return enterNary(self);
             }
@@ -472,31 +471,31 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
             }
 
             @Override
-            public UnitType notEqual(NotEqualExpression self, @Recorded Expression lhs, @Recorded Expression rhs)
+            public UnitType notEqual(NotEqualExpression self, Expression lhs, Expression rhs)
             {
                 return enterBinary(self);
             }
 
             @Override
-            public UnitType divide(DivideExpression self, @Recorded Expression lhs, @Recorded Expression rhs)
+            public UnitType divide(DivideExpression self, Expression lhs, Expression rhs)
             {
                 return enterBinary(self);
             }
 
             @Override
-            public UnitType plusMinus(PlusMinusPatternExpression self, @Recorded Expression lhs, @Recorded Expression rhs)
+            public UnitType plusMinus(PlusMinusPatternExpression self, Expression lhs, Expression rhs)
             {
                 return enterBinary(self);
             }
 
             @Override
-            public UnitType raise(RaiseExpression self, @Recorded Expression lhs, @Recorded Expression rhs)
+            public UnitType raise(RaiseExpression self, Expression lhs, Expression rhs)
             {
                 return enterBinary(self);
             }
 
             @Override
-            public UnitType hasType(@Recorded HasTypeExpression self, @ExpressionIdentifier String lhsVar, @Recorded Expression rhsType)
+            public UnitType hasType(HasTypeExpression self, String lhsVar, Expression rhsType)
             {
                 write(lhsVar);
                 write("::");
@@ -521,13 +520,13 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait, 
             }
 
             @Override
-            public UnitType equal(EqualExpression self, ImmutableList<@Recorded Expression> expressions, boolean lastIsPattern)
+            public UnitType equal(EqualExpression self, ImmutableList<Expression> expressions, boolean lastIsPattern)
             {
                 return enterNary(self);
             }
 
             @Override
-            public UnitType lambda(LambdaExpression self, ImmutableList<@Recorded Expression> parameters, @Recorded Expression body)
+            public UnitType lambda(LambdaExpression self, ImmutableList<Expression> parameters, Expression body)
             {
                 write("@function");
                 for (int i = 0; i < parameters.size(); i++)

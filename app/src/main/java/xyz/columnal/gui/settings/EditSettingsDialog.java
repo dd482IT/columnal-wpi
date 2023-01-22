@@ -39,7 +39,6 @@ import xyz.columnal.utility.gui.LabelledGrid;
 
 import java.io.File;
 
-@OnThread(Tag.FXPlatform)
 public class EditSettingsDialog extends ErrorableDialog<Settings>
 {
     private final TextField rLocation;
@@ -83,9 +82,9 @@ public class EditSettingsDialog extends ErrorableDialog<Settings>
     }
 
     @Override
-    protected Either<@Localized String, Settings> calculateResult()
+    protected Either<String, Settings> calculateResult()
     {
-        @Nullable File rexe;
+        File rexe;
         if (rLocation.getText().trim().isEmpty())
             rexe = null;
         else

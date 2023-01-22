@@ -45,19 +45,18 @@ public class MapFunction extends FunctionDefinition
     }
 
     @Override
-    public @OnThread(Tag.Simulation) ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
+    public ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
     {
         return new ValueFunction2<ListEx, ValueFunction>(ListEx.class, ValueFunction.class)
         {
             @Override
-            @OnThread(Tag.Simulation)
-            public @Value Object call2(ListEx list, ValueFunction f) throws InternalException, UserException
+            public Object call2(ListEx list, ValueFunction f) throws InternalException, UserException
             {
-                ImmutableList.Builder<@Value Object> items = ImmutableList.builderWithExpectedSize(list.size());
+                ImmutableList.Builder<Object> items = ImmutableList.builderWithExpectedSize(list.size());
                 for (int i = 0; i < list.size(); i++)
                 {
-                    @Value Object x = list.get(i);
-                    items.add(f.call(new @Value Object[] {x}));
+                    Object x = list.get(i);
+                    items.add(f.call(new Object[] {x}));
                 }
                 
                 return new ListExList(items.build());

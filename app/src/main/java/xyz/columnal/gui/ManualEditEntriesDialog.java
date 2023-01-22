@@ -64,21 +64,20 @@ import java.util.TreeMap;
 // location is returned as a pair of the identifier and
 // the replaced column.  If Close is clicked instead then
 // empty is returned
-@OnThread(Tag.FXPlatform)
 public class ManualEditEntriesDialog extends LightDialog<Pair<Optional<Pair<ComparableValue, ColumnId>>, SimulationSupplier<ImmutableMap<ColumnId, ColumnReplacementValues>>>>
 {
-    public ManualEditEntriesDialog(DimmableParent parent, @Nullable ColumnId keyColumn, ExFunction<ColumnId, DataType> lookupColumnType, ImmutableList<Entry> originalEntries)
+    public ManualEditEntriesDialog(DimmableParent parent, ColumnId keyColumn, ExFunction<ColumnId, DataType> lookupColumnType, ImmutableList<Entry> originalEntries)
     {
         super(parent);
         setResizable(true);
         FancyList<Entry, HBox> fancyList = new FancyList<Entry, HBox>(originalEntries, true, false, false)
         {
             @Override
-            protected @OnThread(Tag.FXPlatform) Pair<HBox, FXPlatformSupplier<Entry>> makeCellContent(Optional<Entry> initialContentNull, boolean editImmediately)
+            protected Pair<HBox, FXPlatformSupplier<Entry>> makeCellContent(Optional<Entry> initialContentNull, boolean editImmediately)
             {
                 // Can't be null because we don't allow adding items:
                 @SuppressWarnings("optional")
-                @NonNull Entry initialContent = initialContentNull.get();
+                Entry initialContent = initialContentNull.get();
                 
                 HBox content = new HBox(new Label("Loading..."));
                 Workers.onWorkerThread("Loading replacement values", Priority.FETCH, () -> {
@@ -137,14 +136,12 @@ public class ManualEditEntriesDialog extends LightDialog<Pair<Optional<Pair<Comp
         return label;
     }
 
-    @OnThread(Tag.Simulation)
     public static ImmutableList<Entry> getEntries(ManualEdit manualEdit)
     {
         return manualEdit.getReplacements().entrySet().stream().flatMap(e -> e.getValue().streamAll().map(r -> new Entry(r.getFirst(), e.getKey(), r.getSecond())
         )).collect(ImmutableList.<Entry>toImmutableList());
     }
     
-    @OnThread(Tag.Simulation)
     private static ImmutableMap<ColumnId, ColumnReplacementValues> fromEntries(ImmutableList<Entry> entries, ExFunction<ColumnId, DataType> lookupColumnType) throws InternalException, UserException
     {
         HashMap<ColumnId, TreeMap<ComparableValue, Either<String, ComparableValue>>> items = new HashMap<>();
@@ -160,7 +157,7 @@ public class ManualEditEntriesDialog extends LightDialog<Pair<Optional<Pair<Comp
         {
             ColumnId c = entry.getKey();
             TreeMap<ComparableValue, Either<String, ComparableValue>> m = entry.getValue();
-            r.put(c, new ColumnReplacementValues(lookupColumnType.apply(c), m.entrySet().stream().<Pair<@Value Object, Either<String, @Value Object>>>map(e -> new Pair<@Value Object, Either<String, @Value Object>>(e.getKey().getValue(), e.getValue().<@Value Object>map(v -> v.getValue()))).collect(ImmutableList.<Pair<@Value Object, Either<String, @Value Object>>>toImmutableList())));
+            r.put(c, new ColumnReplacementValues(lookupColumnType.apply(c), m.entrySet().stream().<Pair<Object, Either<String, Object>>>map(e -> new Pair<Object, Either<String, Object>>(e.getKey().getValue(), e.getValue().<Object>map(v -> v.getValue()))).collect(ImmutableList.<Pair<Object, Either<String, Object>>>toImmutableList())));
         }
 
         return r.build();
@@ -195,8 +192,7 @@ public class ManualEditEntriesDialog extends LightDialog<Pair<Optional<Pair<Comp
         }
 
         @Override
-        @OnThread(value = Tag.Simulation, ignoreParent = true)
-        public boolean equals(@Nullable Object o)
+        public boolean equals(Object o)
         {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;

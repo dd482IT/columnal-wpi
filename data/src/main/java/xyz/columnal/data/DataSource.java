@@ -91,11 +91,11 @@ public abstract class DataSource extends Table
                 {
                     throw new InternalException("Null default value even though we are editable; should have thrown earlier.");
                 }
-                Either<String, @Value Object> defaultValue = Utility.<Either<String, @Value Object>, DataParser>parseAsOne(defaultValueUnparsed.trim(), DataLexer::new, DataParser::new, p -> DataType.loadSingleItem(t, p, false));
+                Either<String, Object> defaultValue = Utility.<Either<String, Object>, DataParser>parseAsOne(defaultValueUnparsed.trim(), DataLexer::new, DataParser::new, p -> DataType.loadSingleItem(t, p, false));
                 columns.add(ColumnUtility.makeImmediateColumn(t, columnId, defaultValue.getRight("Default values cannot be invalid")));
             }
             LoadedRecordSet recordSet = new LoadedRecordSet(columns, immed);
-            @ExpressionIdentifier String columnName = IdentifierUtility.fixExpressionIdentifier(immed.tableId().getText(), "Table");
+            String columnName = IdentifierUtility.fixExpressionIdentifier(immed.tableId().getText(), "Table");
             ImmediateDataSource immediateDataSource = new ImmediateDataSource(manager, loadDetails(new TableId(columnName), table.dataSource().dataSourceImmediate().dataFormat().detailPrefixed(), table.display()), recordSet);
             manager.record(immediateDataSource);
             return immediateDataSource;
@@ -128,11 +128,11 @@ public abstract class DataSource extends Table
                 {
                     throw new InternalException("Null default value even though we are editable; should have thrown earlier.");
                 }
-                Either<String, @Value Object> defaultValue = Utility.<Either<String, @Value Object>, DataParser2>parseAsOne(defaultValueUnparsed.trim(), DataLexer2::new, DataParser2::new, p -> DataType.loadSingleItem(t, p, false));
+                Either<String, Object> defaultValue = Utility.<Either<String, Object>, DataParser2>parseAsOne(defaultValueUnparsed.trim(), DataLexer2::new, DataParser2::new, p -> DataType.loadSingleItem(t, p, false));
                 columns.add(ColumnUtility.makeImmediateColumn(t, columnId, defaultValue.getRight("Default values cannot be invalid")));
             }
             LoadedRecordSet recordSet = new LoadedRecordSet(columns, immed);
-            @ExpressionIdentifier String columnName = IdentifierUtility.fixExpressionIdentifier(immed.tableId().getText(), "Table");
+            String columnName = IdentifierUtility.fixExpressionIdentifier(immed.tableId().getText(), "Table");
             ImmediateDataSource immediateDataSource = Utility.parseAsOne(Utility.getDetail(table.display().detail()), DisplayLexer::new, DisplayParser::new, p -> new ImmediateDataSource(manager, loadDetails(new TableId(columnName), saveTag, p.tableDisplayDetails()), recordSet));
             manager.record(immediateDataSource);
             return immediateDataSource;
@@ -141,14 +141,13 @@ public abstract class DataSource extends Table
             throw new UnimplementedException();
     }
 
-    @OnThread(Tag.Any)
     public static class LoadedFormat
     {
         public final ColumnId columnId;
         public final DataType dataType;
-        public final @Nullable String defaultValueUnparsed;
+        public final String defaultValueUnparsed;
 
-        public LoadedFormat(ColumnId columnId, DataType dataType, @Nullable String defaultValueUnparsed)
+        public LoadedFormat(ColumnId columnId, DataType dataType, String defaultValueUnparsed)
         {
             this.columnId = columnId;
             this.dataType = dataType;
@@ -156,7 +155,6 @@ public abstract class DataSource extends Table
         }
     }
 
-    @OnThread(Tag.Any)
     public static List<LoadedFormat> loadFormat(TypeManager typeManager, List<String> formatLines, boolean editable) throws UserException, InternalException
     {
         List<LoadedFormat> r = new ArrayList<>();
@@ -198,7 +196,7 @@ public abstract class DataSource extends Table
     protected abstract int dataHashCode();
 
     @Override
-    public final boolean equals(@Nullable Object obj)
+    public final boolean equals(Object obj)
     {
         if (!super.equals(obj))
             return false;

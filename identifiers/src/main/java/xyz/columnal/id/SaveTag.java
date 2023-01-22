@@ -58,8 +58,6 @@ public class SaveTag
         return new SaveTag(new String(cs));
     }
 
-    @OnThread(Tag.Any)
-    @Pure
     public final String getTag()
     {
         return tag;

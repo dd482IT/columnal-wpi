@@ -61,13 +61,13 @@ public class InvalidIdentTypeExpression extends TypeExpression
     }
 
     @Override
-    public @Nullable DataType toDataType(TypeManager typeManager)
+    public DataType toDataType(TypeManager typeManager)
     {
         return null;
     }
 
     @Override
-    public @Recorded JellyType toJellyType(@Recorded InvalidIdentTypeExpression this, TypeManager typeManager, JellyRecorder jellyRecorder) throws InternalException, UnJellyableTypeExpression
+    public JellyType toJellyType(InvalidIdentTypeExpression this, TypeManager typeManager, JellyRecorder jellyRecorder) throws InternalException, UnJellyableTypeExpression
     {
         throw new UnJellyableTypeExpression("Invalid type expression: \"" + value + "\"", this);
     }
@@ -84,7 +84,7 @@ public class InvalidIdentTypeExpression extends TypeExpression
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -107,7 +107,7 @@ public class InvalidIdentTypeExpression extends TypeExpression
     // IdentExpression if possible, otherwise InvalidIdentExpression
     public static TypeExpression identOrUnfinished(String src)
     {
-        @ExpressionIdentifier String valid = IdentifierUtility.asExpressionIdentifier(src);
+        String valid = IdentifierUtility.asExpressionIdentifier(src);
         if (valid != null)
             return new IdentTypeExpression(valid);
         else
@@ -115,7 +115,7 @@ public class InvalidIdentTypeExpression extends TypeExpression
     }
 
     @Override
-    public @Nullable @ExpressionIdentifier String asIdent()
+    public String asIdent()
     {
         return null;
     }

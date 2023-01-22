@@ -63,15 +63,13 @@ import java.util.Map.Entry;
 
 public class AppUtility
 {
-    @OnThread(Tag.FXPlatform)
-    public static Expression valueToExpressionFX(TypeManager typeManager, FunctionLookup functionLookup, DataType dataType, @ImmediateValue Object value) throws UserException, InternalException
+    public static Expression valueToExpressionFX(TypeManager typeManager, FunctionLookup functionLookup, DataType dataType, Object value) throws UserException, InternalException
     {
         return Utility.launderSimulationEx(() -> valueToExpression(typeManager, functionLookup, dataType, value));
     }
     
-    @OnThread(Tag.Simulation)
     @SuppressWarnings("recorded")
-    public static Expression valueToExpression(TypeManager typeManager, FunctionLookup functionLookup, DataType dataType, @Value Object value) throws UserException, InternalException
+    public static Expression valueToExpression(TypeManager typeManager, FunctionLookup functionLookup, DataType dataType, Object value) throws UserException, InternalException
     {
         return dataType.apply(new DataTypeVisitor<Expression>()
         {
@@ -88,7 +86,6 @@ public class AppUtility
             }
 
             @Override
-            @OnThread(Tag.Simulation)
             public Expression date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
                 return new TemporalLiteral(dateTimeInfo.getType(), DataTypeUtility.valueToString(value));
@@ -101,13 +98,12 @@ public class AppUtility
             }
 
             @Override
-            @OnThread(Tag.Simulation)
             public Expression tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
-                @Value TaggedValue taggedValue = Utility.cast(value, TaggedValue.class);
+                TaggedValue taggedValue = Utility.cast(value, TaggedValue.class);
                 TagType<DataType> tag = tags.get(taggedValue.getTagIndex());
                 IdentExpression constructor = IdentExpression.tag(typeName.getRaw(), tag.getName());
-                @Value Object innerValue = taggedValue.getInner();
+                Object innerValue = taggedValue.getInner();
                 DataType innerType = tag.getInner();
                 Expression expression = innerValue == null || innerType == null ? constructor : new CallExpression(constructor, ImmutableList.of(valueToExpression(typeManager, functionLookup, innerType, innerValue)));
                 if (typeVars.isEmpty())
@@ -122,12 +118,11 @@ public class AppUtility
             }
 
             @Override
-            @OnThread(Tag.Simulation)
-            public Expression record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, UserException
+            public Expression record(ImmutableMap<String, DataType> fields) throws InternalException, UserException
             {
                 Record record = Utility.cast(value, Record.class);
-                ImmutableList.Builder<Pair<@ExpressionIdentifier String, Expression>> members = ImmutableList.builderWithExpectedSize(fields.size());
-                for (Entry<@ExpressionIdentifier String, DataType> field : fields.entrySet())
+                ImmutableList.Builder<Pair<String, Expression>> members = ImmutableList.builderWithExpectedSize(fields.size());
+                for (Entry<String, DataType> field : fields.entrySet())
                 {
                     members.add(new Pair<>(field.getKey(), valueToExpression(typeManager, functionLookup, field.getValue(), record.getField(field.getKey()))));
                 }
@@ -135,7 +130,6 @@ public class AppUtility
             }
 
             @Override
-            @OnThread(Tag.Simulation)
             public Expression array(DataType inner) throws InternalException, UserException
             {
                 ListEx listEx = Utility.cast(value, ListEx.class);

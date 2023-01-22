@@ -62,9 +62,9 @@ public class GenFormattedData extends Generator<FormatAndData>
         public final String htmlContent;
         // Outermost list is list of rows
         // Next list in is list of columns.
-        public final List<List<@Value Object>> loadedContent;
+        public final List<List<Object>> loadedContent;
 
-        public FormatAndData(FinalTextFormat format, List<String> textContent, String htmlContent, List<List<@Value Object>> loadedContent)
+        public FormatAndData(FinalTextFormat format, List<String> textContent, String htmlContent, List<List<Object>> loadedContent)
         {
             this.format = format;
             this.textContent = textContent;
@@ -87,7 +87,7 @@ public class GenFormattedData extends Generator<FormatAndData>
     public FormatAndData generate(SourceOfRandomness r, GenerationStatus generationStatus)
     {
         List<String> fileContent = new ArrayList<>();
-        List<List<@Value Object>> intendedContent = new ArrayList<>();
+        List<List<Object>> intendedContent = new ArrayList<>();
         FinalTextFormat format = new GenFormat().generate(r, generationStatus);
         
         StringBuilder htmlContent = new StringBuilder("<html><head><title>Testing!</title></head><body><table>");
@@ -98,7 +98,7 @@ public class GenFormattedData extends Generator<FormatAndData>
         ArrayList<Integer> columnsWithSingleValue = new ArrayList<>();
         for (int row = 0; row < rowCount; row++)
         {
-            List<@Value Object> data = new ArrayList<>();
+            List<Object> data = new ArrayList<>();
             StringBuilder line = new StringBuilder();
             htmlContent.append("<tr>");
             List<ColumnInfo> columnTypes = format.columnTypes;
@@ -182,7 +182,7 @@ public class GenFormattedData extends Generator<FormatAndData>
                         year = 1900 + r.nextInt(199);
                     int month = 1 + r.nextInt(12);
                     int day = 1 + r.nextInt(28);
-                    @Value LocalDate date = LocalDate.of(year, month, day);
+                    LocalDate date = LocalDate.of(year, month, day);
                     data.add(date);
 
                     entry.append(date.format(dateColumnType.getDateTimeFormatter()));
@@ -245,7 +245,7 @@ public class GenFormattedData extends Generator<FormatAndData>
         {
             for (int i = 0; i < intendedContent.size(); i++)
             {
-                List<@Value Object> row = intendedContent.get(i);
+                List<Object> row = intendedContent.get(i);
                 intendedContent.set(i, row.subList(leftTrim, row.size() - rightTrim));
             }
         }

@@ -42,10 +42,10 @@ import java.util.function.Consumer;
 
 class JellyTypeFunction extends JellyType
 {
-    private final ImmutableList<@Recorded JellyType> params;
-    private final @Recorded JellyType result;
+    private final ImmutableList<JellyType> params;
+    private final JellyType result;
 
-    JellyTypeFunction(ImmutableList<@Recorded JellyType> params, @Recorded JellyType result)
+    JellyTypeFunction(ImmutableList<JellyType> params, JellyType result)
     {
         this.params = params;
         this.result = result;
@@ -62,7 +62,7 @@ class JellyTypeFunction extends JellyType
     {
         ImmutableList.Builder<DataType> paramTypes = ImmutableList.builderWithExpectedSize(params.size());
 
-        for (@Recorded JellyType param : params)
+        for (JellyType param : params)
         {
             paramTypes.add(param.makeDataType(typeVariables, mgr));
         }
@@ -99,7 +99,7 @@ class JellyTypeFunction extends JellyType
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;

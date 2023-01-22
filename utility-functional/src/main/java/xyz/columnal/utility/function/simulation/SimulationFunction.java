@@ -30,6 +30,5 @@ import threadchecker.Tag;
  */
 public interface SimulationFunction<T, R>
 {
-    @OnThread(Tag.Simulation)
     public R apply(T t) throws InternalException, UserException;
 }

@@ -31,7 +31,7 @@ import xyz.columnal.error.InternalException;
  */
 abstract class SingleNumericInOutFunction extends FunctionDefinition
 {
-    SingleNumericInOutFunction(@FuncDocKey String funcDocKey) throws InternalException
+    SingleNumericInOutFunction(String funcDocKey) throws InternalException
     {
         super(funcDocKey);
     }

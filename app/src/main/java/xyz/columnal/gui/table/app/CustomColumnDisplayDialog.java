@@ -31,7 +31,6 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.gui.FXUtility;
 
-@OnThread(Tag.FXPlatform)
 class CustomColumnDisplayDialog extends Dialog<ImmutableList<ColumnId>>
 {
     private final HideColumnsPanel hideColumnsPanel;

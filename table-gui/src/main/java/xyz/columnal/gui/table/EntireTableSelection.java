@@ -38,9 +38,9 @@ public class EntireTableSelection implements CellSelection
     private final HeadedDisplay selected;
     // Although we select the whole table, if they move out up/down, we stay
     // in the column they entered from:
-    private final @AbsColIndex int column;
+    private final int column;
 
-    public EntireTableSelection(HeadedDisplay selected, @AbsColIndex int column)
+    public EntireTableSelection(HeadedDisplay selected, int column)
     {
         this.selected = selected;
         this.column = column;
@@ -124,7 +124,7 @@ public class EntireTableSelection implements CellSelection
     }
 
     @Override
-    public boolean includes(@UnknownInitialization(GridArea.class) GridArea tableDisplay)
+    public boolean includes(GridArea tableDisplay)
     {
         return this.selected == tableDisplay;
     }
@@ -143,14 +143,13 @@ public class EntireTableSelection implements CellSelection
     }
 
     @Override
-    public @Nullable CellSelection extendTo(CellPosition cellPosition)
+    public CellSelection extendTo(CellPosition cellPosition)
     {
         return null;
     }
 
     // For debugging
     @Override
-    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     public String toString()
     {
         return "EntireTableSelection[" + selected.getPosition() + "-" + selected.getBottomRightIncl() + "]";

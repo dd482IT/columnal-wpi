@@ -47,7 +47,7 @@ import java.time.temporal.TemporalAccessor;
 public class ToYearMonth extends ToTemporalFunction
 {
 
-    public static final @FuncDocKey String DATEYM_FROM_DATE = "datetime:dateym from date";
+    public static final String DATEYM_FROM_DATE = "datetime:dateym from date";
 
     ImmutableList<FunctionDefinition> getTemporalFunctions(UnitManager mgr) throws InternalException
     {
@@ -61,7 +61,7 @@ public class ToYearMonth extends ToTemporalFunction
         */
         r.add(new FunctionDefinition("datetime:dateym from ym") {
             @Override
-            public @OnThread(Tag.Simulation) ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
+            public ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
             {
                 return new FromNumbers();
             }
@@ -77,7 +77,7 @@ public class ToYearMonth extends ToTemporalFunction
 
 
     @Override
-    @Value Temporal fromTemporal(TemporalAccessor temporalAccessor)
+    Temporal fromTemporal(TemporalAccessor temporalAccessor)
     {
         return YearMonth.from(temporalAccessor);
     }
@@ -85,7 +85,7 @@ public class ToYearMonth extends ToTemporalFunction
     private class FromNumbers extends ValueFunction
     {
         @Override
-        public @Value Object _call() throws UserException, InternalException
+        public Object _call() throws UserException, InternalException
         {
             return YearMonth.of(intArg(0), intArg(1));
         }

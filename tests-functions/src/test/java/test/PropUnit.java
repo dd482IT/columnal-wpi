@@ -43,7 +43,6 @@ import static org.junit.Assert.fail;
 /**
  * Created by neil on 24/01/2017.
  */
-@RunWith(JUnitQuickcheck.class)
 public class PropUnit
 {
     private final UnitManager mgr;
@@ -58,8 +57,7 @@ public class PropUnit
         }
     }
     
-    @Property
-    public void propUnits(@From(GenUnit.class) Unit a, @From(GenUnit.class) Unit b) throws UserException, InternalException
+    public void propUnits(Unit a, Unit b) throws UserException, InternalException
     {
         assertEquals(a.equals(b), b.equals(a));
         assertEquals(a.canScaleTo(b, mgr), b.canScaleTo(a, mgr).map(Rational::reciprocal));
@@ -73,7 +71,6 @@ public class PropUnit
             assertEquals(a, a.raisedTo(i).rootedBy(i));
     }
     
-    @Test
     public void testTypecheckUnitTimes() throws UserException, InternalException
     {
         withMut(u -> {

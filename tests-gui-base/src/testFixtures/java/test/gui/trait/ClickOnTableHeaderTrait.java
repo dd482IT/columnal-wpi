@@ -37,13 +37,11 @@ import threadchecker.Tag;
 
 public interface ClickOnTableHeaderTrait extends FxRobotInterface, ScrollToTrait, ClickTableLocationTrait
 {
-    @OnThread(Tag.Any)
     public default FxRobotInterface triggerTableHeaderContextMenu(VirtualGrid virtualGrid, TableManager tableManager, TableId id) throws UserException
     {
         return triggerTableHeaderContextMenu(virtualGrid, TFXUtil.tablePosition(tableManager, id));
     }
     
-    @OnThread(Tag.Any)
     public default FxRobotInterface triggerTableHeaderContextMenu(VirtualGrid virtualGrid, CellPosition position) throws UserException
     {
         keyboardMoveTo(virtualGrid, position);
@@ -59,6 +57,5 @@ public interface ClickOnTableHeaderTrait extends FxRobotInterface, ScrollToTrait
     }
     
     // Matches method in FXApplicationTest:
-    @OnThread(Tag.Any)
-    public FxRobotInterface showContextMenu(Node node, @Nullable Point2D pointOnScreen);
+    public FxRobotInterface showContextMenu(Node node, Point2D pointOnScreen);
 }

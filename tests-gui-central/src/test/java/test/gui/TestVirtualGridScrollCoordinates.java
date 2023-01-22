@@ -68,22 +68,16 @@ import java.util.function.Function;
 import static org.junit.Assert.assertEquals;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-@OnThread(Tag.Simulation)
-@RunWith(JUnitQuickcheck.class)
 public class TestVirtualGridScrollCoordinates extends FXApplicationTest
 {
     private final double ORIGINAL_SCROLL = 5001.0;
     @SuppressWarnings("nullness")
-    @OnThread(Tag.Any)
     private VirtualGrid virtualGrid;
     @SuppressWarnings("nullness")
-    @OnThread(Tag.Any)
     private Label node;
     @SuppressWarnings("nullness")
-    @OnThread(Tag.Any)
     private Label topLeft;
 
-    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     @Override
     public void start(Stage _stage) throws Exception
     {
@@ -100,7 +94,7 @@ public class TestVirtualGridScrollCoordinates extends FXApplicationTest
         virtualGrid.addGridAreas(ImmutableList.of(new GridArea()
         {
             @Override
-            protected @OnThread(Tag.FXPlatform) void updateKnownRows(@GridAreaRowIndex int checkUpToRowIncl, FXPlatformRunnable updateSizeAndPositions)
+            protected void updateKnownRows(int checkUpToRowIncl, FXPlatformRunnable updateSizeAndPositions)
             {
             }
 
@@ -111,7 +105,7 @@ public class TestVirtualGridScrollCoordinates extends FXApplicationTest
             }
 
             @Override
-            public @Nullable CellSelection getSelectionForSingleCell(CellPosition cellPosition)
+            public CellSelection getSelectionForSingleCell(CellPosition cellPosition)
             {
                 return null;
             }
@@ -135,8 +129,8 @@ public class TestVirtualGridScrollCoordinates extends FXApplicationTest
             @Override
             public Optional<BoundingBox> calculatePosition(VisibleBounds visibleBounds)
             {
-                @AbsColIndex int xCell = CellPosition.col(5);
-                @AbsRowIndex int yCell = CellPosition.row(10);
+                int xCell = CellPosition.col(5);
+                int yCell = CellPosition.row(10);
                 double x = visibleBounds.getXCoord(xCell);
                 double y = visibleBounds.getYCoord(yCell);
                 double width = visibleBounds.getXCoordAfter(xCell) - x;
@@ -151,7 +145,7 @@ public class TestVirtualGridScrollCoordinates extends FXApplicationTest
             }
 
             @Override
-            public @Nullable Pair<ItemState, @Nullable StyledString> getItemState(CellPosition cellPosition, Point2D screenPos)
+            public Pair<ItemState, StyledString> getItemState(CellPosition cellPosition, Point2D screenPos)
             {
                 return null;
             }
@@ -169,8 +163,8 @@ public class TestVirtualGridScrollCoordinates extends FXApplicationTest
             @Override
             public Optional<BoundingBox> calculatePosition(VisibleBounds visibleBounds)
             {
-                @AbsColIndex int xCell = CellPosition.col(0);
-                @AbsRowIndex int yCell = CellPosition.row(0);
+                int xCell = CellPosition.col(0);
+                int yCell = CellPosition.row(0);
                 double x = visibleBounds.getXCoord(xCell);
                 double y = visibleBounds.getYCoord(yCell);
                 double width = visibleBounds.getXCoordAfter(xCell) - x;
@@ -185,7 +179,7 @@ public class TestVirtualGridScrollCoordinates extends FXApplicationTest
             }
 
             @Override
-            public @Nullable Pair<ItemState, @Nullable StyledString> getItemState(CellPosition cellPosition, Point2D screenPos)
+            public Pair<ItemState, StyledString> getItemState(CellPosition cellPosition, Point2D screenPos)
             {
                 return null;
             }
@@ -197,7 +191,6 @@ public class TestVirtualGridScrollCoordinates extends FXApplicationTest
         });
     }
 
-    @OnThread(Tag.Any)
     public static class ScrollAmounts
     {
         final double[] amounts;
@@ -208,7 +201,6 @@ public class TestVirtualGridScrollCoordinates extends FXApplicationTest
         }
     }
     
-    @OnThread(Tag.Any)
     public static class GenScrollAmounts extends Generator<ScrollAmounts>
     {
         public GenScrollAmounts()
@@ -229,8 +221,7 @@ public class TestVirtualGridScrollCoordinates extends FXApplicationTest
         }
     }
     
-    @Property(trials = 5)
-    public void clampTest(@From(GenScrollAmounts.class) ScrollAmounts scrollAmounts)
+    public void clampTest(ScrollAmounts scrollAmounts)
     {
         // We started at top and left, so what we do is scroll out by half the amount, then attempt to scroll back the full amount, then repeat
 
@@ -343,8 +334,7 @@ public class TestVirtualGridScrollCoordinates extends FXApplicationTest
         assertEquals(0, TFXUtil.fx(() -> topLeft.getLayoutX()), 0.01);
     }
     
-    @Property(trials = 5)
-    public void scrollXYBy(@From(GenScrollAmounts.class) ScrollAmounts scrollX, @From(GenScrollAmounts.class) ScrollAmounts scrollY)
+    public void scrollXYBy(ScrollAmounts scrollX, ScrollAmounts scrollY)
     {
         // Scroll to the middle to begin with so we don't get clamped:
         ScrollGroup scrollGroup = TFXUtil.fx(() -> virtualGrid.getScrollGroup());
@@ -410,7 +400,6 @@ public class TestVirtualGridScrollCoordinates extends FXApplicationTest
         assertThat("Render row before logical row", indexesAndLimits[1][0], Matchers.lessThanOrEqualTo(indexesAndLimits[3][0]));
     }
 
-    @Test
     public void testSmoothScrollMonotonic()
     {
         // Seems problematic on Linux:
@@ -436,7 +425,7 @@ public class TestVirtualGridScrollCoordinates extends FXApplicationTest
 
     private void testMonotonicScroll(boolean... scrollDocumentUp)
     {
-        final @Nullable AnimationTimer[] timer = new AnimationTimer[1];
+        final AnimationTimer[] timer = new AnimationTimer[1];
         try
         {
             moveTo(point(node));

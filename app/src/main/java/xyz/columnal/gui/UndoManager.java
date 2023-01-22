@@ -43,7 +43,6 @@ import java.util.HashMap;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-@OnThread(Tag.Simulation)
 public class UndoManager
 {
     // Max number of backups for each file
@@ -58,9 +57,9 @@ public class UndoManager
         // Path of the backed up file, not the original which was backed up:
         private final File backupFile;
         private final Instant instant;
-        private final @Nullable HashCode hash;
+        private final HashCode hash;
 
-        public SaveDetails(File backupFile, Instant instant, @Nullable HashCode hash)
+        public SaveDetails(File backupFile, Instant instant, HashCode hash)
         {
             this.backupFile = backupFile;
             this.instant = instant;
@@ -89,15 +88,14 @@ public class UndoManager
     // Lists are held in chronological order:
     private final HashMap<File, ArrayList<SaveDetails>> backups = new HashMap<>();
     
-    @OnThread(Tag.Any)
     public UndoManager()
     {
     }
     
     public void backupForUndo(File file, Instant saveTime)
     {
-        @Nullable File undoPath = null;
-        @Nullable HashCode hashCode = null;
+        File undoPath = null;
+        HashCode hashCode = null;
         try
         {
             File f = new File(Utility.getUndoDirectory(),
@@ -171,7 +169,7 @@ public class UndoManager
     /**
      * Undoes last change and returns the content as a String.
      */
-    public @Nullable String undo(File file)
+    public String undo(File file)
     {
         ArrayList<SaveDetails> details = backups.get(file);
         if (details != null)

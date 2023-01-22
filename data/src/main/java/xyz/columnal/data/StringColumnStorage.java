@@ -44,15 +44,14 @@ import java.util.stream.Stream;
  */
 public class StringColumnStorage extends SparseErrorColumnStorage<String> implements ColumnStorage<String>
 {
-    private final ArrayList<@Value String> values;
+    private final ArrayList<String> values;
     @SuppressWarnings("unchecked")
-    private final DumbObjectPool<@Value String> pool = new DumbObjectPool<>((Class<@Value String>)(Class)String.class, 1000, null);
-    private final @Nullable BeforeGet<StringColumnStorage> beforeGet;
+    private final DumbObjectPool<String> pool = new DumbObjectPool<>((Class<String>)(Class)String.class, 1000, null);
+    private final BeforeGet<StringColumnStorage> beforeGet;
     
-    @OnThread(value = Tag.Any,requireSynchronized = true)
-    private @MonotonicNonNull DataTypeValue dataType;
+    private DataTypeValue dataType;
 
-    public StringColumnStorage(@Nullable BeforeGet<StringColumnStorage> beforeGet, boolean isImmediateData)
+    public StringColumnStorage(BeforeGet<StringColumnStorage> beforeGet, boolean isImmediateData)
     {
         super(isImmediateData);
         values = new ArrayList<>();
@@ -70,7 +69,7 @@ public class StringColumnStorage extends SparseErrorColumnStorage<String> implem
         return values.size();
     }
     
-    private @Value String get(int index, @Nullable ProgressListener progressListener) throws InternalException, UserException
+    private String get(int index, ProgressListener progressListener) throws InternalException, UserException
     {
         if (index < 0 || index >= values.size())
             throw new UserException("Attempting to access invalid element: " + index + " of " + values.size());
@@ -88,7 +87,6 @@ public class StringColumnStorage extends SparseErrorColumnStorage<String> implem
         }
     }
 
-    @OnThread(Tag.Any)
     public synchronized DataTypeValue getType()
     {
         /*
@@ -101,10 +99,10 @@ public class StringColumnStorage extends SparseErrorColumnStorage<String> implem
         */
         if (dataType == null)
         {
-            dataType = DataTypeValue.text(new GetValueOrError<@Value String>()
+            dataType = DataTypeValue.text(new GetValueOrError<String>()
             {
                 @Override
-                protected @OnThread(Tag.Simulation) void _beforeGet(int index, @Nullable ProgressListener progressListener) throws InternalException, UserException
+                protected void _beforeGet(int index, ProgressListener progressListener) throws InternalException, UserException
                 {
                     if (beforeGet != null)
                         beforeGet.beforeGet(StringColumnStorage.this, index, progressListener);
@@ -112,13 +110,13 @@ public class StringColumnStorage extends SparseErrorColumnStorage<String> implem
                 }
 
                 @Override
-                public @Value String _getWithProgress(int i, @Nullable ProgressListener prog) throws UserException, InternalException
+                public String _getWithProgress(int i, ProgressListener prog) throws UserException, InternalException
                 {
                     return StringColumnStorage.this.get(i, prog);
                 }
 
                 @Override
-                public @OnThread(Tag.Simulation) void _set(int index, @Nullable @Value String value) throws InternalException
+                public void _set(int index, String value) throws InternalException
                 {
                     if (value == null)
                         value = DataTypeUtility.value("");
@@ -130,7 +128,7 @@ public class StringColumnStorage extends SparseErrorColumnStorage<String> implem
         return dataType;
     }
 
-    public void setValue(int index, @Value String value) throws InternalException
+    public void setValue(int index, String value) throws InternalException
     {
         if (index == values.size())
         {
@@ -144,7 +142,7 @@ public class StringColumnStorage extends SparseErrorColumnStorage<String> implem
     }
 
     @Override
-    public SimulationRunnable _insertRows(int index, List<@Nullable String> items) throws InternalException
+    public SimulationRunnable _insertRows(int index, List<String> items) throws InternalException
     {
         if (index < 0 || index > values.size())
             throw new InternalException("Trying to insert rows at invalid index: " + index + " length is: " + values.size());
@@ -166,7 +164,7 @@ public class StringColumnStorage extends SparseErrorColumnStorage<String> implem
     {
         if (index < 0 || index + count > values.size())
             throw new InternalException("Trying to remove rows at invalid index: " + index + " + " + count + " length is: " + values.size());
-        List<@Value String> old = new ArrayList<>(values.subList(index, index + count));
+        List<String> old = new ArrayList<>(values.subList(index, index + count));
         values.subList(index, index + count).clear();
         return () -> values.addAll(index, old);
     }

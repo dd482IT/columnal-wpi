@@ -95,13 +95,12 @@ import java.util.Optional;
 /**
  * A display that can have an editable name at the top
  */
-@OnThread(Tag.FXPlatform)
 public abstract class HeadedDisplay extends GridArea implements SelectionListener
 {
-    protected final @Nullable TableHeaderItem tableHeaderItem;
+    protected final TableHeaderItem tableHeaderItem;
 
     // Version with header
-    public HeadedDisplay(@Nullable TableHeaderItemParams tableHeaderItemParams, VirtualGridSupplierFloating floatingItems)
+    public HeadedDisplay(TableHeaderItemParams tableHeaderItemParams, VirtualGridSupplierFloating floatingItems)
     {
         if (tableHeaderItemParams != null)
         {
@@ -138,12 +137,12 @@ public abstract class HeadedDisplay extends GridArea implements SelectionListene
 
     protected static class TableHeaderItemParams
     {
-        @Nullable TableManager tableManager;
+        TableManager tableManager;
         TableId initialTableName;
         Table table;
         VirtualGridSupplierFloating floatingItems;
 
-        public TableHeaderItemParams(@Nullable TableManager tableManager, TableId initialTableName, Table table, VirtualGridSupplierFloating floatingItems)
+        public TableHeaderItemParams(TableManager tableManager, TableId initialTableName, Table table, VirtualGridSupplierFloating floatingItems)
         {
             this.tableManager = tableManager;
             this.initialTableName = initialTableName;
@@ -152,20 +151,19 @@ public abstract class HeadedDisplay extends GridArea implements SelectionListene
         }
     }
     
-    protected abstract @Nullable FXPlatformConsumer<TableId> renameTableOperation(Table table);
+    protected abstract FXPlatformConsumer<TableId> renameTableOperation(Table table);
 
     protected class TableHeaderItem extends FloatingItem<Pane>
     {
-        private final @Nullable TableManager tableManager;
+        private final TableManager tableManager;
         private final Table table;
         private final TableId initialTableName;
         private final VirtualGridSupplierFloating floatingItems;
-        private @MonotonicNonNull ErrorableTextField<TableId> tableNameField;
-        private @MonotonicNonNull BorderPane borderPane;
+        private ErrorableTextField<TableId> tableNameField;
+        private BorderPane borderPane;
         private final DoubleProperty maxSize;
 
-        @OnThread(Tag.FXPlatform)
-        public TableHeaderItem(@Nullable TableManager tableManager, TableId initialTableName, Table table, VirtualGridSupplierFloating floatingItems)
+        public TableHeaderItem(TableManager tableManager, TableId initialTableName, Table table, VirtualGridSupplierFloating floatingItems)
         {
             super(ViewOrder.STANDARD_CELLS);
             this.maxSize = new SimpleDoubleProperty(100.0);
@@ -176,7 +174,6 @@ public abstract class HeadedDisplay extends GridArea implements SelectionListene
         }
 
         @Override
-        @OnThread(Tag.FXPlatform)
         public Optional<BoundingBox> calculatePosition(VisibleBounds visibleBounds)
         {
             double x = visibleBounds.getXCoord(getPosition().columnIndex);
@@ -194,7 +191,7 @@ public abstract class HeadedDisplay extends GridArea implements SelectionListene
         }
 
         @Override
-        public @Nullable Pair<ItemState, @Nullable StyledString> getItemState(CellPosition cellPosition, Point2D screenPos)
+        public Pair<ItemState, StyledString> getItemState(CellPosition cellPosition, Point2D screenPos)
         {
             if (cellPosition.rowIndex == getPosition().rowIndex
                     && getPosition().columnIndex <= cellPosition.columnIndex && cellPosition.columnIndex <= getBottomRightIncl().columnIndex)
@@ -205,7 +202,6 @@ public abstract class HeadedDisplay extends GridArea implements SelectionListene
         }
 
         @Override
-        @OnThread(Tag.FXPlatform)
         public Pane makeCell(VisibleBounds visibleBounds)
         {
             tableNameField = new TableNameTextField(tableManager, initialTableName, false, () -> withParent_(g -> g.select(new EntireTableSelection(HeadedDisplay.this, getPosition().columnIndex))));
@@ -223,7 +219,7 @@ public abstract class HeadedDisplay extends GridArea implements SelectionListene
                 }
             });
 
-            @Nullable FXPlatformConsumer<TableId> renameTable = renameTableOperation(table);
+            FXPlatformConsumer<TableId> renameTable = renameTableOperation(table);
             if (renameTable == null)
             {
                 tableNameField.setEditable(false);
@@ -236,7 +232,7 @@ public abstract class HeadedDisplay extends GridArea implements SelectionListene
                 });
             }
             final Label reRun;
-            @Nullable SimulationRunnable rerunOp = table.getReevaluateOperation();
+            SimulationRunnable rerunOp = table.getReevaluateOperation();
             if (rerunOp != null)
             {
                 reRun = GUI.label("transformation.rerun", "table-display-rerun");
@@ -321,7 +317,7 @@ public abstract class HeadedDisplay extends GridArea implements SelectionListene
                 if (e.getButton() == MouseButton.PRIMARY && e.isStillSincePress())
                 {
                     withParent_(p -> {
-                        @AbsColIndex int columnIndex = p.getVisibleBounds().getNearestTopLeftToScreenPos(new Point2D(e.getScreenX(), e.getScreenY()), HPos.CENTER, VPos.CENTER).orElse(getPosition()).columnIndex;
+                        int columnIndex = p.getVisibleBounds().getNearestTopLeftToScreenPos(new Point2D(e.getScreenX(), e.getScreenY()), HPos.CENTER, VPos.CENTER).orElse(getPosition()).columnIndex;
                         p.select(new EntireTableSelection(HeadedDisplay.this, columnIndex));
                     });
                 }
@@ -334,11 +330,11 @@ public abstract class HeadedDisplay extends GridArea implements SelectionListene
             borderPane.setOnContextMenuRequested(e -> {
                 withParent_(g -> {
                     Point2D gridRelPos = g.getNode().screenToLocal(new Point2D(e.getScreenX(), e.getScreenY()));
-                    @Nullable Pair<CellPosition, Point2D> cellPositionAt = g.getCellPositionAt(gridRelPos.getX(), gridRelPos.getY());
-                    @AbsColIndex int colIndex = cellPositionAt == null ? getPosition().columnIndex : cellPositionAt.getFirst().columnIndex;
+                    Pair<CellPosition, Point2D> cellPositionAt = g.getCellPositionAt(gridRelPos.getX(), gridRelPos.getY());
+                    int colIndex = cellPositionAt == null ? getPosition().columnIndex : cellPositionAt.getFirst().columnIndex;
                     g.select(new EntireTableSelection(HeadedDisplay.this, colIndex));
                 });
-                @Nullable ContextMenu contextMenu = FXUtility.mouse(HeadedDisplay.this).getTableHeaderContextMenu();
+                ContextMenu contextMenu = FXUtility.mouse(HeadedDisplay.this).getTableHeaderContextMenu();
                 if (contextMenu != null)
                     contextMenu.show(borderPane, e.getScreenX(), e.getScreenY());
             });
@@ -353,20 +349,18 @@ public abstract class HeadedDisplay extends GridArea implements SelectionListene
 
             if (correctRow && correctColumn)
             {
-                @Nullable ContextMenu contextMenu = FXUtility.mouse(HeadedDisplay.this).getTableHeaderContextMenu();
+                ContextMenu contextMenu = FXUtility.mouse(HeadedDisplay.this).getTableHeaderContextMenu();
                 if (contextMenu != null && borderPane != null)
                     contextMenu.show(borderPane, Side.BOTTOM, 0, 0);
             }
         }
 
-        @OnThread(Tag.FXPlatform)
         public void setSelected(boolean selected)
         {
             if (getNode() != null)
                 FXUtility.setPseudoclass(getNode(), "table-selected", selected);
         }
 
-        @OnThread(Tag.FXPlatform)
         public void setPseudoclass(String pseudoClass, boolean on)
         {
             if (getNode() != null)
@@ -374,11 +368,11 @@ public abstract class HeadedDisplay extends GridArea implements SelectionListene
         }
     }
 
-    public abstract void gotoRow(Window parent, @AbsColIndex int column);
+    public abstract void gotoRow(Window parent, int column);
 
-    protected abstract CellPosition getDataPosition(@TableDataRowIndex int rowIndex, @TableDataColIndex int columnIndex);
+    protected abstract CellPosition getDataPosition(int rowIndex, int columnIndex);
     
-    protected abstract @TableDataRowIndex int getCurrentKnownRows();
+    protected abstract int getCurrentKnownRows();
     
     public double getTableNameWidth()
     {
@@ -393,7 +387,7 @@ public abstract class HeadedDisplay extends GridArea implements SelectionListene
      * @param dataBounds The bounds of the data region.  May extend beyond the actual data display
      *                   portion.  If null, copy all data, including that which is not loaded yet.
      */
-    public abstract void doCopy(@Nullable RectangleBounds bounds);
+    public abstract void doCopy(RectangleBounds bounds);
 
     /**
      * Deletes the source table, if possible.
@@ -402,7 +396,7 @@ public abstract class HeadedDisplay extends GridArea implements SelectionListene
 
     protected abstract void setTableDragSource(boolean on, BorderPane tableNamePane);
 
-    protected @Nullable ContextMenu getTableHeaderContextMenu()
+    protected ContextMenu getTableHeaderContextMenu()
     {
         return null;
     }
@@ -459,7 +453,6 @@ public abstract class HeadedDisplay extends GridArea implements SelectionListene
         }
 
         @Override
-        @OnThread(Tag.FXPlatform)
         public Optional<Either<BoundingBox, RectangleBounds>> calculateBounds(VisibleBounds visibleBounds)
         {
             Optional<CellPosition> pos = visibleBounds.getNearestTopLeftToScreenPos(lastMousePosScreen.subtract(offsetFromTopLeftOfSource), HPos.CENTER, VPos.CENTER);
@@ -488,7 +481,6 @@ public abstract class HeadedDisplay extends GridArea implements SelectionListene
     }
 
     // A destination overlay corresponding exactly to the table position and original size
-    @OnThread(Tag.FXPlatform)
     private class MoveDestinationFree extends MoveDestination
     {
         private final double width;
@@ -521,10 +513,9 @@ public abstract class HeadedDisplay extends GridArea implements SelectionListene
      * The table border overlay.  It is a floating overlay because otherwise the drop shadow
      * doesn't work properly.
      */
-    @OnThread(Tag.FXPlatform)
     protected class TableBorderOverlay extends RectangleOverlayItem implements ChangeListener<Number>
     {
-        private @MonotonicNonNull VisibleBounds lastVisibleBounds;
+        private VisibleBounds lastVisibleBounds;
 
         public TableBorderOverlay()
         {
@@ -572,7 +563,6 @@ public abstract class HeadedDisplay extends GridArea implements SelectionListene
         }
 
         @Override
-        @OnThread(value = Tag.FXPlatform, ignoreParent = true)
         public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue)
         {
             if (lastVisibleBounds != null)
@@ -592,7 +582,6 @@ public abstract class HeadedDisplay extends GridArea implements SelectionListene
                 calcClip(getNode(), visibleBounds);
         }
 
-        @OnThread(Tag.FXPlatform)
         private void calcClip(Rectangle r, VisibleBounds visibleBounds)
         {
             Shape originalClip = Shape.subtract(
@@ -612,13 +601,13 @@ public abstract class HeadedDisplay extends GridArea implements SelectionListene
             if (rowLabelsShowing)
             {
                 @SuppressWarnings("units")
-                @TableDataRowIndex int rowZero = 0;
+                int rowZero = 0;
                 @SuppressWarnings("units")
-                @TableDataColIndex int columnZero = 0;
+                int columnZero = 0;
                 // We know where row labels will be, so easy to construct the rectangle:
                 CellPosition topLeftData = getDataPosition(rowZero, columnZero);
                 @SuppressWarnings("units")
-                @TableDataRowIndex int oneRow = 1;
+                int oneRow = 1;
                 CellPosition bottomRightData = getDataPosition(getCurrentKnownRows() - oneRow, columnZero);
                 double rowStartY = visibleBounds.getYCoord(topLeftData.rowIndex);
                 double rowEndY = visibleBounds.getYCoordAfter(bottomRightData.rowIndex);
@@ -645,8 +634,7 @@ public abstract class HeadedDisplay extends GridArea implements SelectionListene
     protected abstract boolean isShowingRowLabels();
 
     @Override
-    @OnThread(Tag.FXPlatform)
-    public Pair<VirtualGrid.ListenerOutcome, @Nullable FXPlatformConsumer<VisibleBounds>> selectionChanged(@Nullable CellSelection oldSelection, @Nullable CellSelection newSelection)
+    public Pair<VirtualGrid.ListenerOutcome, FXPlatformConsumer<VisibleBounds>> selectionChanged(CellSelection oldSelection, CellSelection newSelection)
     {
         if (tableHeaderItem != null)
             tableHeaderItem.setSelected(newSelection instanceof EntireTableSelection && newSelection.includes(this));

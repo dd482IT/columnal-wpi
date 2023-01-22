@@ -42,23 +42,20 @@ import java.util.concurrent.ExecutionException;
 /**
  * Created by neil on 17/04/2017.
  */
-@OnThread(Tag.Any)
 public class TranslationUtility
 {
-    private static final LoadingCache<@LocalizableKey String, Optional<@Localized String>> cached = CacheBuilder.newBuilder().build(new CacheLoader<@LocalizableKey String, Optional<@Localized String>>()
+    private static final LoadingCache<String, Optional<String>> cached = CacheBuilder.newBuilder().build(new CacheLoader<String, Optional<String>>()
     {
         @Override
-        public Optional<@Localized String> load(@LocalizableKey String key) throws Exception
+        public Optional<String> load(String key) throws Exception
         {
             return Optional.ofNullable(loadString(key));
         }
     });
     
-    @OnThread(value = Tag.Any, requireSynchronized = true)
-    private static @MonotonicNonNull List<ResourceBundle> resources;
+    private static List<ResourceBundle> resources;
 
-    @OnThread(Tag.Any)
-    private static synchronized @Nullable List<ResourceBundle> getResources()
+    private static synchronized List<ResourceBundle> getResources()
     {
         if (resources == null)
         {
@@ -90,7 +87,6 @@ public class TranslationUtility
      * If the key is not found, the key itself is returned as the string
      */
     @SuppressWarnings("i18n") // Because we return key if there's an issue
-    @OnThread(Tag.Any)
     public static @Localized String getString(@LocalizableKey String key, String... values)
     {
         @Localized String lookedUp = null;
@@ -120,17 +116,17 @@ public class TranslationUtility
         }
     }
 
-    private static @Localized @Nullable String loadString(@LocalizableKey String key)
+    private static String loadString(String key)
     {
-        @Nullable String lookedUp = null;
-        @Nullable List<ResourceBundle> res = getResources();
+        String lookedUp = null;
+        List<ResourceBundle> res = getResources();
         if (res != null)
         {
             for (ResourceBundle r : res)
             {
                 try
                 {
-                    @Nullable String local = r.getString(key);
+                    String local = r.getString(key);
                     if (local != null)
                     {
                         lookedUp = local;
@@ -147,7 +143,6 @@ public class TranslationUtility
     }
 
     @SuppressWarnings("i18n") // Because we return key if there's an issue
-    @OnThread(Tag.Any)
     public static StyledString getStyledString(@LocalizableKey String key, String... values)
     {
         return StyledString.s(getString(key, values));

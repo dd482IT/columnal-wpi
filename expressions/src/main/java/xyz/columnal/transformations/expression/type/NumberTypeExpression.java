@@ -42,9 +42,9 @@ import java.util.Objects;
 
 public class NumberTypeExpression extends TypeExpression
 {
-    private final @Nullable @Recorded UnitExpression unitExpression;
+    private final UnitExpression unitExpression;
 
-    public NumberTypeExpression(@Nullable @Recorded UnitExpression unitExpression)
+    public NumberTypeExpression(UnitExpression unitExpression)
     {
         this.unitExpression = unitExpression;
     }
@@ -59,7 +59,7 @@ public class NumberTypeExpression extends TypeExpression
     }
 
     @Override
-    public @Nullable DataType toDataType(TypeManager typeManager)
+    public DataType toDataType(TypeManager typeManager)
     {
         try
         {
@@ -77,7 +77,7 @@ public class NumberTypeExpression extends TypeExpression
     }
 
     @Override
-    public @Recorded JellyType toJellyType(@Recorded NumberTypeExpression this, TypeManager typeManager, JellyRecorder jellyRecorder) throws InternalException, UnJellyableTypeExpression
+    public JellyType toJellyType(NumberTypeExpression this, TypeManager typeManager, JellyRecorder jellyRecorder) throws InternalException, UnJellyableTypeExpression
     {
         if (unitExpression == null)
             return jellyRecorder.record(JellyType.number(JellyUnit.fromConcrete(Unit.SCALAR)), this);
@@ -107,13 +107,13 @@ public class NumberTypeExpression extends TypeExpression
             return StyledString.concat(StyledString.s("Number{"), unitExpression.toStyledString(), StyledString.s("}"));
     }
 
-    public @Nullable UnitExpression _test_getUnits()
+    public UnitExpression _test_getUnits()
     {
         return unitExpression;
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -141,7 +141,7 @@ public class NumberTypeExpression extends TypeExpression
     }
 
     @Override
-    public @Nullable @ExpressionIdentifier String asIdent()
+    public String asIdent()
     {
         if (unitExpression == null)
             return "Number";

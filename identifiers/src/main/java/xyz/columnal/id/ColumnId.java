@@ -35,13 +35,12 @@ import java.io.Serializable;
  *
  * Serializable for interface reasons, for not saving to file
  */
-@OnThread(Tag.Any)
 public class ColumnId implements Comparable<ColumnId>, Serializable, StyledShowable
 {
     private static final long serialVersionUID = -6813720608766860501L;
-    private final @ExpressionIdentifier String columnId;
+    private final String columnId;
 
-    public ColumnId(@ExpressionIdentifier String columnId)
+    public ColumnId(String columnId)
     {
         this.columnId = columnId;
     }
@@ -52,7 +51,7 @@ public class ColumnId implements Comparable<ColumnId>, Serializable, StyledShowa
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -81,7 +80,7 @@ public class ColumnId implements Comparable<ColumnId>, Serializable, StyledShowa
     }
 
     @SuppressWarnings("i18n")
-    public @Localized @ExpressionIdentifier String getRaw()
+    public @Localized String getRaw()
     {
         return columnId;
     }

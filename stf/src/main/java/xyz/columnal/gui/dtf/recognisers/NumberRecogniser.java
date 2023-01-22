@@ -31,10 +31,10 @@ import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.ParseProgress;
 import xyz.columnal.utility.Utility;
 
-public class NumberRecogniser extends Recogniser<@ImmediateValue Number>
+public class NumberRecogniser extends Recogniser<Number>
 {
     @Override
-    public Either<ErrorDetails, SuccessDetails<@ImmediateValue Number>> process(ParseProgress orig, boolean immediatelySurroundedByRoundBrackets)
+    public Either<ErrorDetails, SuccessDetails<Number>> process(ParseProgress orig, boolean immediatelySurroundedByRoundBrackets)
     {
         ParseProgress pp = orig.skipSpaces();
         String sign = "";
@@ -78,9 +78,9 @@ public class NumberRecogniser extends Recogniser<@ImmediateValue Number>
         }
     }
 
-    private Either<ErrorDetails, SuccessDetails<@ImmediateValue Number>> success(String src, ParseProgress pp) throws UserException, InternalException
+    private Either<ErrorDetails, SuccessDetails<Number>> success(String src, ParseProgress pp) throws UserException, InternalException
     {
-        @ImmediateValue Number number = Utility.parseNumber(src);
+        Number number = Utility.parseNumber(src);
         String repl = src;
         try
         {

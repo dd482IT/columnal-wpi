@@ -45,7 +45,7 @@ import java.util.Optional;
  */
 public class RaiseExpression extends BinaryOpExpression
 {
-    public RaiseExpression(@Recorded Expression lhs, @Recorded Expression rhs)
+    public RaiseExpression(Expression lhs, Expression rhs)
     {
         super(lhs, rhs);
     }
@@ -57,17 +57,16 @@ public class RaiseExpression extends BinaryOpExpression
     }
 
     @Override
-    public BinaryOpExpression copy(@Nullable @Recorded Expression replaceLHS, @Nullable @Recorded Expression replaceRHS)
+    public BinaryOpExpression copy(Expression replaceLHS, Expression replaceRHS)
     {
         return new RaiseExpression(replaceLHS == null ? lhs : replaceLHS, replaceRHS == null ? rhs : replaceRHS);
     }
 
     @Override
-    @RequiresNonNull({"lhsType", "rhsType"})
-    protected @Nullable CheckedExp checkBinaryOp(@Recorded RaiseExpression this, ColumnLookup data, TypeState typeState, ExpressionKind kind, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    protected CheckedExp checkBinaryOp(RaiseExpression this, ColumnLookup data, TypeState typeState, ExpressionKind kind, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        final @NonNull @Recorded TypeExp lhsTypeFinal = lhsType.typeExp;
-        final @NonNull TypeExp rhsTypeFinal = rhsType.typeExp;
+        final TypeExp lhsTypeFinal = lhsType.typeExp;
+        final TypeExp rhsTypeFinal = rhsType.typeExp;
         
         // Raise expression is sort of an overloaded operator.  If the right-hand side is an integer
         // constant, it adjusts the units on the left-hand side.  Otherwise, it requires unit-less
@@ -135,7 +134,7 @@ public class RaiseExpression extends BinaryOpExpression
     }
 
     @Override
-    public @Value Object getValueBinaryOp(ValueResult lhsValue, ValueResult rhsValue) throws UserException, InternalException
+    public Object getValueBinaryOp(ValueResult lhsValue, ValueResult rhsValue) throws UserException, InternalException
     {
         return Utility.raiseNumber(Utility.cast(lhsValue.value, Number.class), Utility.cast(rhsValue.value, Number.class));
     }

@@ -102,7 +102,6 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
 
 
     @Override
-    @OnThread(value = Tag.Simulation,ignoreParent = true)
     @SuppressWarnings("nullness")
     public TypecheckInfo generate(SourceOfRandomness r, GenerationStatus generationStatus)
     {
@@ -123,7 +122,6 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
     }
 
     @SuppressWarnings("nullness") // Some problem with Collectors.toList
-    @OnThread(value = Tag.Simulation, ignoreParent = true)
     private TypecheckInfo getTypecheckInfo(final SourceOfRandomness r, final GenExpressionValueForwards gen, TypeManager typeManager, Expression expression)
     {
         try
@@ -134,14 +132,13 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
                     @Nullable Expression failedCopy = p.getFirst()._test_typeFailure(r.toJDKRandom(), new _test_TypeVary()
                     {
                         @Override
-                        @OnThread(value = Tag.Simulation, ignoreParent = true)
                         public Expression getDifferentType(@Nullable TypeExp type) throws InternalException, UserException
                         {
                             if (type == null)
                                 throw new RuntimeException("Getting different type than failure?");
                             DataType newType = pickTypeOtherThan(type, r);
                             //System.err.println("Changed old type " + type + " into " + newType + " when replacing " + p.getFirst());
-                            Pair<List<@Value Object>, Expression> replacement = gen.makeOfType(newType);
+                            Pair<List<Object>, Expression> replacement = gen.makeOfType(newType);
                             // Special case: don't let it be empty array because it may type check
                             // against type even though we don't want it to:
                             while (replacement.getSecond().equals(new ArrayExpression(ImmutableList.of())))
@@ -152,14 +149,12 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
                         }
 
                         @Override
-                        @OnThread(value = Tag.Simulation, ignoreParent = true)
                         public Expression getAnyType() throws UserException, InternalException
                         {
                             return gen.makeOfType(pickType(r)).getSecond();
                         }
 
                         @Override
-                        @OnThread(value = Tag.Simulation, ignoreParent = true)
                         public Expression getNonNumericType() throws InternalException, UserException
                         {
                             DataType newType = pickNonNumericType(r);
@@ -168,7 +163,6 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
                         }
 
                         @Override
-                        @OnThread(value = Tag.Simulation, ignoreParent = true)
                         public Expression getType(Predicate<DataType> mustMatch) throws InternalException, UserException
                         {
                             for (int i = 0; i < 100; i++)
@@ -181,7 +175,6 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
                         }
 
                         @Override
-                        @OnThread(value = Tag.Simulation, ignoreParent = true)
                         public List<Expression> getTypes(int amount, ExFunction<List<DataType>, Boolean> mustMatch) throws InternalException, UserException
                         {
                             for (int i = 0; i < 100; i++)
@@ -246,7 +239,6 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
     }
 
     @Override
-    @OnThread(value = Tag.Simulation, ignoreParent = true)
     public List<TypecheckInfo> doShrink(SourceOfRandomness random, TypecheckInfo larger)
     {
         return larger.original._test_childMutationPoints().map(p -> p.getFirst())
@@ -258,7 +250,7 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
         return gen.makeType(r);
     }
 
-    private DataType pickTypeOtherThan(@Nullable TypeExp type, SourceOfRandomness r) throws InternalException, UserException
+    private DataType pickTypeOtherThan(TypeExp type, SourceOfRandomness r) throws InternalException, UserException
     {
         DataType picked;
         do

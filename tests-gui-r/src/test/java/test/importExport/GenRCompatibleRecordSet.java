@@ -69,7 +69,6 @@ public class GenRCompatibleRecordSet extends Generator<RCompatibleRecordSet>
     }
 
     @Override
-    @OnThread(value = Tag.Simulation, ignoreParent = true)
     public RCompatibleRecordSet generate(SourceOfRandomness random, GenerationStatus status)
     {
         boolean tibbleOnly = random.nextBoolean();
@@ -88,8 +87,8 @@ public class GenRCompatibleRecordSet extends Generator<RCompatibleRecordSet>
             return new RCompatibleRecordSet(new KnownLengthRecordSet(TBasicUtil.<SimulationFunction<RecordSet, EditableColumn>>makeList(random, numColumns, numColumns, () -> {
                 DataTypeAndValueMaker type = dataTypeMaker.makeType();
                 @SuppressWarnings("identifier")
-                @ExpressionIdentifier String columnId = "Col " + nextCol[0]++;
-                return ColumnUtility.makeImmediateColumn(type.getDataType(), new ColumnId(columnId), TBasicUtil.<Either<String, @Value Object>>makeList(random, numRows, numRows, () -> Either.<String, @Value Object>right(type.makeValue())), type.makeValue());
+                String columnId = "Col " + nextCol[0]++;
+                return ColumnUtility.makeImmediateColumn(type.getDataType(), new ColumnId(columnId), TBasicUtil.<Either<String, Object>>makeList(random, numRows, numRows, () -> Either.<String, Object>right(type.makeValue())), type.makeValue());
             }), numRows), dataTypeMaker.getTypeManager(), tibbleOnly ? ImmutableSet.of(TableType.TIBBLE) : ImmutableSet.of(TableType.DATA_FRAME, TableType.TIBBLE));
         }
         catch (Exception e)

@@ -66,16 +66,16 @@ public class MatchExpression extends NonOperatorExpression
     {
         private final CanonicalSpan caseLocation;
         private final ImmutableList<Pattern> patterns;
-        private final @Recorded Expression outcome;
+        private final Expression outcome;
 
-        public MatchClause(CanonicalSpan caseLocation, ImmutableList<Pattern> patterns, @Recorded Expression outcome)
+        public MatchClause(CanonicalSpan caseLocation, ImmutableList<Pattern> patterns, Expression outcome)
         {
             this.caseLocation = caseLocation;
             this.patterns = patterns;
             this.outcome = outcome;
         }
         
-        public static MatchClause unrecorded(ImmutableList<Pattern> patterns, @Recorded Expression outcome)
+        public static MatchClause unrecorded(ImmutableList<Pattern> patterns, Expression outcome)
         {
             return new MatchClause(new CanonicalSpan(CanonicalLocation.ZERO, CanonicalLocation.ZERO), patterns, outcome);
         }
@@ -85,7 +85,7 @@ public class MatchExpression extends NonOperatorExpression
             return patterns;
         }
 
-        public @Recorded Expression getOutcome()
+        public Expression getOutcome()
         {
             return outcome;
         }
@@ -99,7 +99,7 @@ public class MatchExpression extends NonOperatorExpression
         /**
          * Returns pattern match type, outcome type
          */
-        public @Nullable Pair<List<TypeExp>, TypeExp> check(ColumnLookup data, TypeState state, ErrorAndTypeRecorder onError) throws InternalException, UserException
+        public Pair<List<TypeExp>, TypeExp> check(ColumnLookup data, TypeState state, ErrorAndTypeRecorder onError) throws InternalException, UserException
         {
             TypeExp[] patternTypes = new TypeExp[patterns.size()];
             TypeState[] rhsStates = new TypeState[patterns.size()];
@@ -110,14 +110,14 @@ public class MatchExpression extends NonOperatorExpression
             }
             for (int i = 0; i < patterns.size(); i++)
             {
-                @Nullable CheckedExp ts = patterns.get(i).check(data, state, onError);
+                CheckedExp ts = patterns.get(i).check(data, state, onError);
                 if (ts == null)
                     return null;
                 patternTypes[i] = ts.typeExp;
                 rhsStates[i] = ts.typeState;
             }
             TypeState rhsState = TypeState.intersect(Arrays.asList(rhsStates));
-            @Nullable CheckedExp outcomeType = outcome.check(data, rhsState, ExpressionKind.EXPRESSION, LocationInfo.UNIT_DEFAULT, onError);
+            CheckedExp outcomeType = outcome.check(data, rhsState, ExpressionKind.EXPRESSION, LocationInfo.UNIT_DEFAULT, onError);
             if (outcomeType == null)
                 return null;
             else
@@ -125,8 +125,7 @@ public class MatchExpression extends NonOperatorExpression
         }
 
         //Returns null if no match
-        @OnThread(Tag.Simulation)
-        public ValueResult matches(@Value Object value, EvaluateState state) throws EvaluationException, InternalException
+        public ValueResult matches(Object value, EvaluateState state) throws EvaluationException, InternalException
         {
             ImmutableList.Builder<ValueResult> patternsSoFar = ImmutableList.builderWithExpectedSize(patterns.size());
             for (int i = 0; i < patterns.size(); i++)
@@ -141,18 +140,17 @@ public class MatchExpression extends NonOperatorExpression
             return result(OptionalInt.empty(), state, patternsSoFar.build());
         }
         
-        @OnThread(Tag.Simulation)
         private ValueResult result(OptionalInt matchedPatternIndex, EvaluateState state, ImmutableList<ValueResult> children)
         {
             return new ValueResult(DataTypeUtility.value(matchedPatternIndex.isPresent()), state)
             {
                 @Override
-                public Explanation makeExplanation(@Nullable ExecutionType overrideExecutionType) throws InternalException
+                public Explanation makeExplanation(ExecutionType overrideExecutionType) throws InternalException
                 {
                     return new Explanation(MatchClause.this, overrideExecutionType != null ? overrideExecutionType : ExecutionType.MATCH, evaluateState, value, ImmutableList.of(), null)
                     {
                         @Override
-                        public @OnThread(Tag.Simulation) @Nullable StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation, ExpressionStyler expressionStyler, ImmutableList<ExplanationLocation> extraLocations, boolean skipIfTrivial) throws InternalException, UserException
+                        public StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation, ExpressionStyler expressionStyler, ImmutableList<ExplanationLocation> extraLocations, boolean skipIfTrivial) throws InternalException, UserException
                         {
                             // We only need to describe the patterns, if we are chosen
                             // then the outer MatchExpression will describe outcome.
@@ -161,7 +159,7 @@ public class MatchExpression extends NonOperatorExpression
                         }
 
                         @Override
-                        public @OnThread(Tag.Simulation) ImmutableList<Explanation> getDirectSubExplanations() throws InternalException
+                        public ImmutableList<Explanation> getDirectSubExplanations() throws InternalException
                         {
                             return Utility.mapListInt(children, c -> c.makeExplanation(null));
                         }
@@ -197,7 +195,7 @@ public class MatchExpression extends NonOperatorExpression
         }
 
         @Override
-        public boolean equals(@Nullable Object o)
+        public boolean equals(Object o)
         {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
@@ -234,10 +232,10 @@ public class MatchExpression extends NonOperatorExpression
      */
     public static class Pattern implements ExplanationSource
     {
-        private final @Recorded Expression pattern;
-        private final @Nullable @Recorded Expression guard;
+        private final Expression pattern;
+        private final Expression guard;
 
-        public Pattern(@Recorded Expression pattern, @Nullable @Recorded Expression guard)
+        public Pattern(Expression pattern, Expression guard)
         {
             this.pattern = pattern;
             this.guard = guard;
@@ -255,9 +253,9 @@ public class MatchExpression extends NonOperatorExpression
         /**
          * Returns pattern type, and resulting type state (including any declared vars)
          */
-        public @Nullable CheckedExp check(ColumnLookup data, TypeState state, ErrorAndTypeRecorder onError) throws InternalException, UserException
+        public CheckedExp check(ColumnLookup data, TypeState state, ErrorAndTypeRecorder onError) throws InternalException, UserException
         {
-            final @Nullable CheckedExp rhsState = pattern.check(data, state, ExpressionKind.PATTERN, LocationInfo.UNIT_CONSTRAINED, onError);
+            final CheckedExp rhsState = pattern.check(data, state, ExpressionKind.PATTERN, LocationInfo.UNIT_CONSTRAINED, onError);
             if (rhsState == null)
                 return null;
             // No need to check expression versus pattern, either is fine, but we will require Equatable either way:
@@ -265,7 +263,7 @@ public class MatchExpression extends NonOperatorExpression
             
             if (guard != null)
             {
-                @Nullable CheckedExp type = guard.check(data, rhsState.typeState, ExpressionKind.EXPRESSION, LocationInfo.UNIT_DEFAULT, onError);
+                CheckedExp type = guard.check(data, rhsState.typeState, ExpressionKind.EXPRESSION, LocationInfo.UNIT_DEFAULT, onError);
                 if (type == null || onError.recordError(guard, TypeExp.unifyTypes(TypeExp.bool(guard), type.typeExp)) == null)
                 {
                     return null;
@@ -277,8 +275,7 @@ public class MatchExpression extends NonOperatorExpression
 
         // Returns just pattern, or pattern + guard.
         // Either way, the real result is the one in last list item. 
-        @OnThread(Tag.Simulation)
-        public ImmutableList<ValueResult> match(@Value Object value, EvaluateState state) throws InternalException, EvaluationException
+        public ImmutableList<ValueResult> match(Object value, EvaluateState state) throws InternalException, EvaluationException
         {
             ValueResult patternOutcome = pattern.matchAsPattern(value, state);
             // Only check guard if initial match was valid:
@@ -301,13 +298,13 @@ public class MatchExpression extends NonOperatorExpression
             return guard == null ? patternDisplay : StyledString.concat(patternDisplay, StyledString.s(" @given "), guard.toDisplay(displayType, BracketedStatus.DONT_NEED_BRACKETS, expressionStyler));
         }
 
-        public @Recorded Expression getPattern()
+        public Expression getPattern()
         {
             return pattern;
         }
 
         @Override
-        public boolean equals(@Nullable Object o)
+        public boolean equals(Object o)
         {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
@@ -326,7 +323,7 @@ public class MatchExpression extends NonOperatorExpression
             return result;
         }
 
-        public @Nullable @Recorded Expression getGuard()
+        public Expression getGuard()
         {
             return guard;
         }
@@ -339,11 +336,11 @@ public class MatchExpression extends NonOperatorExpression
     }
 
     private final CanonicalSpan matchLocation;
-    private final @Recorded Expression expression;
+    private final Expression expression;
     private final ImmutableList<MatchClause> clauses;
     private final CanonicalSpan endLocation;
 
-    public MatchExpression(CanonicalSpan matchLocation, @Recorded Expression expression, ImmutableList<MatchClause> clauses, CanonicalSpan endLocation)
+    public MatchExpression(CanonicalSpan matchLocation, Expression expression, ImmutableList<MatchClause> clauses, CanonicalSpan endLocation)
     {
         this.matchLocation = matchLocation;
         this.expression = expression;
@@ -367,7 +364,7 @@ public class MatchExpression extends NonOperatorExpression
         ImmutableList.Builder<ValueResult> subItems = ImmutableList.builderWithExpectedSize(1 + clauses.size() + 1);
         // It's type checked so can just copy first clause:
         ValueResult originalResult = fetchSubExpression(expression, state, subItems);
-        @Value Object value = originalResult.value;
+        Object value = originalResult.value;
         for (MatchClause clause : clauses)
         {
             ValueResult patternMatch;
@@ -404,14 +401,14 @@ public class MatchExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable CheckedExp check(@Recorded MatchExpression this, ColumnLookup dataLookup, TypeState state, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public CheckedExp check(MatchExpression this, ColumnLookup dataLookup, TypeState state, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {        
         // Need to check several things:
         //   - That all of the patterns have the same type as the expression being matched
         //   - That all of the pattern guards have boolean type
         //   - That all of the outcome expressions have the same type as each other (and is what we will return)
 
-        @Nullable CheckedExp srcType = expression.check(dataLookup, state, ExpressionKind.EXPRESSION, LocationInfo.UNIT_DEFAULT, onError);
+        CheckedExp srcType = expression.check(dataLookup, state, ExpressionKind.EXPRESSION, LocationInfo.UNIT_DEFAULT, onError);
         if (srcType == null)
             return null;
         // The Equatable checks are done on the patterns, not the source item, because e.g. if all patterns match
@@ -428,25 +425,25 @@ public class MatchExpression extends NonOperatorExpression
         List<TypeExp> patternTypes = new ArrayList<>(1 + clauses.size());
         TypeExp[] outcomeTypes = new TypeExp[clauses.size()];
         // Includes the original source pattern:
-        ImmutableList.Builder<@Recorded Expression> patternExpressions = ImmutableList.builderWithExpectedSize(patternTypes.size());
+        ImmutableList.Builder<Expression> patternExpressions = ImmutableList.builderWithExpectedSize(patternTypes.size());
         // Note: patternTypes and patternExpressions should always be the same length.        
         patternTypes.add(srcType.typeExp);
         patternExpressions.add(expression);
         
         for (int i = 0; i < clauses.size(); i++)
         {
-            patternExpressions.addAll(Utility.<Pattern, @Recorded Expression>mapList(clauses.get(i).getPatterns(), p -> p.getPattern()));
-            @Nullable Pair<List<TypeExp>, TypeExp> patternAndOutcomeType = clauses.get(i).check(dataLookup, state, onError);
+            patternExpressions.addAll(Utility.<Pattern, Expression>mapList(clauses.get(i).getPatterns(), p -> p.getPattern()));
+            Pair<List<TypeExp>, TypeExp> patternAndOutcomeType = clauses.get(i).check(dataLookup, state, onError);
             if (patternAndOutcomeType == null)
                 return null;
             patternTypes.addAll(patternAndOutcomeType.getFirst());
             outcomeTypes[i] = patternAndOutcomeType.getSecond();
         }
-        ImmutableList<@Recorded Expression> immPatternExpressions = patternExpressions.build();
+        ImmutableList<Expression> immPatternExpressions = patternExpressions.build();
         
         for (int i = 0; i < immPatternExpressions.size(); i++)
         {
-            @Recorded Expression expression = immPatternExpressions.get(i);
+            Expression expression = immPatternExpressions.get(i);
             List<QuickFix<Expression>> fixesForMatchingNumericUnits = ExpressionUtil.getFixesForMatchingNumericUnits(state, new TypeProblemDetails(patternTypes.stream().map(p -> Optional.of(p)).collect(ImmutableList.<Optional<TypeExp>>toImmutableList()), immPatternExpressions, i));
             if (!fixesForMatchingNumericUnits.isEmpty())
             {
@@ -464,7 +461,7 @@ public class MatchExpression extends NonOperatorExpression
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -493,7 +490,7 @@ public class MatchExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
+    public Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
     {
         return null;
     }

@@ -35,12 +35,11 @@ import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
-@OnThread(Tag.FXPlatform)
 public class Instruction extends PopupControl implements ChangeListener<Object>
 {
     private final Label label;
 
-    public Instruction(@LocalizableKey String instructionKey, String... styleClasses)
+    public Instruction(String instructionKey, String... styleClasses)
     {
         this.label = GUI.label(instructionKey, "instruction-label");
         setSkin(new InstructionSkin());
@@ -80,7 +79,6 @@ public class Instruction extends PopupControl implements ChangeListener<Object>
     }
 
     @Override
-    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     public void changed(ObservableValue<?> observable, Object oldValue, Object newValue)
     {
         if (isShowing())
@@ -90,7 +88,6 @@ public class Instruction extends PopupControl implements ChangeListener<Object>
         }
     }
 
-    @OnThread(Tag.FX)
     private class InstructionSkin implements Skin<Instruction>
     {
         @Override

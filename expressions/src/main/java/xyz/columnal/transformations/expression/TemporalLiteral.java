@@ -43,7 +43,7 @@ public class TemporalLiteral extends Literal
 {
     private final String content;
     // The parsed version of content, if it parsed successfully, otherwise an error
-    private final Either<StyledString, @Value TemporalAccessor> value;
+    private final Either<StyledString, TemporalAccessor> value;
     private final DateTimeType literalType;
 
     public TemporalLiteral(DateTimeType literalType, String content)
@@ -51,7 +51,7 @@ public class TemporalLiteral extends Literal
         this.content = content.trim();
         this.literalType = literalType;
         StringView stringView = new StringView(content);
-        Either<StyledString, @Value TemporalAccessor> v;
+        Either<StyledString, TemporalAccessor> v;
         try
         {
             v = Either.right(DataTypeUtility.parseTemporalFlexible(new DateTimeInfo(literalType), stringView));
@@ -74,7 +74,7 @@ public class TemporalLiteral extends Literal
 
 
     @Override
-    protected @Nullable TypeExp checkType(TypeState typeState, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws InternalException
+    protected TypeExp checkType(TypeState typeState, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws InternalException
     {
         if (value.isLeft())
         {
@@ -88,7 +88,7 @@ public class TemporalLiteral extends Literal
     @Override
     public ValueResult calculateValue(EvaluateState state) throws InternalException
     {
-        return result(value.<@Value Object>eitherInt(err -> {
+        return result(value.<Object>eitherInt(err -> {
             throw new InternalException("Executing with unrecognised date/time literal: " + content + " " + err);
         }, v -> v), state);
     }
@@ -129,7 +129,7 @@ public class TemporalLiteral extends Literal
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;

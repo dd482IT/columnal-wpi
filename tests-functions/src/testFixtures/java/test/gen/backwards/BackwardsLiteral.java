@@ -61,7 +61,7 @@ public class BackwardsLiteral extends BackwardsProvider
     }
 
     @Override
-    public List<ExpressionMaker> terminals(DataType targetType, @Value Object targetValue) throws InternalException, UserException
+    public List<ExpressionMaker> terminals(DataType targetType, Object targetValue) throws InternalException, UserException
     {
         return targetType.apply(new DataTypeVisitor<List<ExpressionMaker>>()
         {
@@ -100,7 +100,7 @@ public class BackwardsLiteral extends BackwardsProvider
             public List<ExpressionMaker> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 return ImmutableList.of(() -> {
-                    @Value TaggedValue taggedValue = (TaggedValue) targetValue;
+                    TaggedValue taggedValue = (TaggedValue) targetValue;
                     TagType<DataType> tag = tags.get(taggedValue.getTagIndex());
 
                     TaggedTypeDefinition typeDefinition = parent.getTypeManager().lookupDefinition(typeName);
@@ -108,7 +108,7 @@ public class BackwardsLiteral extends BackwardsProvider
                         throw new InternalException("Looked up type but null definition: " + typeName);
                     TagInfo tagInfo = typeDefinition._test_getTagInfos().get(taggedValue.getTagIndex());
                     DataType inner = tag.getInner();
-                    @Value Object innerValue = taggedValue.getInner();
+                    Object innerValue = taggedValue.getInner();
                     if (inner == null || innerValue == null)
                         return TFunctionUtil.tagged(parent.getTypeManager().getUnitManager(), tagInfo, null, targetType, true);
                     else
@@ -117,12 +117,12 @@ public class BackwardsLiteral extends BackwardsProvider
             }
 
             @Override
-            public List<ExpressionMaker> record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, InternalException
+            public List<ExpressionMaker> record(ImmutableMap<String, DataType> fields) throws InternalException, InternalException
             {
                 Record record = Utility.cast(targetValue, Record.class);
                 return ImmutableList.of(() -> {
-                    ArrayList<Pair<@ExpressionIdentifier String, Expression>> members = new ArrayList<>();
-                    for (Entry<@ExpressionIdentifier String, DataType> entry : fields.entrySet())
+                    ArrayList<Pair<String, Expression>> members = new ArrayList<>();
+                    for (Entry<String, DataType> entry : fields.entrySet())
                     {
                         List<ExpressionMaker> terminals = terminals(entry.getValue(), record.getField(entry.getKey()));
                         members.add(new Pair<>(entry.getKey(), terminals.get(r.nextInt(terminals.size())).make()));
@@ -149,7 +149,7 @@ public class BackwardsLiteral extends BackwardsProvider
 
     // Structural semi-literals: structural outer layer, then recurse for inner item.
     @Override
-    public List<ExpressionMaker> deep(int maxLevels, DataType targetType, @Value Object targetValue) throws InternalException, UserException
+    public List<ExpressionMaker> deep(int maxLevels, DataType targetType, Object targetValue) throws InternalException, UserException
     {
         return targetType.apply(new DataTypeVisitor<List<ExpressionMaker>>()
         {
@@ -181,7 +181,7 @@ public class BackwardsLiteral extends BackwardsProvider
             public List<ExpressionMaker> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 return ImmutableList.of(() -> {
-                    @Value TaggedValue taggedValue = (TaggedValue) targetValue;
+                    TaggedValue taggedValue = (TaggedValue) targetValue;
                     TagType<DataType> tag = tags.get(taggedValue.getTagIndex());
 
                     TaggedTypeDefinition typeDefinition = parent.getTypeManager().lookupDefinition(typeName);
@@ -189,7 +189,7 @@ public class BackwardsLiteral extends BackwardsProvider
                         throw new InternalException("Looked up type but null definition: " + typeName);
                     TagInfo tagInfo = typeDefinition._test_getTagInfos().get(taggedValue.getTagIndex());
                     DataType inner = tag.getInner();
-                    @Value Object innerValue = taggedValue.getInner();
+                    Object innerValue = taggedValue.getInner();
                     if (inner == null || innerValue == null)
                         return TFunctionUtil.tagged(parent.getTypeManager().getUnitManager(), tagInfo, null, targetType, true);
                     else
@@ -198,12 +198,12 @@ public class BackwardsLiteral extends BackwardsProvider
             }
 
             @Override
-            public List<ExpressionMaker> record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, InternalException
+            public List<ExpressionMaker> record(ImmutableMap<String, DataType> fields) throws InternalException, InternalException
             {
                 Record record = Utility.cast(targetValue, Record.class);
                 return ImmutableList.of(() -> {
-                    ArrayList<Pair<@ExpressionIdentifier String, Expression>> members = new ArrayList<>();
-                    for (Entry<@ExpressionIdentifier String, DataType> entry : fields.entrySet())
+                    ArrayList<Pair<String, Expression>> members = new ArrayList<>();
+                    for (Entry<String, DataType> entry : fields.entrySet())
                     {
                         members.add(new Pair<>(entry.getKey(), parent.make(entry.getValue(), record.getField(entry.getKey()), maxLevels - 1)));
                     }

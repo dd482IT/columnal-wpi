@@ -44,7 +44,7 @@ import java.util.stream.Stream;
 public class MemoryArrayColumn extends EditableColumn
 {
     private final ArrayColumnStorage storage;
-    private final @Value ListEx defaultValue;
+    private final ListEx defaultValue;
 
     public MemoryArrayColumn(RecordSet recordSet, ColumnId title, DataType inner, List<Either<String, ListEx>> values, ListEx defaultValue) throws InternalException
     {
@@ -55,7 +55,6 @@ public class MemoryArrayColumn extends EditableColumn
     }
 
     @Override
-    @OnThread(Tag.Any)
     public synchronized DataTypeValue getType()
     {
         return storage.getType();
@@ -81,20 +80,19 @@ public class MemoryArrayColumn extends EditableColumn
 
 
     @Override
-    public @OnThread(Tag.Simulation) SimulationRunnable insertRows(int index, int count) throws InternalException, UserException
+    public SimulationRunnable insertRows(int index, int count) throws InternalException, UserException
     {
         return storage.insertRows(index, Utility.<Either<String, ListEx>>replicate(count, Either.<String, ListEx>right(defaultValue)));
     }
 
     @Override
-    public @OnThread(Tag.Simulation) SimulationRunnable removeRows(int index, int count) throws InternalException, UserException
+    public SimulationRunnable removeRows(int index, int count) throws InternalException, UserException
     {
         return storage.removeRows(index, count);
     }
 
     @Override
-    @OnThread(Tag.Any)
-    public @Value Object getDefaultValue()
+    public Object getDefaultValue()
     {
         return defaultValue;
     }

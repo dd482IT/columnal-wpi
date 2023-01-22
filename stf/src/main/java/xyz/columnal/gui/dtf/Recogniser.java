@@ -32,7 +32,7 @@ import xyz.columnal.utility.ParseProgress;
 
 public abstract class Recogniser<T>
 {
-    protected  @Nullable Pair<String, ParseProgress> consumeDigits(ParseProgress parseProgress)
+    protected  Pair<String, ParseProgress> consumeDigits(ParseProgress parseProgress)
     {
         int i;
         for (i = parseProgress.curCharIndex; i < parseProgress.src.length(); i++)
@@ -65,12 +65,12 @@ public abstract class Recogniser<T>
     
     public static class SuccessDetails<T>
     {
-        public final @NonNull @ImmediateValue T value;
+        public final T value;
         public final String immediateReplacementText;
         public final ImmutableList<StyleSpanInfo> styles;
         public final ParseProgress parseProgress;
 
-        private SuccessDetails(@NonNull @ImmediateValue T value, String immediateReplacementText, ImmutableList<StyleSpanInfo> styles, ParseProgress parseProgress)
+        private SuccessDetails(T value, String immediateReplacementText, ImmutableList<StyleSpanInfo> styles, ParseProgress parseProgress)
         {
             this.value = value;
             this.immediateReplacementText = immediateReplacementText;
@@ -78,7 +78,7 @@ public abstract class Recogniser<T>
             this.parseProgress = parseProgress;
         }
 
-        public SuccessDetails<@ImmediateValue Object> asObject()
+        public SuccessDetails<Object> asObject()
         {
             return new SuccessDetails<>(value, immediateReplacementText, styles, parseProgress);
         }
@@ -115,12 +115,12 @@ public abstract class Recogniser<T>
         return Either.left(new ErrorDetails(StyledString.s(msg), errorPosition));
     }
 
-    protected Either<ErrorDetails, SuccessDetails<T>> success(@NonNull @ImmediateValue T value, String replacementText, ParseProgress parseProgress)
+    protected Either<ErrorDetails, SuccessDetails<T>> success(T value, String replacementText, ParseProgress parseProgress)
     {
         return Either.right(new SuccessDetails<T>(value, replacementText, ImmutableList.of(), parseProgress));
     }
 
-    protected Either<ErrorDetails, SuccessDetails<T>> success(@NonNull @ImmediateValue T value, String replacementText, ImmutableList<StyleSpanInfo> styleSpanInfos, ParseProgress parseProgress)
+    protected Either<ErrorDetails, SuccessDetails<T>> success(T value, String replacementText, ImmutableList<StyleSpanInfo> styleSpanInfos, ParseProgress parseProgress)
     {
         return Either.right(new SuccessDetails<T>(value, replacementText, styleSpanInfos, parseProgress));
     }

@@ -42,7 +42,7 @@ public class InvalidSingleUnitExpression extends UnitExpression
     }
 
     @Override
-    public JellyUnit asUnit(@Recorded InvalidSingleUnitExpression this, UnitManager unitManager) throws UnitLookupException
+    public JellyUnit asUnit(InvalidSingleUnitExpression this, UnitManager unitManager) throws UnitLookupException
     {
         throw new UnitLookupException(StyledString.s("Invalid unit name"), this, ImmutableList.of());
     }
@@ -57,7 +57,7 @@ public class InvalidSingleUnitExpression extends UnitExpression
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -94,7 +94,7 @@ public class InvalidSingleUnitExpression extends UnitExpression
     // IdentExpression if possible, otherwise InvalidIdentExpression
     public static UnitExpression identOrUnfinished(String src)
     {
-        @UnitIdentifier String valid = IdentifierUtility.asUnitIdentifier(src);
+        String valid = IdentifierUtility.asUnitIdentifier(src);
         if (valid != null)
             return new SingleUnitExpression(valid);
         else

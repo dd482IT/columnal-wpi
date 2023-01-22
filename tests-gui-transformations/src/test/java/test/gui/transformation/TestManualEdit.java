@@ -107,15 +107,14 @@ import java.util.function.Supplier;
 
 import static org.junit.Assert.*;
 
-@RunWith(JUnitQuickcheck.class)
 public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, ScrollToTrait, PopupTrait, ClickTableLocationTrait, EnterStructuredValueTrait
 {
     private static final class ValueMaker
     {
         private final DataType dataType;
         private static final GenValueSpecifiedType genValue = new GenValueSpecifiedType();
-        private static @MonotonicNonNull SourceOfRandomness sourceOfRandomness;
-        private static @MonotonicNonNull GenerationStatus generationStatus;
+        private static SourceOfRandomness sourceOfRandomness;
+        private static GenerationStatus generationStatus;
         
         public ValueMaker(DataType dataType, Random random)
         {
@@ -132,19 +131,16 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
             return dataType;
         }
 
-        @OnThread(Tag.Simulation)
-        public @Value Object makeValue() throws InternalException, UserException
+        public Object makeValue() throws InternalException, UserException
         {
             // Can't ever be null because initialised when first object is created
             return genValue.generate(TBasicUtil.checkNonNull(sourceOfRandomness), TBasicUtil.checkNonNull(generationStatus)).makeValue(dataType);
         }
     }
     
-    @Property(trials = 5)
-    @OnThread(Tag.Simulation)
     public void propManualEdit(
-            @From(GenDataAndTransforms.class) TableManager original,
-            @From(GenRandom.class) Random r) throws Exception
+            TableManager original,
+            Random r) throws Exception
     {
         MainWindowActions mainWindowActions = TAppUtil.openDataAsTable(windowToUse, original).get();
         TFXUtil.sleep(5000);
@@ -162,7 +158,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
         MatcherAssert.assertThat("Table" + findSrc.get() + " has one or more columns", srcColumnCount, Matchers.greaterThanOrEqualTo(1));
         int replaceKeyColumnIndex = r.nextInt(5) == 1 ? -1 : r.nextInt(srcColumnCount);
         // Fetches the column that is being used for the manual edit primary key.  Null means using row number.
-        ExSupplier<@Nullable Column> findReplaceKeyColumn = () -> replaceKeyColumnIndex == -1 ? null : findSrc.get().getData().getColumns().get(replaceKeyColumnIndex);
+        ExSupplier<Column> findReplaceKeyColumn = () -> replaceKeyColumnIndex == -1 ? null : findSrc.get().getData().getColumns().get(replaceKeyColumnIndex);
 
         // Start by checking the original values are as expected if we copy them::
         TFXUtil.sleep(500);
@@ -215,11 +211,11 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
 
         // Now time to make some replacements
 
-        @TableDataRowIndex int length = findSrc.get().getData().getLength();
+        int length = findSrc.get().getData().getLength();
         // Pass true if you require a row with a unique replacement key,
         // pass false if you just want a valid row number
         @SuppressWarnings("units")
-        Function<Boolean, @TableDataRowIndex Integer> makeRowIndex = unique -> {
+        Function<Boolean, Integer> makeRowIndex = unique -> {
             if (unique)
                 return rowIndexesWithUniqueKey.get(r.nextInt(rowIndexesWithUniqueKey.size()));
             else
@@ -227,7 +223,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
         };
         int numColumns = findSrc.get().getData().getColumns().size();
         @SuppressWarnings("units")
-        Supplier<@TableDataColIndex Integer> makeColIndex = () -> r.nextInt(numColumns);
+        Supplier<Integer> makeColIndex = () -> r.nextInt(numColumns);
 
         HashMap<ColumnId, TreeMap<ComparableValue, ComparableEither<String, ComparableValue>>> replacementsSoFar = new HashMap<>();
 
@@ -238,18 +234,18 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
         {
             System.out.println("Attempting to creating manual edit transformation by editing source: " + findSrc.get().getClass());
             // Let's pick a location and edit it
-            @TableDataRowIndex int row = makeRowIndex.apply(true);
-            @TableDataColIndex int col = makeColIndex.get();
+            int row = makeRowIndex.apply(true);
+            int col = makeColIndex.get();
 
-            @Nullable @Value Object replaceKey;
+            Object replaceKey;
             Column replaceKeyColumn = findReplaceKeyColumn.get();
             if (replaceKeyColumn == null)
                 replaceKey = DataTypeUtility.value(new BigDecimal(row));
             else
                 replaceKey = TBasicUtil.getSingleCollapsedData(replaceKeyColumn.getType(), row).leftToNull();
 
-            SimulationFunction<@Value Object, Boolean> equalToExistingKey = v -> TBasicUtil.getSingleCollapsedData(findSrc.get().getData().getColumns().get(col).getType(), row).eitherEx(e -> -1, x -> Utility.compareValues(x, v)) == 0;
-            @Value Object value = columnTypes.get(col).makeValue();
+            SimulationFunction<Object, Boolean> equalToExistingKey = v -> TBasicUtil.getSingleCollapsedData(findSrc.get().getData().getColumns().get(col).getType(), row).eitherEx(e -> -1, x -> Utility.compareValues(x, v)) == 0;
+            Object value = columnTypes.get(col).makeValue();
             for (int i = 0; i < 5 && equalToExistingKey.apply(value); i++)
             {
                 value = columnTypes.get(col).makeValue();
@@ -272,7 +268,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
 
                 CellPosition cellPos = keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), mainWindowActions._test_getTableManager(), srcTableId, row, col);
 
-                VersionedSTF oldCell = TBasicUtil.checkNonNull(TFXUtil.<@Nullable VersionedSTF>fx(() -> mainWindowActions._test_getDataCell(cellPos)));
+                VersionedSTF oldCell = TBasicUtil.checkNonNull(TFXUtil.<VersionedSTF>fx(() -> mainWindowActions._test_getDataCell(cellPos)));
                 String oldContent = TFXUtil.fx(() -> oldCell._test_getGraphicalText());
                 //if (!oldContent.contains("\u2026"))
                     //assertEquals(oldContent, TestUtil.getSingleCollapsedData(findSrc.get().getData().getColumns().get(col).getType(), row));
@@ -288,7 +284,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
                 assertNotShowing("Alert should be dismissed", ".alert");
 
                 sleep(1000);
-                VersionedSTF newCell = TBasicUtil.checkNonNull(TFXUtil.<@Nullable VersionedSTF>fx(() -> mainWindowActions._test_getDataCell(cellPos)));
+                VersionedSTF newCell = TBasicUtil.checkNonNull(TFXUtil.<VersionedSTF>fx(() -> mainWindowActions._test_getDataCell(cellPos)));
                 //if (!oldContent.contains("\u2026"))
                     //assertEquals(oldContent, TestUtil.getSingleCollapsedData(findSrc.get().getData().getColumns().get(col).getType(), row));
                 assertEquals("Cell: " + newCell, oldContent, TFXUtil.fx(() -> newCell._test_getGraphicalText()));
@@ -336,7 +332,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
 
         TableId manualEditId = ManualEdit.suggestedName(Utility.onNullable(findReplaceKeyColumn.get(), c -> c.getName()), replacementsSoFar);
         ExSupplier<ManualEdit> findManualEdit = () -> (ManualEdit) mainWindowActions._test_getTableManager().getSingleTableOrThrow(manualEditId);
-        TableDisplay manualEditDisplay = TBasicUtil.checkNonNull((TableDisplay) TFXUtil.<@Nullable TableDisplayBase>fx(() -> findManualEdit.get().getDisplay()));
+        TableDisplay manualEditDisplay = TBasicUtil.checkNonNull((TableDisplay) TFXUtil.<TableDisplayBase>fx(() -> findManualEdit.get().getDisplay()));
 
         ImmutableSet<TableId> idsBeforeNewSort = getTableIdSet(mainWindowActions);
         // Add a sort transformation, sorting the edit transformation by a random column:
@@ -362,10 +358,10 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
         int numFurtherEdits = r.nextInt(10);
         for (int i = 0; i < numFurtherEdits; i++)
         {
-            @TableDataRowIndex int row = makeRowIndex.apply(true);
-            @TableDataColIndex int col = makeColIndex.get();
+            int row = makeRowIndex.apply(true);
+            int col = makeColIndex.get();
             
-            @Nullable @Value Object replaceKey;
+            Object replaceKey;
             {
                 Column replaceKeyColumn = findReplaceKeyColumn.get();
                 if (replaceKeyColumn == null)
@@ -374,7 +370,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
                     replaceKey = TBasicUtil.getSingleCollapsedData(replaceKeyColumn.getType(), row).leftToNull();
             }
             
-            @Value Object value = columnTypes.get(col).makeValue();
+            Object value = columnTypes.get(col).makeValue();
             ComparableEither<String, ComparableValue> toEnter = ComparableEither.right(new ComparableValue(value));
             if (TBasicUtil.getSingleCollapsedData(findSrc.get().getData().getColumns().get(col).getType(), row).eitherEx(e -> -1, x -> Utility.compareValues(x, value)) == 0)
             {
@@ -508,7 +504,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
         // Copy the values from the resulting sort:
         TableId secondSortId = sortId;
         Sort secondSort = mainWindowActions._test_getTableManager().getAllTables().stream().filter(t -> t instanceof Sort && t.getId().equals(secondSortId)).map(t -> (Sort)t).findFirst().orElseThrow(() -> new RuntimeException("No edit"));
-        TableDisplay secondSortDisplay = (TableDisplay) TBasicUtil.checkNonNull(TFXUtil.<@Nullable TableDisplayBase>fx(() -> secondSort.getDisplay()));
+        TableDisplay secondSortDisplay = (TableDisplay) TBasicUtil.checkNonNull(TFXUtil.<TableDisplayBase>fx(() -> secondSort.getDisplay()));
         keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), secondSortDisplay.getMostRecentPosition());
         showContextMenu(withItemInBounds(".table-display-table-title.transformation-table-title", mainWindowActions._test_getVirtualGrid(), new RectangleBounds(secondSortDisplay.getMostRecentPosition(), secondSortDisplay.getMostRecentPosition()), (n, p) -> {}), null)
                 .clickOn(".id-tableDisplay-menu-copyValues");
@@ -536,7 +532,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
             
             ManualEditEntriesDialog.Entry toDelete = possibleItems.get(r.nextInt(possibleItems.size()));
 
-            @NonNull Node cell = TBasicUtil.checkNonNull(TFXUtil.fx(() -> listEntries._test_scrollToItem(toDelete)));
+            Node cell = TBasicUtil.checkNonNull(TFXUtil.fx(() -> listEntries._test_scrollToItem(toDelete)));
             clickOn(TFXUtil.fx(() -> cell.lookup(".small-delete")));
             // They animate out so we need to give it some time:
             TFXUtil.sleep(1000);
@@ -552,10 +548,10 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
             // Try using the hyperlink functionality to close the dialog, on random chance:
             List<Entry> entries = getEntries.get();
             Entry toClick = entries.get(r.nextInt(entries.size()));
-            @NonNull Node cell = TBasicUtil.checkNonNull(TFXUtil.fx(() -> listEntries._test_scrollToItem(toClick)));
+            Node cell = TBasicUtil.checkNonNull(TFXUtil.fx(() -> listEntries._test_scrollToItem(toClick)));
             clickOn(TFXUtil.fx(() -> cell.lookup(".jump-to-link")));
             assertNotShowing("List", ".fancy-list");
-            @TableDataColIndex int col = DataItemPosition.col(Utility.findFirstIndex(findManualEdit.get().getData().getColumnIds(), c -> c.equals(toClick.getReplacementColumn())).orElseThrow(() -> new RuntimeException("Could not find replacement column: " + toClick.getReplacementColumn())));
+            int col = DataItemPosition.col(Utility.findFirstIndex(findManualEdit.get().getData().getColumnIds(), c -> c.equals(toClick.getReplacementColumn())).orElseThrow(() -> new RuntimeException("Could not find replacement column: " + toClick.getReplacementColumn())));
             int row = -1;
             replaceKeyColumn = findReplaceKeyColumn.get();
             if (replaceKeyColumn == null)
@@ -582,10 +578,10 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
                 }
             }
             assertNotEquals(-1, row);
-            @TableDataRowIndex int rowFinal = DataItemPosition.row(row);
+            int rowFinal = DataItemPosition.row(row);
             replaceKeyColumn = findReplaceKeyColumn.get();
             Column replaceKeyColumnFinal = replaceKeyColumn;
-            waitForSuccess(() -> assertEquals("Clicking on " + toClick + " key: " + (replaceKeyColumnFinal == null ? "<row>" : replaceKeyColumnFinal.getName()) + " row: " + rowFinal + " col: " + col, TFXUtil.fx(() -> manualEditDisplay.getDataPosition(rowFinal, col)), TFXUtil.<@Nullable CellPosition>fx(() -> mainWindowActions._test_getVirtualGrid()._test_getSelection().map(s -> s.getActivateTarget()).orElse(null))));
+            waitForSuccess(() -> assertEquals("Clicking on " + toClick + " key: " + (replaceKeyColumnFinal == null ? "<row>" : replaceKeyColumnFinal.getName()) + " row: " + rowFinal + " col: " + col, TFXUtil.fx(() -> manualEditDisplay.getDataPosition(rowFinal, col)), TFXUtil.<CellPosition>fx(() -> mainWindowActions._test_getVirtualGrid()._test_getSelection().map(s -> s.getActivateTarget()).orElse(null))));
             assertNull(TFXUtil.fx(() -> lookup(".id-create-table").match(Node::isVisible).tryQuery().orElse(null)));
         }
         else
@@ -622,7 +618,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
         });
     }
 
-    public ImmutableList<ValueMaker> calculateColumnTypes(@When(seed = 2L) @From(GenRandom.class) Random r, ExSupplier<Transformation> findSrc) throws UserException, InternalException
+    public ImmutableList<ValueMaker> calculateColumnTypes(Random r, ExSupplier<Transformation> findSrc) throws UserException, InternalException
     {
         ImmutableList.Builder<ValueMaker> columnTypesBuilder = ImmutableList.builder();
         for (Column column : findSrc.get().getData().getColumns())
@@ -638,8 +634,7 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
         return mainWindowActions._test_getTableManager().getAllTables().stream().map(t -> t.getId()).collect(ImmutableSet.toImmutableSet());
     }
 
-    @OnThread(Tag.Simulation)
-    private ImmutableList<LoadedColumnInfo> makeExpected(RecordSet original, @Nullable ColumnId replacementIdentifier, HashMap<ColumnId, TreeMap<ComparableValue, ComparableEither<String, ComparableValue>>> replacements, @Nullable ColumnId sortBy) throws UserException, InternalException
+    private ImmutableList<LoadedColumnInfo> makeExpected(RecordSet original, ColumnId replacementIdentifier, HashMap<ColumnId, TreeMap<ComparableValue, ComparableEither<String, ComparableValue>>> replacements, ColumnId sortBy) throws UserException, InternalException
     {
         int length = original.getLength();
         // Maps original indexes to sorted indexes
@@ -669,16 +664,16 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
         
         return Utility.mapListExI(original.getColumns(), column -> {
             TreeMap<ComparableValue, ComparableEither<String, ComparableValue>> colReplacements = replacements.getOrDefault(column.getName(), new TreeMap<>());
-            ImmutableList.Builder<Either<String, @Value Object>> columnValues = ImmutableList.builderWithExpectedSize(original.getLength());
+            ImmutableList.Builder<Either<String, Object>> columnValues = ImmutableList.builderWithExpectedSize(original.getLength());
             for (int rowWithoutSort = 0; rowWithoutSort < original.getLength(); rowWithoutSort++)
             {
                 // We must map backwards to original row:
                 int rowWithoutSortFinal = rowWithoutSort;
                 int row = sortMap.get(rowWithoutSort);//Utility.findFirstIndex(sortMap, i -> i == rowWithoutSortFinal).orElseThrow(() -> new RuntimeException("Invalid sortMap"));
-                Either<String, @Value Object> rowKey = replacementIdentifier == null ? Either.<String, @Value Object>right(DataTypeUtility.value(row)) : TBasicUtil.getSingleCollapsedData(original.getColumn(replacementIdentifier).getType(), row);
-                @Nullable ComparableEither<String, ComparableValue> replacement = rowKey.<@Nullable ComparableEither<String, ComparableValue>>either(err -> null, k -> colReplacements.get(new ComparableValue(k)));
+                Either<String, Object> rowKey = replacementIdentifier == null ? Either.<String, Object>right(DataTypeUtility.value(row)) : TBasicUtil.getSingleCollapsedData(original.getColumn(replacementIdentifier).getType(), row);
+                ComparableEither<String, ComparableValue> replacement = rowKey.<ComparableEither<String, ComparableValue>>either(err -> null, k -> colReplacements.get(new ComparableValue(k)));
                 if (replacement != null)
-                    columnValues.add(replacement.<@Value Object>map(r -> r.getValue()));
+                    columnValues.add(replacement.<Object>map(r -> r.getValue()));
                 else
                     columnValues.add(TBasicUtil.getSingleCollapsedData(column.getType(), row));
                     
@@ -688,7 +683,6 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
         });
     }
 
-    @OnThread(Tag.Simulation)
     private void checkEqual(ImmutableList<LoadedColumnInfo> expected, Optional<ImmutableList<LoadedColumnInfo>> actual) throws InternalException, UserException
     {
         if (!actual.isPresent())
@@ -705,25 +699,23 @@ public class TestManualEdit extends FXApplicationTest implements ListUtilTrait, 
         }
     }
 
-    @OnThread(Tag.Simulation)
     @SuppressWarnings("units")
     private Optional<ImmutableList<LoadedColumnInfo>> getGraphicalContent(MainWindowActions mainWindowActions, Table table) throws InternalException, UserException
     {
         RecordSet tableData = table.getData();
         // Horribly hacky:
-        @OnThread(Tag.Any)
         class MissingCellException extends RuntimeException {}
         
         try
         {
             return Optional.of(Utility.mapListExI_Index(tableData.getColumns(), (colIndex, column) -> {
-                TableDisplay tableDisplay = TBasicUtil.checkNonNull(TFXUtil.<@Nullable TableDisplay>fx(() -> (TableDisplay) table.getDisplay()));
-                ImmutableList.Builder<Either<String, @Value Object>> values = ImmutableList.builder();
+                TableDisplay tableDisplay = TBasicUtil.checkNonNull(TFXUtil.<TableDisplay>fx(() -> (TableDisplay) table.getDisplay()));
+                ImmutableList.Builder<Either<String, Object>> values = ImmutableList.builder();
                 for (int row = 0; row < tableData.getLength(); row++)
                 {
                     int rowFinal = row;
-                    Either<String, @Value Object> internalContent = TBasicUtil.getSingleCollapsedData(column.getType(), rowFinal);
-                    @Nullable Either<String, @Value Object> cellValue = TFXUtil.<@Nullable Either<String, @Value Object>>fx(() -> {
+                    Either<String, Object> internalContent = TBasicUtil.getSingleCollapsedData(column.getType(), rowFinal);
+                    Either<String, Object> cellValue = TFXUtil.<Either<String, Object>>fx(() -> {
                         CellPosition dataPosition = tableDisplay.getDataPosition(rowFinal, colIndex);
                         VersionedSTF cell = mainWindowActions._test_getDataCell(dataPosition);
                         if (cell == null)

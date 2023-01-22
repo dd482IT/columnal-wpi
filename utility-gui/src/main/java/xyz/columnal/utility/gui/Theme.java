@@ -28,9 +28,7 @@ import threadchecker.Tag;
  */
 public interface Theme
 {
-    @OnThread(Tag.Any)
     public String getStylesheetURL(String stylesheetFileName) throws Throwable;
     
-    @OnThread(Tag.Any)
     public String getName();
 }

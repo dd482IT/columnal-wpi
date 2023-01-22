@@ -49,10 +49,10 @@ public class StringWithinIndex //extends FunctionDefinition
     {
 
         @Override
-        public @Value Object _call() throws UserException, InternalException
+        public Object _call() throws UserException, InternalException
         {
-            @Value String big = arg(1, String.class);
-            @Value String small = arg(0, String.class);
+            String big = arg(1, String.class);
+            String small = arg(0, String.class);
             return DataTypeUtility.value(new ListEx()
             {
                 private final List<Integer> charIndexes = new ArrayList<>();
@@ -83,7 +83,7 @@ public class StringWithinIndex //extends FunctionDefinition
                 }
 
                 @Override
-                public @Value Object get(int index) throws InternalException, UserException
+                public Object get(int index) throws InternalException, UserException
                 {
                     while (index < codepointIndexes.size() && calcNext())
                     {

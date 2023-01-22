@@ -18,7 +18,6 @@
  * with Columnal. If not, see <https://www.gnu.org/licenses/>.
  */
 
-@OnThread(Tag.FXPlatform)
 package xyz.columnal.gui.lexeditor;
 
 import threadchecker.OnThread;

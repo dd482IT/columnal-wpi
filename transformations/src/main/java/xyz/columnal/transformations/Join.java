@@ -85,11 +85,9 @@ public class Join extends VisitableTransformation
     private final NumericColumnStorage secondaryIndexMap;
     private boolean examinedAllSourceRows = false;
     
-    @OnThread(Tag.Any)
-    private final @Nullable String error;
-    private final @Nullable RecordSet recordSet;
+    private final String error;
+    private final RecordSet recordSet;
 
-    @OnThread(Tag.Simulation)
     public Join(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId primarySource, TableId secondarySource, boolean keepPrimaryWithNoMatch, ImmutableList<Pair<ColumnId, ColumnId>> columnsToMatch) throws InternalException
     {
         super(mgr, initialLoadDetails);
@@ -155,12 +153,12 @@ public class Join extends VisitableTransformation
     }
 
     // If typeManager != null, wrap into optional, else keep original type
-    private SimulationFunction<RecordSet, Column> copyColumn(@UnknownInitialization(Transformation.class) Join this, Column c, ColumnId name, NumericColumnStorage indexMap, Pair<RecordSet, RecordSet> recordSets, @Nullable TypeManager typeManager)
+    private SimulationFunction<RecordSet, Column> copyColumn(Join this, Column c, ColumnId name, NumericColumnStorage indexMap, Pair<RecordSet, RecordSet> recordSets, TypeManager typeManager)
     {
         return rs -> new Column(rs, name)
         {
             @Override
-            public @OnThread(Tag.Any) DataTypeValue getType() throws InternalException, UserException
+            public DataTypeValue getType() throws InternalException, UserException
             {
                 return addManualEditSet(getName(), typeManager == null ? 
                 c.getType().copyReorder(i -> {
@@ -176,14 +174,13 @@ public class Join extends VisitableTransformation
             }
 
             @Override
-            public @OnThread(Tag.Any) AlteredState getAlteredState()
+            public AlteredState getAlteredState()
             {
                 return AlteredState.FILTERED_OR_REORDERED;
             }
         };
     }
 
-    @OnThread(Tag.Simulation)
     private void fillJoinMapTo(int destIndex, Pair<RecordSet, RecordSet> recordSets) throws InternalException, UserException
     {
         if (examinedAllSourceRows)
@@ -199,8 +196,8 @@ public class Join extends VisitableTransformation
                 boolean allMatch = true;
                 for (Pair<ColumnId, ColumnId> toMatch : columnsToMatch)
                 {
-                    @Value Object primaryVal = recordSets.getFirst().getColumn(toMatch.getFirst()).getType().getCollapsed(nextPrimaryToExamine);
-                    @Value Object secondaryVal = recordSets.getSecond().getColumn(toMatch.getSecond()).getType().getCollapsed(secondaryIndex);
+                    Object primaryVal = recordSets.getFirst().getColumn(toMatch.getFirst()).getType().getCollapsed(nextPrimaryToExamine);
+                    Object secondaryVal = recordSets.getSecond().getColumn(toMatch.getSecond()).getType().getCollapsed(secondaryIndex);
                     if (Utility.compareValues(primaryVal, secondaryVal) != 0)
                     {
                         allMatch = false;
@@ -231,25 +228,25 @@ public class Join extends VisitableTransformation
     }
 
     @Override
-    protected @OnThread(Tag.Any) Stream<TableId> getSourcesFromExpressions()
+    protected Stream<TableId> getSourcesFromExpressions()
     {
         return Stream.of();
     }
 
     @Override
-    protected @OnThread(Tag.Any) Stream<TableId> getPrimarySources()
+    protected Stream<TableId> getPrimarySources()
     {
         return Stream.of(primarySource, secondarySource);
     }
 
     @Override
-    protected @OnThread(Tag.Any) String getTransformationName()
+    protected String getTransformationName()
     {
         return "join";
     }
 
     @Override
-    protected @OnThread(Tag.Simulation) List<String> saveDetail(@Nullable File destination, TableAndColumnRenames renames)
+    protected List<String> saveDetail(File destination, TableAndColumnRenames renames)
     {
         return Utility.<String>prependToList(keepPrimaryWithNoMatch ? "LEFTJOIN" : "INNERJOIN",
             Utility.<Pair<ColumnId, ColumnId>, String>mapListI(columnsToMatch, p -> OutputBuilder.quoted(p.getFirst().getRaw()) + " EQUALS " + OutputBuilder.quoted(p.getSecond().getRaw())) 
@@ -275,7 +272,7 @@ public class Join extends VisitableTransformation
     }
 
     @Override
-    public @OnThread(Tag.Any) RecordSet getData() throws UserException, InternalException
+    public RecordSet getData() throws UserException, InternalException
     {
         if (recordSet != null)
             return recordSet;
@@ -328,7 +325,7 @@ public class Join extends VisitableTransformation
         }
 
         @Override
-        public @OnThread(Tag.Simulation) Transformation load(TableManager mgr, InitialLoadDetails initialLoadDetails, List<TableId> source, String detail, ExpressionVersion expressionVersion) throws InternalException, UserException
+        public Transformation load(TableManager mgr, InitialLoadDetails initialLoadDetails, List<TableId> source, String detail, ExpressionVersion expressionVersion) throws InternalException, UserException
         {
             if (source.size() != 2)
                 throw new UserException("Expected two tables as join sources but found " + source.size());
@@ -336,8 +333,8 @@ public class Join extends VisitableTransformation
             ArrayList<Pair<ColumnId, ColumnId>> columns = new ArrayList<>();
             for (JoinColumnLineContext ctx : whole.joinColumnLine())
             {
-                @ExpressionIdentifier String a = IdentifierUtility.asExpressionIdentifier(ctx.columnA.getText());
-                @ExpressionIdentifier String b = IdentifierUtility.asExpressionIdentifier(ctx.columnB.getText());
+                String a = IdentifierUtility.asExpressionIdentifier(ctx.columnA.getText());
+                String b = IdentifierUtility.asExpressionIdentifier(ctx.columnB.getText());
                 if (a == null)
                     throw new UserException("Invalid column id: \"" + ctx.columnA.getText() + "\"");
                 if (b == null)
@@ -349,7 +346,7 @@ public class Join extends VisitableTransformation
 
         @SuppressWarnings("identifier")
         @Override
-        public @OnThread(Tag.FXPlatform) @Nullable SimulationSupplier<Transformation> make(TableManager mgr, CellPosition destination, FXPlatformSupplier<Optional<Table>> askForSingleSrcTable)
+        public SimulationSupplier<Transformation> make(TableManager mgr, CellPosition destination, FXPlatformSupplier<Optional<Table>> askForSingleSrcTable)
         {
             return () -> new Join(mgr, new InitialLoadDetails(null, null, destination, null), new TableId(""), new TableId(""), false, ImmutableList.of());
         }
@@ -369,6 +366,6 @@ public class Join extends VisitableTransformation
 
     public static TableId suggestedName(ImmutableList<Pair<ColumnId, ColumnId>> columnsToMatch)
     {
-        return new TableId(IdentifierUtility.spaceSeparated("Join", columnsToMatch.stream().<@ExpressionIdentifier String>map(p -> IdentifierUtility.spaceSeparated(IdentifierUtility.shorten(p.getFirst().getRaw()), "to", IdentifierUtility.shorten(p.getFirst().getRaw()))).findFirst().orElse("none")));
+        return new TableId(IdentifierUtility.spaceSeparated("Join", columnsToMatch.stream().<String>map(p -> IdentifierUtility.spaceSeparated(IdentifierUtility.shorten(p.getFirst().getRaw()), "to", IdentifierUtility.shorten(p.getFirst().getRaw()))).findFirst().orElse("none")));
     }
 }

@@ -85,13 +85,13 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF
     }
 
     @Override
-    public OptionalDouble getPrefColumnWidth(@AbsColIndex int colIndex)
+    public OptionalDouble getPrefColumnWidth(int colIndex)
     {
         return getItemsInColumn(colIndex).stream().mapToDouble(n -> n.calcWidthToFitContent()).max();
     }
 
     @Override
-    protected @Nullable Pair<ItemState, @Nullable StyledString> getItemState(VersionedSTF stf, Point2D screenPos)
+    protected Pair<ItemState, StyledString> getItemState(VersionedSTF stf, Point2D screenPos)
     {
         if (stf.isFocused())
             return new Pair<>(ItemState.EDITING, stf.getHoverText());
@@ -100,7 +100,7 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF
     }
 
     @Override
-    protected @Nullable Pair<ItemState, @Nullable StyledString> getItemState(CellPosition cellPosition, Point2D screenPos)
+    protected Pair<ItemState, StyledString> getItemState(CellPosition cellPosition, Point2D screenPos)
     {
         // Override here to check for expanded cell
         Optional<VersionedSTF> expanded = findItems(node -> node.isExpanded()).findFirst();
@@ -118,9 +118,9 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF
     }
 
     @Override
-    protected void startEditing(@Nullable Point2D screenPosition, CellPosition cellPosition, @Nullable String startTyping)
+    protected void startEditing(Point2D screenPosition, CellPosition cellPosition, String startTyping)
     {
-        @Nullable VersionedSTF stf = getItemAt(cellPosition);
+        VersionedSTF stf = getItemAt(cellPosition);
         if (stf != null)
         {
             if (screenPosition != null)
@@ -174,12 +174,11 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF
             }
         };
 
-        @OnThread(Tag.FX)
         public abstract void applyStyle(Node item, boolean on);
     }
 
     @Override
-    protected @OnThread(Tag.FX) void adjustStyle(VersionedSTF item, CellStyle style, boolean on)
+    protected void adjustStyle(VersionedSTF item, CellStyle style, boolean on)
     {
         style.applyStyle(item, on);
     }
@@ -192,14 +191,13 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF
         spareCell.blank(new ReadOnlyDocument(TranslationUtility.getString("data.loading")));
     }
 
-    @OnThread(Tag.FXPlatform)
-    public @Nullable VersionedSTF _test_getCellAt(CellPosition position)
+    public VersionedSTF _test_getCellAt(CellPosition position)
     {
         return getItemAt(position);
     }
 
     @Override
-    protected void sizeAndLocateCell(double x, double y, @AbsColIndex int columnIndex, @AbsRowIndex int rowIndex, VersionedSTF cell, VisibleBounds visibleBounds)
+    protected void sizeAndLocateCell(double x, double y, int columnIndex, int rowIndex, VersionedSTF cell, VisibleBounds visibleBounds)
     {
         if (cell.isExpanded())
         {
@@ -223,11 +221,9 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF
 
     // A simple subclass of STF that holds a version param.  A version is a weak reference
     // to a list of column details
-    @OnThread(Tag.FXPlatform)
     public class VersionedSTF extends DocumentTextField
     {
-        @OnThread(Tag.FXPlatform)
-        private @Nullable WeakReference<ImmutableList<ColumnDetails>> currentVersion = null;
+        private WeakReference<ImmutableList<ColumnDetails>> currentVersion = null;
         
         public VersionedSTF(FXPlatformRunnable redoLayout)
         {
@@ -235,7 +231,6 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF
             setFocusTraversable(false);
         }
 
-        @OnThread(Tag.FXPlatform)
         public boolean isUsingColumns(ImmutableList<ColumnDetails> columns)
         {
             // Very important here we use reference equality not .equals()
@@ -244,14 +239,12 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF
             return currentVersion != null && currentVersion.get() == columns;
         }
 
-        @OnThread(Tag.FXPlatform)
         public void blank(Document editorKit)
         {
             super.setDocument(editorKit);
             currentVersion = null;
         }
 
-        @OnThread(Tag.FXPlatform)
         public void setContent(Document editorKit, ImmutableList<ColumnDetails> columns)
         {
             super.setDocument(editorKit);
@@ -259,7 +252,7 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF
         }
 
         @Override
-        public @OnThread(Tag.FXPlatform) void documentChanged(Document document)
+        public void documentChanged(Document document)
         {
             super.documentChanged(document);
             if (document.getText().startsWith("=") && isFocused())
@@ -286,8 +279,7 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF
         }
     }
 
-    @OnThread(Tag.FXPlatform)
-    private <T extends DataDisplay & TableDisplayBase> Guidance makeTransformGuidance(Window mainWindow, VirtualGrid virtualGrid, @Nullable T srcTable, String content)
+    private <T extends DataDisplay & TableDisplayBase> Guidance makeTransformGuidance(Window mainWindow, VirtualGrid virtualGrid, T srcTable, String content)
     {
         // TODO make them choose upfront calculate vs aggregate?
         
@@ -310,12 +302,12 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF
     private class EmptyCellSelectedCondition implements Condition
     {
         @Override
-        public @OnThread(Tag.FXPlatform) void onSatisfied(FXPlatformRunnable runOnceSatsified)
+        public void onSatisfied(FXPlatformRunnable runOnceSatsified)
         {
             virtualGrid.addSelectionListener(new SelectionListener()
             {
                 @Override
-                public @OnThread(Tag.FXPlatform) Pair<ListenerOutcome, @Nullable FXPlatformConsumer<VisibleBounds>> selectionChanged(@Nullable CellSelection oldSelection, @Nullable CellSelection newSelection)
+                public Pair<ListenerOutcome, FXPlatformConsumer<VisibleBounds>> selectionChanged(CellSelection oldSelection, CellSelection newSelection)
                 {
                     if (newSelection != null && newSelection.isExactly(newSelection.getActivateTarget()))
                     {

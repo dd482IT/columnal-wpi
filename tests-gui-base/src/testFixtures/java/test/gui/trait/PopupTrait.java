@@ -34,7 +34,6 @@ import java.util.function.Supplier;
 
 public interface PopupTrait extends FxRobotInterface
 {
-    @OnThread(Tag.Any)
     default public void moveAndDismissPopupsAtPos(Point2D p)
     {
         Supplier<Boolean> popupAtMousePos = () -> {

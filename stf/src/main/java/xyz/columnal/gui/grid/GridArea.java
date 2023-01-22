@@ -51,14 +51,13 @@ import java.util.Optional;
  * Each GridArea is assumed to have a fixed immediately-knowable position and number of columns,
  * but a number of rows which may not be known ahead of time.
  */
-@OnThread(Tag.FXPlatform)
 public abstract class GridArea
 {
     // The top left cell, which is probably a column header.
     private CellPosition topLeft;
     private CellPosition bottomRight;
     
-    private @MonotonicNonNull VirtualGrid parent;
+    private VirtualGrid parent;
 
     public GridArea()
     {
@@ -67,32 +66,32 @@ public abstract class GridArea
         this.bottomRight = topLeft;
     }
 
-    public final CellPosition getPosition(@UnknownInitialization(GridArea.class) GridArea this)
+    public final CellPosition getPosition(GridArea this)
     {
         return topLeft;
     }
     
-    public void setPosition(@UnknownInitialization(GridArea.class) GridArea this, CellPosition cellPosition)
+    public void setPosition(GridArea this, CellPosition cellPosition)
     {
         bottomRight = bottomRight.offsetByRowCols(cellPosition.rowIndex - topLeft.rowIndex, cellPosition.columnIndex - topLeft.columnIndex);
         topLeft = cellPosition;
         updateParent();
     }
 
-    protected void updateParent(@UnknownInitialization(GridArea.class) GridArea this)
+    protected void updateParent(GridArea this)
     {
         if (parent != null)
             parent.positionOrAreaChanged();
     }
     
     // Calls the consumer, iff we have a non-null parent
-    protected void withParent_(@UnknownInitialization(GridArea.class) GridArea this, FXPlatformConsumer<VirtualGrid> withVirtualGrid)
+    protected void withParent_(GridArea this, FXPlatformConsumer<VirtualGrid> withVirtualGrid)
     {
         if (parent != null)
             withVirtualGrid.consume(parent);
     }
 
-    protected <R> Optional<R> withParent(@UnknownInitialization(GridArea.class) GridArea this, FXPlatformFunction<VirtualGrid, @NonNull R> withVirtualGrid)
+    protected <R> Optional<R> withParent(GridArea this, FXPlatformFunction<VirtualGrid, R> withVirtualGrid)
     {
         if (parent != null)
             return Optional.of(withVirtualGrid.apply(parent));
@@ -120,13 +119,12 @@ public abstract class GridArea
      * @param updateSizeAndPositions The runnable to call if the size later changes.
      * @return The current known row size.
      */
-    @OnThread(Tag.FXPlatform)
-    protected abstract void updateKnownRows(@GridAreaRowIndex int checkUpToRowIncl, FXPlatformRunnable updateSizeAndPositions);
+    protected abstract void updateKnownRows(int checkUpToRowIncl, FXPlatformRunnable updateSizeAndPositions);
 
-    public final @AbsRowIndex int getAndUpdateBottomRow(@AbsRowIndex int checkUpToRowIncl, FXPlatformRunnable updateSizeAndPositions)
+    public final int getAndUpdateBottomRow(int checkUpToRowIncl, FXPlatformRunnable updateSizeAndPositions)
     {
         @SuppressWarnings("units")
-        @GridAreaRowIndex int gridAreaRow = checkUpToRowIncl - getPosition().rowIndex;
+        int gridAreaRow = checkUpToRowIncl - getPosition().rowIndex;
         updateKnownRows(gridAreaRow, updateSizeAndPositions);
         bottomRight = recalculateBottomRightIncl();
         if (bottomRight.rowIndex < topLeft.rowIndex || bottomRight.columnIndex < topLeft.columnIndex)
@@ -147,19 +145,19 @@ public abstract class GridArea
 
     protected abstract CellPosition recalculateBottomRightIncl();
 
-    public final boolean contains(@UnknownInitialization(GridArea.class) GridArea this, CellPosition cellPosition)
+    public final boolean contains(GridArea this, CellPosition cellPosition)
     {
         return topLeft.rowIndex <= cellPosition.rowIndex && cellPosition.rowIndex <= bottomRight.rowIndex
             && topLeft.columnIndex  <= cellPosition.columnIndex && cellPosition.columnIndex <= bottomRight.columnIndex;
     }
     
-    public final CellPosition getBottomRightIncl(@UnknownInitialization(GridArea.class) GridArea this)
+    public final CellPosition getBottomRightIncl(GridArea this)
     {
         return bottomRight;
     }
     
     // Select a cell by moving to it using the keyboard/mouse.  Return null if not possible
-    public abstract @Nullable CellSelection getSelectionForSingleCell(CellPosition cellPosition);
+    public abstract CellSelection getSelectionForSingleCell(CellPosition cellPosition);
 
     // When sorting grid areas, ones with a lower sort key will be put to the left.
     public abstract String getSortKey();

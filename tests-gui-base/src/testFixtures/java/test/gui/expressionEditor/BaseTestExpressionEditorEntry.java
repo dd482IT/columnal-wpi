@@ -66,7 +66,6 @@ import static org.junit.Assert.assertTrue;
 
 public class BaseTestExpressionEditorEntry extends FXApplicationTest implements ScrollToTrait, ClickTableLocationTrait, EnterExpressionTrait, PopupTrait
 {
-    @OnThread(Tag.Simulation)
     protected void testEntry_Impl(ExpressionValue expressionValue, Random r, String... qualifiedIdentsToEnterInFull) throws Exception
     {
         MainWindowActions mainWindowActions = TAppUtil.openDataAsTable(windowToUse, expressionValue.typeManager, expressionValue.recordSet, expressionValue.tableId);
@@ -128,8 +127,8 @@ public class BaseTestExpressionEditorEntry extends FXApplicationTest implements 
             assertTrue(clip.isPresent());
             // Need to fish out first column from clip, then compare item:
             //TestUtil.checkType(expressionValue.type, clip.get().get(0));
-            List<Either<String, @Value Object>> actual = clip.get().stream().filter((LoadedColumnInfo p) -> Objects.equals(p.columnName, new ColumnId("DestCol"))).findFirst().orElseThrow(RuntimeException::new).dataValues;
-            TBasicUtil.assertValueListEitherEqual("Transformed", Utility.<@Value Object, Either<String, @Value Object>>mapList(expressionValue.value, x -> Either.<String, @Value Object>right(x)), actual);
+            List<Either<String, Object>> actual = clip.get().stream().filter((LoadedColumnInfo p) -> Objects.equals(p.columnName, new ColumnId("DestCol"))).findFirst().orElseThrow(RuntimeException::new).dataValues;
+            TBasicUtil.assertValueListEitherEqual("Transformed", Utility.<Object, Either<String, Object>>mapList(expressionValue.value, x -> Either.<String, Object>right(x)), actual);
             
             TFXUtil.sleep(2000);
         }

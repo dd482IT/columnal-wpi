@@ -40,8 +40,7 @@ import xyz.columnal.utility.gui.ErrorableLightDialog;
 import xyz.columnal.utility.gui.FXUtility;
 import xyz.columnal.utility.gui.GUI;
 
-@OnThread(Tag.FXPlatform)
-public class EnterValueDialog<V extends @NonNull @ImmediateValue Object> extends ErrorableLightDialog<V>
+public class EnterValueDialog<V extends Object> extends ErrorableLightDialog<V>
 {
     private final RecogniserDocument<V> document;
 
@@ -72,8 +71,8 @@ public class EnterValueDialog<V extends @NonNull @ImmediateValue Object> extends
 
 
     @Override
-    protected @OnThread(Tag.FXPlatform) Either<@Localized String, V> calculateResult()
+    protected Either<String, V> calculateResult()
     {
-        return document.getLatestValue().<@Localized String, V>mapBoth(err -> err.error.toPlain(), v -> v);
+        return document.getLatestValue().<String, V>mapBoth(err -> err.error.toPlain(), v -> v);
     }
 }

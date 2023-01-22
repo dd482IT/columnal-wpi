@@ -58,10 +58,10 @@ public class GetElement extends FunctionDefinition
     private static class Instance extends ValueFunction
     {
         @Override
-        public @Value Object _call() throws UserException, InternalException
+        public Object _call() throws UserException, InternalException
         {
-            @Value int oneBasedIndex = intArg(1);
-            @UserIndex int userIndex = DataTypeUtility.userIndex(oneBasedIndex);
+            int oneBasedIndex = intArg(1);
+            int userIndex = DataTypeUtility.userIndex(oneBasedIndex);
             addUsedLocations(locs -> {
                 ExplanationLocation resultLoc = locs.get(0).getListElementLocation(oneBasedIndex - 1);
                 if (resultLoc != null)

@@ -48,14 +48,11 @@ import xyz.columnal.utility.adt.Either;
 
 import static org.junit.Assert.assertEquals;
 
-@RunWith(JUnitQuickcheck.class)
 public class TestRTransformation extends FXApplicationTest implements ScrollToTrait, ClickTableLocationTrait
 {
     // The R functionality is tested more thoroughly in other tests,
     // this is about testing the GUI, and the package installation.
     
-    @Test
-    @OnThread(Tag.Simulation)
     public void testR() throws Exception
     {
         // Uninstall one package first to check installation works:

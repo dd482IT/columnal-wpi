@@ -73,13 +73,12 @@ import java.util.stream.Stream;
 /**
  * Created by neil on 17/12/2016.
  */
-@OnThread(Tag.FXPlatform)
 public class AutoComplete<C extends Completion>
 {
     private static final double CELL_HEIGHT = 30.0;
     private final TextField textField;
     private final CompletionListener<C> onSelect;
-    private @Nullable AutoCompleteWindow window;
+    private AutoCompleteWindow window;
     
     private boolean settingContentDirectly = false;
 
@@ -112,7 +111,6 @@ public class AutoComplete<C extends Completion>
      *                       no available completions with this character then we pick
      *                       the top one and move to next slot.
      */
-    @OnThread(Tag.FXPlatform)
     public AutoComplete(TextField textField, CompletionCalculator<C> calculateCompletions, CompletionListener<C> onSelect, WhitespacePolicy whitespacePolicy)
     {
         this.textField = textField;
@@ -179,7 +177,7 @@ public class AutoComplete<C extends Completion>
         FXUtility.addChangeListenerPlatformNN(textField.layoutYProperty(), updatePos);
         FXUtility.addChangeListenerPlatformNN(textField.heightProperty(), updatePos);
         
-        textField.sceneProperty().addListener(new ChangeListener<@Nullable Scene>()
+        textField.sceneProperty().addListener(new ChangeListener<Scene>()
         {
             // This listens to scene all the time.
             // While scene is non-null, positionListener listens to scene's X/Y position.
@@ -187,7 +185,7 @@ public class AutoComplete<C extends Completion>
             // but seems correct to listen to it)
             
             // While scene is non-null, the inner listener listens to window:
-            private final ChangeListener<@Nullable Window> windowListener = new WindowChangeListener();
+            private final ChangeListener<Window> windowListener = new WindowChangeListener();
             private final ChangeListener<Number> positionListener = new NumberChangeListener();
             
             {
@@ -196,8 +194,7 @@ public class AutoComplete<C extends Completion>
             }
             
             @Override
-            @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-            public void changed(ObservableValue<? extends @Nullable Scene> observable, @Nullable Scene oldValue, @Nullable Scene newValue)
+            public void changed(ObservableValue<? extends Scene> observable, Scene oldValue, Scene newValue)
             {
                 if (oldValue != null)
                 {
@@ -262,14 +259,12 @@ public class AutoComplete<C extends Completion>
         });
     }
 
-    @EnsuresNonNull("window")
     private void show(TextField textField, double x, double y)
     {
         createWindow();
         window.show(textField, x, y);
     }
 
-    @EnsuresNonNull("window")
     private void createWindow()
     {
         if (window == null)
@@ -278,9 +273,9 @@ public class AutoComplete<C extends Completion>
         }
     }
 
-    public void hide(@UnknownInitialization AutoComplete<C> this)
+    public void hide(AutoComplete<C> this)
     {
-        final @Nullable AutoCompleteWindow w = window;
+        final AutoCompleteWindow w = window;
         if (w != null)
         {
             w.instruction.hide();
@@ -289,7 +284,7 @@ public class AutoComplete<C extends Completion>
         }
     }
 
-    private boolean isShowing(@UnknownInitialization AutoComplete<C> this)
+    private boolean isShowing(AutoComplete<C> this)
     {
         return window != null && window.isShowing();
     }
@@ -303,15 +298,13 @@ public class AutoComplete<C extends Completion>
         settingContentDirectly = false;
     }
 
-    @OnThread(Tag.FXPlatform)
-    @RequiresNonNull({"textField"})
-    private @Nullable Pair<Double, Double> calculatePosition(@UnknownInitialization(Object.class) AutoComplete<C> this)
+    private Pair<Double, Double> calculatePosition(AutoComplete<C> this)
     {
-        @Nullable Point2D textToScene = textField.localToScene(0, textField.getHeight());
-        @Nullable Scene textFieldScene = textField.getScene();
+        Point2D textToScene = textField.localToScene(0, textField.getHeight());
+        Scene textFieldScene = textField.getScene();
         if (textToScene == null || textFieldScene == null || textFieldScene == null)
             return null;
-        @Nullable Window window = textFieldScene.getWindow();
+        Window window = textFieldScene.getWindow();
         if (window == null)
             return null;
         return new Pair<>(
@@ -320,27 +313,26 @@ public class AutoComplete<C extends Completion>
         );
     }
     
-    public abstract static @Interned class Completion
+    public abstract static class Completion
     {
-        @OnThread(Tag.FXPlatform)
         protected final class CompletionContent
         {
             private final ObservableStringValue completion;
-            private final @Localized String description;
+            private final String description;
 
-            public CompletionContent(ObservableStringValue completion, @Nullable @Localized String description)
+            public CompletionContent(ObservableStringValue completion, String description)
             {
                 this.completion = completion;
                 this.description = description == null ? Utility.universal("") : description;
             }
 
-            public CompletionContent(String completion, @Nullable @Localized String description)
+            public CompletionContent(String completion, String description)
             {
                 this(new ReadOnlyStringWrapper(completion), description);
             }
             
             // Slight hack: use Pair to have an overload that comes pre-localised:
-            public CompletionContent(Pair<String, @Localized String> completionAndDescription)
+            public CompletionContent(Pair<String, String> completionAndDescription)
             {
                 this.completion = new ReadOnlyStringWrapper(completionAndDescription.getFirst());
                 this.description = completionAndDescription.getSecond();
@@ -351,10 +343,8 @@ public class AutoComplete<C extends Completion>
          * Given a property with the latest text, what graphical node and text property
          * should we show for the item?
          */
-        @OnThread(Tag.FXPlatform)
         public abstract CompletionContent makeDisplay(ObservableStringValue currentText);
 
-        @OnThread(Tag.FXPlatform)
         public String _test_getContent()
         {
             return makeDisplay(new ReadOnlyStringWrapper("")).completion.get();
@@ -365,7 +355,6 @@ public class AutoComplete<C extends Completion>
          * 
          * @param text The current user-entered text (independent of this item)
          */
-        @OnThread(Tag.FXPlatform)
         public String getDisplaySortKey(String text)
         {
             return makeDisplay(new ReadOnlyStringWrapper(text)).completion.get();
@@ -375,8 +364,7 @@ public class AutoComplete<C extends Completion>
          * Gets the URL of the details to show to the right of the list.  If null, nothing
          * is shown to the right.
          */
-        @OnThread(Tag.FXPlatform)
-        public @Nullable String getFurtherDetailsURL()
+        public String getFurtherDetailsURL()
         {
             return null;
         }
@@ -385,9 +373,9 @@ public class AutoComplete<C extends Completion>
     public static class SimpleCompletion extends Completion
     {
         protected final String completion;
-        private final @Nullable @Localized String description;
+        private final String description;
 
-        public SimpleCompletion(String completion, @Nullable @Localized String description)
+        public SimpleCompletion(String completion, String description)
         {
             this.completion = completion;
             this.description = description;
@@ -400,7 +388,7 @@ public class AutoComplete<C extends Completion>
         }
 
         @Override
-        public @Nullable String getFurtherDetailsURL()
+        public String getFurtherDetailsURL()
         {
             return super.getFurtherDetailsURL();
         }
@@ -417,8 +405,7 @@ public class AutoComplete<C extends Completion>
         }
 
         @Override
-        @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-        protected void updateItem(@Nullable C item, boolean empty)
+        protected void updateItem(C item, boolean empty)
         {
             textProperty().unbind();
             if (empty || item == null)
@@ -440,23 +427,21 @@ public class AutoComplete<C extends Completion>
     {
         // Item was double-clicked in the list
         // Returns the new text for the textfield, or null if keep as-is
-        @Nullable String doubleClick(String currentText, C selectedItem);
+        String doubleClick(String currentText, C selectedItem);
 
         // Enter or Tab used to select
         // Returns the new text for the textfield, or null if keep as-is
-        @Nullable String keyboardSelect(String textBeforeCaret, String textAfterCaret, @Nullable C selectedItem, boolean wasTab);
+        String keyboardSelect(String textBeforeCaret, String textAfterCaret, C selectedItem, boolean wasTab);
     }
 
     // For reasons I'm not clear about, this listener needs to be its own class, not anonymous:
     private class NumberChangeListener implements ChangeListener<Number>
     {
-        @OnThread(Tag.FXPlatform)
         public NumberChangeListener()
         {
         }
 
         @Override
-        @OnThread(value = Tag.FXPlatform, ignoreParent = true)
         public void changed(ObservableValue<? extends Number> prop, Number oldVal, Number newVal)
         {
             if (window != null)
@@ -464,20 +449,17 @@ public class AutoComplete<C extends Completion>
         }
     }
 
-    private class WindowChangeListener implements ChangeListener<@Nullable Window>
+    private class WindowChangeListener implements ChangeListener<Window>
     {
-        @OnThread(Tag.FXPlatform)
         final ChangeListener<Number> positionListener;
 
-        @OnThread(Tag.FXPlatform)
         private WindowChangeListener()
         {
             positionListener = new NumberChangeListener();
         }
 
         @Override
-        @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-        public void changed(ObservableValue<? extends @Nullable Window> prop, @Nullable Window oldValue, @Nullable Window newValue)
+        public void changed(ObservableValue<? extends Window> prop, Window oldValue, Window newValue)
         {
             if (oldValue != null)
             {
@@ -496,7 +478,6 @@ public class AutoComplete<C extends Completion>
     }
     
     // public for testing purposes only
-    @OnThread(Tag.FXPlatform)
     public class AutoCompleteWindow extends PopupControl
     {
         private final ListView<C> completions;
@@ -514,7 +495,6 @@ public class AutoComplete<C extends Completion>
             this.instruction = new Instruction("autocomplete.instruction", "autocomplete-instruction");
             this.completions = new ListView<C>() {
                 @Override
-                @OnThread(Tag.FX)
                 public void requestFocus()
                 {
                     // Can't be focused
@@ -546,10 +526,10 @@ public class AutoComplete<C extends Completion>
                 return new CompleteCell();
             });
             completions.setOnMouseClicked(e -> {
-                @Nullable C selectedItem = completions.getSelectionModel().getSelectedItem();
+                C selectedItem = completions.getSelectionModel().getSelectedItem();
                 if (e.getClickCount() == 2 && e.getButton() == MouseButton.PRIMARY && selectedItem != null)
                 {
-                    @Nullable String newContent = onSelect.doubleClick(textField.getText(), selectedItem);
+                    String newContent = onSelect.doubleClick(textField.getText(), selectedItem);
                     if (newContent != null)
                         setContentDirect(newContent, true);
                     hide();
@@ -560,7 +540,7 @@ public class AutoComplete<C extends Completion>
             FXUtility.addChangeListenerPlatform(completions.getSelectionModel().selectedItemProperty(), selected -> {
                 if (selected != null)
                 {
-                    @Nullable String url = selected.getFurtherDetailsURL();
+                    String url = selected.getFurtherDetailsURL();
                     if (url != null)
                     {
                         WebView webView = new WebView();
@@ -645,7 +625,7 @@ public class AutoComplete<C extends Completion>
                 {
                     e.consume();
                     String curText = textField.getText();
-                    @Nullable String newContent = onSelect.keyboardSelect(curText.substring(0, textField.getCaretPosition()), curText.substring(textField.getCaretPosition()), selectedItem, e.getCode() == KeyCode.TAB);
+                    String newContent = onSelect.keyboardSelect(curText.substring(0, textField.getCaretPosition()), curText.substring(textField.getCaretPosition()), selectedItem, e.getCode() == KeyCode.TAB);
                     if (newContent != null)
                         setContentDirect(newContent, true);
                     hide();
@@ -654,7 +634,7 @@ public class AutoComplete<C extends Completion>
             }
         }
 
-        private void updateHeight(@UnknownInitialization(Window.class) AutoCompleteWindow this, ListView<?> completions)
+        private void updateHeight(AutoCompleteWindow this, ListView<?> completions)
         {
             // Merging several answers from https://stackoverflow.com/questions/17429508/how-do-you-get-javafx-listview-to-be-the-height-of-its-items
             double itemHeight = CELL_HEIGHT;
@@ -663,12 +643,11 @@ public class AutoComplete<C extends Completion>
             sizeToScene();
         }
 
-        @OnThread(Tag.FXPlatform)
-        private void updatePosition(@UnknownInitialization(PopupControl.class) AutoCompleteWindow this)
+        private void updatePosition(AutoCompleteWindow this)
         {
             if (isShowing() && textField != null)
             {
-                @Nullable Pair<Double, Double> pos = calculatePosition();
+                Pair<Double, Double> pos = calculatePosition();
                 if (pos != null)
                 {
                     setAnchorX(pos.getFirst());
@@ -694,8 +673,7 @@ public class AutoComplete<C extends Completion>
             return this.completions.getItems();
         }
         
-        @OnThread(Tag.FXPlatform)
-        public @Nullable String _test_getSelectedContent()
+        public String _test_getSelectedContent()
         {
             C selected = completions.getSelectionModel().getSelectedItem();
             if (selected != null)
@@ -707,21 +685,18 @@ public class AutoComplete<C extends Completion>
         private class AutoCompleteSkin implements Skin<AutoCompleteWindow>
         {
             @Override
-            @OnThread(Tag.FX)
             public AutoCompleteWindow getSkinnable()
             {
                 return AutoCompleteWindow.this;
             }
 
             @Override
-            @OnThread(Tag.FX)
             public Node getNode()
             {
                 return container;
             }
 
             @Override
-            @OnThread(Tag.FX)
             public void dispose()
             {
             }

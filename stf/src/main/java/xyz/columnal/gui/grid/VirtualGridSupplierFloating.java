@@ -55,7 +55,6 @@ import java.util.stream.DoubleStream;
  * Note: we offer a guarantee that items are iterated through in order that they were added;
  * this is made use of by some table overlays.
  */
-@OnThread(Tag.FXPlatform)
 public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
 {
     // We want to maintain order of adding for iteration, and removal is quite rare, so list is best:
@@ -111,7 +110,7 @@ public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
     // Returns true if removed, false if wasn't present
     public final <T extends Node> boolean removeItem(FloatingItem<T> item)
     {
-        @Nullable T removed = items.remove(item) ? item.node : null;
+        T removed = items.remove(item) ? item.node : null;
         // We don't have access to containerChildren right now to remove, so
         // just queue for removal next time we get laid out:
         if (removed != null)
@@ -120,9 +119,9 @@ public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
     }
 
     @Override
-    protected @Nullable Pair<ItemState, @Nullable StyledString> getItemState(CellPosition cellPosition, Point2D screenPos)
+    protected Pair<ItemState, StyledString> getItemState(CellPosition cellPosition, Point2D screenPos)
     {
-        return Utility.filterOutNulls(items.stream().<@Nullable Pair<ItemState, @Nullable StyledString>>map(f -> f.getItemState(cellPosition, screenPos))).min(Comparator.<Pair<ItemState, @Nullable StyledString>, Integer>comparing(s -> s.getFirst().ordinal())).orElse(null);
+        return Utility.filterOutNulls(items.stream().<Pair<ItemState, StyledString>>map(f -> f.getItemState(cellPosition, screenPos))).min(Comparator.<Pair<ItemState, StyledString>, Integer>comparing(s -> s.getFirst().ordinal())).orElse(null);
     }
 
     @Override
@@ -138,14 +137,14 @@ public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
     protected void keyboardActivate(CellPosition cellPosition)
     {
         // Avoid concurrent modification issues:
-        for (FloatingItem<?> item : new ArrayList<@NonNull FloatingItem<?>>(items))
+        for (FloatingItem<?> item : new ArrayList<FloatingItem<?>>(items))
         {
             item.keyboardActivate(cellPosition);
         }
     }
 
     @Override
-    public OptionalDouble getPrefColumnWidth(@AbsColIndex int colIndex)
+    public OptionalDouble getPrefColumnWidth(int colIndex)
     {
         return items.stream().flatMapToDouble(n -> {
             OptionalDouble optionalDouble = n.getPrefWidthForColumn(colIndex);
@@ -161,11 +160,10 @@ public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
      * various layout operations.
      * @param <T>
      */
-    @OnThread(Tag.FXPlatform)
-    public static abstract class FloatingItem<T extends @NonNull Node>
+    public static abstract class FloatingItem<T extends Node>
     {
         // null if not created, or has been removed.
-        private @Nullable T node;
+        private T node;
         private final ViewOrder viewOrder;
 
         protected FloatingItem(ViewOrder viewOrder)
@@ -189,19 +187,19 @@ public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
          * Is there an item at the given position and if so what it is its state?
          * If none, return null;
          */
-        public abstract @Nullable Pair<ItemState, @Nullable StyledString> getItemState(CellPosition cellPosition, Point2D screenPos);
+        public abstract Pair<ItemState, StyledString> getItemState(CellPosition cellPosition, Point2D screenPos);
         
-        protected final @Pure @Nullable T getNode(@UnknownInitialization(FloatingItem.class) FloatingItem<T> this)
+        protected final T getNode(FloatingItem<T> this)
         {
             return node;
         }
 
-        protected OptionalDouble getPrefWidthForItem(@AbsColIndex int columnIndex, T node)
+        protected OptionalDouble getPrefWidthForItem(int columnIndex, T node)
         {
             return OptionalDouble.empty();
         }
         
-        public final OptionalDouble getPrefWidthForColumn(@AbsColIndex int columnIndex)
+        public final OptionalDouble getPrefWidthForColumn(int columnIndex)
         {
             return node == null ? OptionalDouble.empty() : getPrefWidthForItem(columnIndex, node);
         }
@@ -213,7 +211,7 @@ public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
             if (pos.isPresent())
             {
                 // Should be visible; make sure there is a cell and put in right position:
-                final @NonNull T nodeFinal;
+                final T nodeFinal;
                 if (node == null)
                 {
                     nodeFinal = makeCell(visibleBounds);

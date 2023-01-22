@@ -29,21 +29,21 @@ import xyz.columnal.utility.ParseProgress;
 import xyz.columnal.utility.Utility.ListEx;
 import xyz.columnal.utility.Utility.ListExList;
 
-public class ListRecogniser extends Recogniser<@ImmediateValue ListEx>
+public class ListRecogniser extends Recogniser<ListEx>
 {
-    private final Recogniser<? extends @ImmediateValue @NonNull Object> inner;
+    private final Recogniser<? extends Object> inner;
 
-    public ListRecogniser(Recogniser<? extends @ImmediateValue @NonNull Object> inner)
+    public ListRecogniser(Recogniser<? extends Object> inner)
     {
         this.inner = inner;
     }
 
     @Override
-    public Either<ErrorDetails, SuccessDetails<@ImmediateValue ListEx>> process(ParseProgress parseProgress, boolean immediatelySurroundedByRoundBrackets)
+    public Either<ErrorDetails, SuccessDetails<ListEx>> process(ParseProgress parseProgress, boolean immediatelySurroundedByRoundBrackets)
     {
         try
         {
-            ImmutableList.Builder<@ImmediateValue Object> list = ImmutableList.builder();
+            ImmutableList.Builder<Object> list = ImmutableList.builder();
             StringBuilder replText = new StringBuilder();
             ParseProgress pp = parseProgress;
             pp = pp.consumeNext("[");
@@ -92,7 +92,7 @@ public class ListRecogniser extends Recogniser<@ImmediateValue ListEx>
         }
     }
 
-    private static <T extends @ImmediateValue Object> ParseProgress addToList(ImmutableList.Builder<@ImmediateValue Object> list, StringBuilder replText, Either<ErrorDetails, SuccessDetails<T>> process) throws ListException
+    private static <T extends Object> ParseProgress addToList(ImmutableList.Builder<Object> list, StringBuilder replText, Either<ErrorDetails, SuccessDetails<T>> process) throws ListException
     {
         return process.either(err -> {throw new ListException(err);}, 
             succ -> { list.add(succ.value); replText.append(succ.immediateReplacementText); return succ.parseProgress; });

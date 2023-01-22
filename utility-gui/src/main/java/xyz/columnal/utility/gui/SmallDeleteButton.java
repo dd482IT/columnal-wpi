@@ -35,7 +35,6 @@ import xyz.columnal.utility.function.fx.FXPlatformRunnable;
 /**
  * A cross shape, like the close on a web browser tab header
  */
-@OnThread(Tag.FX)
 public class SmallDeleteButton extends StackPane
 {
     // Composed of two shapes: a cross, with a circle underneath

@@ -42,12 +42,10 @@ import java.util.List;
 /**
  * Created by neil on 21/11/2016.
  */
-@RunWith(JUnitQuickcheck.class)
 public class PropDAG
 {
     // This test ignores late and does it without them:
-    @Property(trials = 500)
-    public void propLinearise(@From(GenGraph.class) Graph g)
+    public void propLinearise(Graph g)
     {
         List<Object> linear = GraphUtility.<Object>lineariseDAG(Collections.unmodifiableList(g.nodes), Collections.unmodifiableMap(g.incoming), new ArrayList<>());
 
@@ -62,7 +60,7 @@ public class PropDAG
     }
 
     @SuppressWarnings("intern")
-    private void checkGraphLinear(@From(GenGraph.class) GenGraph.Graph g, List<Object> linear)
+    private void checkGraphLinear(GenGraph.Graph g, List<Object> linear)
     {
         Assert.assertEquals(linear.size(), g.nodes.size());
         Assert.assertEquals(new HashSet<>(linear), new HashSet<>(g.nodes));
@@ -79,8 +77,7 @@ public class PropDAG
     }
 
     // This property checks that late is obeyed:
-    @Property(trials = 500)
-    public void propLineariseLateness(@From(GenGraph.class) Graph g)
+    public void propLineariseLateness(Graph g)
     {
         List<Object> linear = GraphUtility.<Object>lineariseDAG(Collections.unmodifiableList(g.nodes), Collections.unmodifiableMap(g.incoming), Collections.unmodifiableList(g.late));
 
@@ -115,13 +112,11 @@ public class PropDAG
         }
     }
     
-    @Test
     public void testSpecific()
     {
         propLinearise(new Graph(ImmutableList.of("A", "B", "BL", "C", "EK", "ENU", "JR", "Nested", "VQ"), ImmutableMap.of("VQ", ImmutableList.of("BL"), "JR", ImmutableList.of("BL", "BL")), ImmutableList.of()));
     }
 
-    @Test
     public void testSpecificLate()
     {
         propLineariseLateness(new Graph(ImmutableList.of("T2", "T9", "T6", "A", "S", "P", "E", "m"), ImmutableMap.of( "m", ImmutableList.of("T9"), "S", ImmutableList.of("T6", "E"), "T2", ImmutableList.of("A"), "T9", ImmutableList.of("T2", "S", "P")), ImmutableList.of("T2")));

@@ -80,7 +80,6 @@ import java.util.function.Function;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-@OnThread(Tag.Simulation)
 public class TestExpressionExplanation
 {
     private final TableManager tableManager;
@@ -100,22 +99,21 @@ public class TestExpressionExplanation
         tableManager.record(new ImmediateDataSource(tableManager, new InitialLoadDetails(new TableId("T2"), null, null, null), new EditableRecordSet(columns, () -> 4)));
     }
 
-    private static SimulationFunction<RecordSet, EditableColumn> bools(@ExpressionIdentifier String name, boolean... values)
+    private static SimulationFunction<RecordSet, EditableColumn> bools(String name, boolean... values)
     {
-        return rs -> new MemoryBooleanColumn(rs, new ColumnId(name), Utility.<@ImmediateValue Boolean, Either<String, Boolean>>mapList(Booleans.asList(values), Either::right), false);
+        return rs -> new MemoryBooleanColumn(rs, new ColumnId(name), Utility.<Boolean, Either<String, Boolean>>mapList(Booleans.asList(values), Either::right), false);
     }
 
-    private static SimulationFunction<RecordSet, EditableColumn> nums(@ExpressionIdentifier String name, Number... values)
+    private static SimulationFunction<RecordSet, EditableColumn> nums(String name, Number... values)
     {
         return rs -> new MemoryNumericColumn(rs, new ColumnId(name), new NumberInfo(Unit.SCALAR), Utility.<Number, Either<String, Number>>mapList(Arrays.asList(values), Either::right), DataTypeUtility.value(0));
     }
 
-    private static SimulationFunction<RecordSet, EditableColumn> text(@ExpressionIdentifier String name, String... values)
+    private static SimulationFunction<RecordSet, EditableColumn> text(String name, String... values)
     {
         return rs -> new MemoryStringColumn(rs, new ColumnId(name), Utility.<String, Either<String, String>>mapList(Arrays.asList(values), Either::right), "");
     }
     
-    @Test
     public void testException() throws Exception
     {
         testExplanation("(1 / 2) + 3",
@@ -133,14 +131,12 @@ public class TestExpressionExplanation
                 ));
     }
 
-    @Test
     public void testLiterals() throws Exception
     {
         testExplanation("1", e("1", null, 1, null));
         testExplanation("true", e("true", null, true, null));
     }
     
-    @Test
     public void testExplainedElement() throws Exception
     {
         testExplanation("@call function\\\\list\\element(table\\\\T1#all true, 3)", e("@call function\\\\list\\element(table\\\\T1#all true, 3)", null, true, l("T1", "all true", 2), entire("T1", "all true"), lit(3)));
@@ -157,12 +153,11 @@ public class TestExpressionExplanation
         );
     }
 
-    protected Explanation entire(@ExpressionIdentifier String table, @ExpressionIdentifier String column, Object... values) throws InternalException, UserException
+    protected Explanation entire(String table, String column, Object... values) throws InternalException, UserException
     {
         return e("table\\\\" + table + "#" + column, null, new ListExList(TTableUtil.streamFlattened(tableManager.getSingleTableOrThrow(new TableId(table)).getData().getColumn(new ColumnId(column))).collect(ImmutableList.toImmutableList())), l(table, column), e("table\\\\" + table, null, null, new ExplanationLocation(new TableId(table))));
     }
 
-    @Test
     public void testExplainedAll() throws Exception
     {
         testExplanation("@call function\\\\listprocess\\all(table\\\\T1#all false, (? = true))", 
@@ -257,7 +252,7 @@ public class TestExpressionExplanation
          */
     }
 
-    private Pattern pattern(String patternSrc, @Nullable String guardSrc) throws InternalException, UserException
+    private Pattern pattern(String patternSrc, String guardSrc) throws InternalException, UserException
     {
         TypeManager typeManager = tableManager.getTypeManager();
         Expression pattern = TFunctionUtil.parseExpression(patternSrc, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
@@ -267,14 +262,14 @@ public class TestExpressionExplanation
 
     // No row index, and a mapping from a single implicit lambda arg param to the given value
     @SuppressWarnings("valuetype")
-    private Pair<OptionalInt, ImmutableMap<String, @Value Object>> q(Object value)
+    private Pair<OptionalInt, ImmutableMap<String, Object>> q(Object value)
     {
         return new Pair<>(OptionalInt.empty(), ImmutableMap.of("?1", value));
     }
 
     // No row index, and a mapping from a single name to the given value
     @SuppressWarnings("valuetype")
-    private Pair<OptionalInt, ImmutableMap<String, @Value Object>> vv(String name, Object value)
+    private Pair<OptionalInt, ImmutableMap<String, Object>> vv(String name, Object value)
     {
         return new Pair<>(OptionalInt.empty(), ImmutableMap.of(name, value));
     }
@@ -282,9 +277,9 @@ public class TestExpressionExplanation
     private static class VarValue
     {
         private final String name;
-        private final @Value Object value;
+        private final Object value;
 
-        public VarValue(String name, @Value Object value)
+        public VarValue(String name, Object value)
         {
             this.name = name;
             this.value = value;
@@ -298,9 +293,9 @@ public class TestExpressionExplanation
     }
     
     // Just a row index, no variables
-    private Pair<OptionalInt, ImmutableMap<String, @Value Object>> r(int rowIndex, VarValue... varValues)
+    private Pair<OptionalInt, ImmutableMap<String, Object>> r(int rowIndex, VarValue... varValues)
     {
-        ImmutableMap.Builder<String, @Value Object> vars = ImmutableMap.builderWithExpectedSize(varValues.length);
+        ImmutableMap.Builder<String, Object> vars = ImmutableMap.builderWithExpectedSize(varValues.length);
         for (VarValue varValue : varValues)
         {
             vars.put(varValue.name, varValue.value);
@@ -309,38 +304,38 @@ public class TestExpressionExplanation
         return new Pair<>(OptionalInt.of(rowIndex), vars.build());
     }
     
-    private Explanation clause(ImmutableList<Pattern> patterns, String outcomeSrc, @Nullable Pair<OptionalInt, ImmutableMap<String, @Value Object>> rowIndexAndVars, boolean result, Explanation... children) throws InternalException, UserException
+    private Explanation clause(ImmutableList<Pattern> patterns, String outcomeSrc, Pair<OptionalInt, ImmutableMap<String, Object>> rowIndexAndVars, boolean result, Explanation... children) throws InternalException, UserException
     {
         TypeManager typeManager = tableManager.getTypeManager();
         Expression outcomeExpression = TFunctionUtil.parseExpression(outcomeSrc, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
         return new Explanation(MatchClause.unrecorded(patterns, outcomeExpression), ExecutionType.MATCH, makeEvaluateState(rowIndexAndVars, typeManager), DataTypeUtility.value(result), ImmutableList.of(), null)
         {
             @Override
-            public @OnThread(Tag.Simulation) StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation, ExpressionStyler expressionStyler, ImmutableList<ExplanationLocation> extraLocations, boolean skipIfTrivial) throws InternalException, UserException
+            public StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation, ExpressionStyler expressionStyler, ImmutableList<ExplanationLocation> extraLocations, boolean skipIfTrivial) throws InternalException, UserException
             {
                 return StyledString.s("No description in TestExpressionExplanation");
             }
 
             @Override
-            public @OnThread(Tag.Simulation) ImmutableList<Explanation> getDirectSubExplanations() throws InternalException
+            public ImmutableList<Explanation> getDirectSubExplanations() throws InternalException
             {
                 return ImmutableList.copyOf(children);
             }
         };
     }
 
-    private Explanation m(String expressionSrc, @Nullable Pair<OptionalInt, ImmutableMap<String, @Value Object>> rowIndexAndVars, @Nullable Object result, @Nullable ExplanationLocation location, Explanation... children) throws InternalException, UserException
+    private Explanation m(String expressionSrc, Pair<OptionalInt, ImmutableMap<String, Object>> rowIndexAndVars, Object result, ExplanationLocation location, Explanation... children) throws InternalException, UserException
     {
         return explanation(expressionSrc, ExecutionType.MATCH, rowIndexAndVars, result, location, false, children);
     }
     
-    private Explanation e(String expressionSrc, @Nullable Pair<OptionalInt, ImmutableMap<String, @Value Object>> rowIndexAndVars, @Nullable Object result, @Nullable ExplanationLocation location, Explanation... children) throws InternalException, UserException
+    private Explanation e(String expressionSrc, Pair<OptionalInt, ImmutableMap<String, Object>> rowIndexAndVars, Object result, ExplanationLocation location, Explanation... children) throws InternalException, UserException
     {
         return explanation(expressionSrc, ExecutionType.VALUE, rowIndexAndVars, result, location, true, children);
     }
     
     @SuppressWarnings("valuetype")
-    private Explanation explanation(String expressionSrc, ExecutionType executionType, @Nullable Pair<OptionalInt, ImmutableMap<String, @Value Object>> rowIndexAndVars, @Nullable Object result, @Nullable ExplanationLocation location, boolean locationIsResult, Explanation... children) throws InternalException, UserException
+    private Explanation explanation(String expressionSrc, ExecutionType executionType, Pair<OptionalInt, ImmutableMap<String, Object>> rowIndexAndVars, Object result, ExplanationLocation location, boolean locationIsResult, Explanation... children) throws InternalException, UserException
     {
         TypeManager typeManager = tableManager.getTypeManager();
         Expression expression = TFunctionUtil.parseExpression(expressionSrc, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
@@ -348,25 +343,25 @@ public class TestExpressionExplanation
         return new Explanation(expression, executionType, evaluateState, result, Utility.streamNullable(location).collect(ImmutableList.<ExplanationLocation>toImmutableList()), locationIsResult ? location : null)
         {
             @Override
-            public @OnThread(Tag.Simulation) StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation, ExpressionStyler expressionStyler, ImmutableList<ExplanationLocation> extraLocations, boolean skipIfTrivial) throws InternalException, UserException
+            public StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation, ExpressionStyler expressionStyler, ImmutableList<ExplanationLocation> extraLocations, boolean skipIfTrivial) throws InternalException, UserException
             {
                 return StyledString.s("No description in TestExpressionExplanation");
             }
 
             @Override
-            public @OnThread(Tag.Simulation) ImmutableList<Explanation> getDirectSubExplanations() throws InternalException
+            public ImmutableList<Explanation> getDirectSubExplanations() throws InternalException
             {
                 return ImmutableList.copyOf(children);
             }
         };
     }
 
-    private EvaluateState makeEvaluateState(@Nullable Pair<OptionalInt, ImmutableMap<String, @Value Object>> rowIndexAndVars, TypeManager typeManager) throws InternalException
+    private EvaluateState makeEvaluateState(Pair<OptionalInt, ImmutableMap<String, Object>> rowIndexAndVars, TypeManager typeManager) throws InternalException
     {
         EvaluateState evaluateState = new EvaluateState(typeManager, rowIndexAndVars == null ? OptionalInt.empty() : rowIndexAndVars.getFirst());
         if (rowIndexAndVars != null)
         {
-            for (Entry<String, @Value Object> var : rowIndexAndVars.getSecond().entrySet())
+            for (Entry<String, Object> var : rowIndexAndVars.getSecond().entrySet())
             {
                 evaluateState = evaluateState.add(var.getKey(), var.getValue());
             }
@@ -379,12 +374,12 @@ public class TestExpressionExplanation
         return e(value.toString(), null, value, null);
     }
 
-    private ExplanationLocation l(@ExpressionIdentifier String tableName, @ExpressionIdentifier String columnName)
+    private ExplanationLocation l(String tableName, String columnName)
     {
         return new ExplanationLocation(new TableId(tableName), new ColumnId(columnName));
     }
 
-    private ExplanationLocation l(@ExpressionIdentifier String tableName, @ExpressionIdentifier String columnName, int rowIndex)
+    private ExplanationLocation l(String tableName, String columnName, int rowIndex)
     {
         return new ExplanationLocation(new TableId(tableName), new ColumnId(columnName), DataItemPosition.row(rowIndex));
     }
@@ -409,7 +404,7 @@ public class TestExpressionExplanation
         assertEquals(expectedExplanation, actual);
     }
 
-    private void testCheckExplanation(@ExpressionIdentifier String srcTable, String src, CheckType checkType, @Nullable Explanation expectedExplanation) throws Exception
+    private void testCheckExplanation(String srcTable, String src, CheckType checkType, Explanation expectedExplanation) throws Exception
     {
         TypeManager typeManager = tableManager.getTypeManager();
         Expression expression = TFunctionUtil.parseExpression(src, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));

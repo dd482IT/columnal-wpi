@@ -36,13 +36,12 @@ import java.util.List;
  */
 public abstract class NaryOpTotalExpression extends NaryOpExpression
 {
-    public NaryOpTotalExpression(List<@Recorded Expression> expressions)
+    public NaryOpTotalExpression(List<Expression> expressions)
     {
         super(expressions);
     }
 
     @Override
-    @OnThread(Tag.Simulation)
     public final ValueResult calculateValue(EvaluateState state) throws EvaluationException, InternalException
     {
         if (expressions.stream().anyMatch(e -> e instanceof ImplicitLambdaArg))
@@ -67,6 +66,5 @@ public abstract class NaryOpTotalExpression extends NaryOpExpression
         }
     }
 
-    @OnThread(Tag.Simulation)
     public abstract ValueResult getValueNaryOp(ImmutableList<ValueResult> expressionValues, EvaluateState state) throws EvaluationException, InternalException;
 }

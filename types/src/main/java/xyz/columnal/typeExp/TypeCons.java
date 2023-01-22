@@ -43,7 +43,7 @@ import java.util.Objects;
 
 public class TypeCons extends TypeExp
 {
-    public final @ExpressionIdentifier String name;
+    public final String name;
     // Can be size 0+:
     public final ImmutableList<Either<UnitExp, TypeExp>> operands;
     
@@ -53,7 +53,7 @@ public class TypeCons extends TypeExp
     private final ImmutableSet<String> typeClasses;
 
     // For primitive types
-    public TypeCons(@Nullable ExpressionBase src, @ExpressionIdentifier String name, ImmutableSet<String> typeClasses)
+    public TypeCons(ExpressionBase src, String name, ImmutableSet<String> typeClasses)
     {
         super(src);
         this.name = name;
@@ -62,7 +62,7 @@ public class TypeCons extends TypeExp
     }
     
     // For tagged types
-    public TypeCons(@Nullable ExpressionBase src, @ExpressionIdentifier String name, ImmutableList<Either<UnitExp, TypeExp>> operands, ImmutableSet<String> derivableTypeClasses)
+    public TypeCons(ExpressionBase src, String name, ImmutableList<Either<UnitExp, TypeExp>> operands, ImmutableSet<String> derivableTypeClasses)
     {
         super(src);
         this.name = name;
@@ -93,7 +93,7 @@ public class TypeCons extends TypeExp
             
             if (us.isLeft() && them.isLeft())
             {
-                @Nullable UnitExp unified = us.getLeft("Impossible").unifyWith(them.getLeft("Impossible"));
+                UnitExp unified = us.getLeft("Impossible").unifyWith(them.getLeft("Impossible"));
                 if (unified == null)
                     return Either.left(new TypeError(StyledString.s("Cannot match units " + us.getLeft("Impossible") + " with " + them.getLeft("Impossible")), ImmutableList.of(this, b)));
                 unifiedOperands.add(Either.left(unified));
@@ -162,7 +162,7 @@ public class TypeCons extends TypeExp
                     }, t -> t.toConcreteType(typeManager, substituteDefaultIfPossible).map(x -> Either.<Unit, DataType>right(x)));
                 });
                 return errOrOperandsAsTypes.eitherEx(err -> Either.<TypeConcretisationError, DataType>left(new TypeConcretisationError(err.getErrorText(), null)), (List<Either<Unit, DataType>> operandsAsTypes) -> {
-                    @Nullable DataType tagged = typeManager.lookupType(new TypeId(name), ImmutableList.copyOf(operandsAsTypes));
+                    DataType tagged = typeManager.lookupType(new TypeId(name), ImmutableList.copyOf(operandsAsTypes));
                     if (tagged != null)
                     {
                         return Either.right(tagged);
@@ -174,7 +174,7 @@ public class TypeCons extends TypeExp
     }
 
     @Override
-    public @Nullable TypeError requireTypeClasses(TypeClassRequirements typeClasses, IdentityHashSet<MutVar> visited)
+    public TypeError requireTypeClasses(TypeClassRequirements typeClasses, IdentityHashSet<MutVar> visited)
     {
         if (operands.isEmpty())
         {
@@ -192,14 +192,14 @@ public class TypeCons extends TypeExp
         {
             // Apply all type constraints to children.
             // First check that everything they want can be derived:
-            @Nullable TypeError derivationError = typeClasses.checkIfSatisfiedBy(toStyledString(), this.typeClasses, this);
+            TypeError derivationError = typeClasses.checkIfSatisfiedBy(toStyledString(), this.typeClasses, this);
             if (derivationError == null)
             {
                 // Apply constraints to children so that they know them
                 // for future unification:
                 for (Either<UnitExp, TypeExp> operand : operands)
                 {
-                    @Nullable TypeError err = operand.<@Nullable TypeError>either(u -> null, t -> t.requireTypeClasses(typeClasses, visited));
+                    TypeError err = operand.<TypeError>either(u -> null, t -> t.requireTypeClasses(typeClasses, visited));
                     if (err != null)
                         return err;
                 }
@@ -219,7 +219,7 @@ public class TypeCons extends TypeExp
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;

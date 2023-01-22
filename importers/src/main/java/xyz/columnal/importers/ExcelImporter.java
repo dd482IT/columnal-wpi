@@ -69,20 +69,20 @@ import java.util.Map;
 public class ExcelImporter implements Importer
 {
     @Override
-    public @Localized String getName()
+    public String getName()
     {
         return TranslationUtility.getString("importer.excel.files");
     }
 
     @Override
-    public @OnThread(Tag.Any) ImmutableList<String> getSupportedFileTypes()
+    public ImmutableList<String> getSupportedFileTypes()
     {
         return ImmutableList.of("*.xls", "*.xlsx", "*.xlsm");
     }
 
     @SuppressWarnings("deprecation")
     @Override
-    public @OnThread(Tag.FXPlatform) void importFile(Window parent, TableManager mgr, CellPosition destination, File src, URL origin, SimulationConsumerNoError<DataSource> recordLoadedTable)
+    public void importFile(Window parent, TableManager mgr, CellPosition destination, File src, URL origin, SimulationConsumerNoError<DataSource> recordLoadedTable)
     {
         try
         {
@@ -145,7 +145,7 @@ public class ExcelImporter implements Importer
 
             Import<UnitType, PlainImportInfo> importInfo = new ImportPlainTable(numSrcColumns, mgr, vals) {
                 @Override
-                public Pair<ColumnId, @Localized String> srcColumnName(int index)
+                public Pair<ColumnId, String> srcColumnName(int index)
                 {
                     ColumnId columnId = excelColumnName(index);
                     return new Pair<>(columnId, columnId.getRaw());
@@ -161,11 +161,11 @@ public class ExcelImporter implements Importer
                 }
             };
             
-            @Nullable ImportInfo<PlainImportInfo> outcome = new ImportChoicesDialog<>(parent, src.getName(), importInfo).showAndWait().orElse(null);
+            ImportInfo<PlainImportInfo> outcome = new ImportChoicesDialog<>(parent, src.getName(), importInfo).showAndWait().orElse(null);
 
             if (outcome != null)
             {
-                @NonNull ImportInfo<PlainImportInfo> outcomeNonNull = outcome;
+                ImportInfo<PlainImportInfo> outcomeNonNull = outcome;
                 SimulationSupplier<DataSource> makeDataSource = () -> new ImmediateDataSource(mgr, outcomeNonNull.getInitialLoadDetails(destination), ImporterUtility.makeEditableRecordSet(mgr.getTypeManager(), outcomeNonNull.getFormat().trim.trim(vals), outcomeNonNull.getFormat().columnInfo));
                 Workers.onWorkerThread("Loading " + src.getName(), Priority.LOAD_FROM_DISK, () -> FXUtility.alertOnError_(TranslationUtility.getString("error.importing.excel"), () -> {
                     DataSource dataSource = makeDataSource.get();

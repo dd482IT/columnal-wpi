@@ -94,7 +94,6 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
         }
 
         @Override
-        @OnThread(Tag.Any)
         public String getContent()
         {
             return keyword;
@@ -118,7 +117,6 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
         }
 
         @Override
-        @OnThread(Tag.Any)
         public String getContent()
         {
             return op;
@@ -139,11 +137,11 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
     }
 
     @Override
-    public LexerResult<TypeExpression, CodeCompletionContext> process(String content, @Nullable Integer curCaretPos, InsertListener insertListener)
+    public LexerResult<TypeExpression, CodeCompletionContext> process(String content, Integer curCaretPos, InsertListener insertListener)
     {
         TypeSaver saver = new TypeSaver(typeManager, insertListener);
         boolean prevWasIdent = false;
-        @RawInputLocation int curIndex = RawInputLocation.ZERO;
+        int curIndex = RawInputLocation.ZERO;
         ArrayList<ContentChunk> chunks = new ArrayList<>();
         ImmutableList.Builder<AutoCompleteDetails<CodeCompletionContext>> nestedCompletions = ImmutableList.builder();
         RemovedCharacters removedCharacters = new RemovedCharacters();
@@ -191,7 +189,7 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
             if (content.charAt(curIndex) == '{')
             {
                 @SuppressWarnings("units")
-                @RawInputLocation int end = content.indexOf('}', curIndex + 1);
+                int end = content.indexOf('}', curIndex + 1);
                 if (end != -1)
                 {
                     // We don't require concrete as we do that bit so don't want do it twice:
@@ -200,8 +198,8 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
                     saver.saveOperand(new UnitLiteralTypeExpression(lexerResult.result), removedCharacters.map(curIndex, end + RawInputLocation.ONE));
                     chunks.add(new ContentChunk("{", ChunkType.NESTED_START));
                     @SuppressWarnings("units")
-                    @DisplayLocation int displayOffset = chunks.stream().mapToInt(c -> c.displayContent.getLength()).sum();
-                    @CanonicalLocation int caretPosOffset = removedCharacters.map(curIndex + RawInputLocation.ONE);
+                    int displayOffset = chunks.stream().mapToInt(c -> c.displayContent.getLength()).sum();
+                    int caretPosOffset = removedCharacters.map(curIndex + RawInputLocation.ONE);
                     saver.addNestedLocations(lexerResult.locationRecorder, caretPosOffset);
                     saver.addNestedErrors(lexerResult.errors, caretPosOffset, displayOffset);
                     removedCharacters.orShift(lexerResult.removedChars, curIndex + lexerResult.adjustedContent.length());
@@ -224,15 +222,15 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
                 continue nextToken;
             }
 
-            @Nullable Pair<Either<DataType, @ExpressionIdentifier String>, @RawInputLocation Integer> parsed = consumeTypeIdentifier(content, curIndex);
+            Pair<Either<DataType, String>, Integer> parsed = consumeTypeIdentifier(content, curIndex);
             if (parsed != null && parsed.getSecond() > curIndex)
             {
                 prevWasIdent = true;
                 
-                @CanonicalLocation int startOfType = removedCharacters.map(curIndex);
+                int startOfType = removedCharacters.map(curIndex);
                 String match = parsed.getFirst().either(dt -> dt.toString(), s -> s);
                 
-                final @RawInputLocation int curIndexFinal = curIndex;
+                final int curIndexFinal = curIndex;
                 parsed.getFirst().either_(dataType -> {
                     saver.saveOperand(dataType.equals(DataType.NUMBER) ? new NumberTypeExpression(null) : new TypePrimitiveLiteral(dataType), removedCharacters.map(curIndexFinal, parsed.getSecond()));
                     
@@ -251,9 +249,9 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
             
             curIndex += RawInputLocation.ONE;
         }
-        @Recorded TypeExpression saved = saver.finish(removedCharacters.map(curIndex, curIndex));
+        TypeExpression saved = saver.finish(removedCharacters.map(curIndex, curIndex));
         
-        Pair<ArrayList<CaretPos>, ImmutableList<@CanonicalLocation Integer>> caretPositions = calculateCaretPos(chunks);
+        Pair<ArrayList<CaretPos>, ImmutableList<Integer>> caretPositions = calculateCaretPos(chunks);
         StyledString built = chunks.stream().map(c -> c.displayContent).collect(StyledString.joining(""));
         if (built.getLength() == 0)
             built = StyledString.s(" ");
@@ -264,19 +262,18 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
         {
             class LocalJellyRecorder implements JellyRecorder
             {
-                private final IdentityHashMap<@Recorded JellyType, CanonicalSpan> jellyTypeLocations = new IdentityHashMap<>();
+                private final IdentityHashMap<JellyType, CanonicalSpan> jellyTypeLocations = new IdentityHashMap<>();
                 
                 @SuppressWarnings("recorded")
                 @Override
-                @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-                public @Recorded JellyType record(JellyType jellyType, @Recorded TypeExpression source)
+                public JellyType record(JellyType jellyType, TypeExpression source)
                 {
                     jellyTypeLocations.put(jellyType, saver.locationRecorder.recorderFor(source));
                     return jellyType;
                 }
                 
                 @SuppressWarnings("nullness")
-                public CanonicalSpan locationFor(@Recorded JellyType jellyType)
+                public CanonicalSpan locationFor(JellyType jellyType)
                 {
                     return jellyTypeLocations.get(jellyType);
                 }
@@ -338,7 +335,7 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
         return new LexerResult<>(saved, chunks.stream().map(c -> c.internalContent).collect(Collectors.joining()), removedCharacters, false, ImmutableList.copyOf(caretPositions.getFirst()), ImmutableList.copyOf(caretPositions.getSecond()), built, errors, saver.locationRecorder, Utility.<AutoCompleteDetails<CodeCompletionContext>>concatI(Lexer.<CodeCompletionContext>makeCompletions(chunks, this::makeCompletions), nestedCompletions.build()), new BitSet(), !saver.hasUnmatchedBrackets(), (i, n) -> ImmutableMap.<DisplayType, Pair<StyledString, ImmutableList<TextQuickFix>>>of());
     }
     
-    private CodeCompletionContext makeCompletions(String stem, @CanonicalLocation int canonIndex, ChunkType curType, ChunkType preceding)
+    private CodeCompletionContext makeCompletions(String stem, int canonIndex, ChunkType curType, ChunkType preceding)
     {
         return new CodeCompletionContext(curType != ChunkType.IDENT ? ImmutableList.of() : ImmutableList.of(new LexCompletionGroup(
             Stream.<LexCompletion>concat(
@@ -356,12 +353,12 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
         , null, 2)));
     }
 
-    protected LexCompletion typeCompletionConcrete(DataType dataType, @CanonicalLocation int start, int lengthToShowFor)
+    protected LexCompletion typeCompletionConcrete(DataType dataType, int start, int lengthToShowFor)
     {
         return new LexCompletion(start, lengthToShowFor, dataType.toString()).withFurtherDetailsURL("type-" + dataType.toString() + ".html");
     }
     
-    protected LexCompletion typeCompletionTagged(TaggedTypeDefinition taggedTypeDefinition, @CanonicalLocation int start, int lengthToShowFor)
+    protected LexCompletion typeCompletionTagged(TaggedTypeDefinition taggedTypeDefinition, int start, int lengthToShowFor)
     {
         return new LexCompletion(start, lengthToShowFor, taggedTypeDefinition.getTaggedTypeName().getRaw() + Utility.replicate(taggedTypeDefinition.getTypeArguments().size(), "()").stream().collect(Collectors.joining()));
     }
@@ -371,13 +368,13 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
         return Stream.<DataType>concat(Stream.<DataType>of(DataType.NUMBER, DataType.TEXT, DataType.BOOLEAN), Arrays.stream(DateTimeType.values()).<DataType>map(t -> DataType.date(new DateTimeInfo(t))));
     }
 
-    private AutoCompleteDetails<CodeCompletionContext> offsetBy(AutoCompleteDetails<CodeCompletionContext> acd, @CanonicalLocation int caretPosOffset)
+    private AutoCompleteDetails<CodeCompletionContext> offsetBy(AutoCompleteDetails<CodeCompletionContext> acd, int caretPosOffset)
     {
         return new AutoCompleteDetails<>(acd.location.offsetBy(caretPosOffset), new CodeCompletionContext(acd.codeCompletionContext, caretPosOffset));
     }
 
     @SuppressWarnings({"identifier", "units"})
-    public static @Nullable Pair<Either<DataType, @ExpressionIdentifier String>, @RawInputLocation Integer> consumeTypeIdentifier(String content, int startFrom)
+    public static Pair<Either<DataType, String>, Integer> consumeTypeIdentifier(String content, int startFrom)
     {
         CodePointCharStream inputStream = CharStreams.fromString(content.substring(startFrom));
         org.antlr.v4.runtime.Lexer lexer = new FormatLexer(inputStream);
@@ -386,7 +383,7 @@ public class TypeLexer extends Lexer<TypeExpression, CodeCompletionContext>
         Token token = lexer.nextToken();
         if (!errorListener.errors.isEmpty())
             return null;
-        final Either<DataType, @ExpressionIdentifier String> r;
+        final Either<DataType, String> r;
         switch (token.getType())
         {
             case FormatLexer.BOOLEAN:

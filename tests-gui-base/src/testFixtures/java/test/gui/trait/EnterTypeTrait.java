@@ -47,7 +47,6 @@ public interface EnterTypeTrait extends FxRobotInterface
 {
     static final int DELAY = 1;
     
-    @OnThread(Tag.Any)
     public default void enterType(TypeExpression typeExpression, Random r) throws InternalException
     {
         if (typeExpression instanceof TypePrimitiveLiteral)
@@ -93,7 +92,7 @@ public interface EnterTypeTrait extends FxRobotInterface
             push(KeyCode.DELETE);
             for (int i = 0; i < record._test_getItems().size(); i++)
             {
-                Pair<@ExpressionIdentifier String, @Recorded TypeExpression> item = record._test_getItems().get(i);
+                Pair<String, TypeExpression> item = record._test_getItems().get(i);
                 write(item.getFirst() + ": ");
                 enterType(item.getSecond(), r);
                 if (i < record._test_getItems().size() - 1)
@@ -143,7 +142,6 @@ public interface EnterTypeTrait extends FxRobotInterface
         }
     }
 
-    @OnThread(Tag.Any)
     public default void enterUnit(UnitExpression unitExpression, Random r) throws InternalException
     {
         // Bit of a hack...

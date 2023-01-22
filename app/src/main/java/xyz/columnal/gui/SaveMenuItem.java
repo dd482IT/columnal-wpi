@@ -37,14 +37,13 @@ import java.time.Instant;
 final class SaveMenuItem extends MenuItem
 {
     private final ObjectProperty<Object> dummyNowBinding = new SimpleObjectProperty<>(new Object());
-    private final @OnThread(Tag.FXPlatform) StringBinding text;
+    private final StringBinding text;
 
-    @OnThread(Tag.FXPlatform)
     public SaveMenuItem(View view)
     {
         text = Bindings.createStringBinding(() ->
         {
-            @Nullable Instant lastSave = view.lastSaveTime().get();
+            Instant lastSave = view.lastSaveTime().get();
             if (lastSave == null)
                 return TranslationUtility.getString("menu.project.modified");
             else

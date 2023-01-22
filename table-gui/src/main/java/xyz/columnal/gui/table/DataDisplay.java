@@ -109,17 +109,15 @@ import java.util.OptionalDouble;
  * used as the base class for {@link TableDisplay.TableDataDisplay} which does show data from a real
  * RecordSet.
  */
-@OnThread(Tag.FXPlatform)
 public abstract class DataDisplay extends HeadedDisplay
 {    
     protected final VirtualGridSupplierFloating floatingItems;
     private final List<FloatingItem<Label>> columnHeaderItems = new ArrayList<>();
 
-    protected @TableDataRowIndex int currentKnownRows; 
+    protected int currentKnownRows; 
     
     // Not final because it may changes if user changes the display item or preview options change:
     // Also note that this is used by reference as an up-to-date check in GridCellInfo
-    @OnThread(Tag.FXPlatform)
     protected ImmutableList<ColumnDetails> displayColumns = ImmutableList.of();
     // This is re-assigned all at once when columns change:
     protected ImmutableMap<ColumnId, ColumnHeaderOps> columnHeaderOps = ImmutableMap.of();
@@ -129,7 +127,7 @@ public abstract class DataDisplay extends HeadedDisplay
     protected final RectangularTableCellSelection.TableSelectionLimits dataSelectionLimits;
     private final HeaderRows headerRows;
 
-    private DataDisplay(@Nullable TableHeaderItemParams tableHeaderItemParams, VirtualGridSupplierFloating floatingItems, HeaderRows headerRows)
+    private DataDisplay(TableHeaderItemParams tableHeaderItemParams, VirtualGridSupplierFloating floatingItems, HeaderRows headerRows)
     {
         super(tableHeaderItemParams, floatingItems);
         this.floatingItems = floatingItems;
@@ -158,10 +156,10 @@ public abstract class DataDisplay extends HeadedDisplay
             @Override
             public void doDelete(CellPosition topLeftIncl, CellPosition bottomRightIncl)
             {
-                for (@AbsColIndex int colIndex = topLeftIncl.columnIndex; colIndex <= bottomRightIncl.columnIndex; colIndex++)
+                for (int colIndex = topLeftIncl.columnIndex; colIndex <= bottomRightIncl.columnIndex; colIndex++)
                 {
                     ColumnId columnId = displayColumns.get(colIndex - getPosition().columnIndex).getColumnId();
-                    for (@AbsRowIndex int row = topLeftIncl.rowIndex; row <= bottomRightIncl.rowIndex; row++)
+                    for (int row = topLeftIncl.rowIndex; row <= bottomRightIncl.rowIndex; row++)
                     {
                         Utility.later(DataDisplay.this).deleteValue(columnId, Utility.later(DataDisplay.this).getTableRowIndexFromAbsRow(row));
                     }
@@ -169,7 +167,7 @@ public abstract class DataDisplay extends HeadedDisplay
             }
 
             @Override
-            public void gotoRow(Window parent, @AbsColIndex int column)
+            public void gotoRow(Window parent, int column)
             {
                 Utility.later(DataDisplay.this).gotoRow(parent, column);
             }
@@ -188,8 +186,7 @@ public abstract class DataDisplay extends HeadedDisplay
         this(new TableHeaderItemParams(tableManager, table.getId(), table, floatingItems), floatingItems, new HeaderRows(true, true, true));
     }
 
-    @OnThread(Tag.FXPlatform)
-    public void setColumns(@UnknownInitialization(DataDisplay.class) DataDisplay this, ImmutableList<ColumnDetails> columns, @Nullable TableOperations operations, @Nullable FXPlatformFunction<ColumnId, ColumnHeaderOps> columnActions)
+    public void setColumns(DataDisplay this, ImmutableList<ColumnDetails> columns, TableOperations operations, FXPlatformFunction<ColumnId, ColumnHeaderOps> columnActions)
     {
         // Remove old columns:
         columnHeaderItems.forEach(x -> floatingItems.removeItem(x));
@@ -202,7 +199,7 @@ public abstract class DataDisplay extends HeadedDisplay
         {
             final int columnIndex = i;
             ColumnDetails column = columns.get(i);
-            @Nullable ColumnHeaderOps ops = columnActions == null ? null : columnActions.apply(column.getColumnId());
+            ColumnHeaderOps ops = columnActions == null ? null : columnActions.apply(column.getColumnId());
             if (ops != null)
                 colOps.put(column.getColumnId(), ops);
             // Item for column name:
@@ -227,10 +224,10 @@ public abstract class DataDisplay extends HeadedDisplay
     }
 
     // Gets the column and the bounds for that column, if one is there (otherwise null is returned)
-    public @Nullable Pair<ColumnId, RectangleBounds> getColumnAt(CellPosition cell)
+    public Pair<ColumnId, RectangleBounds> getColumnAt(CellPosition cell)
     {
-        @AbsRowIndex int topDataRow = getPosition().rowIndex + CellPosition.row(tableHeaderItem == null ? 0 : 1);
-        @AbsRowIndex int bottomDataRow = getDataDisplayBottomRightIncl().from(getPosition()).rowIndex;
+        int topDataRow = getPosition().rowIndex + CellPosition.row(tableHeaderItem == null ? 0 : 1);
+        int bottomDataRow = getDataDisplayBottomRightIncl().from(getPosition()).rowIndex;
         if (cell.rowIndex < topDataRow
             || cell.rowIndex > bottomDataRow)
             return null;
@@ -258,19 +255,19 @@ public abstract class DataDisplay extends HeadedDisplay
     }
 
     @SuppressWarnings("units")
-    protected @TableDataRowIndex int getRowIndexWithinTable(@GridAreaRowIndex int gridRowIndex)
+    protected int getRowIndexWithinTable(int gridRowIndex)
     {
         return gridRowIndex - getHeaderRowCount();
     }
 
     @SuppressWarnings("units")
-    public @AbsRowIndex int getAbsRowIndexFromTableRow(@TableDataRowIndex int tableDataRowIndex)
+    public int getAbsRowIndexFromTableRow(int tableDataRowIndex)
     {
         return tableDataRowIndex + getPosition().rowIndex + getHeaderRowCount();
     }
 
     @SuppressWarnings("units")
-    public @TableDataRowIndex int getTableRowIndexFromAbsRow(@AbsRowIndex int absIndex)
+    public int getTableRowIndexFromAbsRow(int absIndex)
     {
         return absIndex - (getPosition().rowIndex + getHeaderRowCount());
     }
@@ -283,16 +280,14 @@ public abstract class DataDisplay extends HeadedDisplay
 
     // The top left data item in grid area terms, not including any headers
     @SuppressWarnings("units")
-    @OnThread(Tag.FXPlatform)
-    public final GridAreaCellPosition getDataDisplayTopLeftIncl(@UnknownInitialization(DataDisplay.class) DataDisplay this)
+    public final GridAreaCellPosition getDataDisplayTopLeftIncl(DataDisplay this)
     {
         return new GridAreaCellPosition(getHeaderRowCount(), 0);
     }
 
     // The last data row in grid area terms, not including any append buttons
     @SuppressWarnings("units")
-    @OnThread(Tag.FXPlatform)
-    public GridAreaCellPosition getDataDisplayBottomRightIncl(@UnknownInitialization(DataDisplay.class) DataDisplay this)
+    public GridAreaCellPosition getDataDisplayBottomRightIncl(DataDisplay this)
     {
         return new GridAreaCellPosition(getHeaderRowCount() + Math.max(0, currentKnownRows - 1), Math.max(0, displayColumns == null ? 0 : (displayColumns.size() - 1)));
     }
@@ -302,7 +297,7 @@ public abstract class DataDisplay extends HeadedDisplay
         return new GridCellInfo<VersionedSTF, CellStyle>()
         {
             @Override
-            public @Nullable GridAreaCellPosition cellAt(CellPosition cellPosition)
+            public GridAreaCellPosition cellAt(CellPosition cellPosition)
             {
                 int tableDataRow = cellPosition.rowIndex - (getPosition().rowIndex + getHeaderRowCount());
                 int tableDataColumn = cellPosition.columnIndex - getPosition().columnIndex;
@@ -324,16 +319,16 @@ public abstract class DataDisplay extends HeadedDisplay
             }
 
             @Override
-            public void fetchFor(GridAreaCellPosition cellPosition, FXPlatformFunction<CellPosition, @Nullable VersionedSTF> getCell, FXPlatformRunnable scheduleStyleTogether)
+            public void fetchFor(GridAreaCellPosition cellPosition, FXPlatformFunction<CellPosition, VersionedSTF> getCell, FXPlatformRunnable scheduleStyleTogether)
             {
                 // Blank then queue fetch:
                 VersionedSTF orig = getCell.apply(cellPosition.from(getPosition()));
                 if (orig != null)
                     orig.blank(new ReadOnlyDocument(TranslationUtility.getString("data.loading")));
                 @SuppressWarnings("units")
-                @TableDataColIndex int columnIndexWithinTable = cellPosition.columnIndex;
+                int columnIndexWithinTable = cellPosition.columnIndex;
                 @SuppressWarnings("units")
-                @TableDataRowIndex int rowIndexWithinTable = getRowIndexWithinTable(cellPosition.rowIndex);
+                int rowIndexWithinTable = getRowIndexWithinTable(cellPosition.rowIndex);
                 if (displayColumns != null && columnIndexWithinTable < displayColumns.size())
                 {
                     displayColumns.get(columnIndexWithinTable).getColumnHandler().fetchValue(
@@ -342,7 +337,7 @@ public abstract class DataDisplay extends HeadedDisplay
                             (k, c) -> withParent_(p -> p.select(new RectangularTableCellSelection(c.rowIndex + CellPosition.row(k == KeyCode.ENTER ? 1 : 0), c.columnIndex, dataSelectionLimits))),
                         (rowIndex, colIndex, doc) -> {
                             // The rowIndex and colIndex are in table data terms, so we must translate:
-                            @Nullable VersionedSTF cell = getCell.apply(cellPosition.from(getPosition()));
+                            VersionedSTF cell = getCell.apply(cellPosition.from(getPosition()));
                             if (cell != null)// && cell == orig)
                             {
                                 if (doc instanceof RecogniserDocument)
@@ -373,7 +368,7 @@ public abstract class DataDisplay extends HeadedDisplay
             @Override
             public void styleTogether(Collection<Pair<GridAreaCellPosition, VersionedSTF>> cells)
             {
-                HashMap<@GridAreaColIndex Integer, ArrayList<VersionedSTF>> cellsByColumn = new HashMap<>();
+                HashMap<Integer, ArrayList<VersionedSTF>> cellsByColumn = new HashMap<>();
                 
                 for (Pair<GridAreaCellPosition, VersionedSTF> cellInfo : cells)
                 {
@@ -400,10 +395,10 @@ public abstract class DataDisplay extends HeadedDisplay
         super.cleanupFloatingItems(floatingItems);        
     }
 
-    public @Nullable CellSelection getSelectionForSingleCell(ColumnId columnId, @TableDataRowIndex int rowIndex)
+    public CellSelection getSelectionForSingleCell(ColumnId columnId, int rowIndex)
     {
         @SuppressWarnings("units")
-        @TableDataColIndex int colIndex = Utility.findFirstIndex(displayColumns, c -> c.getColumnId().equals(columnId)).orElse(-1);
+        int colIndex = Utility.findFirstIndex(displayColumns, c -> c.getColumnId().equals(columnId)).orElse(-1);
         if (colIndex < 0)
             return null;
         CellPosition pos = getDataPosition(rowIndex, colIndex);
@@ -411,7 +406,7 @@ public abstract class DataDisplay extends HeadedDisplay
     }
 
     @Override
-    public @Nullable CellSelection getSelectionForSingleCell(CellPosition cellPosition)
+    public CellSelection getSelectionForSingleCell(CellPosition cellPosition)
     {
         if (!contains(cellPosition))
             return null;
@@ -430,7 +425,7 @@ public abstract class DataDisplay extends HeadedDisplay
         return new SingleCellSelection(cellPosition);
     }
 
-    public int getHeaderRowCount(@UnknownInitialization(DataDisplay.class) DataDisplay this)
+    public int getHeaderRowCount(DataDisplay this)
     {
         return (headerRows.showingTableNameRow ? 1 : 0)
             + (headerRows.showingColumnNameRow ? 1 : 0)
@@ -438,7 +433,7 @@ public abstract class DataDisplay extends HeadedDisplay
     }
 
     // Make a row label context menu
-    public @Nullable ContextMenu makeRowContextMenu(@TableDataRowIndex int row)
+    public ContextMenu makeRowContextMenu(int row)
     {
         return null;
     }
@@ -491,7 +486,7 @@ public abstract class DataDisplay extends HeadedDisplay
         }
 
         @Override
-        public @Nullable CellSelection extendTo(CellPosition cellPosition)
+        public CellSelection extendTo(CellPosition cellPosition)
         {
             return null;
         }
@@ -515,7 +510,7 @@ public abstract class DataDisplay extends HeadedDisplay
         }
 
         @Override
-        public boolean includes(@UnknownInitialization(GridArea.class) GridArea tableDisplay)
+        public boolean includes(GridArea tableDisplay)
         {
             return false;
         }
@@ -547,7 +542,7 @@ public abstract class DataDisplay extends HeadedDisplay
                 if (relCol >= 0 && relCol < getDisplayColumns().size())
                 {
                     ColumnId columnId = getDisplayColumns().get(relCol).getColumnId();
-                    @Nullable ColumnHeaderOps ops = columnHeaderOps.get(columnId);
+                    ColumnHeaderOps ops = columnHeaderOps.get(columnId);
                     if (ops != null && ops.getDeleteOperation() != null)
                         ops.getDeleteOperation().executeFX();
                 }
@@ -585,7 +580,7 @@ public abstract class DataDisplay extends HeadedDisplay
         }
     }
 
-    protected void deleteValue(ColumnId columnId, @TableDataRowIndex int rowIndex)
+    protected void deleteValue(ColumnId columnId, int rowIndex)
     {
         // Do nothing by default
     }
@@ -601,20 +596,17 @@ public abstract class DataDisplay extends HeadedDisplay
 
     public static interface ColumnHeaderOps
     {
-        @OnThread(Tag.FXPlatform)
         public ImmutableList<MenuItem> contextOperations();
         
-        @Pure
-        public @Nullable ColumnOperation getDeleteOperation();
+        public ColumnOperation getDeleteOperation();
         
         public static enum EditTarget { EDIT_NAME, EDIT_TYPE }
         
         // Used as the hyperlinked edit operation on column headers, if non-null.
-        @Pure
-        public @Nullable FXPlatformConsumer<EditTarget> getPrimaryEditOperation(); 
+        public FXPlatformConsumer<EditTarget> getPrimaryEditOperation(); 
     }
 
-    private void setColumnOperationContextMenu(Label columnHeader, @Nullable ColumnHeaderOps columnActions)
+    private void setColumnOperationContextMenu(Label columnHeader, ColumnHeaderOps columnActions)
     {
         ContextMenu contextMenu = new ContextMenu();
         if (columnActions != null)
@@ -632,12 +624,12 @@ public abstract class DataDisplay extends HeadedDisplay
     {
         private final int columnIndex;
         private final ColumnDetails column;
-        private final @Nullable ColumnHeaderOps columnActions;
+        private final ColumnHeaderOps columnActions;
         private double containerTranslateY;
         // minTranslateY is zero; we can't scroll above our current position.
         private double maxTranslateY;
 
-        public ColumnNameItem(int columnIndex, ColumnDetails column, @Nullable ColumnHeaderOps columnActions)
+        public ColumnNameItem(int columnIndex, ColumnDetails column, ColumnHeaderOps columnActions)
         {
             super(ViewOrder.FLOATING);
             this.columnIndex = columnIndex;
@@ -645,15 +637,13 @@ public abstract class DataDisplay extends HeadedDisplay
             this.columnActions = columnActions;
         }
 
-        @OnThread(Tag.FXPlatform)
         private CellPosition getFloatingPosition()
         {
             return new CellPosition(getPosition().rowIndex + CellPosition.row(headerRows.showingTableNameRow ? 1 : 0), getPosition().columnIndex + CellPosition.col(columnIndex));
         }
 
         @Override
-        @OnThread(Tag.FXPlatform)
-        protected OptionalDouble getPrefWidthForItem(@AbsColIndex int columnIndex, Label node)
+        protected OptionalDouble getPrefWidthForItem(int columnIndex, Label node)
         {
             if (getPosition().offsetByRowCols(0, this.columnIndex).columnIndex == columnIndex)
             {
@@ -664,14 +654,12 @@ public abstract class DataDisplay extends HeadedDisplay
         }
 
         @Override
-        @OnThread(value = Tag.FXPlatform)
-        public @Nullable Pair<ItemState, @Nullable StyledString> getItemState(CellPosition cellPosition, Point2D screenPos)
+        public Pair<ItemState, StyledString> getItemState(CellPosition cellPosition, Point2D screenPos)
         {
             return cellPosition.equals(getFloatingPosition()) ? new Pair<>(ItemState.DIRECTLY_CLICKABLE, null) : null;
         }
 
         @Override
-        @OnThread(Tag.FXPlatform)
         public Optional<BoundingBox> calculatePosition(VisibleBounds visibleBounds)
         {
             CellPosition pos = getFloatingPosition();
@@ -694,7 +682,6 @@ public abstract class DataDisplay extends HeadedDisplay
         }
 
         @Override
-        @OnThread(Tag.FXPlatform)
         public Label makeCell(VisibleBounds visibleBounds)
         {
             Label columnName = new Label(column.getDisplayHeaderLabel());
@@ -702,7 +689,7 @@ public abstract class DataDisplay extends HeadedDisplay
             GUI.showTooltipWhenAbbrev(columnName);
             if (columnActions != null && columnActions.getPrimaryEditOperation() != null)
             {
-                @NonNull FXPlatformConsumer<EditTarget> primaryEditOp = columnActions.getPrimaryEditOperation();
+                FXPlatformConsumer<EditTarget> primaryEditOp = columnActions.getPrimaryEditOperation();
                 addEditableStyling(columnName);
                 columnName.addEventHandler(MouseEvent.MOUSE_CLICKED, e -> {
                     if (e.getButton() == MouseButton.PRIMARY)
@@ -730,7 +717,6 @@ public abstract class DataDisplay extends HeadedDisplay
         }
 
         @Override
-        @OnThread(value = Tag.FXPlatform)
         public void keyboardActivate(CellPosition cellPosition)
         {
             if (getFloatingPosition().equals(cellPosition) && columnActions != null && columnActions.getPrimaryEditOperation() != null)
@@ -740,7 +726,6 @@ public abstract class DataDisplay extends HeadedDisplay
         }
 
         @Override
-        @OnThread(value = Tag.FXPlatform)
         public void adjustForContainerTranslation(Label node, Pair<DoubleExpression, DoubleExpression> translateXY, boolean adding)
         {
             if (adding)
@@ -750,15 +735,13 @@ public abstract class DataDisplay extends HeadedDisplay
         }
 
         @Override
-        @OnThread(value = Tag.FXPlatform, ignoreParent = true)
         public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue)
         {
             containerTranslateY = newValue.doubleValue();
             updateTranslate(getNode(), null);
         }
 
-        @OnThread(Tag.FX)
-        private void updateTranslate(@Nullable Label label, @Nullable Double futureWidth)
+        private void updateTranslate(Label label, Double futureWidth)
         {
             if (label != null)
             {
@@ -776,11 +759,10 @@ public abstract class DataDisplay extends HeadedDisplay
     {
         private final int columnIndex;
         private final ColumnDetails column;
-        private final @Nullable FXPlatformConsumer<EditTarget> editOp;
-        private final @Nullable ColumnHeaderOps columnActions;
+        private final FXPlatformConsumer<EditTarget> editOp;
+        private final ColumnHeaderOps columnActions;
 
-        @OnThread(Tag.FXPlatform)
-        public ColumnTypeItem(int columnIndex, ColumnDetails column, @Nullable ColumnHeaderOps columnHeaderOps)
+        public ColumnTypeItem(int columnIndex, ColumnDetails column, ColumnHeaderOps columnHeaderOps)
         {
             super(ViewOrder.STANDARD_CELLS);
             this.columnIndex = columnIndex;
@@ -789,15 +771,13 @@ public abstract class DataDisplay extends HeadedDisplay
             this.editOp = columnHeaderOps == null ? null : columnHeaderOps.getPrimaryEditOperation();
         }
 
-        @OnThread(Tag.FXPlatform)
         private CellPosition getFloatingPosition()
         {
             return new CellPosition(getPosition().rowIndex + CellPosition.row((headerRows.showingTableNameRow ? 1 : 0) + (headerRows.showingColumnNameRow ? 1 : 0)), getPosition().columnIndex + CellPosition.col(columnIndex));
         }
 
         @Override
-        @OnThread(Tag.FXPlatform)
-        protected OptionalDouble getPrefWidthForItem(@AbsColIndex int columnIndex, Label node)
+        protected OptionalDouble getPrefWidthForItem(int columnIndex, Label node)
         {
             if (getPosition().offsetByRowCols(0, this.columnIndex).columnIndex == columnIndex)
             {
@@ -808,7 +788,7 @@ public abstract class DataDisplay extends HeadedDisplay
         }
 
         @Override
-        public @Nullable Pair<ItemState, @Nullable StyledString> getItemState(CellPosition cellPosition, Point2D screenPos)
+        public Pair<ItemState, StyledString> getItemState(CellPosition cellPosition, Point2D screenPos)
         {
             return cellPosition.equals(getFloatingPosition()) ? new Pair<>(ItemState.DIRECTLY_CLICKABLE, null) : null;
         }
@@ -828,12 +808,12 @@ public abstract class DataDisplay extends HeadedDisplay
         @Override
         public Label makeCell(VisibleBounds visibleBounds)
         {
-            Label typeLabel = new TypeLabel(new ReadOnlyObjectWrapper<@Nullable DataType>(column.getColumnType()));
+            Label typeLabel = new TypeLabel(new ReadOnlyObjectWrapper<DataType>(column.getColumnType()));
             typeLabel.getStyleClass().add("table-display-column-type");
             GUI.showTooltipWhenAbbrev(typeLabel);
             if (editOp != null)
             {
-                @Nullable FXPlatformConsumer<EditTarget> editOpFinal = editOp;
+                FXPlatformConsumer<EditTarget> editOpFinal = editOp;
                 addEditableStyling(typeLabel);
                 typeLabel.addEventHandler(MouseEvent.MOUSE_CLICKED, e -> {
                     if (e.getButton() == MouseButton.PRIMARY)
@@ -861,7 +841,7 @@ public abstract class DataDisplay extends HeadedDisplay
     }
     
     @Override
-    public void gotoRow(Window parent, @AbsColIndex int currentCol)
+    public void gotoRow(Window parent, int currentCol)
     {
         new GotoRowDialog(parent).showAndWait().ifPresent(row -> {
             withParent_(g -> {
@@ -906,16 +886,15 @@ public abstract class DataDisplay extends HeadedDisplay
         return false;
     }
 
-    @OnThread(Tag.FXPlatform)
-    private class GotoRowDialog extends Dialog<@TableDataRowIndex Integer>
+    private class GotoRowDialog extends Dialog<Integer>
     {
-        private final ErrorableTextField<@TableDataRowIndex Integer> textField;
+        private final ErrorableTextField<Integer> textField;
 
         public GotoRowDialog(Window parent)
         {
             initOwner(parent);
             initModality(FXUtility.windowModal());
-            this.textField = new ErrorableTextField<@TableDataRowIndex Integer>(this::parseRowNumber);
+            this.textField = new ErrorableTextField<Integer>(this::parseRowNumber);
             setResultConverter(bt -> {
                 if (bt == ButtonType.OK)
                     return textField.valueProperty().get();
@@ -938,8 +917,7 @@ public abstract class DataDisplay extends HeadedDisplay
             });
         }
 
-        @OnThread(Tag.FXPlatform)
-        private ErrorableTextField.ConversionResult<@TableDataRowIndex Integer> parseRowNumber(@UnknownInitialization(Object.class) GotoRowDialog this, String text)
+        private ErrorableTextField.ConversionResult<Integer> parseRowNumber(GotoRowDialog this, String text)
         {
             try
             {

@@ -74,7 +74,6 @@ import java.util.stream.Stream;
  * Error behaviour:
  *   - Errors in every place if the sort-by columns can't be found.
  */
-@OnThread(Tag.Simulation)
 public class Sort extends VisitableTransformation implements SingleSourceTransformation
 {
     public static final String NAME = "sort";
@@ -91,14 +90,12 @@ public class Sort extends VisitableTransformation implements SingleSourceTransfo
         }
     }
 
-    @OnThread(Tag.Any)
     private String sortByError;
-    @OnThread(Tag.Any)
     private final TableId srcTableId;
-    private final @Nullable Table src;
-    private final @Nullable RecordSet result;
+    private final Table src;
+    private final RecordSet result;
     // Not actually a column by itself, but holds a list of integers so reasonable to re-use:
-    private final @Nullable NumericColumnStorage sortMap;
+    private final NumericColumnStorage sortMap;
 
     // This works like a linked list, but flattened into an integer array.
     // The first item is the head, then others point onwards.  (Irritatingly, stillToOrder[n]
@@ -118,11 +115,10 @@ public class Sort extends VisitableTransformation implements SingleSourceTransfo
     // 1 : 4 [next item after originalIndex=0 is originalIndex=3]
     // 2 : 4
     // 3 : 4 [now stillToOrder], etc
-    private int @Nullable [] stillToOrder;
+    private int[] stillToOrder;
 
-    @OnThread(Tag.Any)
-    private final @NonNull ImmutableList<Pair<ColumnId, Direction>> originalSortBy;
-    private final @Nullable ImmutableList<Pair<Column, Direction>> sortBy;
+    private final ImmutableList<Pair<ColumnId, Direction>> originalSortBy;
+    private final ImmutableList<Pair<Column, Direction>> sortBy;
 
     public Sort(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, ImmutableList<Pair<ColumnId, Direction>> sortBy) throws InternalException
     {
@@ -139,8 +135,8 @@ public class Sort extends VisitableTransformation implements SingleSourceTransfo
             sortByError = "Could not find source table: \"" + srcTableId + "\"";
             return;
         }
-        @Nullable RecordSet theResult = null;
-        @Nullable List<Pair<Column, Direction>> theSortBy = null;
+        RecordSet theResult = null;
+        List<Pair<Column, Direction>> theSortBy = null;
         
         try
         {
@@ -160,7 +156,7 @@ public class Sort extends VisitableTransformation implements SingleSourceTransfo
             for (Pair<ColumnId, Direction> c : originalSortBy)
             {
                 
-                @Nullable Column column = srcData.getColumnOrNull(c.getFirst());
+                Column column = srcData.getColumnOrNull(c.getFirst());
                 if (column == null)
                 {
                     sortByColumns = null;
@@ -183,7 +179,7 @@ public class Sort extends VisitableTransformation implements SingleSourceTransfo
                 {
                     @Override
                     @SuppressWarnings({"nullness", "initialization"})
-                    public @OnThread(Tag.Any) DataTypeValue getType() throws InternalException, UserException
+                    public DataTypeValue getType() throws InternalException, UserException
                     {
                         return addManualEditSet(getName(), c.getType().copyReorder(i ->
                         {
@@ -193,7 +189,7 @@ public class Sort extends VisitableTransformation implements SingleSourceTransfo
                     }
 
                     @Override
-                    public @OnThread(Tag.Any) AlteredState getAlteredState()
+                    public AlteredState getAlteredState()
                     {
                         return AlteredState.FILTERED_OR_REORDERED;
                     }
@@ -209,7 +205,7 @@ public class Sort extends VisitableTransformation implements SingleSourceTransfo
                 }
 
                 @Override
-                public @TableDataRowIndex int getLength() throws UserException, InternalException
+                public int getLength() throws UserException, InternalException
                 {
                     return srcData.getLength();
                 }
@@ -235,7 +231,7 @@ public class Sort extends VisitableTransformation implements SingleSourceTransfo
         for (int dest = destStart; dest <= target; dest++)
         {
             int lowestIndex = 0;
-            ImmutableList<Either<String, @Value Object>> lowest = null;
+            ImmutableList<Either<String, Object>> lowest = null;
             int pointerToLowestIndex = -1;
             int prevSrc = 0;
             if (stillToOrder == null)
@@ -244,7 +240,7 @@ public class Sort extends VisitableTransformation implements SingleSourceTransfo
             for (int src = stillToOrder[prevSrc]; src != -1; src = stillToOrder == null ? -1 : stillToOrder[src])
             {
                 // src is in stillToOrder terms, which is one more than original indexes
-                ImmutableList<Either<String, @Value Object>> cur = getItem(src - 1);
+                ImmutableList<Either<String, Object>> cur = getItem(src - 1);
                 if (lowest == null || compareFixedSet(cur, lowest, justDirections) < 0)
                 {
                     lowest = cur;
@@ -276,12 +272,12 @@ public class Sort extends VisitableTransformation implements SingleSourceTransfo
     // All arrays must be same length.
     // Returns -1 if a is before b, given the directions.
     // e.g. compareFixedSet({0}, {1}, DESCENDING) will return positive number, because 0 is after 1 when descending
-    private static int compareFixedSet(ImmutableList<Either<String, @Value Object>> a, ImmutableList<Either<String, @Value Object>> b, Direction[] justDirections) throws UserException, InternalException
+    private static int compareFixedSet(ImmutableList<Either<String, Object>> a, ImmutableList<Either<String, Object>> b, Direction[] justDirections) throws UserException, InternalException
     {
         for (int i = 0; i < a.size(); i++)
         {
-            Either<String, @Value Object> ax = a.get(i);
-            Either<String, @Value Object> bx = b.get(i);
+            Either<String, Object> ax = a.get(i);
+            Either<String, Object> bx = b.get(i);
             // Errors are always first, whether descending or ascending:
             if (ax.isLeft())
             {
@@ -303,16 +299,15 @@ public class Sort extends VisitableTransformation implements SingleSourceTransfo
         return 0;
     }
 
-    @Pure
-    private ImmutableList<Either<String, @Value Object>> getItem(int srcIndex) throws UserException, InternalException
+    private ImmutableList<Either<String, Object>> getItem(int srcIndex) throws UserException, InternalException
     {
         if (sortBy == null)
             throw new UserException(sortByError);
-        ImmutableList.Builder<Either<String, @Value Object>> r = ImmutableList.builderWithExpectedSize(sortBy.size());
+        ImmutableList.Builder<Either<String, Object>> r = ImmutableList.builderWithExpectedSize(sortBy.size());
         for (int i = 0; i < sortBy.size(); i++)
         {
             Pair<Column, Direction> c = sortBy.get(i);
-            Either<String, @Value Object> val;
+            Either<String, Object> val;
             try
             {
                 val = Either.right(c.getFirst().getType().getCollapsed(srcIndex));
@@ -333,7 +328,7 @@ public class Sort extends VisitableTransformation implements SingleSourceTransfo
     }
 
     @Override
-    public @OnThread(Tag.Any) RecordSet getData() throws UserException
+    public RecordSet getData() throws UserException
     {
         if (result == null)
             throw new UserException(sortByError);
@@ -341,47 +336,42 @@ public class Sort extends VisitableTransformation implements SingleSourceTransfo
     }
 
     @Override
-    protected @OnThread(Tag.Any) String getTransformationName()
+    protected String getTransformationName()
     {
         return NAME;
     }
 
-    @OnThread(Tag.Any)
     public TableId getSrcTableId()
     {
         return srcTableId;
     }
 
     @Override
-    public @OnThread(Tag.Simulation) Transformation withNewSource(TableId newSrcTableId) throws InternalException
+    public Transformation withNewSource(TableId newSrcTableId) throws InternalException
     {
         return new Sort(getManager(), getDetailsForCopy(getId()), newSrcTableId, originalSortBy);
     }
 
     @Override
-    @OnThread(Tag.Any)
     public Stream<TableId> getPrimarySources()
     {
         return Stream.of(srcTableId);
     }
 
     @Override
-    protected @OnThread(Tag.Any) Stream<TableId> getSourcesFromExpressions()
+    protected Stream<TableId> getSourcesFromExpressions()
     {
         return Stream.empty();
     }
 
-    @OnThread(Tag.FXPlatform)
     public static class Info extends SingleSourceTransformationInfo
     {
-        @OnThread(Tag.Any)
         public Info()
         {
             super(NAME, "transform.sort", "preview-sort.png", "sort.explanation.short",Collections.emptyList());
         }
 
         @Override
-        @OnThread(Tag.Simulation)
         @SuppressWarnings("identifier")
         public Transformation loadSingle(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, String detail, ExpressionVersion expressionVersion) throws InternalException, UserException
         {
@@ -391,7 +381,6 @@ public class Sort extends VisitableTransformation implements SingleSourceTransfo
         }
 
         @Override
-        @OnThread(Tag.Simulation)
         public Transformation makeWithSource(TableManager mgr, CellPosition destination, Table srcTable) throws InternalException
         {
             return new Sort(mgr, new InitialLoadDetails(null, null, destination, new Pair<>(Display.ALL, ImmutableList.of())), srcTable.getId(), ImmutableList.of());
@@ -399,7 +388,7 @@ public class Sort extends VisitableTransformation implements SingleSourceTransfo
     }
 
     @Override
-    protected @OnThread(Tag.Any) List<String> saveDetail(@Nullable File destination, TableAndColumnRenames renames)
+    protected List<String> saveDetail(File destination, TableAndColumnRenames renames)
     {
         renames.useColumnsFromTo(srcTableId, getId());
         OutputBuilder b = new OutputBuilder();
@@ -408,7 +397,6 @@ public class Sort extends VisitableTransformation implements SingleSourceTransfo
         return b.toLines();
     }
 
-    @OnThread(Tag.Any)
     public ImmutableList<Pair<ColumnId, Direction>> getSortBy()
     {
         return originalSortBy;
@@ -433,7 +421,6 @@ public class Sort extends VisitableTransformation implements SingleSourceTransfo
     }
 
     @Override
-    @OnThread(Tag.Any)
     public <T> T visit(TransformationVisitor<T> visitor)
     {
         return visitor.sort(this);
@@ -447,6 +434,6 @@ public class Sort extends VisitableTransformation implements SingleSourceTransfo
 
     public static <T> TableId suggestedName(ImmutableList<Pair<ColumnId, T>> sortBy)
     {
-        return new TableId(IdentifierUtility.spaceSeparated("Sort by", sortBy.stream().<@ExpressionIdentifier String>map(p -> IdentifierUtility.shorten(p.getFirst().getRaw())).findFirst().orElse("none")));
+        return new TableId(IdentifierUtility.spaceSeparated("Sort by", sortBy.stream().<String>map(p -> IdentifierUtility.shorten(p.getFirst().getRaw())).findFirst().orElse("none")));
     }
 }

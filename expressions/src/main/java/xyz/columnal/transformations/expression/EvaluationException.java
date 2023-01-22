@@ -87,7 +87,7 @@ public class EvaluationException extends UserException
         return new Explanation(cur.expression, cur.executionType, cur.evaluateState, null, ImmutableList.of(), null)
         {
             @Override
-            public @Nullable StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation, ExpressionStyler expressionStyler, ImmutableList<ExplanationLocation> extraLocations, boolean skipIfTrivial) throws InternalException, UserException
+            public StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation, ExpressionStyler expressionStyler, ImmutableList<ExplanationLocation> extraLocations, boolean skipIfTrivial) throws InternalException, UserException
             {
                 if (stackLevel == 0)
                     return StyledString.concat(getStyledMessage(), StyledString.s(" in: "), cur.expression.toStyledString());
@@ -98,7 +98,7 @@ public class EvaluationException extends UserException
             @Override
             public ImmutableList<Explanation> getDirectSubExplanations() throws InternalException
             {
-                ImmutableList<@NonNull Explanation> successful = Utility.mapListInt(cur.subValues, r -> r.makeExplanation(null));
+                ImmutableList<Explanation> successful = Utility.mapListInt(cur.subValues, r -> r.makeExplanation(null));
                 return stackLevel == 0 ? successful : Utility.appendToList(successful, makeExplanation(stackLevel - 1));
             }
         };

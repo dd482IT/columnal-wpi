@@ -52,20 +52,20 @@ public class MaxIndex extends FunctionDefinition
     private static class Instance extends ValueFunction
     {
         @Override
-        public @Value Object _call() throws UserException, InternalException
+        public Object _call() throws UserException, InternalException
         {
-            @Value ListEx list = arg(0, ListEx.class);
+            ListEx list = arg(0, ListEx.class);
             if (list.size() == 0)
             {
                 throw new UserException("Cannot take maximum of empty list");
             }
             else
             {
-                @Value Object max = list.get(0);
+                Object max = list.get(0);
                 int zeroIndexMax = 0;
                 for (int i = 1; i < list.size(); i++)
                 {
-                    @Value Object val = list.get(i);
+                    Object val = list.get(i);
                     if (Utility.compareValues(max, val) < 0)
                     {
                         max = val;

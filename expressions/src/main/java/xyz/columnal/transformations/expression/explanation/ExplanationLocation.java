@@ -35,12 +35,11 @@ import java.util.Objects;
  *  - A whole column (tableId and columnId is present)
  *  - A specific location (tableId, columnId and rowIndex are present)
  */
-@OnThread(Tag.Any)
 public class ExplanationLocation
 {
     public final TableId tableId;
-    public final @Nullable ColumnId columnId;
-    public final @Nullable @TableDataRowIndex Integer rowIndex;
+    public final ColumnId columnId;
+    public final Integer rowIndex;
 
     public ExplanationLocation(TableId tableId)
     {
@@ -56,7 +55,7 @@ public class ExplanationLocation
         this.rowIndex = null;
     }
     
-    public ExplanationLocation(TableId tableId, @Nullable ColumnId columnId, @Nullable @TableDataRowIndex Integer rowIndex)
+    public ExplanationLocation(TableId tableId, ColumnId columnId, Integer rowIndex)
     {
         this.tableId = tableId;
         this.columnId = columnId;
@@ -64,7 +63,7 @@ public class ExplanationLocation
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;

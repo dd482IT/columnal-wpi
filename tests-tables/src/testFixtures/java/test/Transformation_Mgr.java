@@ -30,7 +30,6 @@ public class Transformation_Mgr
     public final TableManager mgr;
     public final Transformation transformation;
 
-    @OnThread(Tag.Simulation)
     public Transformation_Mgr(TableManager mgr, Transformation transformation)
     {
         this.mgr = mgr;
@@ -39,7 +38,7 @@ public class Transformation_Mgr
     }
 
     @Override
-    @OnThread(value = Tag.Simulation, ignoreParent = true) // Only for testing anyway
+    // Only for testing anyway
     public String toString()
     {
         return transformation.toString();

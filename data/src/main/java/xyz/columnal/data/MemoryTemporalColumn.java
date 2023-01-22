@@ -43,10 +43,9 @@ import java.util.stream.Stream;
 public class MemoryTemporalColumn extends EditableColumn
 {
     private final TemporalColumnStorage storage;
-    @OnThread(Tag.Any)
-    private final @Value TemporalAccessor defaultValue;
+    private final TemporalAccessor defaultValue;
 
-    public MemoryTemporalColumn(RecordSet rs, ColumnId title, DateTimeInfo dateTimeInfo, List<Either<String, TemporalAccessor>> list, @Value TemporalAccessor defaultValue) throws InternalException
+    public MemoryTemporalColumn(RecordSet rs, ColumnId title, DateTimeInfo dateTimeInfo, List<Either<String, TemporalAccessor>> list, TemporalAccessor defaultValue) throws InternalException
     {
         super(rs, title);
         this.defaultValue = defaultValue;
@@ -55,7 +54,6 @@ public class MemoryTemporalColumn extends EditableColumn
     }
 
     @Override
-    @OnThread(Tag.Any)
     public synchronized DataTypeValue getType()
     {
         return storage.getType();
@@ -80,20 +78,19 @@ public class MemoryTemporalColumn extends EditableColumn
 
 
     @Override
-    public @OnThread(Tag.Simulation) SimulationRunnable insertRows(int index, int count) throws InternalException, UserException
+    public SimulationRunnable insertRows(int index, int count) throws InternalException, UserException
     {
         return storage.insertRows(index, Utility.replicate(count, Either.<String, TemporalAccessor>right(defaultValue)));
     }
 
     @Override
-    public @OnThread(Tag.Simulation) SimulationRunnable removeRows(int index, int count) throws InternalException, UserException
+    public SimulationRunnable removeRows(int index, int count) throws InternalException, UserException
     {
         return storage.removeRows(index, count);
     }
 
     @Override
-    @OnThread(Tag.Any)
-    public @Value Object getDefaultValue()
+    public Object getDefaultValue()
     {
         return defaultValue;
     }

@@ -62,21 +62,19 @@ public class TestGenDataType
         TAGGED, RECORD, ARRAY;
     }
 
-    @Test
-    @OnThread(Tag.Simulation)
     public void testVarieties()
     {
         // We check that each nested pair occurs.  We start by putting them all in a set, remove if we find them,
         // and any left at the end did not occur:
-        Set<Pair<@Nullable Container, @Nullable Container>> nestings = new HashSet<>();
-        nestings.add(new Pair<@Nullable Container, @Nullable Container>(null, null));
+        Set<Pair<Container, Container>> nestings = new HashSet<>();
+        nestings.add(new Pair<Container, Container>(null, null));
         for (Container a : Container.values())
         {
             for (Container b : Container.values())
             {
-                nestings.add(new Pair<@Nullable Container, @Nullable Container>(a, b));
+                nestings.add(new Pair<Container, Container>(a, b));
             }
-            nestings.add(new Pair<@Nullable Container, @Nullable Container>(a, null));
+            nestings.add(new Pair<Container, Container>(a, null));
         }
 
         Random r = new Random(1L);
@@ -91,50 +89,50 @@ public class TestGenDataType
         assertEquals(Collections.emptySet(), nestings);
     }
 
-    private static Stream<Pair<@Nullable Container, @Nullable Container>> calculateNesting(DataType t)
+    private static Stream<Pair<Container, Container>> calculateNesting(DataType t)
     {
         try
         {
-            return t.apply(new DataTypeVisitor<Stream<Pair<@Nullable Container, @Nullable Container>>>()
+            return t.apply(new DataTypeVisitor<Stream<Pair<Container, Container>>>()
             {
                 @Override
-                public Stream<Pair<@Nullable Container, @Nullable Container>> number(NumberInfo numberInfo) throws InternalException, UserException
+                public Stream<Pair<Container, Container>> number(NumberInfo numberInfo) throws InternalException, UserException
                 {
-                    return Stream.of(new Pair<@Nullable Container, @Nullable Container>(null, null));
+                    return Stream.of(new Pair<Container, Container>(null, null));
                 }
 
                 @Override
-                public Stream<Pair<@Nullable Container, @Nullable Container>> text() throws InternalException, UserException
+                public Stream<Pair<Container, Container>> text() throws InternalException, UserException
                 {
-                    return Stream.of(new Pair<@Nullable Container, @Nullable Container>(null, null));
+                    return Stream.of(new Pair<Container, Container>(null, null));
                 }
 
                 @Override
-                public Stream<Pair<@Nullable Container, @Nullable Container>> date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
+                public Stream<Pair<Container, Container>> date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
                 {
-                    return Stream.of(new Pair<@Nullable Container, @Nullable Container>(null, null));
+                    return Stream.of(new Pair<Container, Container>(null, null));
                 }
 
                 @Override
-                public Stream<Pair<@Nullable Container, @Nullable Container>> bool() throws InternalException, UserException
+                public Stream<Pair<Container, Container>> bool() throws InternalException, UserException
                 {
-                    return Stream.of(new Pair<@Nullable Container, @Nullable Container>(null, null));
+                    return Stream.of(new Pair<Container, Container>(null, null));
                 }
 
                 @Override
-                public Stream<Pair<@Nullable Container, @Nullable Container>> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+                public Stream<Pair<Container, Container>> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
                 {
-                    return tags.stream().flatMap(t -> Utility.streamNullable(t.getInner())).<Pair<@Nullable Container, @Nullable Container>>flatMap((Function<DataType, Stream<Pair<@Nullable Container, @Nullable Container>>>)(t -> TestGenDataType.calculateNesting(t))).map(wrap(Container.TAGGED));
+                    return tags.stream().flatMap(t -> Utility.streamNullable(t.getInner())).<Pair<Container, Container>>flatMap((Function<DataType, Stream<Pair<Container, Container>>>)(t -> TestGenDataType.calculateNesting(t))).map(wrap(Container.TAGGED));
                 }
 
                 @Override
-                public Stream<Pair<@Nullable Container, @Nullable Container>> record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, UserException
+                public Stream<Pair<Container, Container>> record(ImmutableMap<String, DataType> fields) throws InternalException, UserException
                 {
-                    return fields.values().stream().<Pair<@Nullable Container, @Nullable Container>>flatMap((Function<DataType, Stream<Pair<@Nullable Container, @Nullable Container>>>)TestGenDataType::calculateNesting).map(wrap(Container.RECORD));
+                    return fields.values().stream().<Pair<Container, Container>>flatMap((Function<DataType, Stream<Pair<Container, Container>>>)TestGenDataType::calculateNesting).map(wrap(Container.RECORD));
                 }
 
                 @Override
-                public Stream<Pair<@Nullable Container, @Nullable Container>> array(@Nullable DataType inner) throws InternalException, UserException
+                public Stream<Pair<Container, Container>> array(DataType inner) throws InternalException, UserException
                 {
                     if (inner == null)
                         throw new RuntimeException("Should not generate null inside array");
@@ -148,8 +146,8 @@ public class TestGenDataType
         }
     }
 
-    private static Function<Pair<@Nullable Container, @Nullable Container>, Pair<@Nullable Container, @Nullable Container>> wrap(Container outer)
+    private static Function<Pair<Container, Container>, Pair<Container, Container>> wrap(Container outer)
     {
-        return (Pair<@Nullable Container, @Nullable Container> p) -> new Pair<@Nullable Container, @Nullable Container>(outer, p.getFirst());
+        return (Pair<Container, Container> p) -> new Pair<Container, Container>(outer, p.getFirst());
     }
 }

@@ -38,7 +38,7 @@ import java.net.URL;
 
 public final class DocWindow extends Stage
 {
-    public DocWindow(String title, String docURL, @Nullable Node toRightOf, InsertListener insertListener, ObjectExpression<Scene> lastAsLongAsSceneIsNotNull) throws InternalException
+    public DocWindow(String title, String docURL, Node toRightOf, InsertListener insertListener, ObjectExpression<Scene> lastAsLongAsSceneIsNotNull) throws InternalException
     {
         setTitle(title);
         setAlwaysOnTop(true);

@@ -85,7 +85,7 @@ public abstract class DisplayDocument extends Document
     }
 
     @Override
-    TrackedPosition trackPosition(int pos, Bias bias, @Nullable FXPlatformRunnable onChange)
+    TrackedPosition trackPosition(int pos, Bias bias, FXPlatformRunnable onChange)
     {
         TrackedPosition trackedPosition = new TrackedPosition(pos, bias, onChange);
         trackedPositions.add(new WeakReference<>(trackedPosition));
@@ -105,7 +105,7 @@ public abstract class DisplayDocument extends Document
     }
 
     @Override
-    public String getText(@UnknownInitialization(DisplayDocument.class) DisplayDocument this)
+    public String getText(DisplayDocument this)
     {
         return content;
     }

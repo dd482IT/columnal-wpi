@@ -72,42 +72,37 @@ public class BackwardsColumnRef extends BackwardsProvider
     }
 
     @Override
-    public List<ExpressionMaker> terminals(DataType type, @Value Object value) throws InternalException, UserException
+    public List<ExpressionMaker> terminals(DataType type, Object value) throws InternalException, UserException
     {
         return ImmutableList.of(() -> {
             ColumnId name = new ColumnId(IdentifierUtility.identNum("GEV Col", columns.size()));
             columns.add(rs -> type.apply(new DataTypeVisitor<Column>()
             {
                 @Override
-                @OnThread(Tag.Simulation)
                 public Column number(NumberInfo numberInfo) throws InternalException, UserException
                 {
                     return new MemoryNumericColumn(rs, name, numberInfo, Stream.of(Utility.toBigDecimal((Number) value).toPlainString()));
                 }
 
                 @Override
-                @OnThread(Tag.Simulation)
                 public Column text() throws InternalException, UserException
                 {
                     return new MemoryStringColumn(rs, name, Collections.singletonList(Either.right((String)value)), "");
                 }
 
                 @Override
-                @OnThread(Tag.Simulation)
                 public Column date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
                 {
                     return new MemoryTemporalColumn(rs, name, dateTimeInfo, Collections.singletonList(Either.right((Temporal)value)), dateTimeInfo.getDefaultValue());
                 }
 
                 @Override
-                @OnThread(Tag.Simulation)
                 public Column bool() throws InternalException, UserException
                 {
                     return new MemoryBooleanColumn(rs, name, Collections.singletonList(Either.right((Boolean) value)), false);
                 }
 
                 @Override
-                @OnThread(Tag.Simulation)
                 public Column tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
                 {
                     return new MemoryTaggedColumn(rs, name, typeName, typeVars, tags, Collections.singletonList(Either.right((TaggedValue) value)), (TaggedValue)parent.makeValue(type));
@@ -115,14 +110,12 @@ public class BackwardsColumnRef extends BackwardsProvider
 
                 @Override
                 @SuppressWarnings("valuetype")
-                @OnThread(Tag.Simulation)
-                public Column record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, UserException
+                public Column record(ImmutableMap<String, DataType> fields) throws InternalException, UserException
                 {
                     return new MemoryRecordColumn(rs, name, fields, Collections.singletonList(Either.right((Record)value)), (Record) parent.makeValue(type));
                 }
 
                 @Override
-                @OnThread(Tag.Simulation)
                 public Column array(DataType inner) throws InternalException, UserException
                 {
                     return new MemoryArrayColumn(rs, name, inner, Collections.singletonList(Either.right((ListEx)value)), new ListExList(Collections.emptyList()));
@@ -134,7 +127,7 @@ public class BackwardsColumnRef extends BackwardsProvider
     }
 
     @Override
-    public List<ExpressionMaker> deep(int maxLevels, DataType targetType, @Value Object targetValue) throws InternalException, UserException
+    public List<ExpressionMaker> deep(int maxLevels, DataType targetType, Object targetValue) throws InternalException, UserException
     {
         return ImmutableList.of();
     }

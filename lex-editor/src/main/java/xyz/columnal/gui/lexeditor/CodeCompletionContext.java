@@ -34,12 +34,12 @@ public class CodeCompletionContext
         this.completions = completions;
     }
 
-    public CodeCompletionContext(CodeCompletionContext nestedCompletions, @CanonicalLocation int offsetBy)
+    public CodeCompletionContext(CodeCompletionContext nestedCompletions, int offsetBy)
     {
         this(Utility.mapListI(nestedCompletions.completions, cc -> cc.offsetBy(offsetBy)));
     }
 
-    public ImmutableList<LexCompletionGroup> getCompletionsFor(@CanonicalLocation int caretPos)
+    public ImmutableList<LexCompletionGroup> getCompletionsFor(int caretPos)
     {
         return completions.stream().flatMap(g -> Utility.streamNullable(g.filterForPos(caretPos))).collect(ImmutableList.<LexCompletionGroup>toImmutableList());
     }

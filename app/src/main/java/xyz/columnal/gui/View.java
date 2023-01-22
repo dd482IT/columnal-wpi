@@ -160,7 +160,6 @@ import java.util.stream.Stream;
 /**
  * Created by neil on 18/10/2016.
  */
-@OnThread(Tag.FXPlatform)
 public class View extends StackPane implements DimmableParent, ExpressionEditor.ColumnPicker
 {
     private static final double DEFAULT_SPACE = 150.0;
@@ -180,16 +179,15 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
     // The supplier for row labels:
     private final RowLabelSupplier rowLabelSupplier;
     private final HintMessage hintMessage;
-    private @Nullable Pair<Table, ExplanationDisplay> explanationDisplay;
+    private Pair<Table, ExplanationDisplay> explanationDisplay;
 
     // This is only put into our children while we are doing special mouse capture, but it is always non-null.
-    private @Nullable Pane pickPaneMouse;
-    @OnThread(Tag.FXPlatform)
+    private Pane pickPaneMouse;
     private final ObjectProperty<File> diskFile;
     // Null means modified since last save
-    private final ObjectProperty<@Nullable Instant> lastSaveTime = new SimpleObjectProperty<>(Instant.now());
+    private final ObjectProperty<Instant> lastSaveTime = new SimpleObjectProperty<>(Instant.now());
     // Cancels a delayed save operation:
-    private @Nullable FXPlatformRunnable cancelDelayedSave;
+    private FXPlatformRunnable cancelDelayedSave;
 
     // We start in readOnly mode, and enable writing later if everything goes well:
     private boolean readOnly = true;
@@ -242,19 +240,16 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
         });
     }
 
-    @OnThread(Tag.Any)
-    private synchronized @NonNull List<Table> getAllTables()
+    private synchronized List<Table> getAllTables()
     {
         return tableManager.getAllTables();
     }
 
-    @OnThread(Tag.Any)
     public TableManager getManager()
     {
         return tableManager;
     }
     
-    @OnThread(Tag.Simulation)
     private void removeTable(Table t, int remainingCount)
     {
         FXUtility.runFX(() ->
@@ -302,7 +297,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
         Utility.usedFile(newDest);
     }
 
-    public ObservableObjectValue<@Nullable Instant> lastSaveTime()
+    public ObservableObjectValue<Instant> lastSaveTime()
     {
         return lastSaveTime;
     }
@@ -319,14 +314,11 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
         save(true);
     }
 
-    @OnThread(Tag.Any)
-    @Pure
     public VirtualGrid getGrid()
     {
         return mainPane;
     }
 
-    @OnThread(Tag.FXPlatform)
     public void disablePickingMode()
     {
         if (pickPaneMouse != null)
@@ -337,16 +329,15 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
         }
     }
     
-    @OnThread(Tag.FXPlatform)
-    public void enableTablePickingMode(Point2D screenPos, ObjectExpression<@PolyNull Scene> sceneProperty, ImmutableSet<Table> excludeTables, FXPlatformConsumer<Table> onPick)
+    public void enableTablePickingMode(Point2D screenPos, ObjectExpression<Scene> sceneProperty, ImmutableSet<Table> excludeTables, FXPlatformConsumer<Table> onPick)
     {
         if (pickPaneMouse != null)
             disablePickingMode();
         
-        final @NonNull Pane pickPaneMouseFinal = pickPaneMouse = new Pane();
+        final Pane pickPaneMouseFinal = pickPaneMouse = new Pane();
         
         pickPaneMouseFinal.setPickOnBounds(true);
-        @Nullable Table[] picked = new @Nullable Table[1];
+        Table[] picked = new Table[1];
         Picker<Table> validPick = p -> {
             if (p == null)
                 return null;
@@ -378,7 +369,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
         tableHighlights.highlightAtScreenPos(screenPos, validPick, pickPaneMouseFinal::setCursor);
     }
 
-    private static ImmutableList<FXPlatformFunction<Point2D, Point2D>> getWindowTargetPoint(ObjectExpression<@PolyNull Scene> sceneProperty)
+    private static ImmutableList<FXPlatformFunction<Point2D, Point2D>> getWindowTargetPoint(ObjectExpression<Scene> sceneProperty)
     {
         Scene scene = sceneProperty.get();
         if (scene != null)
@@ -393,18 +384,17 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
         return ImmutableList.of();
     }
 
-    @OnThread(Tag.FXPlatform)
-    public void enableColumnPickingMode(@Nullable Point2D screenPos, ObjectExpression<@PolyNull Scene> sceneProperty, Predicate<Pair<Table, ColumnId>> includeColumn, FXPlatformConsumer<Pair<Table, ColumnId>> onPick)
+    public void enableColumnPickingMode(Point2D screenPos, ObjectExpression<Scene> sceneProperty, Predicate<Pair<Table, ColumnId>> includeColumn, FXPlatformConsumer<Pair<Table, ColumnId>> onPick)
     {
         if (pickPaneMouse != null)
             disablePickingMode();
 
-        final @NonNull Pane pickPaneMouseFinal = pickPaneMouse = new Pane();
+        final Pane pickPaneMouseFinal = pickPaneMouse = new Pane();
 
         pickPaneMouseFinal.setPickOnBounds(true);
         class Ref
         {
-            @Nullable Pair<Table, ColumnId> pick = null;
+            Pair<Table, ColumnId> pick = null;
         }
         Ref picked = new Ref();
         Picker<Pair<Table, ColumnId>> validPick = p -> {
@@ -415,7 +405,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
             if (!(g instanceof TableDisplay))
                 return null;
             TableDisplay tableDisplay = (TableDisplay) g;
-            @Nullable Pair<ColumnId, RectangleBounds> c = tableDisplay.getColumnAt(cell);
+            Pair<ColumnId, RectangleBounds> c = tableDisplay.getColumnAt(cell);
             if (c != null && includeColumn.test(new Pair<>(tableDisplay.getTable(), c.getFirst())))
             {
                 return new PickResult<>(ImmutableList.of(c.getSecond()), HighlightType.SELECT, new Pair<>(tableDisplay.getTable(), c.getFirst()), getWindowTargetPoint(sceneProperty));
@@ -484,20 +474,19 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
         TABLE, COLUMN, NONE;
     }
     
-    @OnThread(Tag.FXPlatform)
-    public void enableTableOrColumnPickingMode(@Nullable Point2D screenPos, ObjectExpression<@PolyNull Scene> sceneProperty, FXPlatformFunction<Pair<Table, @Nullable ColumnId>, Pick> check, FXPlatformConsumer<Pair<Table, @Nullable ColumnId>> onPick)
+    public void enableTableOrColumnPickingMode(Point2D screenPos, ObjectExpression<Scene> sceneProperty, FXPlatformFunction<Pair<Table, ColumnId>, Pick> check, FXPlatformConsumer<Pair<Table, ColumnId>> onPick)
     {
         disablePickingMode();
 
-        final @NonNull Pane pickPaneMouseFinal = pickPaneMouse = new Pane();
+        final Pane pickPaneMouseFinal = pickPaneMouse = new Pane();
 
         pickPaneMouseFinal.setPickOnBounds(true);
         class Ref
         {
-            @Nullable Pair<Table, @Nullable ColumnId> pick = null;
+            Pair<Table, ColumnId> pick = null;
         }
         Ref picked = new Ref();
-        Picker<Pair<Table, @Nullable ColumnId>> validPick = p -> {
+        Picker<Pair<Table, ColumnId>> validPick = p -> {
             if (p == null)
                 return null;
             GridArea g = p.getFirst();
@@ -505,8 +494,8 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
             if (!(g instanceof TableDisplay))
                 return null;
             TableDisplay tableDisplay = (TableDisplay) g;
-            @Nullable Pair<ColumnId, RectangleBounds> c = tableDisplay.getColumnAt(cell);
-            Pick pick = check.apply(new Pair<Table, @Nullable ColumnId>(tableDisplay.getTable(), c == null ? null : c.getFirst()));
+            Pair<ColumnId, RectangleBounds> c = tableDisplay.getColumnAt(cell);
+            Pick pick = check.apply(new Pair<Table, ColumnId>(tableDisplay.getTable(), c == null ? null : c.getFirst()));
             if (pick == Pick.COLUMN && c != null)
                 return new PickResult<>(ImmutableList.of(c.getSecond()), HighlightType.SELECT, new Pair<>(tableDisplay.getTable(), c.getFirst()), getWindowTargetPoint(sceneProperty));
             else if (pick == Pick.TABLE)
@@ -548,11 +537,11 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
     }
 
     // Doesn't really need to be generic in both, but better type safety checking this way:
-    private static <A,B> Pair<@Nullable A, @Nullable B> findFirstLeftAndFirstRight(Stream<Either<A, B>> stream)
+    private static <A,B> Pair<A, B> findFirstLeftAndFirstRight(Stream<Either<A, B>> stream)
     {
         // Atomic is a bit overkill, but creating arrays of generic types is a pain:
-        AtomicReference<@Nullable A> left = new AtomicReference<>(null);
-        AtomicReference<@Nullable B> right = new AtomicReference<>(null);
+        AtomicReference<A> left = new AtomicReference<>(null);
+        AtomicReference<B> right = new AtomicReference<>(null);
         for (Either<A, B> v : Utility.iterableStream(stream))
         {
             // Overwrite null only; leave other values intact:
@@ -571,13 +560,12 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
         return diskFile.get();
     }
 
-    @OnThread(Tag.FXPlatform)
     public void undo()
     {
         File file = diskFile.get();
         readOnly = true;
         Workers.onWorkerThread("Undo", Priority.SAVE, () -> {
-            @Nullable String current = null;
+            String current = null;
             try
             {
                 current = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
@@ -586,14 +574,14 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
             {
                 Log.log(e);
             }
-            @Nullable String prev = undoManager.undo(file);
+            String prev = undoManager.undo(file);
             while (current != null && Objects.equals(current, prev))
                 prev = undoManager.undo(file);
 
             if (prev == null)
                 return; // Nothing to undo
             
-            final @NonNull String previousVersion = prev;
+            final String previousVersion = prev;
             
             try
             {
@@ -629,7 +617,6 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
     }
 
     @SuppressWarnings("units") // Because of AbsColIndex
-    @OnThread(Tag.Simulation)
     void loadColumnWidths(ImmutableList<Pair<Integer, Double>> columnWidths)
     {
         Platform.runLater(() -> {
@@ -640,7 +627,6 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
         });
     }
 
-    @OnThread(Tag.Swing)
     public File getHomeDirectory()
     {
         return FileSystemView.getFileSystemView().getDefaultDirectory();
@@ -651,7 +637,6 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
         getGrid().gotoRow(getWindow());
     }
 
-    @OnThread(Tag.FXPlatform)
     public int test_getSaveCount()
     {
         return saveCount;
@@ -900,10 +885,10 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
         
         VirtualGridManager vgManager = new VirtualGridManager()
         {
-            private @Nullable FXPlatformRunnable cancelSave;
+            private FXPlatformRunnable cancelSave;
 
             @Override
-            public @OnThread(Tag.FXPlatform) void notifyColumnSizeChanged()
+            public void notifyColumnSizeChanged()
             {
                 // Save after five seconds of no resizing:
                 if (cancelSave != null)
@@ -918,7 +903,6 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
             }
 
             @Override
-            @OnThread(Tag.FXPlatform)
             public void createTable(CellPosition cellPos, Point2D mousePos, VirtualGrid grid)
             {
                 // Data table if there are none, or if we ask and they say data
@@ -927,10 +911,9 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
             }
 
             @Override
-            @OnThread(Tag.FXPlatform)
             public void pasteIntoEmpty(CellPosition target)
             {
-                @Initialized View thisView = Utility.later(View.this);
+                View thisView = Utility.later(View.this);
                 FXPlatformConsumer<DataSource> selectAfter = data -> {
                     if (data.getDisplay() instanceof TableDisplay)
                     {
@@ -1016,23 +999,23 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
         mainPane.addGridAreas(ImmutableList.of(tableDisplay));
         mainPane.addSelectionListener(tableDisplay);
         rowLabelSupplier.addTable(mainPane, tableDisplay, false);
-        @Nullable FXPlatformConsumer<@Nullable ColumnId> addColumn = tableDisplay.addColumnOperation();
+        FXPlatformConsumer<ColumnId> addColumn = tableDisplay.addColumnOperation();
         boolean addRows = tableDisplay.getTable().getOperations().appendRows != null;
         if (addColumn != null || addRows)
         {
-            @Nullable FXPlatformRunnable addColumnAtEnd = null;
+            FXPlatformRunnable addColumnAtEnd = null;
             if (addColumn != null)
             {
-                @NonNull FXPlatformConsumer<@Nullable ColumnId> addColumnFinal = addColumn;
+                FXPlatformConsumer<ColumnId> addColumnFinal = addColumn;
                 addColumnAtEnd = () -> addColumnFinal.consume(null);
             }
             expandTableArrowSupplier.addTable(tableDisplay, addColumnAtEnd, addRows);
         }
     }
 
-    private @Nullable TableDisplay getTableDisplayOrNull(TableId tableId)
+    private TableDisplay getTableDisplayOrNull(TableId tableId)
     {
-        @Nullable Table table = tableManager.getSingleTableOrNull(tableId);
+        Table table = tableManager.getSingleTableOrNull(tableId);
         if (table != null && table.getDisplay() instanceof TableDisplay)
             return (TableDisplay)table.getDisplay();
         else
@@ -1050,7 +1033,6 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
     }
 
     @Override
-    @OnThread(Tag.FX)
     public void requestFocus()
     {
         // Don't allow focus
@@ -1067,8 +1049,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
     }
 
     @Override
-    @OnThread(Tag.FXPlatform)
-    public Window dimWhileShowing(@UnknownInitialization(Dialog.class) Dialog<?> dialog)
+    public Window dimWhileShowing(Dialog<?> dialog)
     {
         Effect dim = new ColorAdjust(0.0, 0.0, -0.2, 0.0);
         FXUtility.addChangeListenerPlatformNN(dialog.showingProperty(), show -> {
@@ -1085,7 +1066,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
     }
 
     @Override
-    public <T> @OnThread(Tag.FXPlatform) T dimAndWait(FXPlatformFunction<Window, T> showAndWait)
+    public <T> T dimAndWait(FXPlatformFunction<Window, T> showAndWait)
     {
         Effect dim = new ColorAdjust(0.0, 0.0, -0.2, 0.0);
         getGrid().setEffectOnNonOverlays(dim);
@@ -1131,11 +1112,11 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
                     break;
                 case TRANSFORM:
                     new PickTransformationDialog(thisView).showAndWaitCentredOn(mouseScreenPos).ifPresent(createTrans -> {
-                        @Nullable SimulationSupplier<Transformation> makeTrans = createTrans.getSecond().make(thisView.getManager(), cellPosition, () ->
+                        SimulationSupplier<Transformation> makeTrans = createTrans.getSecond().make(thisView.getManager(), cellPosition, () ->
                             new PickTableDialog(thisView, null, createTrans.getFirst()).showAndWait());
                         if (makeTrans != null)
                         {
-                            @NonNull SimulationSupplier<Transformation> makeTransFinal = makeTrans;
+                            SimulationSupplier<Transformation> makeTransFinal = makeTrans;
                             Workers.onWorkerThread("Creating transformation", Priority.SAVE, () -> {
                                 FXUtility.alertOnError_(TranslationUtility.getString("error.creating.transformation"), () -> {
                                     Transformation transformation = makeTransFinal.get();
@@ -1171,10 +1152,10 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
     public void createTransform(Table srcTable, Point2D mouseScreenPos)
     {
         new PickTransformationDialog(this).showAndWaitCentredOn(mouseScreenPos).ifPresent(createTrans -> {
-            @Nullable SimulationSupplier<Transformation> makeTrans = createTrans.getSecond().make(getManager(), tableManager.getNextInsertPosition(srcTable.getId()), () -> Optional.of(srcTable));
+            SimulationSupplier<Transformation> makeTrans = createTrans.getSecond().make(getManager(), tableManager.getNextInsertPosition(srcTable.getId()), () -> Optional.of(srcTable));
             if (makeTrans != null)
             {
-                @NonNull SimulationSupplier<Transformation> makeTransFinal = makeTrans;
+                SimulationSupplier<Transformation> makeTransFinal = makeTrans;
                 Workers.onWorkerThread("Creating transformation", Priority.SAVE, () -> {
                     FXUtility.alertOnError_(TranslationUtility.getString("error.creating.transformation"), () -> {
                         Transformation transformation = makeTransFinal.get();
@@ -1255,7 +1236,6 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
     private static final String HASH_FILE_NAME = "hashes.txt";
 
     // Checks if we have seen that file with that content last time we saved the file.
-    @OnThread(Tag.Simulation)
     public static boolean checkHashMatch(File file, HashCode contentHash)
     {
         try
@@ -1273,13 +1253,11 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
         }
     }
 
-    @OnThread(Tag.Any)
     private static HashCode hashFilePath(File file)
     {
         return Hashing.sha256().hashString(file.getAbsolutePath(), StandardCharsets.UTF_8);
     }
 
-    @OnThread(Tag.Simulation)
     private static ImmutableMap<HashCode, HashCode> loadFileHashes() throws IOException
     {
         File hashesFile = new File(Utility.getStorageDirectory(), HASH_FILE_NAME);
@@ -1305,7 +1283,6 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
             }).distinct().collect(ImmutableMap.<Pair<HashCode, HashCode>, HashCode, HashCode>toImmutableMap(p -> p.getFirst(), p -> p.getSecond()));
     }
 
-    @OnThread(Tag.Simulation)
     private static void recordFileHash(File file, HashCode contentHash)
     {
         try
@@ -1322,7 +1299,6 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
         }
     }
 
-    @OnThread(Tag.FXPlatform)
     public class FindEverywhereDialog extends Dialog<Void>
     {
 
@@ -1375,11 +1351,10 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
             setOnShown(e -> findField.requestFocus());
         }
 
-        @RequiresNonNull("results")
         @SuppressWarnings("method.invocation")
-        private void selectResult(@UnknownInitialization(Object.class) FindEverywhereDialog this)
+        private void selectResult(FindEverywhereDialog this)
         {
-            @Nullable Result result = results.getSelectionModel().getSelectedItem();
+            Result result = results.getSelectionModel().getSelectedItem();
             if (result != null)
             {
                 result.onPick.run();
@@ -1387,7 +1362,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
             close();
         }
 
-        private List<Result> findAllPossibleResults(@UnknownInitialization(Object.class) FindEverywhereDialog this)
+        private List<Result> findAllPossibleResults(FindEverywhereDialog this)
         {
             List<Result> r = new ArrayList<>();
             // Tables:
@@ -1399,7 +1374,6 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
         }
     }
     
-    @OnThread(Tag.FXPlatform)
     private final class HintMessage extends FloatingItem<VBox>
     {
         /*
@@ -1460,14 +1434,14 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
             }
         }
 
-        private void show(@Localized String main)
+        private void show(String main)
         {
             label.setText(main);
             container.getChildren().setAll(label);
             container.setVisible(true);
         }
 
-        private void show(@Localized String main, @Localized String sub)
+        private void show(String main, String sub)
         {
             label.setText(main);
             label2.setText(sub);
@@ -1498,7 +1472,7 @@ public class View extends StackPane implements DimmableParent, ExpressionEditor.
         }
 
         @Override
-        public @Nullable Pair<ItemState, @Nullable StyledString> getItemState(CellPosition cellPosition, Point2D screenPos)
+        public Pair<ItemState, StyledString> getItemState(CellPosition cellPosition, Point2D screenPos)
         {
             return null;
         }

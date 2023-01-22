@@ -102,7 +102,6 @@ public class RImporter implements Importer
         });
     }
     
-    @OnThread(Tag.Simulation)
     private void register(TableManager tableManager, CellPosition cellPosition, Iterator<Pair<String, EditableRecordSet>> tables, SimulationConsumerNoError<DataSource> onLoad)
     {
         if (tables.hasNext())
@@ -117,12 +116,11 @@ public class RImporter implements Importer
     }
 
     @Override
-    public @Localized String getName()
+    public String getName()
     {
         return TranslationUtility.getString("importer.r.files");
     }
 
-    @OnThread(Tag.FXPlatform)
     private class PickImportsDialog extends Dialog<ImmutableList<Pair<String, EditableRecordSet>>>
     {
         public PickImportsDialog(Window parent, ImmutableList<Pair<String, EditableRecordSet>> tables)

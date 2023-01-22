@@ -93,27 +93,22 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
-@RunWith(JUnitQuickcheck.class)
 public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, ClickOnTableHeaderTrait, ClickTableLocationTrait
 {
     @SuppressWarnings("units")
-    public static final @TableDataRowIndex int ONE_ROW = 1;
+    public static final int ONE_ROW = 1;
     
-    @OnThread(Tag.Any)
     @SuppressWarnings("nullness")
     private VirtualGrid virtualGrid;
-    @OnThread(Tag.Any)
     @SuppressWarnings("nullness")
     private TableManager tableManager;
 
     /**
      * Generates a file with some raw data and a transform, then loads it and deletes a row in the source table.
      */
-    @Property(trials = 5)
-    @OnThread(Tag.Simulation)
     public void propTestDeleteRow(
-        @From(GenExpressionValueForwards.class) @From(GenExpressionValueBackwards.class) ExpressionValue expressionValue,
-        @From(GenRandom.class) Random r) throws Exception
+        ExpressionValue expressionValue,
+        Random r) throws Exception
     {
         if (expressionValue.recordSet.getLength() == 0)
             return; // Can't delete if there's no rows!
@@ -147,7 +142,7 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
         virtualGrid = details._test_getVirtualGrid();
 
         @SuppressWarnings("units")
-        @TableDataRowIndex int randomRow = r.nextInt(expressionValue.recordSet.getLength());
+        int randomRow = r.nextInt(expressionValue.recordSet.getLength());
 
         triggerRowLabelContextMenu(srcData.getId(), randomRow);
         clickOn(".id-virtGrid-row-delete");
@@ -193,11 +188,9 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
         exportToCSVAndCheck(virtualGrid, details._test_getTableManager(),"After deleting " + randomRow, expectedCalcContent, calculated.getId());
     }
 
-    @Property(trials = 5)
-    @OnThread(Tag.Any)
     public void propTestInsertRow(
-        @From(GenImmediateData.class)ImmediateData_Mgr srcDataAndMgr,
-        @From(GenRandom.class) Random r) throws UserException, InternalException
+        ImmediateData_Mgr srcDataAndMgr,
+        Random r) throws UserException, InternalException
     {
         if (srcDataAndMgr.data.isEmpty() || srcDataAndMgr.data.get(0).getData().getColumns().isEmpty())
             return; // Can't insert if there's no table or no columns
@@ -224,7 +217,7 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
 
         int srcLength = TFXUtil.sim(() -> srcData.getData().getLength());
         @SuppressWarnings("units")
-        @TableDataRowIndex int targetNewRow = r.nextInt(srcLength + 1);
+        int targetNewRow = r.nextInt(srcLength + 1);
         boolean originalWasEmpty = false;
 
         // Can't do insert-after if target is first row. Can't do insert-before if it's last row
@@ -238,7 +231,7 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
         else if (targetNewRow > 0)
         {
             // Insert-after:
-            @TableDataRowIndex int beforeTargetRow = targetNewRow - ONE_ROW;
+            int beforeTargetRow = targetNewRow - ONE_ROW;
             triggerRowLabelContextMenu(srcData.getId(), beforeTargetRow);
             clickOn(".id-virtGrid-row-insertAfter");
             TFXUtil.sleep(500);
@@ -262,21 +255,21 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
 
         // Work out positions in sorted data:
         @SuppressWarnings("units")
-        @TableDataRowIndex int beforeDefault = 0;
-        @Nullable Pair<Integer, @Value Object> firstAfterDefault = null;
-        @Nullable @Value Object sortDefault_ = TFXUtil.<@Nullable @Value Object>sim(() -> sortBy.getDefaultValue());
+        int beforeDefault = 0;
+        Pair<Integer, Object> firstAfterDefault = null;
+        Object sortDefault_ = TFXUtil.<Object>sim(() -> sortBy.getDefaultValue());
         if (sortDefault_ == null)
         {
             fail("Default value null for sortBy column: " + sortBy.getName() + " " + sortBy.getType());
             return;
         }
-        @NonNull @Value Object sortDefault = sortDefault_;
+        Object sortDefault = sortDefault_;
 
         int newSrcLength = TFXUtil.sim(() -> srcData.getData().getLength());
         for (int i = 0; i < newSrcLength; i++)
         {
             int iFinal = i;
-            @Value Object value = TFXUtil.<@Value Object>sim(() -> sortBy.getType().getCollapsed(iFinal));
+            Object value = TFXUtil.<Object>sim(() -> sortBy.getType().getCollapsed(iFinal));
             int cmp = TFXUtil.sim(() -> Utility.compareValues(value, sortDefault));
             // It will be before us if either it is strictly lower, or it is equal
             // and it started before us.
@@ -286,7 +279,7 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
             }
             else
             {
-                @Nullable Pair<Integer, @Value Object> curFirstAfterDefault = firstAfterDefault;
+                Pair<Integer, Object> curFirstAfterDefault = firstAfterDefault;
                 if (TFXUtil.sim(() -> curFirstAfterDefault == null || Utility.compareValues(value, curFirstAfterDefault.getSecond()) < 0))
                 {
                     firstAfterDefault = new Pair<>(i, value);
@@ -294,7 +287,7 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
             }
         }
         // Position when sorted is simply the number before it in sort order:
-        @TableDataRowIndex int positionPostSort = beforeDefault;
+        int positionPostSort = beforeDefault;
 
         // TODO check for default data in inserted spot
 
@@ -308,7 +301,7 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
             if (firstAfterDefault != null)
             {
                 scrollToRow(calculated.getId(), beforeDefault + ONE_ROW);
-                Pair<Integer, @Value Object> firstAfterDefaultFinal = firstAfterDefault;
+                Pair<Integer, Object> firstAfterDefaultFinal = firstAfterDefault;
                 TFXUtil.sim_(() -> TBasicUtil.checkedToRuntime_(() -> checkVisibleRowData(prefix, calculated.getId(), positionPostSort + ONE_ROW, getRowVals(srcData.getData(), firstAfterDefaultFinal.getFirst()))));
             }
         }
@@ -322,14 +315,14 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
             DataTypeValue columnType = column.getType();
             Pair<String, List<String>> colData = new Pair<>(column.getName().getRaw(), TFXUtil.sim(() -> CheckCSVTrait.collapse(srcData.getData().getLength(), columnType)));
             // Add new default data at right point:
-            @Nullable @Value Object defaultValue_ = TFXUtil.<@Nullable @Value Object>sim(() -> column.getDefaultValue());
+            Object defaultValue_ = TFXUtil.<Object>sim(() -> column.getDefaultValue());
             if (defaultValue_ == null)
             {
                 fail("Null default value for column " + column.getName().getRaw());
             }
             else
             {
-                @NonNull @Value Object defaultValue = defaultValue_;
+                Object defaultValue = defaultValue_;
                 String defaultAsString = TFXUtil.sim(() -> DataTypeUtility.valueToString(defaultValue));
                 expectedSrcContent.add(colData.mapSecond(d -> {
                     ArrayList<String> xs = new ArrayList<>(d);
@@ -357,8 +350,7 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
 
     }
 
-    @OnThread(Tag.Simulation)
-    private void checkVisibleRowData(String prefix, TableId tableId, @TableDataRowIndex int targetRow, List<Pair<DataType, @Value Object>> expected) throws InternalException, UserException
+    private void checkVisibleRowData(String prefix, TableId tableId, int targetRow, List<Pair<DataType, Object>> expected) throws InternalException, UserException
     {
         // This is deliberately low-tech.  We really do want to
         // check the visible data on screen, not what the internals
@@ -367,7 +359,7 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
         Node rowLabel = findRowLabel(tableId, targetRow);
         if (rowLabel == null)
             throw new RuntimeException("No row label for zero-based row " + targetRow + " in " + findVisRowLabels(tableId) + "focused: " + TFXUtil.fx(() -> focusedWindows()));
-        @NonNull Node rowLabelFinal = rowLabel;
+        Node rowLabelFinal = rowLabel;
         double rowLabelTop = TFXUtil.fx(() -> rowLabelFinal.localToScene(rowLabelFinal.getBoundsInLocal()).getMinY());
         List<Node> rowCells = TFXUtil.fx(() -> queryTableDisplay(tableId).lookup(".document-text-field").match(n -> Math.abs(n.localToScene(n.getBoundsInLocal()).getMinY()) - rowLabelTop <= 3).queryAll().stream().sorted(Comparator.comparing(n -> n.localToScene(n.getBoundsInLocal()).getMinX())).collect(Collectors.toList()));
         for (int i = 0; i < rowCells.size(); i++)
@@ -377,13 +369,12 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
         }
     }
 
-    @OnThread(Tag.Simulation)
-    private List<Pair<DataType, @Value Object>> getRowVals(RecordSet recordSet, int targetRow)
+    private List<Pair<DataType, Object>> getRowVals(RecordSet recordSet, int targetRow)
     {
-        return recordSet.getColumns().stream().<Pair<DataType, @Value Object>>map(c -> {
+        return recordSet.getColumns().stream().<Pair<DataType, Object>>map(c -> {
             try
             {
-                return new Pair<DataType, @Value Object>(c.getType().getType(), c.getType().getCollapsed(targetRow));
+                return new Pair<DataType, Object>(c.getType().getType(), c.getType().getCollapsed(targetRow));
             }
             catch (InternalException | UserException e)
             {
@@ -392,8 +383,7 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
         }).collect(Collectors.toList());
     }
 
-    @OnThread(Tag.Any)
-    private void triggerRowLabelContextMenu(TableId id, @TableDataRowIndex int targetRow) throws UserException
+    private void triggerRowLabelContextMenu(TableId id, int targetRow) throws UserException
     {
         Node rowLabel = findRowLabel(id, targetRow);
         if (rowLabel == null)
@@ -401,7 +391,6 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
         showContextMenu(rowLabel, null);
     }
 
-    @OnThread(Tag.Any)
     private String findVisRowLabels(TableId id)
     {
         NodeQuery tableDisplay = TFXUtil.fx(() -> queryTableDisplay(id));
@@ -409,8 +398,7 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
     }
 
     // Note: table ID header will get clicked, to expose the labels
-    @OnThread(Tag.Any)
-    private @Nullable Node findRowLabel(TableId id, @TableDataRowIndex int targetRow) throws UserException
+    private Node findRowLabel(TableId id, int targetRow) throws UserException
     {
         // Move to first cell in that row, which will make row labels visible
         // and ensure we are at correct Y position
@@ -418,7 +406,7 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
         Set<Node> possibles = TFXUtil.fx(() ->  
             lookup(".virt-grid-row-label-pane")
             .match(Node::isVisible)
-            .match((RowLabelSupplier.LabelPane p) -> id.equals(TFXUtil.<@Nullable TableId>fx(() -> p._test_getTableId())))
+            .match((RowLabelSupplier.LabelPane p) -> id.equals(TFXUtil.<TableId>fx(() -> p._test_getTableId())))
             .lookup(".virt-grid-row-label")
             .match((Label l) -> TFXUtil.fx(() -> l.getText().trim().equals(Integer.toString(1 + targetRow))))
             .queryAll());
@@ -435,15 +423,13 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
         return possibles.iterator().next();
     }
 
-    @OnThread(Tag.FXPlatform)
     private NodeQuery queryTableDisplay(TableId id)
     {
         // TODO This is broken in new scheme
         return lookup(".tableDisplay");
     }
 
-    @OnThread(Tag.Any)
-    private CellPosition scrollToRow(TableId id, @TableDataRowIndex int targetRow) throws UserException
+    private CellPosition scrollToRow(TableId id, int targetRow) throws UserException
     {
         return keyboardMoveTo(virtualGrid, tableManager, id, targetRow);
     }

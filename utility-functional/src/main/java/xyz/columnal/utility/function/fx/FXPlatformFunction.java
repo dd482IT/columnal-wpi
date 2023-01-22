@@ -28,6 +28,5 @@ import threadchecker.Tag;
  */
 public interface FXPlatformFunction<T, R>
 {
-    @OnThread(Tag.FXPlatform)
     public R apply(T t);
 }

@@ -68,10 +68,10 @@ import java.util.stream.Stream;
 public class MultipleTableLookup implements ColumnLookup
 {
     // Only null during testing
-    private final @Nullable TableId us;
+    private final TableId us;
     private final TableManager tableManager;
-    private final @Nullable Table srcTable;
-    private final @Nullable CalculationEditor editing;
+    private final Table srcTable;
+    private final CalculationEditor editing;
 
     public static interface CalculationEditor
     {
@@ -79,11 +79,10 @@ public class MultipleTableLookup implements ColumnLookup
 
         // Gives back an action which will make a new Calculate depending on the current Calculate,
         // with the currently editing expression moved there.
-        @OnThread(Tag.FXPlatform)
-        public SimulationConsumer<Pair<@Nullable ColumnId, Expression>> moveExpressionToNewCalculation();
+        public SimulationConsumer<Pair<ColumnId, Expression>> moveExpressionToNewCalculation();
     }
 
-    public MultipleTableLookup(@Nullable TableId us, TableManager tableManager, @Nullable TableId srcTableId, @Nullable CalculationEditor editing)
+    public MultipleTableLookup(TableId us, TableManager tableManager, TableId srcTableId, CalculationEditor editing)
     {
         this.us = us;
         this.tableManager = tableManager;
@@ -92,7 +91,7 @@ public class MultipleTableLookup implements ColumnLookup
     }
 
     @Override
-    public @Nullable QuickFix<Expression> getFixForIdent(@Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents, @Recorded Expression target)
+    public QuickFix<Expression> getFixForIdent(String namespace, ImmutableList<String> idents, Expression target)
     {
         if (editing == null)
             return null;
@@ -120,8 +119,8 @@ public class MultipleTableLookup implements ColumnLookup
                 return new QuickFix<>(StyledString.s("Make a new calculation that can use this table's " + idents.get(0)), ImmutableList.of(), target, new QuickFixAction()
                 {
                     @Override
-                    public @OnThread(Tag.FXPlatform)
-                    @Nullable SimulationConsumer<Pair<@Nullable ColumnId, Expression>> doAction(TypeManager typeManager, ObjectExpression<Scene> editorSceneProperty)
+                    public 
+                    SimulationConsumer<Pair<ColumnId, Expression>> doAction(TypeManager typeManager, ObjectExpression<Scene> editorSceneProperty)
                     {
                         return editing.moveExpressionToNewCalculation();
                     }
@@ -210,33 +209,33 @@ public class MultipleTableLookup implements ColumnLookup
         return tableManager.getAllTablesAvailableTo(us, false).stream().map(t -> t.getId());
     }
 
-    public Stream<Pair<@Nullable TableId, ColumnId>> getAvailableColumnReferences()
+    public Stream<Pair<TableId, ColumnId>> getAvailableColumnReferences()
     {
-        return tableManager.getAllTablesAvailableTo(us, false).stream().<Pair<@Nullable TableId, ColumnId>>flatMap(new Function<Table, Stream<Pair<@Nullable TableId, ColumnId>>>()
+        return tableManager.getAllTablesAvailableTo(us, false).stream().<Pair<TableId, ColumnId>>flatMap(new Function<Table, Stream<Pair<TableId, ColumnId>>>()
         {
             @Override
-            public Stream<Pair<@Nullable TableId, ColumnId>> apply(Table t)
+            public Stream<Pair<TableId, ColumnId>> apply(Table t)
             {
                 try
                 {
                     boolean isUsOrSrc = Objects.equals(us, t.getId()) || (srcTable != null && Objects.equals(t.getId(), srcTable.getId()));
-                    return t.getData().getColumns().stream().<Pair<@Nullable TableId, ColumnId>>map(c -> new Pair<@Nullable TableId, ColumnId>(isUsOrSrc ? null : t.getId(), c.getName()));
+                    return t.getData().getColumns().stream().<Pair<TableId, ColumnId>>map(c -> new Pair<TableId, ColumnId>(isUsOrSrc ? null : t.getId(), c.getName()));
                 }
                 catch (UserException e)
                 {
-                    return Stream.<Pair<@Nullable TableId, ColumnId>>empty();
+                    return Stream.<Pair<TableId, ColumnId>>empty();
                 }
                 catch (InternalException e)
                 {
                     Log.log(e);
-                    return Stream.<Pair<@Nullable TableId, ColumnId>>empty();
+                    return Stream.<Pair<TableId, ColumnId>>empty();
                 }
             }
         }).distinct();
     }
 
     @Override
-    public @Nullable FoundTable getTable(@Nullable TableId tableName) throws UserException, InternalException
+    public FoundTable getTable(TableId tableName) throws UserException, InternalException
     {
         if (tableName == null && srcTable != null)
             tableName = srcTable.getId();
@@ -250,11 +249,11 @@ public class MultipleTableLookup implements ColumnLookup
     }
 
     @Override
-    public @Nullable FoundColumn getColumn(@Recorded Expression expression, @Nullable TableId tableId, ColumnId columnId)
+    public FoundColumn getColumn(Expression expression, TableId tableId, ColumnId columnId)
     {
         try
         {
-            @Nullable Pair<TableId, RecordSet> rs = null;
+            Pair<TableId, RecordSet> rs = null;
             if (tableId == null)
             {
                 if (srcTable != null)
@@ -284,7 +283,7 @@ public class MultipleTableLookup implements ColumnLookup
     }
 
     // If column is redefined in this table, issue a warning
-    private @Nullable Pair<StyledString, @Nullable QuickFix<Expression>> checkRedefined(@Recorded Expression expression, @Nullable TableId tableId, ColumnId columnId)
+    private Pair<StyledString, QuickFix<Expression>> checkRedefined(Expression expression, TableId tableId, ColumnId columnId)
     {
         if (tableId == null && us != null)
         {

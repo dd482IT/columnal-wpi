@@ -29,7 +29,7 @@ import java.util.List;
 
 public abstract class NaryOpShortCircuitExpression extends NaryOpExpression
 {
-    public NaryOpShortCircuitExpression(List<@Recorded Expression> expressions)
+    public NaryOpShortCircuitExpression(List<Expression> expressions)
     {
         super(expressions);
     }
@@ -47,6 +47,5 @@ public abstract class NaryOpShortCircuitExpression extends NaryOpExpression
         }
     }
 
-    @OnThread(Tag.Simulation)
     public abstract ValueResult getValueNaryOp(EvaluateState state) throws EvaluationException, InternalException;
 }

@@ -41,8 +41,7 @@ public class ExceptionWithStyle extends Exception
         this.styledMessage = styledMessage;
     }
 
-    @OnThread(Tag.Any)
-    @Pure public final StyledString getStyledMessage()
+    public final StyledString getStyledMessage()
     {
         return styledMessage;
     }

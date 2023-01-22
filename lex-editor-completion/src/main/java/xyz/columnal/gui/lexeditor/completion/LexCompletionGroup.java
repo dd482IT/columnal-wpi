@@ -31,18 +31,18 @@ import java.util.OptionalInt;
 public class LexCompletionGroup
 {
     final ImmutableList<LexCompletion> completions;
-    final @Nullable StyledString header;
+    final StyledString header;
     // How many items to show as a minimum if the group is collapsed
     final int minCollapsed;
 
-    public LexCompletionGroup(ImmutableList<LexCompletion> completions, @Nullable StyledString header, int minCollapsed)
+    public LexCompletionGroup(ImmutableList<LexCompletion> completions, StyledString header, int minCollapsed)
     {
         this.completions = completions;
         this.header = header;
         this.minCollapsed = minCollapsed;
     }
     
-    public @Nullable LexCompletionGroup filterForPos(@CanonicalLocation int caretPos)
+    public LexCompletionGroup filterForPos(int caretPos)
     {
         ImmutableList<LexCompletion> filtered = completions.stream().filter(c -> c.showFor(caretPos)).collect(ImmutableList.<LexCompletion>toImmutableList());
         if (filtered.isEmpty())
@@ -50,7 +50,7 @@ public class LexCompletionGroup
         return new LexCompletionGroup(filtered, header, minCollapsed);
     }
 
-    public LexCompletionGroup offsetBy(@CanonicalLocation int offsetBy)
+    public LexCompletionGroup offsetBy(int offsetBy)
     {
         ImmutableList<LexCompletion> offset = Utility.mapListI(completions, c -> c.offsetBy(offsetBy));
 

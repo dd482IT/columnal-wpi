@@ -43,12 +43,10 @@ public abstract class ValueFunction2<A, B> extends ValueFunction
     }
 
     @Override
-    @OnThread(Tag.Simulation)
-    public final @Value Object _call() throws InternalException, UserException
+    public final Object _call() throws InternalException, UserException
     {
         return call2(arg(0, classA), arg(1, classB));
     }
 
-    @OnThread(Tag.Simulation)
-    public abstract @Value Object call2(@Value A a, @Value B b) throws InternalException, UserException;
+    public abstract Object call2(A a, B b) throws InternalException, UserException;
 }

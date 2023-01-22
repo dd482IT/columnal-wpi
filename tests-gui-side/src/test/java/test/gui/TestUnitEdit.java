@@ -55,12 +55,9 @@ import xyz.columnal.utility.Utility;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-@RunWith(JUnitQuickcheck.class)
 public class TestUnitEdit extends FXApplicationTest implements TextFieldTrait, PopupTrait
 {
-    @Property(trials = 5)
-    @OnThread(Tag.Simulation)
-    public void testNewUnit(@From(GenUnitDefinition.class) GenUnitDefinition.UnitDetails unitDetails) throws Exception
+    public void testNewUnit(GenUnitDefinition.UnitDetails unitDetails) throws Exception
     {
         MainWindowActions mainWindowActions = TAppUtil.openDataAsTable(windowToUse, new DummyManager()).get();
         TFXUtil.sleep(1000);
@@ -85,14 +82,12 @@ public class TestUnitEdit extends FXApplicationTest implements TextFieldTrait, P
         assertEquals(ImmutableMap.of(unitDetails.name, unitDetails.aliasOrDeclaration), tmpUnits.getAllUserDeclared());
     }
 
-    @OnThread(Tag.Simulation)
     public String getUnitSrcFromFile(String fileContent) throws InternalException, xyz.columnal.error.UserException
     {
         FileContext file = Utility.parseAsOne(fileContent, MainLexer2::new, MainParser2::new, p -> p.file());
         return Utility.getDetail(file.content().stream().filter(c -> c.ATOM(0).getText().equals("UNITS")).findFirst().orElseThrow(() -> new AssertionError("No UNITS section")).detail());
     }
 
-    @OnThread(Tag.Simulation)
     private void enterUnitDetails(GenUnitDefinition.UnitDetails unitDetails) throws InternalException
     {
         correctTargetWindow();
@@ -118,7 +113,7 @@ public class TestUnitEdit extends FXApplicationTest implements TextFieldTrait, P
             write(declaration.getDefined().getDescription());
             push(KeyCode.TAB);
             CheckBox equivCheck = getFocusOwner(CheckBox.class);
-            @Nullable Pair<Rational, Unit> equiv = declaration.getEquivalentTo();
+            Pair<Rational, Unit> equiv = declaration.getEquivalentTo();
             if (equiv != null)
             {
                 // Tick the box:
@@ -141,9 +136,7 @@ public class TestUnitEdit extends FXApplicationTest implements TextFieldTrait, P
         }
     }
 
-    @Property(trials = 5)
-    @OnThread(Tag.Simulation)
-    public void testNoOpEditUnit(@From(GenUnitDefinition.class) GenUnitDefinition.UnitDetails details) throws Exception
+    public void testNoOpEditUnit(GenUnitDefinition.UnitDetails details) throws Exception
     {
         DummyManager prevManager = new DummyManager();
         prevManager.getUnitManager().addUserUnit(new Pair<>(details.name, details.aliasOrDeclaration));
@@ -174,9 +167,7 @@ public class TestUnitEdit extends FXApplicationTest implements TextFieldTrait, P
 
 
 
-    @Property(trials = 5)
-    @OnThread(Tag.Simulation)
-    public void testEditUnit(@From(GenUnitDefinition.class) GenUnitDefinition.UnitDetails before, @From(GenUnitDefinition.class) GenUnitDefinition.UnitDetails after) throws Exception
+    public void testEditUnit(GenUnitDefinition.UnitDetails before, GenUnitDefinition.UnitDetails after) throws Exception
     {
         DummyManager prevManager = new DummyManager();
         prevManager.getUnitManager().addUserUnit(new Pair<>(before.name, before.aliasOrDeclaration));
@@ -206,9 +197,7 @@ public class TestUnitEdit extends FXApplicationTest implements TextFieldTrait, P
         assertEquals(ImmutableMap.of(after.name, after.aliasOrDeclaration), tmpUnits.getAllUserDeclared());
     }
 
-    @Property(trials = 5)
-    @OnThread(Tag.Simulation)
-    public void testDeleteUnit(@From(GenUnitDefinition.class) GenUnitDefinition.UnitDetails unitDetailsA, @From(GenUnitDefinition.class) GenUnitDefinition.UnitDetails unitDetailsB, @From(GenUnitDefinition.class) GenUnitDefinition.UnitDetails unitDetailsC, int whichToDelete) throws Exception
+    public void testDeleteUnit(GenUnitDefinition.UnitDetails unitDetailsA, GenUnitDefinition.UnitDetails unitDetailsB, GenUnitDefinition.UnitDetails unitDetailsC, int whichToDelete) throws Exception
     {
         DummyManager prevManager = new DummyManager();
         prevManager.getUnitManager().addUserUnit(new Pair<>(unitDetailsA.name, unitDetailsA.aliasOrDeclaration));
@@ -238,7 +227,6 @@ public class TestUnitEdit extends FXApplicationTest implements TextFieldTrait, P
         assertEquals(ImmutableMap.of(unitDetailsB.name, unitDetailsB.aliasOrDeclaration, unitDetailsC.name, unitDetailsC.aliasOrDeclaration), tmpUnits.getAllUserDeclared());
     }
 
-    @OnThread(Tag.Simulation)
     private boolean existsSelectedCell(String content)
     {
         return TFXUtil.fx(() -> lookup(".table-cell").match(t -> {

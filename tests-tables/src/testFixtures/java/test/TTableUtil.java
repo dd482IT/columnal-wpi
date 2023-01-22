@@ -53,15 +53,13 @@ import java.util.stream.Stream;
 
 public class TTableUtil
 {
-    @OnThread(Tag.Simulation)
-    public static StreamEx<@Value Object> streamFlattened(Column column)
+    public static StreamEx<Object> streamFlattened(Column column)
     {
-        return new StreamEx.Emitter<@Value Object>()
+        return new StreamEx.Emitter<Object>()
         {
             int nextIndex = 0;
             @Override
-            @OnThread(value = Tag.Simulation, ignoreParent = true)
-            public StreamEx.@Nullable Emitter<@Value Object> next(Consumer<? super @Value Object> consumer)
+            public StreamEx.Emitter<Object> next(Consumer<? super Object> consumer)
             {
                 try
                 {
@@ -82,7 +80,6 @@ public class TTableUtil
         }.stream();
     }
 
-    @OnThread(Tag.Simulation)
     public static String save(TableManager tableManager) throws ExecutionException, InterruptedException, InvocationTargetException
     {
         // This thread is only pretend running on FXPlatform, but sets off some
@@ -103,11 +100,10 @@ public class TTableUtil
         return f.get();
     }
 
-    @OnThread(Tag.Simulation)
     @SuppressWarnings("nullness")
-    public static Map<List<@Value Object>, Long> getRowFreq(Stream<List<@Value Object>> src)
+    public static Map<List<Object>, Long> getRowFreq(Stream<List<Object>> src)
     {
-        SortedMap<List<@Value Object>, Long> r = new TreeMap<>((Comparator<List<@Value Object>>)(List<@Value Object> a, List<@Value Object> b) -> {
+        SortedMap<List<Object>, Long> r = new TreeMap<>((Comparator<List<Object>>)(List<Object> a, List<Object> b) -> {
             if (a.size() != b.size())
                 return Integer.compare(a.size(), b.size());
             for (int i = 0; i < a.size(); i++)
@@ -125,15 +121,15 @@ public class TTableUtil
             }
             return 0;
         });
-        src.forEach(new Consumer<List<@Value Object>>()
+        src.forEach(new Consumer<List<Object>>()
         {
             @Override
-            public void accept(List<@Value Object> row)
+            public void accept(List<Object> row)
             {
-                r.compute(row, new BiFunction<List<@Value Object>, Long, Long>()
+                r.compute(row, new BiFunction<List<Object>, Long, Long>()
                 {
                     @Override
-                    public Long apply(List<@Value Object> k, Long v)
+                    public Long apply(List<Object> k, Long v)
                     {
                         return v == null ? 1 : v + 1;
                     }
@@ -143,28 +139,25 @@ public class TTableUtil
         return r;
     }
 
-    @OnThread(Tag.Simulation)
     @SuppressWarnings("nullness")
-    public static Map<List<@Value Object>, Long> getRowFreq(RecordSet src)
+    public static Map<List<Object>, Long> getRowFreq(RecordSet src)
     {
-        return getRowFreq(streamFlattened(src).<List<@Value Object>>map(p -> p.getSecond()));
+        return getRowFreq(streamFlattened(src).<List<Object>>map(p -> p.getSecond()));
     }
 
-    @OnThread(Tag.Simulation)
-    public static StreamEx<Pair<Integer, List<@Value Object>>> streamFlattened(RecordSet src)
+    public static StreamEx<Pair<Integer, List<Object>>> streamFlattened(RecordSet src)
     {
-        return new StreamEx.Emitter<Pair<Integer, List<@Value Object>>>()
+        return new StreamEx.Emitter<Pair<Integer, List<Object>>>()
         {
             int nextIndex = 0;
             @Override
-            @OnThread(value = Tag.Simulation, ignoreParent = true)
-            public StreamEx.@Nullable Emitter<Pair<Integer, List<@Value Object>>> next(Consumer<? super Pair<Integer, List<Object>>> consumer)
+            public StreamEx.Emitter<Pair<Integer, List<Object>>> next(Consumer<? super Pair<Integer, List<Object>>> consumer)
             {
                 try
                 {
                     if (src.indexValid(nextIndex))
                     {
-                        List<@Value Object> collapsed = src.getColumns().stream()/*.sorted(Comparator.comparing(Column::getName))*/.map(c ->
+                        List<Object> collapsed = src.getColumns().stream()/*.sorted(Comparator.comparing(Column::getName))*/.map(c ->
                         {
                             try
                             {
@@ -190,12 +183,11 @@ public class TTableUtil
         }.stream();
     }
 
-    @OnThread(Tag.Simulation)
-    public static String toString(@Value Object value)
+    public static String toString(Object value)
     {
         if (value instanceof Object[])
         {
-            return "(" + Arrays.stream((@Value Object[])value).map(TTableUtil::toString).collect(Collectors.joining(",")) + ")";
+            return "(" + Arrays.stream((Object[])value).map(TTableUtil::toString).collect(Collectors.joining(",")) + ")";
         }
         else if (value instanceof ListEx)
         {
@@ -219,14 +211,13 @@ public class TTableUtil
         }
         else if (value instanceof TaggedValue)
         {
-            @Value TaggedValue t = ((TaggedValue)value);
+            TaggedValue t = ((TaggedValue)value);
             return t.getTagIndex() + (t.getInner() == null ? "" : ":" + toString(t.getInner()));
         }
         else
             return value.toString();
     }
 
-    @OnThread(Tag.Simulation)
     public static String toString(Column c) throws UserException, InternalException
     {
         StringBuilder sb = new StringBuilder("[");

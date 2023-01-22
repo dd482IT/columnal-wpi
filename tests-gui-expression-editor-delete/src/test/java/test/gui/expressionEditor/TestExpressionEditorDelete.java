@@ -57,133 +57,110 @@ import java.util.Random;
 
 import static org.junit.Assert.assertEquals;
 
-@RunWith(JUnitQuickcheck.class)
-@OnThread(Tag.Simulation)
 public class TestExpressionEditorDelete extends FXApplicationTest
     implements ClickTableLocationTrait, EnterExpressionTrait, ClickOnTableHeaderTrait, PopupTrait
 {
     @SuppressWarnings("nullness")
-    @OnThread(Tag.Any)
     private MainWindowActions mainWindowActions;
     private final CellPosition targetPos = new CellPosition(CellPosition.row(2), CellPosition.col(2));
 
-    @Before
     public void setupWindow() throws Exception
     {
         mainWindowActions = TAppUtil.openDataAsTable(windowToUse,null, new EditableRecordSet(ImmutableList.of(), () -> 0));
 
     }
     
-    @Property(trials = 3)
-    public void testDeleteAfterOperand(@From(GenRandom.class) Random r) throws Exception
+    public void testDeleteAfterOperand(Random r) throws Exception
     {
         testBackspace("true&false", 10, 1, "true & fals", r);
     }
 
-    @Property(trials = 3)
-    public void testDeleteAfterInvalidOperator(@From(GenRandom.class) Random r) throws Exception
+    public void testDeleteAfterInvalidOperator(Random r) throws Exception
     {
         testDeleteBackspace("@invalidops(true, @unfinished \"&\")", 4, 1, "true", r);
     }
 
-    @Property(trials = 3)
-    public void testDeleteAfterSpareKeyword(@From(GenRandom.class) Random r) throws Exception
+    public void testDeleteAfterSpareKeyword(Random r) throws Exception
     {
         testDeleteBackspace("@invalidops(1, @unfinished \"+\", 2, @invalidops(@unfinished \"^aif\", @invalidops ()))", 3, 3, "1+2", r);
     }
 
-    @Property(trials = 3)
-    public void testDeleteAfterInfixOperator(@From(GenRandom.class) Random r) throws Exception
+    public void testDeleteAfterInfixOperator(Random r) throws Exception
     {
         testDeleteBackspace("1+2", 1, 1, "12", r);
     }
     
-    @Property(trials = 3)
-    public void testDeleteAfterInfixOperator2(@From(GenRandom.class) Random r) throws Exception
+    public void testDeleteAfterInfixOperator2(Random r) throws Exception
     {
         testDeleteBackspace("a<b<=c", 1, 1, "ab <= c", r);
     }
     
-    @Property(trials = 3)
-    public void testDeleteAfterInfixOperator2b(@From(GenRandom.class) Random r) throws Exception
+    public void testDeleteAfterInfixOperator2b(Random r) throws Exception
     {
         testDeleteBackspace("a<b<=c", 3, 2, "a < bc", r, 1);
     }
 
-    @Property(trials = 3)
-    public void testDeleteAfterInfixOperator2c(@From(GenRandom.class) Random r) throws Exception
+    public void testDeleteAfterInfixOperator2c(Random r) throws Exception
     {
         testDeleteBackspace("a<b<=c", 3, 1, "@invalidops(a, @unfinished \"<\", b, @unfinished \"=\", c)", r, -1);
     }
     
-    @Property(trials = 3)
-    public void testDeleteAfterInfixOperator3(@From(GenRandom.class) Random r) throws Exception
+    public void testDeleteAfterInfixOperator3(Random r) throws Exception
     {
         testDeleteBackspace("\"a\";b", 3, 1, "@invalidops(\"a\", b)", r);
     }
     
-    @Property(trials = 2)
-    public void testRetypeInfix(@From(GenRandom.class) Random r) throws Exception
+    public void testRetypeInfix(Random r) throws Exception
     {
         testBackspaceRetype("1+2", 2, 1, "+", r);
     }
 
-    @Property(trials = 2)
-    public void testRetypeInfix2(@From(GenRandom.class) Random r) throws Exception
+    public void testRetypeInfix2(Random r) throws Exception
     {
         testBackspaceRetype("1<=2", 3, 2, "<=", r);
     }
 
-    @Property(trials = 2)
-    public void testRetypeLeadingOperand(@From(GenRandom.class) Random r) throws Exception
+    public void testRetypeLeadingOperand(Random r) throws Exception
     {
         testBackspaceRetype("1+2", 1, 1, "1", r);
     }
 
-    @Property(trials = 2)
-    public void testRetypeLeadingOperand2(@From(GenRandom.class) Random r) throws Exception
+    public void testRetypeLeadingOperand2(Random r) throws Exception
     {
         testBackspaceRetype("1234 + 5678", 4, 4, "1234", r);
     }
 
-    @Property(trials = 2)
-    public void testRetypeTrailingOperand(@From(GenRandom.class) Random r) throws Exception
+    public void testRetypeTrailingOperand(Random r) throws Exception
     {
         testBackspaceRetype("1+2", 3, 1, "2", r);
     }
 
-    @Property(trials = 2)
-    public void testRetypeTrailingOperand2(@From(GenRandom.class) Random r) throws Exception
+    public void testRetypeTrailingOperand2(Random r) throws Exception
     {
         testBackspaceRetype("123+456", 7, 3,"456", r);
     }
     
-    @Property(trials = 2)
-    public void testRetypeListTypeContent(@From(GenRandom.class) Random r) throws Exception
+    public void testRetypeListTypeContent(Random r) throws Exception
     {
         testBackspaceRetype("type{[Text]}", 10, 4, "Text", r);
     }
 
-    @Property(trials = 2)
-    public void testRetypeParameter(@From(GenRandom.class) Random r) throws Exception
+    public void testRetypeParameter(Random r) throws Exception
     {
         testBackspaceRetype("@call function\\\\number\\sum([2])", 7, 3, "[2]", r);
     }
 
-    @Property(trials = 2)
-    public void testRetypeParameter2(@From(GenRandom.class) Random r) throws Exception
+    public void testRetypeParameter2(Random r) throws Exception
     {
         testBackspaceRetype("@call function\\\\number\\sum([])", 6, 2, "[]", r);
     }
 
-    @Property(trials = 2)
-    public void testRetypeParameter3(@From(GenRandom.class) Random r) throws Exception
+    public void testRetypeParameter3(Random r) throws Exception
     {
         testBackspaceRetype("@call function\\\\core\\convert unit(foo*unit{m}, 1{cm})", 15, 2, "fo", r);
     }
 
-    @Property(trials = 2)
-    public void testRetypeWordInIdent(@From(GenRandom.class) Random r) throws Exception
+    public void testRetypeWordInIdent(Random r) throws Exception
     {
         testBackspaceRetype("the quick brown fox", 9, 5, "quick", r);
     }
@@ -192,8 +169,7 @@ public class TestExpressionEditorDelete extends FXApplicationTest
     
     // TODO more retype tests
 
-    @Property(trials = 2)
-    public void testPasteSeveral(@From(GenRandom.class) Random r) throws Exception
+    public void testPasteSeveral(Random r) throws Exception
     {
         testPaste("12", 1, "+3+4-", "1+3+4-2", r);
     }
@@ -335,10 +311,10 @@ public class TestExpressionEditorDelete extends FXApplicationTest
             // Test copy does same as cut:
             TFXUtil.fx_(() -> Clipboard.getSystemClipboard().setContent(ImmutableMap.of(DataFormat.PLAIN_TEXT, "EMPTY")));
             push(KeyCode.SHORTCUT, KeyCode.C);
-            String copied = TFXUtil.<@Nullable String>fx(() -> Clipboard.getSystemClipboard().getString());
+            String copied = TFXUtil.<String>fx(() -> Clipboard.getSystemClipboard().getString());
             TFXUtil.fx_(() -> Clipboard.getSystemClipboard().setContent(ImmutableMap.of(DataFormat.PLAIN_TEXT, "EMPTY")));
             push(KeyCode.SHORTCUT, KeyCode.X);
-            assertEquals(copied, TFXUtil.<@Nullable String>fx(() -> Clipboard.getSystemClipboard().getString()));
+            assertEquals(copied, TFXUtil.<String>fx(() -> Clipboard.getSystemClipboard().getString()));
         }
         
 

@@ -42,10 +42,9 @@ import xyz.columnal.utility.Workers.WorkInfo;
 import xyz.columnal.utility.gui.FXUtility;
 import xyz.columnal.utility.gui.GUI;
 
-@OnThread(Tag.FXPlatform)
 public class TaskManagerWindow extends Dialog<Void>
 {
-    private static @MonotonicNonNull TaskManagerWindow SINGLETON;
+    private static TaskManagerWindow SINGLETON;
     private final ObservableList<Workers.WorkInfo> taskListMirror = FXCollections.observableArrayList();
 
     private TaskManagerWindow()
@@ -63,8 +62,7 @@ public class TaskManagerWindow extends Dialog<Void>
         setOnHidden(e -> t.stop());
     }
 
-    @RequiresNonNull("taskListMirror")
-    private void refreshTaskList(@UnknownInitialization(Object.class) TaskManagerWindow this)
+    private void refreshTaskList(TaskManagerWindow this)
     {
         taskListMirror.setAll(Workers.getTaskList());
     }

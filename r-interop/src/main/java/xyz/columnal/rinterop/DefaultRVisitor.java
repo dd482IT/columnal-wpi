@@ -43,43 +43,43 @@ public abstract class DefaultRVisitor<T> implements RVisitor<T>
     }
 
     @Override
-    public T visitString(@Nullable @Value String s, boolean isSymbol) throws InternalException, UserException
+    public T visitString(String s, boolean isSymbol) throws InternalException, UserException
     {
         return def;
     }
 
     @Override
-    public T visitLogicalList(boolean[] values, boolean @Nullable [] isNA, @Nullable RValue attributes) throws InternalException, UserException
+    public T visitLogicalList(boolean[] values, boolean[] isNA, RValue attributes) throws InternalException, UserException
     {
         return def;
     }
 
     @Override
-    public T visitIntList(int[] values, @Nullable RValue attributes) throws InternalException, UserException
+    public T visitIntList(int[] values, RValue attributes) throws InternalException, UserException
     {
         return def;
     }
 
     @Override
-    public T visitDoubleList(double[] values, @Nullable RValue attributes) throws InternalException, UserException
+    public T visitDoubleList(double[] values, RValue attributes) throws InternalException, UserException
     {
         return def;
     }
 
     @Override
-    public T visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes, boolean isObject) throws InternalException, UserException
+    public T visitGenericList(ImmutableList<RValue> values, RValue attributes, boolean isObject) throws InternalException, UserException
     {
         return def;
     }
 
     @Override
-    public T visitStringList(ImmutableList<Optional<@Value String>> values, @Nullable RValue attributes) throws InternalException, UserException
+    public T visitStringList(ImmutableList<Optional<String>> values, RValue attributes) throws InternalException, UserException
     {
         return def;
     }
 
     @Override
-    public T visitTemporalList(DateTimeType dateTimeType, ImmutableList<Optional<@Value TemporalAccessor>> values, @Nullable RValue attributes) throws InternalException, UserException
+    public T visitTemporalList(DateTimeType dateTimeType, ImmutableList<Optional<TemporalAccessor>> values, RValue attributes) throws InternalException, UserException
     {
         return def;
     }

@@ -37,10 +37,9 @@ import static org.junit.Assert.assertTrue;
 /**
  * Created by neil on 10/06/2017.
  */
-@OnThread(value = Tag.FXPlatform, ignoreParent = true)
 public class TestInitialWindow extends FXApplicationTest
 {
-    private @MonotonicNonNull Stage initialWindow;
+    private Stage initialWindow;
 
     @Override
     public void start(Stage _stage) throws Exception
@@ -50,9 +49,6 @@ public class TestInitialWindow extends FXApplicationTest
         initialWindow = windowToUse;
     }
 
-    @Test
-    @RequiresNonNull("initialWindow")
-    @OnThread(Tag.Any)
     public void testNew()
     {
         assertTrue(TFXUtil.fx(() -> initialWindow.isShowing()));

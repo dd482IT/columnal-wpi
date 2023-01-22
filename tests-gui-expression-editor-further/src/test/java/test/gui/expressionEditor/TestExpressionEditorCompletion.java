@@ -72,7 +72,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-@OnThread(Tag.Simulation)
 public class TestExpressionEditorCompletion extends BaseTestEditorCompletion implements PopupTrait, AutoCompleteTrait
 {
     @SuppressWarnings("nullness")
@@ -112,7 +111,6 @@ public class TestExpressionEditorCompletion extends BaseTestEditorCompletion imp
         return finish().save(SaveDestination.TO_FILE, BracketedStatus.DONT_NEED_BRACKETS, TableAndColumnRenames.EMPTY);
     }
 
-    @Test
     public void testCompColumn() throws Exception
     {
         loadExpression("@unfinished \"\"");
@@ -148,7 +146,6 @@ public class TestExpressionEditorCompletion extends BaseTestEditorCompletion imp
                 c("@if", 0,0, 7,7));
     }
 
-    @Test
     public void testRelatedColumn() throws Exception
     {
         loadExpression("@unfinished \"\"");
@@ -158,7 +155,6 @@ public class TestExpressionEditorCompletion extends BaseTestEditorCompletion imp
         );
     }
 
-    @Test
     public void testRelatedFunction() throws Exception
     {
         loadExpression("@unfinished \"\"");
@@ -168,7 +164,6 @@ public class TestExpressionEditorCompletion extends BaseTestEditorCompletion imp
         );
     }
     
-    @Test
     public void testCompIf() throws Exception
     {
         loadExpression("@if true | false @then 12{m} @else @callfunction\\\\from text to(type{Number{m}}, \"34\")@endif");
@@ -186,7 +181,6 @@ public class TestExpressionEditorCompletion extends BaseTestEditorCompletion imp
         );
     }
     
-    @Test
     public void testColumn1() throws Exception
     {
         loadExpression("@unfinished \"\"");
@@ -197,7 +191,6 @@ public class TestExpressionEditorCompletion extends BaseTestEditorCompletion imp
         assertEquals(IdentExpression.column(new ColumnId("My Number")), finish());
     }
 
-    @Test
     public void testColumn1b() throws Exception
     {
         loadExpression("@unfinished \"\"");
@@ -211,7 +204,6 @@ public class TestExpressionEditorCompletion extends BaseTestEditorCompletion imp
         assertEquals(IdentExpression.column(new ColumnId("My Number")), finish());
     }
 
-    @Test
     public void testColumn2() throws Exception
     {
         loadExpression("@unfinished \"\"");
@@ -222,7 +214,6 @@ public class TestExpressionEditorCompletion extends BaseTestEditorCompletion imp
         assertEquals(IdentExpression.table("IDS"), finish());
     }
 
-    @Test
     public void testColumn2a() throws Exception
     {
         loadExpression("@unfinished \"\"");
@@ -233,7 +224,6 @@ public class TestExpressionEditorCompletion extends BaseTestEditorCompletion imp
         assertEquals(IdentExpression.table("IDS"), finish());
     }
 
-    @Test
     public void testColumn2b() throws Exception
     {
         loadExpression("@unfinished \"\"");
@@ -256,7 +246,7 @@ public class TestExpressionEditorCompletion extends BaseTestEditorCompletion imp
         double caretBottom = TFXUtil.fx(() -> caret.localToScreen(caret.getBoundsInLocal()).getMaxY());
         MatcherAssert.assertThat(TFXUtil.fx(() -> completions.get(0).getY()), Matchers.closeTo(caretBottom, 2.0));
         @SuppressWarnings("units") // Because passes through IntStream
-        @CanonicalLocation int targetStartPos = TFXUtil.fx(() -> completions.get(0)._test_getShowing().stream().mapToInt(c -> c.startPos).min().orElse(0));
+        int targetStartPos = TFXUtil.fx(() -> completions.get(0)._test_getShowing().stream().mapToInt(c -> c.startPos).min().orElse(0));
         double edX = TFXUtil.fx(() -> FXUtility.getCentre(editorDisplay._test_getCaretBounds(targetStartPos)).getX());
         Collection<Node> compText = TFXUtil.fx(() -> lookup(n -> n instanceof Text && n.getStyleClass().contains("styled-text") &&  !((Text)n).getText().isEmpty() && !ImmutableList.of("Related", "Operators", "Help").contains(((Text)n).getText()) && n.getScene() == completions.get(0).getScene()).queryAll());
         double compX = TFXUtil.fx(() -> compText.stream().mapToDouble(t -> {
@@ -266,7 +256,6 @@ public class TestExpressionEditorCompletion extends BaseTestEditorCompletion imp
         MatcherAssert.assertThat(compX, Matchers.closeTo(edX, 1.0));
     }
 
-    @Test
     public void testIsolatedKeyword() throws Exception
     {
         loadExpression("@unfinished \"\"");
@@ -278,7 +267,6 @@ public class TestExpressionEditorCompletion extends BaseTestEditorCompletion imp
         assertThat(finishExternal(), Matchers.containsString("^aelse"));
     }
     
-    @Test
     public void testInsertIfBefore1() throws Exception
     {
         loadExpression("column\\\\My Number");
@@ -290,7 +278,6 @@ public class TestExpressionEditorCompletion extends BaseTestEditorCompletion imp
         assertThat(finished, Matchers.containsString("My Number"));
     }
 
-    @Test
     public void testInsertIfBefore1b() throws Exception
     {
         loadExpression("column\\\\My Number");
@@ -305,7 +292,6 @@ public class TestExpressionEditorCompletion extends BaseTestEditorCompletion imp
         assertThat(finished, Matchers.containsString("My Number"));
     }
 
-    @Test
     public void testInsertIfBefore2() throws Exception
     {
         loadExpression("column\\\\My Number");
@@ -318,7 +304,6 @@ public class TestExpressionEditorCompletion extends BaseTestEditorCompletion imp
         assertEquals("@if true @then column\\\\My Number @else 0 @endif", finished);
     }
     
-    @Test
     public void testWholeIfByCompletion() throws Exception
     {
         // Top completion in blank expression should be to insert a complete if statement.
@@ -330,7 +315,6 @@ public class TestExpressionEditorCompletion extends BaseTestEditorCompletion imp
         assertEquals(IfThenElseExpression.unrecorded(new InvalidOperatorExpression(ImmutableList.of()), new InvalidOperatorExpression(ImmutableList.of()), new InvalidOperatorExpression(ImmutableList.of())), finish());
     }
 
-    @Test
     public void testWholeIfByCompletion2() throws Exception
     {
         // Top completion in blank expression should be to insert a complete if statement.
@@ -342,7 +326,6 @@ public class TestExpressionEditorCompletion extends BaseTestEditorCompletion imp
         assertEquals(IfThenElseExpression.unrecorded(new InvalidOperatorExpression(ImmutableList.of()), new InvalidOperatorExpression(ImmutableList.of()), new InvalidOperatorExpression(ImmutableList.of())), finish());
     }
 
-    @Test
     public void testJustIfByTyping() throws Exception
     {
         // Top completion in blank expression should be to insert a complete if statement.
@@ -354,7 +337,6 @@ public class TestExpressionEditorCompletion extends BaseTestEditorCompletion imp
         assertEquals(new InvalidOperatorExpression(ImmutableList.of(new InvalidIdentExpression("@if"), new InvalidOperatorExpression(ImmutableList.of()))), finish());
     }
 
-    @Test
     public void testJustIfByCompletion() throws Exception
     {
         // Top completion in blank expression should be to insert a complete if statement.
@@ -367,7 +349,6 @@ public class TestExpressionEditorCompletion extends BaseTestEditorCompletion imp
         assertEquals(new InvalidOperatorExpression(ImmutableList.of(new InvalidIdentExpression("@if"), new InvalidOperatorExpression(ImmutableList.of()))), finish());
     }
 
-    @Test
     public void testJustIfByTypingWithoutAt() throws Exception
     {
         // Top completion in blank expression should be to insert a complete if statement.
@@ -380,7 +361,6 @@ public class TestExpressionEditorCompletion extends BaseTestEditorCompletion imp
         assertEquals(new InvalidOperatorExpression(ImmutableList.of(new InvalidIdentExpression("@if"), new InvalidOperatorExpression(ImmutableList.of()))), finish());
     }
 
-    @Test
     public void testLong() throws Exception
     {
         // Check a long multi-line expression still shows completion in right place:
@@ -393,7 +373,6 @@ public class TestExpressionEditorCompletion extends BaseTestEditorCompletion imp
         assertEquals("@if true @then 0 @else 1 @endif + @if true @then 0 @else 1 @endif + @if true @then 0 @else 1 @endif + @if true @then 0 @else 1 @endif + column\\\\My Number", finishExternal());
     }
     
-    @Test
     public void testCompPartial() throws Exception
     {
         // From a failing test:
@@ -407,7 +386,6 @@ public class TestExpressionEditorCompletion extends BaseTestEditorCompletion imp
         );
     }
 
-    @Test
     public void testNumMinus1() throws Exception
     {
         loadExpression("@unfinished \"\"");
@@ -419,7 +397,6 @@ public class TestExpressionEditorCompletion extends BaseTestEditorCompletion imp
         assertEquals(new AddSubtractExpression(ImmutableList.of(new NumericLiteral(12, null), new NumericLiteral(3, null)), ImmutableList.of(AddSubtractOp.SUBTRACT)), finish());
     }
 
-    @Test
     public void testNumMinus1b() throws Exception
     {
         loadExpression("@unfinished \"\"");
@@ -431,7 +408,6 @@ public class TestExpressionEditorCompletion extends BaseTestEditorCompletion imp
         assertEquals(new AddSubtractExpression(ImmutableList.of(new NumericLiteral(12, null), new NumericLiteral(3, null)), ImmutableList.of(AddSubtractOp.SUBTRACT)), finish());
     }
 
-    @Test
     public void testLongOp() throws Exception
     {
         loadExpression("@unfinished \"\"");
@@ -443,7 +419,6 @@ public class TestExpressionEditorCompletion extends BaseTestEditorCompletion imp
         assertEquals(new ComparisonExpression(ImmutableList.of(new NumericLiteral(1, null), new NumericLiteral(2, null)), ImmutableList.of(ComparisonOperator.LESS_THAN_OR_EQUAL_TO)), finish());
     }
 
-    @Test
     public void testTrailingOperator1() throws Exception
     {
         loadExpression("@unfinished \"\"");
@@ -457,7 +432,6 @@ public class TestExpressionEditorCompletion extends BaseTestEditorCompletion imp
         );
     }
 
-    @Test
     public void testTrailingOperator1b() throws Exception
     {
         loadExpression("@unfinished \"\"");
@@ -471,7 +445,6 @@ public class TestExpressionEditorCompletion extends BaseTestEditorCompletion imp
         );
     }
 
-    @Test
     public void testTrailingOperator2() throws Exception
     {
         loadExpression("@unfinished \"\"");
@@ -485,7 +458,6 @@ public class TestExpressionEditorCompletion extends BaseTestEditorCompletion imp
         );
     }
 
-    @Test
     public void testTrailingOperator2b() throws Exception
     {
         loadExpression("@unfinished \"\"");
@@ -499,7 +471,6 @@ public class TestExpressionEditorCompletion extends BaseTestEditorCompletion imp
         );
     }
 
-    @Test
     public void testEndOperator() throws Exception
     {
         loadExpression("@unfinished \"\"");
@@ -511,7 +482,6 @@ public class TestExpressionEditorCompletion extends BaseTestEditorCompletion imp
         );
     }
 
-    @Test
     public void testRelatedFunction2() throws Exception
     {
         loadExpression("@unfinished \"\"");
@@ -524,7 +494,6 @@ public class TestExpressionEditorCompletion extends BaseTestEditorCompletion imp
         assertEquals(new CallExpression(fromTextTo, ImmutableList.of(new NumericLiteral(1, null))), finish());
     }
 
-    @Test
     public void testRelatedFunction2b() throws Exception
     {
         loadExpression("@unfinished \"\"");

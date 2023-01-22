@@ -42,11 +42,11 @@ public abstract class BaseTestEditorCompletion extends FXApplicationTest
 {
     protected CompletionCheck c(String content, int... startEndInclPairs)
     {
-        ImmutableList.Builder<Pair<@CanonicalLocation Integer, @CanonicalLocation Integer>> pairs = ImmutableList.builder();
+        ImmutableList.Builder<Pair<Integer, Integer>> pairs = ImmutableList.builder();
         for (int i = 0; i < startEndInclPairs.length; i += 2)
         {
             @SuppressWarnings("units")
-            Pair<@CanonicalLocation Integer, @CanonicalLocation Integer> pos = new Pair<>(startEndInclPairs[i], startEndInclPairs[i + 1]);
+            Pair<Integer, Integer> pos = new Pair<>(startEndInclPairs[i], startEndInclPairs[i + 1]);
             pairs.add(pos);
         }
         return new CompletionCheck(content, pairs.build());
@@ -64,7 +64,7 @@ public abstract class BaseTestEditorCompletion extends FXApplicationTest
         {
             TFXUtil.sleep(500);
             // Check completions here
-            @Nullable LexAutoCompleteWindow window = Utility.filterClass(TFXUtil.fx(() -> listWindows()).stream(), LexAutoCompleteWindow.class).findFirst().orElse(null);
+            LexAutoCompleteWindow window = Utility.filterClass(TFXUtil.fx(() -> listWindows()).stream(), LexAutoCompleteWindow.class).findFirst().orElse(null);
             List<LexCompletion> showing = TFXUtil.fx(() -> window == null ? ImmutableList.<LexCompletion>of() : window._test_getShowing());
             for (CompletionCheck check : checks)
             {
@@ -103,9 +103,9 @@ public abstract class BaseTestEditorCompletion extends FXApplicationTest
     protected class CompletionCheck
     {
         private final String content;
-        private final ImmutableList<Pair<@CanonicalLocation Integer, @CanonicalLocation Integer>> startInclToEndIncl;
+        private final ImmutableList<Pair<Integer, Integer>> startInclToEndIncl;
 
-        public CompletionCheck(String content, ImmutableList<Pair<@CanonicalLocation Integer, @CanonicalLocation Integer>> startInclToEndIncl)
+        public CompletionCheck(String content, ImmutableList<Pair<Integer, Integer>> startInclToEndIncl)
         {
             this.content = content;
             this.startInclToEndIncl = startInclToEndIncl;

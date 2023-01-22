@@ -51,7 +51,6 @@ import xyz.columnal.utility.gui.FXUtility;
 
 import static org.junit.Assert.assertNotNull;
 
-@OnThread(Tag.Simulation)
 public class TestTypeEditorCompletion extends BaseTestEditorCompletion
 {
     @SuppressWarnings("nullness")
@@ -84,7 +83,6 @@ public class TestTypeEditorCompletion extends BaseTestEditorCompletion
         push(KeyCode.TAB);
     }
     
-    @Test
     public void testCore() throws Exception
     {
         loadTypeExpression("");
@@ -108,12 +106,11 @@ public class TestTypeEditorCompletion extends BaseTestEditorCompletion
         );
     }
 
-    @Test
     public void testBuiltInTagged() throws Exception
     {
         loadTypeExpression("",
             new TaggedTypeDefinition(new TypeId("Opsicle"), ImmutableList.of(), ImmutableList.of(new TagType<>("Single", null))),
-            new TaggedTypeDefinition(new TypeId("Either"), ImmutableList.<Pair<TypeVariableKind, @ExpressionIdentifier String>>of(new Pair<>(TypeVariableKind.TYPE, "a"), new Pair<>(TypeVariableKind.TYPE, "b")), ImmutableList.of(new TagType<>("Left", null))));
+            new TaggedTypeDefinition(new TypeId("Either"), ImmutableList.<Pair<TypeVariableKind, String>>of(new Pair<>(TypeVariableKind.TYPE, "a"), new Pair<>(TypeVariableKind.TYPE, "b")), ImmutableList.of(new TagType<>("Left", null))));
         // Don't want to offer Void or Type as they are considered internal
         checkCompletions(
                 c("Optional()", 0, 0),

@@ -52,18 +52,18 @@ public class RecordExpression extends Expression
 {
     // Has to be list of pairs to maintain the same order:
     // Also, duplicates are a type error not a syntax error, so duplicates are possible here.
-    private final ImmutableList<Pair<@ExpressionIdentifier String, @Recorded Expression>> members;
+    private final ImmutableList<Pair<String, Expression>> members;
 
-    public RecordExpression(ImmutableList<Pair<@ExpressionIdentifier String, @Recorded Expression>> members)
+    public RecordExpression(ImmutableList<Pair<String, Expression>> members)
     {
         this.members = members;
     }
 
     @Override
-    public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState typeState, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public CheckedExp check(ColumnLookup dataLookup, TypeState typeState, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        HashMap<@ExpressionIdentifier String, TypeExp> fieldTypes = new HashMap<>();
-        for (Pair<@ExpressionIdentifier String, @Recorded Expression> member : members)
+        HashMap<String, TypeExp> fieldTypes = new HashMap<>();
+        for (Pair<String, Expression> member : members)
         {
             CheckedExp checkedExp = member.getSecond().check(dataLookup, typeState, kind, LocationInfo.UNIT_DEFAULT, onError);
             if (checkedExp == null)
@@ -84,13 +84,13 @@ public class RecordExpression extends Expression
     }
 
     @Override
-    public @OnThread(Tag.Simulation) ValueResult calculateValue(EvaluateState state) throws EvaluationException, InternalException
+    public ValueResult calculateValue(EvaluateState state) throws EvaluationException, InternalException
     {
         ImmutableList.Builder<ValueResult> valuesBuilder = ImmutableList.builderWithExpectedSize(members.size());
         // If it typechecked, assume no duplicate fields
-        HashMap<@ExpressionIdentifier String, @Value Object> fieldValues = new HashMap<>();
+        HashMap<String, Object> fieldValues = new HashMap<>();
 
-        for (Pair<@ExpressionIdentifier String, @Recorded Expression> member : members)
+        for (Pair<String, Expression> member : members)
         {
             fieldValues.put(member.getFirst(), fetchSubExpression(member.getSecond(), state, valuesBuilder).value);
         }
@@ -99,14 +99,14 @@ public class RecordExpression extends Expression
     }
 
     @Override
-    public @OnThread(Tag.Simulation) ValueResult matchAsPattern(@Value Object value, EvaluateState state) throws InternalException, EvaluationException
+    public ValueResult matchAsPattern(Object value, EvaluateState state) throws InternalException, EvaluationException
     {
-        @Value Record record = Utility.cast(value, Record.class);
+        Record record = Utility.cast(value, Record.class);
         ImmutableList.Builder<ValueResult> itemValues = ImmutableList.builderWithExpectedSize(members.size());
         
-        for (Pair<@ExpressionIdentifier String, Expression> member : members)
+        for (Pair<String, Expression> member : members)
         {
-            @Value Object fieldValue = record.getField(member.getFirst());
+            Object fieldValue = record.getField(member.getFirst());
             ValueResult result = matchSubExpressionAsPattern(member.getSecond(), fieldValue, state, itemValues);
             if (Utility.cast(result.value, Boolean.class) == false)
                 return explanation(DataTypeUtility.value(false), ExecutionType.MATCH, state, itemValues.build(), ImmutableList.of(), false);
@@ -129,13 +129,13 @@ public class RecordExpression extends Expression
     }
 
     @Override
-    public @Nullable Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
+    public Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
     {
         return null;
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -168,6 +168,6 @@ public class RecordExpression extends Expression
         if (this == toReplace)
             return replaceWith;
         else
-            return new RecordExpression(Utility.<Pair<@ExpressionIdentifier String, Expression>, Pair<@ExpressionIdentifier String, Expression>>mapListI(members, (Pair<@ExpressionIdentifier String, Expression> p) -> p.mapSecond(e -> e.replaceSubExpression(toReplace, replaceWith))));
+            return new RecordExpression(Utility.<Pair<String, Expression>, Pair<String, Expression>>mapListI(members, (Pair<String, Expression> p) -> p.mapSecond(e -> e.replaceSubExpression(toReplace, replaceWith))));
     }
 }

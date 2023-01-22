@@ -46,13 +46,13 @@ import java.util.Map;
 public class DumbObjectPool<T>
 {
     private final Class<T> cls;
-    private final @Nullable Comparator<T> comparator;
-    private @Nullable T @NonNull [] pool;
+    private final Comparator<T> comparator;
+    private T[] pool;
     private int used = 0;
     private final int limit;
 
     @SuppressWarnings("unchecked")
-    public DumbObjectPool(Class<T> cls, int limit, @Nullable Comparator<T> comparator)
+    public DumbObjectPool(Class<T> cls, int limit, Comparator<T> comparator)
     {
         this.cls = cls;
         this.pool = (T[])Array.newInstance(cls, 4);

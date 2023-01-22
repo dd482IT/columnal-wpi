@@ -33,11 +33,10 @@ import java.lang.annotation.Target;
  * A location in the lex editor's display, including added spaces.
  */
 @Documented
-@SubtypeOf(value= UnknownUnits.class)
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE_USE, ElementType.TYPE_PARAMETER})
 public @interface DisplayLocation
 {
-    public static final @DisplayLocation int ZERO = 0;
-    public static final @DisplayLocation int ONE = 1;
+    public static final int ZERO = 0;
+    public static final int ONE = 1;
 }

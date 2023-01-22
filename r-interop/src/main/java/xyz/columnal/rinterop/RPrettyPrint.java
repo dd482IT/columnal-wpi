@@ -44,23 +44,23 @@ public class RPrettyPrint
 
     private static void prettyPrint(RValue rValue, StringBuilder b, String indent) throws UserException, InternalException
     {
-        rValue.visit(new RVisitor<@Nullable Void>() {
+        rValue.visit(new RVisitor<Void>() {
             @Override
-            public @Nullable Void visitNil() throws InternalException, UserException
+            public Void visitNil() throws InternalException, UserException
             {
                 b.append("<nil>");
                 return null;
             }
 
             @Override
-            public @Nullable Void visitString(@Nullable @Value String s, boolean isSymbol) throws InternalException, UserException
+            public Void visitString(String s, boolean isSymbol) throws InternalException, UserException
             {
                 b.append((isSymbol ? "symb" : "") + "\"" + s + "\"");
                 return null;
             }
 
             @Override
-            public @Nullable Void visitLogicalList(boolean[] values, boolean @Nullable [] isNA, @Nullable RValue attributes) throws InternalException, UserException
+            public Void visitLogicalList(boolean[] values, boolean[] isNA, RValue attributes) throws InternalException, UserException
             {
                 b.append("boolean[" + values.length + (isNA != null ? "?" : ""));
                 if (attributes != null)
@@ -73,7 +73,7 @@ public class RPrettyPrint
             }
 
             @Override
-            public @Nullable Void visitIntList(int[] values, @Nullable RValue attributes) throws InternalException, UserException
+            public Void visitIntList(int[] values, RValue attributes) throws InternalException, UserException
             {
                 b.append("int[" + values.length + ":" + limited(Ints.asList(values)));
                 if (attributes != null)
@@ -86,7 +86,7 @@ public class RPrettyPrint
             }
 
             @Override
-            public @Nullable Void visitDoubleList(double[] values, @Nullable RValue attributes) throws InternalException, UserException
+            public Void visitDoubleList(double[] values, RValue attributes) throws InternalException, UserException
             {
                 b.append("double[" + values.length);
                 if (attributes != null)
@@ -99,7 +99,7 @@ public class RPrettyPrint
             }
 
             @Override
-            public @Nullable Void visitStringList(ImmutableList<Optional<@Value String>> values, @Nullable RValue attributes) throws InternalException, UserException
+            public Void visitStringList(ImmutableList<Optional<String>> values, RValue attributes) throws InternalException, UserException
             {
                 b.append("String[" + values.size() + ": "+ limited(values));
                 if (attributes != null)
@@ -117,7 +117,7 @@ public class RPrettyPrint
             }
 
             @Override
-            public @Nullable Void visitTemporalList(DateTimeType dateTimeType, ImmutableList<Optional<@Value TemporalAccessor>> values, @Nullable RValue attributes) throws InternalException, UserException
+            public Void visitTemporalList(DateTimeType dateTimeType, ImmutableList<Optional<TemporalAccessor>> values, RValue attributes) throws InternalException, UserException
             {
                 b.append(dateTimeType.toString() + "[" + values.size());
                 if (attributes != null)
@@ -130,7 +130,7 @@ public class RPrettyPrint
             }
 
             @Override
-            public @Nullable Void visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes, boolean isObject) throws InternalException, UserException
+            public Void visitGenericList(ImmutableList<RValue> values, RValue attributes, boolean isObject) throws InternalException, UserException
             {
                 b.append(isObject ? "object{\n" : "generic{\n");
                 for (RValue value : values)
@@ -152,7 +152,7 @@ public class RPrettyPrint
             }
 
             @Override
-            public @Nullable Void visitPairList(ImmutableList<PairListEntry> items) throws InternalException, UserException
+            public Void visitPairList(ImmutableList<PairListEntry> items) throws InternalException, UserException
             {
                 b.append("pair{");
                 for (PairListEntry value : items)
@@ -176,7 +176,7 @@ public class RPrettyPrint
             }
 
             @Override
-            public @Nullable Void visitFactorList(int[] values, ImmutableList<String> levelNames) throws InternalException, UserException
+            public Void visitFactorList(int[] values, ImmutableList<String> levelNames) throws InternalException, UserException
             {
                 b.append("factor[" + values.length + ", levels=" + levelNames.stream().collect(Collectors.joining(",")) + "]");
                 return null;

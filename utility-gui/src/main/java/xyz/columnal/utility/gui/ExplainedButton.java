@@ -45,10 +45,9 @@ import java.net.URL;
 /**
  * A button with a title, an explanation, and optionally an image.
  */
-@OnThread(Tag.FXPlatform)
 public final class ExplainedButton extends Button
 {
-    private @Nullable Point2D lastMouseScreenPos;
+    private Point2D lastMouseScreenPos;
     
     private ExplainedButton(double buttonWidth, FXPlatformConsumer<Point2D> onAction)
     {
@@ -76,7 +75,7 @@ public final class ExplainedButton extends Button
      * @param buttonWidth The width of the button
      * @param onAction The action to run when the button is clicked.
      */
-    public ExplainedButton(@LocalizableKey String titleKey, @LocalizableKey String explanationKey, double buttonWidth, FXPlatformConsumer<Point2D> onAction)
+    public ExplainedButton(String titleKey, String explanationKey, double buttonWidth, FXPlatformConsumer<Point2D> onAction)
     {
         this(buttonWidth, onAction);
         GUI.<ExplainedButton>addIdClass(Utility.<ExplainedButton>later(this), titleKey);
@@ -95,7 +94,7 @@ public final class ExplainedButton extends Button
      * @param buttonWidth The width of the button
      * @param onAction The action to run when the button is clicked.
      */
-    public ExplainedButton(@LocalizableKey String titleKey, @LocalizableKey String explanationKey, String imageFileName, double buttonWidth, FXPlatformConsumer<Point2D> onAction)
+    public ExplainedButton(String titleKey, String explanationKey, String imageFileName, double buttonWidth, FXPlatformConsumer<Point2D> onAction)
     {
         this(buttonWidth, onAction);
         String titleText = TranslationUtility.getString(titleKey);
@@ -108,7 +107,7 @@ public final class ExplainedButton extends Button
         setAlignment(Pos.TOP_CENTER);
         Label explanation = GUI.labelWrap(explanationKey, "explanation-button-explanation");
         explanation.setMaxWidth(buttonWidth * 0.85);
-        @Nullable ImageView imageView = null;
+        ImageView imageView = null;
         URL imageURL = ResourceUtility.getResource(imageFileName);
         if (imageURL != null)
         {
@@ -124,7 +123,7 @@ public final class ExplainedButton extends Button
         
     }
 
-    private Point2D getPos(@UnknownInitialization(Button.class)ExplainedButton this)
+    private Point2D getPos(ExplainedButton this)
     {
         if (lastMouseScreenPos != null)
         {
@@ -138,7 +137,6 @@ public final class ExplainedButton extends Button
     }
 
     @Override
-    @OnThread(Tag.FX)
     public Orientation getContentBias()
     {
         return Orientation.HORIZONTAL;

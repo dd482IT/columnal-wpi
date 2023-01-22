@@ -27,12 +27,12 @@ import xyz.columnal.gui.dtf.Recogniser;
 import xyz.columnal.utility.adt.Either;
 import xyz.columnal.utility.ParseProgress;
 
-public class BooleanRecogniser extends Recogniser<@ImmediateValue Boolean>
+public class BooleanRecogniser extends Recogniser<Boolean>
 {
     @Override
-    public Either<ErrorDetails, SuccessDetails<@ImmediateValue Boolean>> process(ParseProgress orig, boolean immediatelySurroundedByRoundBrackets)
+    public Either<ErrorDetails, SuccessDetails<Boolean>> process(ParseProgress orig, boolean immediatelySurroundedByRoundBrackets)
     {
-        @Nullable ParseProgress pp = orig.consumeNextIC("true");
+        ParseProgress pp = orig.consumeNextIC("true");
         if (pp != null)
             return success(DataTypeUtility.value(true), "true", pp);
         pp = orig.consumeNextIC("false");

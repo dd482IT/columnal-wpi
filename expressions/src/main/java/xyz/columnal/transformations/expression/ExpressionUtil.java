@@ -130,13 +130,11 @@ import java.util.stream.Stream;
 public class ExpressionUtil
 {
     // Parameter should be Expression/UnitExpression/etc
-    @OnThread(Tag.Any)
     public static String makeCssClass(StyledShowable replacement)
     {
         return makeCssClass(replacement.toStyledString().toPlain());
     }
 
-    @OnThread(Tag.Any)
     public static String makeCssClass(String replacement)
     {
         Log.debug("Munging: " + replacement);
@@ -158,7 +156,7 @@ public class ExpressionUtil
     {
         return expressions.flatMap(e -> e.visit(new ExpressionVisitorStream<TableId>() {
             @Override
-            public Stream<TableId> ident(IdentExpression self, @Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents, boolean isVariable)
+            public Stream<TableId> ident(IdentExpression self, String namespace, ImmutableList<String> idents, boolean isVariable)
             {
                 if (namespace != null)
                 {
@@ -178,17 +176,17 @@ public class ExpressionUtil
     }
 
     @SuppressWarnings("recorded")
-    public static Stream<Pair<@Nullable TableId, ColumnId>> columnsFromExpressions(Stream<Expression> expressions)
+    public static Stream<Pair<TableId, ColumnId>> columnsFromExpressions(Stream<Expression> expressions)
     {
-        return expressions.flatMap(new Function<Expression, Stream<? extends Pair<@Nullable TableId, ColumnId>>>()
+        return expressions.flatMap(new Function<Expression, Stream<? extends Pair<TableId, ColumnId>>>()
         {
             @Override
-            public Stream<Pair<@Nullable TableId, ColumnId>> apply(Expression e)
+            public Stream<Pair<TableId, ColumnId>> apply(Expression e)
             {
-                return e.visit(new ExpressionVisitorStream<Pair<@Nullable TableId, ColumnId>>()
+                return e.visit(new ExpressionVisitorStream<Pair<TableId, ColumnId>>()
                 {
                     @Override
-                    public Stream<Pair<@Nullable TableId, ColumnId>> ident(IdentExpression self, @Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents, boolean isVariable)
+                    public Stream<Pair<TableId, ColumnId>> ident(IdentExpression self, String namespace, ImmutableList<String> idents, boolean isVariable)
                     {
                         if (namespace != null)
                         {
@@ -196,9 +194,9 @@ public class ExpressionUtil
                             {
                                 case "column":
                                     if (idents.size() == 2)
-                                        return Stream.of(new Pair<@Nullable TableId, ColumnId>(new TableId(idents.get(0)), new ColumnId(idents.get(1))));
+                                        return Stream.of(new Pair<TableId, ColumnId>(new TableId(idents.get(0)), new ColumnId(idents.get(1))));
                                     else if (idents.size() == 1)
-                                        return Stream.of(new Pair<@Nullable TableId, ColumnId>(null, new ColumnId(idents.get(0))));
+                                        return Stream.of(new Pair<TableId, ColumnId>(null, new ColumnId(idents.get(0))));
                                     break;
                             }
                         }
@@ -210,37 +208,35 @@ public class ExpressionUtil
     }
     
     @SuppressWarnings("recorded")
-    @OnThread(Tag.Any)
-    public static List<QuickFix<Expression>> quickFixesForTypeError(TypeManager typeManager, FunctionLookup functionLookup, Expression src, @Nullable DataType fix)
+    public static List<QuickFix<Expression>> quickFixesForTypeError(TypeManager typeManager, FunctionLookup functionLookup, Expression src, DataType fix)
     {
         List<QuickFix<Expression>> quickFixes = new ArrayList<>();
         QuickFixReplace<Expression> makeTypeFix = () -> {
-            return TypeLiteralExpression.fixType(functionLookup, fix == null ? new InvalidOpTypeExpression(ImmutableList.<@Recorded TypeExpression>of()) : TypeExpression.fromDataType(fix), src);
+            return TypeLiteralExpression.fixType(functionLookup, fix == null ? new InvalidOpTypeExpression(ImmutableList.<TypeExpression>of()) : TypeExpression.fromDataType(fix), src);
         };
         quickFixes.add(new QuickFix<Expression>(StyledString.s(TranslationUtility.getString("fix.setType")), ImmutableList.<String>of(), src, makeTypeFix));
         if (fix != null)
         {
-            @NonNull DataType fixFinal = fix;
+            DataType fixFinal = fix;
             quickFixes.add(new QuickFix<Expression>(StyledString.s(TranslationUtility.getString("fix.setTypeTo", fix.toString())), ImmutableList.of(), src, () -> TypeLiteralExpression.fixType(typeManager, functionLookup, JellyType.fromConcrete(fixFinal), src)));
         }
         return quickFixes;
     }
 
-    @OnThread(Tag.Any)
     public static ImmutableList<QuickFix<Expression>> getFixesForMatchingNumericUnits(TypeState state, TypeProblemDetails p)
     {
         // Must be a units issue.  Check if fixing a numeric literal involved would make
         // the units match all non-literal units:
-        List<Pair<NumericLiteral, @Nullable Unit>> literals = new ArrayList<>();
-        List<@Nullable Unit> nonLiteralUnits = new ArrayList<>();
+        List<Pair<NumericLiteral, Unit>> literals = new ArrayList<>();
+        List<Unit> nonLiteralUnits = new ArrayList<>();
         for (int i = 0; i < p.expressions.size(); i++)
         {
             Expression expression = p.expressions.get(i);
             if (expression instanceof NumericLiteral)
             {
                 NumericLiteral n = (NumericLiteral) expression;
-                @Nullable @Recorded UnitExpression unitExpression = n.getUnitExpression();
-                @Nullable Unit unit = null;
+                UnitExpression unitExpression = n.getUnitExpression();
+                Unit unit = null;
                 if (unitExpression == null)
                     unit = Unit.SCALAR;
                 else
@@ -258,11 +254,11 @@ public class ExpressionUtil
                         // Could not find unit, leave it as null
                     }
                 }
-                literals.add(new Pair<NumericLiteral, @Nullable Unit>(n, unit));
+                literals.add(new Pair<NumericLiteral, Unit>(n, unit));
             }
             else
             {
-                @Nullable TypeExp type = p.getType(i);
+                TypeExp type = p.getType(i);
                 if (type != null && !(type instanceof NumTypeExp))
                 {
                     // Non-numeric type; definitely can't offer a sensible fix:
@@ -279,7 +275,7 @@ public class ExpressionUtil
         List<Unit> uniqueNonLiteralUnits = Utility.filterOutNulls(nonLiteralUnits.stream()).distinct().collect(Collectors.<Unit>toList());
         if (uniqueNonLiteralUnits.size() == 1)
         {
-            for (Pair<NumericLiteral, @Nullable Unit> literal : literals)
+            for (Pair<NumericLiteral, Unit> literal : literals)
             {
                 Log.debug("Us: " + p.getOurExpression() + " literal: " + literal.getFirst() + " match: " + (literal.getFirst() == p.getOurExpression()));
                 Log.debug("Non-literal unit: " + uniqueNonLiteralUnits.get(0) + " us: " + literal.getSecond());
@@ -294,7 +290,7 @@ public class ExpressionUtil
         return ImmutableList.of();
     }
 
-    public static Expression parse(@Nullable String keyword, String src, ExpressionVersion expressionVersion, TypeManager typeManager, FunctionLookup functionLookup) throws UserException, InternalException
+    public static Expression parse(String keyword, String src, ExpressionVersion expressionVersion, TypeManager typeManager, FunctionLookup functionLookup) throws UserException, InternalException
     {
         if (keyword != null)
         {
@@ -361,7 +357,7 @@ public class ExpressionUtil
         {
             try
             {
-                @Nullable @Recorded UnitExpression unitExpression;
+                UnitExpression unitExpression;
                 if (ctx.CURLIED() == null)
                 {
                     unitExpression = null;
@@ -395,10 +391,10 @@ public class ExpressionUtil
         @Override
         public Expression visitConstructor(ConstructorContext ctx)
         {
-            @Nullable @ExpressionIdentifier String type = null;
+            String type = null;
             if (ctx.typeName() != null)
                 type = IdentifierUtility.fromParsed(ctx.typeName().ident());
-            @ExpressionIdentifier String tagName = IdentifierUtility.fromParsed(ctx.constructorName().ident());
+            String tagName = IdentifierUtility.fromParsed(ctx.constructorName().ident());
             if (type != null)
                 return IdentExpression.tag(type, tagName);
             else
@@ -613,7 +609,7 @@ public class ExpressionUtil
         {
             Expression function = visitCallTarget(ctx.callTarget());
             
-            ImmutableList<@NonNull Expression> args;
+            ImmutableList<Expression> args;
             args = Utility.<TopLevelExpressionContext, Expression>mapListI(ctx.topLevelExpression(), e -> visitTopLevelExpression(e));
             
             return new CallExpression(function, args);
@@ -622,8 +618,8 @@ public class ExpressionUtil
         @Override
         public Expression visitStandardFunction(StandardFunctionContext ctx)
         {
-            @ExpressionIdentifier String functionName = IdentifierUtility.fromParsed(ctx.ident());
-            return IdentExpression.function(ImmutableList.<@ExpressionIdentifier String>of(functionName));
+            String functionName = IdentifierUtility.fromParsed(ctx.ident());
+            return IdentExpression.function(ImmutableList.<String>of(functionName));
         }
         
         /*
@@ -646,8 +642,8 @@ public class ExpressionUtil
                 ImmutableList.Builder<Pattern> patterns = ImmutableList.builderWithExpectedSize(matchClauseContext.pattern().size());
                 for (PatternContext patternContext : matchClauseContext.pattern())
                 {
-                    @Nullable TopLevelExpressionContext guardExpression = patternContext.topLevelExpression().size() < 2 ? null : patternContext.topLevelExpression(1);
-                    @Nullable Expression guard = guardExpression == null ? null : visitTopLevelExpression(guardExpression);
+                    TopLevelExpressionContext guardExpression = patternContext.topLevelExpression().size() < 2 ? null : patternContext.topLevelExpression(1);
+                    Expression guard = guardExpression == null ? null : visitTopLevelExpression(guardExpression);
                     patterns.add(new Pattern(visitTopLevelExpression(patternContext.topLevelExpression(0)), guard));
                 }
                 clauses.add(new MatchClause(new CanonicalSpan(CanonicalLocation.ZERO, CanonicalLocation.ZERO), patterns.build(), visitTopLevelExpression(matchClauseContext.topLevelExpression())));
@@ -667,7 +663,7 @@ public class ExpressionUtil
         @Override
         public Expression visitRecordExpression(RecordExpressionContext ctx)
         {
-            ImmutableList.Builder<Pair<@ExpressionIdentifier String, Expression>> members = ImmutableList.builderWithExpectedSize(ctx.ident().size());
+            ImmutableList.Builder<Pair<String, Expression>> members = ImmutableList.builderWithExpectedSize(ctx.ident().size());
             for (int i = 0; i < ctx.ident().size(); i++)
             {
                 members.add(new Pair<>(IdentifierUtility.fromParsed(ctx.ident(i)), visitTopLevelExpression(ctx.topLevelExpression(i))));
@@ -725,7 +721,7 @@ public class ExpressionUtil
         }
 
         public Expression visitChildren(RuleNode node) {
-            @Nullable Expression result = this.defaultResult();
+            Expression result = this.defaultResult();
             int n = node.getChildCount();
 
             for(int i = 0; i < n && this.shouldVisitNextChild(node, result); ++i) {
@@ -759,7 +755,7 @@ public class ExpressionUtil
         {
             try
             {
-                @Nullable @Recorded UnitExpression unitExpression;
+                UnitExpression unitExpression;
                 if (ctx.CURLIED() == null)
                 {
                     unitExpression = null;
@@ -998,7 +994,7 @@ public class ExpressionUtil
         {
             Expression function = visitCallTarget(ctx.callTarget());
 
-            ImmutableList<@NonNull Expression> args;
+            ImmutableList<Expression> args;
             args = Utility.<ExpressionParser2.TopLevelExpressionContext, Expression>mapListI(ctx.topLevelExpression(), e -> visitTopLevelExpression(e));
 
             return new CallExpression(function, args);
@@ -1024,8 +1020,8 @@ public class ExpressionUtil
                 ImmutableList.Builder<Pattern> patterns = ImmutableList.builderWithExpectedSize(matchClauseContext.pattern().size());
                 for (ExpressionParser2.PatternContext patternContext : matchClauseContext.pattern())
                 {
-                    ExpressionParser2.@Nullable TopLevelExpressionContext guardExpression = patternContext.topLevelExpression().size() < 2 ? null : patternContext.topLevelExpression(1);
-                    @Nullable Expression guard = guardExpression == null ? null : visitTopLevelExpression(guardExpression);
+                    ExpressionParser2.TopLevelExpressionContext guardExpression = patternContext.topLevelExpression().size() < 2 ? null : patternContext.topLevelExpression(1);
+                    Expression guard = guardExpression == null ? null : visitTopLevelExpression(guardExpression);
                     patterns.add(new Pattern(visitTopLevelExpression(patternContext.topLevelExpression(0)), guard));
                 }
                 clauses.add(new MatchClause(new CanonicalSpan(CanonicalLocation.ZERO, CanonicalLocation.ZERO), patterns.build(), visitTopLevelExpression(matchClauseContext.topLevelExpression())));
@@ -1045,7 +1041,7 @@ public class ExpressionUtil
         @Override
         public Expression visitRecordExpression(ExpressionParser2.RecordExpressionContext ctx)
         {
-            ImmutableList.Builder<Pair<@ExpressionIdentifier String, Expression>> members = ImmutableList.builderWithExpectedSize(ctx.singleIdent().size());
+            ImmutableList.Builder<Pair<String, Expression>> members = ImmutableList.builderWithExpectedSize(ctx.singleIdent().size());
             for (int i = 0; i < ctx.singleIdent().size(); i++)
             {
                 members.add(new Pair<>(IdentifierUtility.fromParsed(ctx.singleIdent(i)), visitTopLevelExpression(ctx.topLevelExpression(i))));
@@ -1057,9 +1053,9 @@ public class ExpressionUtil
         public Expression visitIdent(ExpressionParser2.IdentContext ctx)
         {
             NamespaceContext namespaceContext = ctx.namespace();
-            @ExpressionIdentifier String namespace = namespaceContext == null ? null : IdentifierUtility.fromParsed(namespaceContext.singleIdent());
+            String namespace = namespaceContext == null ? null : IdentifierUtility.fromParsed(namespaceContext.singleIdent());
             
-            return IdentExpression.load(namespace, Utility.<SingleIdentContext, @ExpressionIdentifier String>mapListI(ctx.singleIdent(), IdentifierUtility::fromParsed));
+            return IdentExpression.load(namespace, Utility.<SingleIdentContext, String>mapListI(ctx.singleIdent(), IdentifierUtility::fromParsed));
         }
 
         @Override
@@ -1108,7 +1104,7 @@ public class ExpressionUtil
         }
 
         public Expression visitChildren(RuleNode node) {
-            @Nullable Expression result = this.defaultResult();
+            Expression result = this.defaultResult();
             int n = node.getChildCount();
 
             for(int i = 0; i < n && this.shouldVisitNextChild(node, result); ++i) {

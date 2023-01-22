@@ -44,26 +44,25 @@ import java.util.Objects;
 /**
  * One per column.
  */
-@OnThread(Tag.FXPlatform)
 // package-visible
-class NumberColumnFormatter implements FXPlatformConsumer<EditorKitCache<@Value Number>.VisibleDetails>
+class NumberColumnFormatter implements FXPlatformConsumer<EditorKitCache<Number>.VisibleDetails>
 {
     private static final String ELLIPSIS = "\u2026";//"\u22EF";
 
     private ArrayList<NumberDetails> recentDetails = new ArrayList<>();
 
     @Override
-    public @OnThread(Tag.FXPlatform) void consume(EditorKitCache<@Value Number>.VisibleDetails vis)
+    public void consume(EditorKitCache<Number>.VisibleDetails vis)
     {
         final ArrayList<NumberDetails> visibleItems = new ArrayList<>();
         for (DocumentTextField visibleCell : vis.visibleCells)
         {
             visibleCell.setUnfocusedAlignment(TextAlignment.RIGHT);
             @SuppressWarnings("valuetype")
-            RecogniserDocument<@Value Number> editorKit = visibleCell.getRecogniserDocument(Number.class);
+            RecogniserDocument<Number> editorKit = visibleCell.getRecogniserDocument(Number.class);
             if (editorKit != null)
             {
-                @Nullable @Value Number value = editorKit.getLatestValue().<@Nullable @Value Number>either(err -> null, x -> x);
+                Number value = editorKit.getLatestValue().<Number>either(err -> null, x -> x);
                 if (value != null)
                 {
                     visibleItems.add(new NumberDetails(visibleCell, value));
@@ -145,7 +144,7 @@ class NumberColumnFormatter implements FXPlatformConsumer<EditorKitCache<@Value 
         private String displayIntegerPart;
         private DotStatus displayDotState;
 
-        public NumberDetails(DocumentTextField textField, @Value Number n)
+        public NumberDetails(DocumentTextField textField, Number n)
         {
             this.textField = textField;
             Number intPart = Utility.getIntegerPart(n);
@@ -211,7 +210,7 @@ class NumberColumnFormatter implements FXPlatformConsumer<EditorKitCache<@Value 
         }
 
         @Override
-        public boolean equals(@Nullable Object o)
+        public boolean equals(Object o)
         {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
@@ -496,7 +495,6 @@ class NumberColumnFormatter implements FXPlatformConsumer<EditorKitCache<@Value 
         private final double RIGHT_DIGIT_WIDTH;
         private final double DOT_WIDTH;
 
-        @OnThread(Tag.FXPlatform)
         public DigitSizes()
         {
             Text t = new Text();
@@ -517,11 +515,10 @@ class NumberColumnFormatter implements FXPlatformConsumer<EditorKitCache<@Value 
             DOT_WIDTH = t.prefWidth(-1) / 20.0;
         }
     }
-    private static @MonotonicNonNull DigitSizes SIZES;
+    private static DigitSizes SIZES;
 
     // Maps a number of digits on the right side of the decimal place to the amount
     // of digits which there is then room for on the left side of the decimal place:
-    @OnThread(Tag.FXPlatform)
     private static int rightToLeft(int right, double totalWidth)
     {
         if (SIZES == null)
@@ -533,7 +530,6 @@ class NumberColumnFormatter implements FXPlatformConsumer<EditorKitCache<@Value 
     }
 
     // Given number of digits to left of point, number to right, calculates required width
-    @OnThread(Tag.FXPlatform)
     private static double fullSize(int left, int right)
     {
         if (SIZES == null)

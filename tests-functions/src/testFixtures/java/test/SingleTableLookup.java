@@ -48,7 +48,7 @@ public class SingleTableLookup implements ColumnLookup
     }
 
     @Override
-    public Stream<Pair<@Nullable TableId, ColumnId>> getAvailableColumnReferences()
+    public Stream<Pair<TableId, ColumnId>> getAvailableColumnReferences()
     {
         return srcTable.getColumns().stream().map(c -> new Pair<>(null, c.getName()));
     }
@@ -66,7 +66,7 @@ public class SingleTableLookup implements ColumnLookup
     }
 
     @Override
-    public @Nullable FoundColumn getColumn(Expression expression, @Nullable TableId refTableId, ColumnId refColumnId)
+    public FoundColumn getColumn(Expression expression, TableId refTableId, ColumnId refColumnId)
     {
         try
         {
@@ -84,7 +84,7 @@ public class SingleTableLookup implements ColumnLookup
     }
 
     @Override
-    public @Nullable FoundTable getTable(@Nullable TableId tableName) throws UserException, InternalException
+    public FoundTable getTable(TableId tableName) throws UserException, InternalException
     {
         if (!tableId.equals(tableName))
             return null;

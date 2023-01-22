@@ -84,7 +84,6 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-@OnThread(Tag.FXPlatform)
 public class UnitsDialog extends Dialog<Optional<FXPlatformRunnable>>
 {
     private final UnitManager unitManager;
@@ -162,8 +161,8 @@ public class UnitsDialog extends Dialog<Optional<FXPlatformRunnable>>
     {
         if (userDeclaredUnitList.getSelectionModel().getSelectedItems().size() == 1)
         {
-            Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> prevValue = userDeclaredUnitList.getSelectionModel().getSelectedItems().get(0);
-            Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> edited = new EditUnitDialog(typeManager, prevValue, owner).showAndWait().orElse(null);
+            Pair<String, Either<String, UnitDeclaration>> prevValue = userDeclaredUnitList.getSelectionModel().getSelectedItems().get(0);
+            Pair<String, Either<String, UnitDeclaration>> edited = new EditUnitDialog(typeManager, prevValue, owner).showAndWait().orElse(null);
             if (edited != null)
             {
                 unitManager.removeUserUnit(prevValue.getFirst());
@@ -174,9 +173,9 @@ public class UnitsDialog extends Dialog<Optional<FXPlatformRunnable>>
         }
     }
 
-    private static void addUnit(@Nullable @UnitIdentifier String initialName, DimmableParent parent, TypeManager typeManager, @Nullable UnitList userDeclaredUnitList)
+    private static void addUnit(String initialName, DimmableParent parent, TypeManager typeManager, UnitList userDeclaredUnitList)
     {
-        Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> newUnit = new EditUnitDialog(typeManager, initialName == null ? null : new Pair<>(initialName, Either.<@UnitIdentifier String, UnitDeclaration>right(new UnitDeclaration(new SingleUnit(initialName, "", "", ""), null, ""))), parent).showAndWait().orElse(null);
+        Pair<String, Either<String, UnitDeclaration>> newUnit = new EditUnitDialog(typeManager, initialName == null ? null : new Pair<>(initialName, Either.<String, UnitDeclaration>right(new UnitDeclaration(new SingleUnit(initialName, "", "", ""), null, ""))), parent).showAndWait().orElse(null);
         if (newUnit != null)
         {
             typeManager.getUnitManager().addUserUnit(newUnit);
@@ -193,27 +192,27 @@ public class UnitsDialog extends Dialog<Optional<FXPlatformRunnable>>
         });
     }
 
-    private final class UnitList extends TableView<Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>>>
+    private final class UnitList extends TableView<Pair<String, Either<String, UnitDeclaration>>>
     {
 
-        public UnitList(ImmutableMap<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> units, boolean showCategory, @Nullable FXPlatformRunnable editSingleSelectedItem)
+        public UnitList(ImmutableMap<String, Either<String, UnitDeclaration>> units, boolean showCategory, FXPlatformRunnable editSingleSelectedItem)
         {
-            TableColumn<Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>>, String> nameColumn = new TableColumn<>("Name");
-            nameColumn.setCellValueFactory((CellDataFeatures<Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>>, String> cdf) -> new ReadOnlyStringWrapper(cdf.getValue().getFirst()));
-            TableColumn<Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>>, String> definitionColumn = new TableColumn<>("Definition");
-            definitionColumn.setCellValueFactory((CellDataFeatures<Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>>, String> cdf) -> new ReadOnlyStringWrapper(cdf.getValue().getSecond().either(u -> u, d -> {
-                @Nullable Pair<Rational, Unit> equivalentTo = d.getEquivalentTo();
+            TableColumn<Pair<String, Either<String, UnitDeclaration>>, String> nameColumn = new TableColumn<>("Name");
+            nameColumn.setCellValueFactory((CellDataFeatures<Pair<String, Either<String, UnitDeclaration>>, String> cdf) -> new ReadOnlyStringWrapper(cdf.getValue().getFirst()));
+            TableColumn<Pair<String, Either<String, UnitDeclaration>>, String> definitionColumn = new TableColumn<>("Definition");
+            definitionColumn.setCellValueFactory((CellDataFeatures<Pair<String, Either<String, UnitDeclaration>>, String> cdf) -> new ReadOnlyStringWrapper(cdf.getValue().getSecond().either(u -> u, d -> {
+                Pair<Rational, Unit> equivalentTo = d.getEquivalentTo();
                 if (equivalentTo != null)
                     return equivalentTo.getFirst() + " * " + equivalentTo.getSecond();
                 else
                     return "";
             })));
-            TableColumn<Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>>, String> descriptionColumn = new TableColumn<>("Description");
-            descriptionColumn.setCellValueFactory((CellDataFeatures<Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>>, String> cdf) -> new ReadOnlyStringWrapper(cdf.getValue().getSecond().either(u -> "", d -> d.getDefined().getDescription())));
+            TableColumn<Pair<String, Either<String, UnitDeclaration>>, String> descriptionColumn = new TableColumn<>("Description");
+            descriptionColumn.setCellValueFactory((CellDataFeatures<Pair<String, Either<String, UnitDeclaration>>, String> cdf) -> new ReadOnlyStringWrapper(cdf.getValue().getSecond().either(u -> "", d -> d.getDefined().getDescription())));
             if (showCategory)
             {
-                TableColumn<Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>>, String> categoryColumn = new TableColumn<>("Category");
-                categoryColumn.setCellValueFactory((CellDataFeatures<Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>>, String> cdf) -> new ReadOnlyStringWrapper(getCategory(cdf.getValue())));
+                TableColumn<Pair<String, Either<String, UnitDeclaration>>, String> categoryColumn = new TableColumn<>("Category");
+                categoryColumn.setCellValueFactory((CellDataFeatures<Pair<String, Either<String, UnitDeclaration>>, String> cdf) -> new ReadOnlyStringWrapper(getCategory(cdf.getValue())));
                 getColumns().add(categoryColumn);
             }
             getColumns().add(nameColumn);
@@ -231,17 +230,17 @@ public class UnitsDialog extends Dialog<Optional<FXPlatformRunnable>>
             setUnits(units);
         }
 
-        private String getCategory(@UnknownInitialization(Object.class) UnitList this, Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> pair)
+        private String getCategory(UnitList this, Pair<String, Either<String, UnitDeclaration>> pair)
         {
             return pair.getSecond().either(alias -> "", decl -> decl.getCategory());
         }
 
-        public void setUnits(ImmutableMap<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> units)
+        public void setUnits(ImmutableMap<String, Either<String, UnitDeclaration>> units)
         {
             getItems().setAll(units.entrySet().stream()
-                    .<Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>>>map((Entry<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> e) -> new Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>>(e.getKey(), e.getValue()))
-                    .sorted(Comparator.<Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>>, String>comparing((Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> p) -> {
-                        @Nullable ImmutableSet<String> canonicalBaseUnit = unitManager.getCanonicalBaseUnit(p.getFirst());
+                    .<Pair<String, Either<String, UnitDeclaration>>>map((Entry<String, Either<String, UnitDeclaration>> e) -> new Pair<String, Either<String, UnitDeclaration>>(e.getKey(), e.getValue()))
+                    .sorted(Comparator.<Pair<String, Either<String, UnitDeclaration>>, String>comparing((Pair<String, Either<String, UnitDeclaration>> p) -> {
+                        ImmutableSet<String> canonicalBaseUnit = unitManager.getCanonicalBaseUnit(p.getFirst());
                         if (canonicalBaseUnit == null)
                             return getCategory(p);
                         // Make canonical units be without suffix so they get sorted ahead of their derivatives:
@@ -249,14 +248,13 @@ public class UnitsDialog extends Dialog<Optional<FXPlatformRunnable>>
                             return getCategory(p) + ":" + p.getFirst();
                         return getCategory(p) + ":" + canonicalBaseUnit.stream().sorted().collect(Collectors.joining(":")) + ";";
                     }))
-                    .collect(Collectors.<Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>>>toList()));
+                    .collect(Collectors.<Pair<String, Either<String, UnitDeclaration>>>toList()));
         }
     }
 
     // Gives back the name of the defined unit, and either a unit alias or a 
     // definition of the unit
-    @OnThread(Tag.FXPlatform)
-    private static class EditUnitDialog extends ErrorableDialog<Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>>>
+    private static class EditUnitDialog extends ErrorableDialog<Pair<String, Either<String, UnitDeclaration>>>
     {
         private final UnitManager unitManager;
         private final TextField unitNameField;
@@ -267,7 +265,7 @@ public class UnitsDialog extends Dialog<Optional<FXPlatformRunnable>>
         private final TextField scale;
         private final CheckBox equivalentTickBox;
 
-        public EditUnitDialog(TypeManager typeManager, @Nullable Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> initialValue, DimmableParent parent)
+        public EditUnitDialog(TypeManager typeManager, Pair<String, Either<String, UnitDeclaration>> initialValue, DimmableParent parent)
         {
             super(new DialogPaneWithSideButtons());
             setTitle(TranslationUtility.getString("units.edit.title"));
@@ -287,7 +285,7 @@ public class UnitsDialog extends Dialog<Optional<FXPlatformRunnable>>
             Row fullRadio = LabelledGrid.radioGridRow("unit.full", "edit-unit/full", toggleGroup);
             descriptionField = new TextField(initialValue == null ? "" : initialValue.getSecond().either(a -> "", d -> d.getDefined().getDescription()));
             Row fullDescription = LabelledGrid.labelledGridRow(alignedLabels, "unit.full.description", "edit-unit/description", descriptionField);
-            @Nullable Pair<Rational, Unit> equiv = initialValue == null ? null : initialValue.getSecond().<@Nullable Pair<Rational, Unit>>either(a -> null, d -> d.getEquivalentTo());
+            Pair<Rational, Unit> equiv = initialValue == null ? null : initialValue.getSecond().<Pair<Rational, Unit>>either(a -> null, d -> d.getEquivalentTo());
             scale = new TextField(equiv == null ? "1" : equiv.getFirst().toString());
             definition = new UnitEditor(typeManager, equiv == null ? null : UnitExpression.load(equiv.getSecond()), u -> {});
             Pair<CheckBox, Row> fullDefinition = LabelledGrid.tickGridRow("unit.full.definition", "edit-unit/definition", new HBox(scale, new Label(" * "), definition.getContainer()));
@@ -339,7 +337,7 @@ public class UnitsDialog extends Dialog<Optional<FXPlatformRunnable>>
             });
         }
 
-        private void updateEnabledState(@UnknownInitialization(EditUnitDialog.class) EditUnitDialog this)
+        private void updateEnabledState(EditUnitDialog this)
         {
             boolean fullEnabled = toggleGroup.getSelectedToggle() == toggleGroup.getToggles().get(0);
             boolean aliasEnabled = !fullEnabled;
@@ -353,9 +351,9 @@ public class UnitsDialog extends Dialog<Optional<FXPlatformRunnable>>
         }
 
         @Override
-        protected @OnThread(Tag.FXPlatform) Either<@Localized String, Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>>> calculateResult()
+        protected Either<String, Pair<String, Either<String, UnitDeclaration>>> calculateResult()
         {
-            @UnitIdentifier String name = IdentifierUtility.asUnitIdentifier(unitNameField.getText().trim());
+            String name = IdentifierUtility.asUnitIdentifier(unitNameField.getText().trim());
             if (name == null)
                 return Either.left(TranslationUtility.getString("invalid.name"));
             
@@ -365,11 +363,11 @@ public class UnitsDialog extends Dialog<Optional<FXPlatformRunnable>>
             }
             else if (toggleGroup.getSelectedToggle() == toggleGroup.getToggles().get(1))
             {
-                @UnitIdentifier String aliasTarget = IdentifierUtility.asUnitIdentifier(aliasTargetField.getText().trim());
+                String aliasTarget = IdentifierUtility.asUnitIdentifier(aliasTargetField.getText().trim());
                 if (aliasTarget == null)
                     return Either.left(TranslationUtility.getString("invalid.alias.target.name"));
                 
-                return Either.right(new Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>>(name, Either.left(aliasTarget)));
+                return Either.right(new Pair<String, Either<String, UnitDeclaration>>(name, Either.left(aliasTarget)));
             }
             else
             {
@@ -377,7 +375,7 @@ public class UnitsDialog extends Dialog<Optional<FXPlatformRunnable>>
 
                 if (this.equivalentTickBox.isSelected() == false)
                 {
-                    return Either.right(new Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>>(name, Either.right(new UnitDeclaration(singleUnit, null, ""))));
+                    return Either.right(new Pair<String, Either<String, UnitDeclaration>>(name, Either.right(new UnitDeclaration(singleUnit, null, ""))));
                 }
                 
                 ScaleContext scaleContext;
@@ -388,7 +386,7 @@ public class UnitsDialog extends Dialog<Optional<FXPlatformRunnable>>
                 }
                 catch (InternalException | UserException e)
                 {
-                    return Either.<@Localized String, Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>>>left(Utility.concatLocal(TranslationUtility.getString("invalid.scale"),  e.getLocalizedMessage()));
+                    return Either.<String, Pair<String, Either<String, UnitDeclaration>>>left(Utility.concatLocal(TranslationUtility.getString("invalid.scale"),  e.getLocalizedMessage()));
                 }
 
                 JellyUnit jellyUnit;
@@ -400,7 +398,7 @@ public class UnitsDialog extends Dialog<Optional<FXPlatformRunnable>>
                 {
                     return Either.left(e.errorMessage == null ? TranslationUtility.getString("invalid.unit") : e.errorMessage.toPlain());
                 }
-                @Nullable Unit concreteUnit = null;
+                Unit concreteUnit = null;
                 try
                 {
                     concreteUnit = jellyUnit.makeUnit(ImmutableMap.of());
@@ -413,9 +411,9 @@ public class UnitsDialog extends Dialog<Optional<FXPlatformRunnable>>
                 if (concreteUnit == null)
                     return Either.left(TranslationUtility.getString("invalid.unit.contains.vars"));
                 
-                @Nullable Pair<Rational, Unit> equiv = new Pair<>(UnitManager.loadScale(scaleContext), concreteUnit);
+                Pair<Rational, Unit> equiv = new Pair<>(UnitManager.loadScale(scaleContext), concreteUnit);
 
-                return Either.<@Localized String, Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>>>right(new Pair<>(name, Either.<@UnitIdentifier String, UnitDeclaration>right(new UnitDeclaration(singleUnit, equiv, ""))));
+                return Either.<String, Pair<String, Either<String, UnitDeclaration>>>right(new Pair<>(name, Either.<String, UnitDeclaration>right(new UnitDeclaration(singleUnit, equiv, ""))));
             }
         }
     }

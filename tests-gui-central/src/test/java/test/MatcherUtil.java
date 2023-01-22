@@ -42,7 +42,7 @@ import static org.junit.Assume.assumeNoException;
 public class MatcherUtil
 {
     // Applies Matcher to the result of an extraction function:
-    public static <@NonNull S, @NonNull T> Matcher<S> matcherOn(Matcher<T> withExtracted, Function<S, @NonNull T> extract)
+    public static <S, T> Matcher<S> matcherOn(Matcher<T> withExtracted, Function<S, T> extract)
     {
         return new BaseMatcher<S>()
         {

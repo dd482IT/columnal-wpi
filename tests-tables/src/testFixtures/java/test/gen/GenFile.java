@@ -61,7 +61,6 @@ public class GenFile extends Generator<GeneratedTextFile>
 
     @Override
     @SuppressWarnings("nullness")
-    @OnThread(value = Tag.Simulation, ignoreParent = true)
     public @Nullable GeneratedTextFile generate(SourceOfRandomness rnd, GenerationStatus generationStatus)
     {
         try
@@ -92,7 +91,7 @@ public class GenFile extends Generator<GeneratedTextFile>
 
             TypeAndValueGen[] columnTypes = new TypeAndValueGen[columnCount];
             GenTypeAndValueGen typeGen = new GenTypeAndValueGen(true);
-            ArrayList<ImmutableList.Builder<@Value Object>> columnValues = new ArrayList<>();
+            ArrayList<ImmutableList.Builder<Object>> columnValues = new ArrayList<>();
             for (int i = 0; i < columnCount; i++)
             {
                 columnTypes[i] = typeGen.generate(rnd, generationStatus);
@@ -104,7 +103,7 @@ public class GenFile extends Generator<GeneratedTextFile>
             {
                 for (int column = 0; column < columnTypes.length; column++)
                 {
-                    @Value Object value = columnTypes[column].makeValue();
+                    Object value = columnTypes[column].makeValue();
                     // We don't want quoting and escaping of strings, so treat them different
                     String string;
                     if (columnTypes[column].getType().equals(DataType.TEXT))
@@ -149,7 +148,7 @@ public class GenFile extends Generator<GeneratedTextFile>
             
             return new GeneratedTextFile(file, charset, lineCount, sep, quot,
                 Arrays.stream(columnTypes).map(t -> t.getType()).collect(ImmutableList.toImmutableList()),
-                    Utility.<Builder<@Value Object>, ImmutableList<@Value Object>>mapListI(columnValues, Builder::build));
+                    Utility.<Builder<Object>, ImmutableList<Object>>mapListI(columnValues, Builder::build));
         }
         catch (Exception e)
         {

@@ -59,7 +59,6 @@ public final class FoundTableActual implements FoundTable
         return columns.build();
     }
 
-    @OnThread(Tag.Simulation)
     @Override
     public int getRowCount() throws InternalException, UserException
     {

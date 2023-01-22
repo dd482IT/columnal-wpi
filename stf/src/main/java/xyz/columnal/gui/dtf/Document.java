@@ -45,10 +45,10 @@ public abstract class Document
         public static enum Bias {BACKWARD, FORWARD};
         
         private final Bias bias;
-        private final @Nullable FXPlatformRunnable onChange;
+        private final FXPlatformRunnable onChange;
         private int position;
 
-        TrackedPosition(int position, Bias bias, @Nullable FXPlatformRunnable onChange)
+        TrackedPosition(int position, Bias bias, FXPlatformRunnable onChange)
         {
             this.bias = bias;
             this.position = position;
@@ -61,7 +61,7 @@ public abstract class Document
         }
 
         @SuppressWarnings("units") // To convert to canonical location
-        public @CanonicalLocation int getPosition()
+        public int getPosition()
         {
             return position;
         }
@@ -88,7 +88,7 @@ public abstract class Document
     abstract void replaceText(int startPosIncl, int endPosExcl, String text);
 
     // Package-protected
-    abstract TrackedPosition trackPosition(int pos, Bias bias, @Nullable FXPlatformRunnable onChange);
+    abstract TrackedPosition trackPosition(int pos, Bias bias, FXPlatformRunnable onChange);
 
     public abstract int getLength();
 
@@ -112,7 +112,6 @@ public abstract class Document
     
     static interface DocumentListener
     {
-        @OnThread(Tag.FXPlatform)
         public void documentChanged(Document document);
     }
     
@@ -137,7 +136,7 @@ public abstract class Document
     public abstract void setAndSave(String content);
     
     // Value to undo to, if applicable.  null if n/a
-    public @Nullable String getUndo()
+    public String getUndo()
     {
         return null;
     }

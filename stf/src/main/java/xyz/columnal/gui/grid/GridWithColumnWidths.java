@@ -32,9 +32,8 @@ class GridWithColumnWidths
     static final double DEFAULT_COLUMN_WIDTH = 100;
     static final double fixedFirstColumnWidth = 20;
 
-    protected final Map<@AbsColIndex Integer, Double> customisedColumnWidths = new HashMap<>();
-    @Pure
-    public final double getColumnWidth(@UnknownInitialization(GridWithColumnWidths.class) GridWithColumnWidths this, int columnIndex)
+    protected final Map<Integer, Double> customisedColumnWidths = new HashMap<>();
+    public final double getColumnWidth(GridWithColumnWidths this, int columnIndex)
     {
         if (columnIndex == 0)
             return fixedFirstColumnWidth;

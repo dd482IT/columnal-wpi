@@ -53,7 +53,6 @@ import java.util.Collection;
 import java.util.OptionalDouble;
 import java.util.WeakHashMap;
 
-@OnThread(Tag.FXPlatform)
 public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Button, CellStyle, GridCellInfo<Button, CellStyle>>
 {
     public static final String RIGHT_ARROW = "\u27F6";
@@ -91,29 +90,29 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
     }
 
     @Override
-    protected @OnThread(Tag.FX) void adjustStyle(Button item, CellStyle style, boolean on)
+    protected void adjustStyle(Button item, CellStyle style, boolean on)
     {
         style.applyStyle(item, on);
     }
 
     @Override
-    public OptionalDouble getPrefColumnWidth(@AbsColIndex int colIndex)
+    public OptionalDouble getPrefColumnWidth(int colIndex)
     {
         return getItemsInColumn(colIndex).stream().mapToDouble(b -> b.prefWidth(-1)).max();
     }
 
     @Override
-    protected @Nullable Pair<ItemState, @Nullable StyledString> getItemState(Button item, Point2D screenPos)
+    protected Pair<ItemState, StyledString> getItemState(Button item, Point2D screenPos)
     {
         return new Pair<>(ItemState.DIRECTLY_CLICKABLE, null);
     }
 
-    public void addTable(TableDisplay tableDisplay, @Nullable FXPlatformRunnable addColumn, boolean addRows)
+    public void addTable(TableDisplay tableDisplay, FXPlatformRunnable addColumn, boolean addRows)
     {
         super.addGrid(tableDisplay, new GridCellInfo<Button, CellStyle>()
         {
             @Override
-            public @Nullable GridAreaCellPosition cellAt(CellPosition cellPosition)
+            public GridAreaCellPosition cellAt(CellPosition cellPosition)
             {
                 GridAreaCellPosition gridAreaCellPosition = GridAreaCellPosition.relativeFrom(cellPosition, tableDisplay.getPosition());
                 // Work out if the cell is either just to the right, or just below:
@@ -139,7 +138,6 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
                 );
             }
 
-            @OnThread(Tag.FXPlatform)
             private boolean hasAddRowArrow(GridAreaCellPosition cellPosition)
             {
                 return addRows
@@ -149,7 +147,6 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
                     && cellPosition.columnIndex <= tableDisplay.getDataDisplayBottomRightIncl().columnIndex;
             }
 
-            @OnThread(Tag.FXPlatform)
             public boolean hasAddColumnArrow(GridAreaCellPosition cellPosition)
             {
                 return addColumn != null
@@ -169,9 +166,9 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
             }
 
             @Override
-            public void fetchFor(GridAreaCellPosition cellPosition, FXPlatformFunction<CellPosition, @Nullable Button> getCell, FXPlatformRunnable scheduleStyleTogether)
+            public void fetchFor(GridAreaCellPosition cellPosition, FXPlatformFunction<CellPosition, Button> getCell, FXPlatformRunnable scheduleStyleTogether)
             {
-                @Nullable Button item = getCell.apply(cellPosition.from(tableDisplay.getPosition()));
+                Button item = getCell.apply(cellPosition.from(tableDisplay.getPosition()));
                 if (item == null)
                     return;
                 
@@ -200,7 +197,7 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
                     item.setText(DOWN_ARROW);
                     item.setOnAction(e -> {
                         Workers.onWorkerThread("Adding row", Priority.SAVE, () -> {
-                            @Nullable AppendRows appendOp = tableDisplay.getTable().getOperations().appendRows;
+                            AppendRows appendOp = tableDisplay.getTable().getOperations().appendRows;
                             if (appendOp != null)
                                 appendOp.appendRows(1);
                         });

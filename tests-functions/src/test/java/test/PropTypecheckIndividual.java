@@ -98,8 +98,6 @@ import static org.junit.Assert.assertNull;
  * Created by neil on 24/01/2017.
  */
 @SuppressWarnings("recorded")
-@OnThread(Tag.Simulation)
-@RunWith(JUnitQuickcheck.class)
 public class PropTypecheckIndividual
 {
     // A shell expression that exists just to resolve its type checking to a given type.
@@ -113,7 +111,7 @@ public class PropTypecheckIndividual
         }
 
         @Override
-        public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState state, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+        public CheckedExp check(ColumnLookup dataLookup, TypeState state, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
         {
             return onError.recordType(this, state, TypeExp.fromDataType(this, type));
         }
@@ -143,14 +141,14 @@ public class PropTypecheckIndividual
         }
 
         @Override
-        public @Nullable Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
+        public Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
         {
             return null;
         }
 
         @SuppressWarnings("interned")
         @Override
-        public boolean equals(@Nullable Object o)
+        public boolean equals(Object o)
         {
             return this == o;
         }
@@ -193,9 +191,8 @@ public class PropTypecheckIndividual
         }
     }
 
-    @Property
     @SuppressWarnings({"i18n", "deprecation"}) // Because of assumeThat
-    public void propEquals(@From(GenDataType.class) DataType a, @From(GenDataType.class) DataType b) throws InternalException, UserException
+    public void propEquals(DataType a, DataType b) throws InternalException, UserException
     {
         boolean same = a.equals(b);
         Assume.assumeThat(same, Matchers.<Boolean>equalTo(false));
@@ -209,8 +206,7 @@ public class PropTypecheckIndividual
         assertEquals(TypeExp.bool(null), new NotEqualExpression(new DummyExpression(b), new DummyExpression(b)).checkExpression(columnLookup, TFunctionUtil.typeState(), new ErrorAndTypeRecorderStorer()));
     }
 
-    @Property
-    public void propDivide(@From(GenDataType.class) DataType a, @From(GenDataType.class) DataType b) throws InternalException, UserException
+    public void propDivide(DataType a, DataType b) throws InternalException, UserException
     {
         ColumnLookup columnLookup = TFunctionUtil.dummyColumnLookup();
         if (DataTypeUtility.isNumber(a) && DataTypeUtility.isNumber(b))
@@ -228,9 +224,8 @@ public class PropTypecheckIndividual
         }
     }
 
-    @Property
     @SuppressWarnings({"i18n", "deprecation"}) // Because of assumeThat 
-    public void testArray(@From(GenDataTypeMaker.class) GenDataTypeMaker.DataTypeMaker typeMaker) throws InternalException, UserException
+    public void testArray(GenDataTypeMaker.DataTypeMaker typeMaker) throws InternalException, UserException
     {
         DataType a = typeMaker.makeType().getDataType();
         DataType b = typeMaker.makeType().getDataType();
@@ -256,16 +251,14 @@ public class PropTypecheckIndividual
     }
 
     // Tests non-numeric types in raise expressions
-    @Property
-    public void propRaiseNonNumeric(@From(GenDataType.class) DataType a) throws UserException, InternalException
+    public void propRaiseNonNumeric(DataType a) throws UserException, InternalException
     {
         Assume.assumeFalse(DataTypeUtility.isNumber(a));
         assertNull(new RaiseExpression(new DummyExpression(a), new DummyExpression(DataType.NUMBER)).checkExpression(TFunctionUtil.dummyColumnLookup(), TFunctionUtil.typeState(), new ErrorAndTypeRecorderStorer()));
         assertNull(new RaiseExpression(new DummyExpression(DataType.NUMBER), new DummyExpression(a)).checkExpression(TFunctionUtil.dummyColumnLookup(), TFunctionUtil.typeState(), new ErrorAndTypeRecorderStorer()));
     }
 
-    @Property
-    public void propRaiseNumeric(@From(GenUnit.class) Unit unit) throws UserException, InternalException
+    public void propRaiseNumeric(Unit unit) throws UserException, InternalException
     {
         // The rules for raise (besides both must be numeric) are:
         // RHS unit is forbidden
@@ -297,8 +290,7 @@ public class PropTypecheckIndividual
         assertEquals(null, checkConcrete(new RaiseExpression(new DummyExpression(DataType.number(new NumberInfo(unit.raisedTo(6)))), new DummyConstExpression(DataType.NUMBER, Rational.ofLongs(2L, 3L)))));
     }
 
-    @Property
-    public void propAndOr(@From(GenDataType.class) DataType nonBool) throws InternalException, UserException
+    public void propAndOr(DataType nonBool) throws InternalException, UserException
     {
         Assume.assumeFalse(nonBool.equals(DataType.BOOLEAN));
 
@@ -317,8 +309,7 @@ public class PropTypecheckIndividual
         }
     }
 
-    @Property
-    public void propComparison(@From(GenDataType.class) DataType main, @From(GenDataType.class) DataType other) throws InternalException, UserException
+    public void propComparison(DataType main, DataType other) throws InternalException, UserException
     {        
         // Must be different types:
         Assume.assumeFalse(main.equals(other));
@@ -335,8 +326,7 @@ public class PropTypecheckIndividual
 
     // TODO typecheck all the compound expressions (addsubtract, times, tag)
 
-    @Property
-    public void checkMatch(@From(GenDataTypeMaker.class) GenDataTypeMaker.DataTypeMaker typeMaker) throws InternalException, UserException
+    public void checkMatch(GenDataTypeMaker.DataTypeMaker typeMaker) throws InternalException, UserException
     {
         DataType matchType = typeMaker.makeType().getDataType();
         DataType resultType = typeMaker.makeType().getDataType();
@@ -373,23 +363,23 @@ public class PropTypecheckIndividual
             ImmutableList.of(new Pattern(new DummyPatternMatch(matchType), null), new Pattern(new DummyPatternMatch(matchType), null)), new DummyExpression(otherType))), new CanonicalSpan(CanonicalLocation.ZERO, CanonicalLocation.ZERO))));
     }
 
-    private static @Nullable TypeExp check(Expression e) throws UserException, InternalException
+    private static TypeExp check(Expression e) throws UserException, InternalException
     {
         return e.checkExpression(TFunctionUtil.dummyColumnLookup(), TFunctionUtil.typeState(), new ErrorAndTypeRecorderStorer());
     }
 
-    private static @Nullable DataType checkConcrete(Expression e) throws UserException, InternalException
+    private static DataType checkConcrete(Expression e) throws UserException, InternalException
     {
         return checkConcrete(DummyManager.make().getTypeManager(), e);
     }
 
-    private static @Nullable DataType checkConcrete(TypeManager typeManager, Expression e) throws UserException, InternalException
+    private static DataType checkConcrete(TypeManager typeManager, Expression e) throws UserException, InternalException
     {
         TypeExp typeExp = e.checkExpression(TFunctionUtil.dummyColumnLookup(), TFunctionUtil.createTypeState(typeManager), new ErrorAndTypeRecorderStorer());
         if (typeExp == null)
             return null;
         else
-            return typeExp.toConcreteType(typeManager).<@Nullable DataType>either(err -> null, t -> t);
+            return typeExp.toConcreteType(typeManager).<DataType>either(err -> null, t -> t);
     }
 
     private static class DummyRecordSet extends KnownLengthRecordSet
@@ -410,7 +400,7 @@ public class PropTypecheckIndividual
         }
 
         @Override
-        public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState state, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+        public CheckedExp check(ColumnLookup dataLookup, TypeState state, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
         {
             return onError.recordTypeAndError(this, Either.right(TypeExp.fromDataType(this, expected)), state);
         }
@@ -440,13 +430,13 @@ public class PropTypecheckIndividual
         }
 
         @Override
-        public @Nullable Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
+        public Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
         {
             return null;
         }
 
         @Override
-        public boolean equals(@Nullable Object o)
+        public boolean equals(Object o)
         {
             return false;
         }
@@ -472,7 +462,6 @@ public class PropTypecheckIndividual
         }
     }
     
-    @Test
     public void checkUnits() throws InternalException, UserException
     {
         Unit m = DummyManager.make().getUnitManager().loadUse("m");
@@ -492,7 +481,7 @@ public class PropTypecheckIndividual
         checkConcreteType(DataType.record(ImmutableMap.of("a", DataType.NUMBER, "b", DataType.NUMBER)), "(a:1, b:2{1})");
     }
 
-    private void checkConcreteType(@Nullable DataType dataType, String expression) throws InternalException, UserException
+    private void checkConcreteType(DataType dataType, String expression) throws InternalException, UserException
     {
         TypeManager typeManager = TFunctionUtil.managerWithTestTypes().getFirst().getTypeManager();
         assertEquals(expression, dataType, checkConcrete(typeManager, TFunctionUtil.parseExpression(expression, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()))));
@@ -504,161 +493,135 @@ public class PropTypecheckIndividual
         assertEquals(expression, dataType.apply(typeManager), checkConcrete(typeManager, TFunctionUtil.parseExpression(expression, typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()))));
     }
 
-    @Test
     public void checkFromTextFunctions() throws UserException, InternalException
     {
         checkConcreteType(DataType.BOOLEAN, "@call function\\\\from text to(type{Boolean}, \"true\")");
     }
 
-    @Test
     public void checkFromTextFunctions2() throws UserException, InternalException
     {
         checkConcreteType(m -> TBasicUtil.checkNonNull(m.lookupType(new TypeId("A"), ImmutableList.of())), "@call function\\\\from text to(type{A}, \"Hello\")");
     }
     
-    @Test
     public void checkNestedFunctions() throws UserException, InternalException
     {
         checkConcreteType(m -> TBasicUtil.checkNonNull(m.lookupType(new TypeId("A"), ImmutableList.of())), "@call function\\\\from text to(type{A}, @call function\\\\from text to(type{Text}, \"Hello\"))");
     }
 
-    @Test
     public void checkDefine1() throws UserException, InternalException
     {
         checkConcreteType(DataType.BOOLEAN, "@define x = true @then x @enddefine");
     }
 
-    @Test
     public void checkDefine2() throws UserException, InternalException
     {
         checkConcreteType(m -> m.getMaybeType().instantiate(ImmutableList.of(Either.right(DataType.number(new NumberInfo(m.getUnitManager().loadUse("m"))))), m), "@define dist = (1 * 32{m/s} * 10{s}) @then @call tag\\\\Optional\\Is(dist * 3) @enddefine");
     }
 
-    @Test
     public void checkDefine2b() throws UserException, InternalException
     {
         checkConcreteType(m -> m.getMaybeType().instantiate(ImmutableList.of(Either.right(DataType.number(new NumberInfo(m.getUnitManager().loadUse("m"))))), m), "@define dist :: type{Number{m}}, dist = (1 * 32{m/s} * 10{s}) @then @call tag\\\\Optional\\Is(dist * 3) @enddefine");
     }
 
-    @Test
     public void checkDefine3() throws UserException, InternalException
     {
         checkConcreteType(DataType.BOOLEAN, "@define a :: type{Boolean}, b :: type{Boolean}, [a, b] = [true, false] @then a & b @enddefine");
     }
 
-    @Test
     public void checkDefine3b() throws UserException, InternalException
     {
         checkConcreteType(DataType.BOOLEAN, "@define a :: type{Boolean}, b :: type{Boolean}, (y:a, x:b) = (x:true, y:false) @then a & b @enddefine");
     }
 
-    @Test
     public void checkDefine4() throws UserException, InternalException
     {
         checkConcreteType(DataType.BOOLEAN, "@define a :: type{Boolean}, a = @call function\\\\from text(\"\"), b = a @then b @enddefine");
     }
 
-    @Test
     public void checkDefineErr1() throws UserException, InternalException
     {
         checkConcreteType((DataType)null, "@define x = x @then x @enddefine");
     }
 
-    @Test
     public void checkDefineErr2() throws UserException, InternalException
     {
         checkConcreteType((DataType)null, "@define x = [] @then x @enddefine");
     }
 
-    @Test
     public void checkDefineErr3() throws UserException, InternalException
     {
         // Typing variable we don't define
         checkConcreteType((DataType)null, "@define dist2 :: type{@apply Optional(Number{m})}, dist = (1 * 32{m/s} * 10{s}) @then @call tag\\\\Optional\\Is(dist * 3) @enddefine");
     }
 
-    @Test
     public void checkDefineErr3b() throws UserException, InternalException
     {
         // Type after definition
         checkConcreteType((DataType)null, "@define dist = (1 * 32{m/s} * 10{s}), dist :: type{@apply Optional(Number{m})} @then @call tag\\\\Optional\\Is(dist * 3) @enddefine");
     }
 
-    @Test
     public void checkDefineErr4() throws UserException, InternalException
     {
         // Duplicate definition:
         checkConcreteType((DataType)null, "@define x = 1, x = 1 @then x @enddefine");
     }
 
-    @Test
     public void checkDefineErr5() throws UserException, InternalException
     {
         // Duplicate definition incl type:
         checkConcreteType((DataType)null, "@define x :: type{Number}, x = 1, x = 1 @then x @enddefine");
     }
     
-    @Test
     public void checkFunction1() throws UserException, InternalException
     {
         checkConcreteType(DataType.NUMBER, "@define f = (? + 1) @then @call f(3) @enddefine");
     }
 
-    @Test
     public void checkFunction1b() throws UserException, InternalException
     {
         checkConcreteType(DataType.NUMBER, "@define f :: type{@apply Function(Number)(Number)}, f = (? + 1) @then @call f(3) @enddefine");
     }
 
-    @Test
     public void checkFunction2() throws UserException, InternalException
     {
         checkConcreteType(DataType.NUMBER, "@define f = @function (x) @then x + 1 @endfunction @then @call f(3) @enddefine");
     }
 
-    @Test
     public void checkFunction2b() throws UserException, InternalException
     {
         checkConcreteType(DataType.NUMBER, "@define f :: type{@apply Function(Number)(Number)}, f = @function (x) @then x + 1 @endfunction @then @call f(3) @enddefine");
     }
     
-    @Test
     public void checkRecord1() throws UserException, InternalException
     {
         checkConcreteType(DataType.record(ImmutableMap.of("a", DataType.NUMBER, "b", DataType.TEXT)), "(a : 3, b : \"Hi\")");
     }
 
-    @Test
     public void checkRecord2() throws UserException, InternalException
     {
         checkConcreteType(DataType.array(DataType.record(ImmutableMap.of("a", DataType.NUMBER, "b", DataType.TEXT))), "[(a : 3, b : \"Hi\"), (b : \"\", a: (3 * 4))]");
     }
 
-    @Test
     public void checkRecord3() throws UserException, InternalException
     {
         checkConcreteType((DataType)null, "[(a : 3, b : \"Hi\"), (b : \"\")]");
     }
 
-    @Test
     public void checkRecord3b() throws UserException, InternalException
     {
         checkConcreteType((DataType)null, "[(a : 3, b : \"Hi\"), (a: true, b : \"\")]");
     }
 
-    @Test
     public void checkField() throws UserException, InternalException
     {
         checkConcreteType(DataType.TEXT, "(a : 3, b : \"Hi\")#b");
     }
 
-    @Test
     public void checkField2() throws UserException, InternalException
     {
         checkConcreteType(DataType.TEXT, "@define var\\\\abs = [(a : 3, b : \"Hi\"), (b : \"\", a: (3 * 4))] @then @call function\\\\element(var\\\\abs, 1)#b @enddefine");
     }
 
-    @Test
     public void checkField3() throws UserException, InternalException
     {
         checkConcreteType(m -> DataType.number(new NumberInfo(m.getUnitManager().loadUse("m").times(m.getUnitManager().loadUse("inch")))), "@define record = (x: 36{m}, y : 37{inch}), getX = (?#x) , getY = (?#y) @then @call getX(record) * @call getY(record) @enddefine");

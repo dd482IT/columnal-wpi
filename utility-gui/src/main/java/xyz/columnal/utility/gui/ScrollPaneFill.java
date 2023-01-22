@@ -55,7 +55,6 @@ public class ScrollPaneFill extends ScrollPane
         contentProperty().addListener(new ChangeListener<Node>()
         {
             @Override
-            @OnThread(value = Tag.FXPlatform, ignoreParent = true)
             public void changed(ObservableValue<? extends Node> prop, Node prev, Node now)
             {
                 fillViewport();
@@ -75,14 +74,12 @@ public class ScrollPaneFill extends ScrollPane
         setContent(content);
     }
     
-    @OnThread(Tag.FXPlatform)
     public void setAlwaysFitToWidth(boolean alwaysFitToWidth)
     {
         this.alwaysFitToWidth = alwaysFitToWidth;
     }
 
-    @OnThread(Tag.FXPlatform)
-    private void fillViewport(@UnknownInitialization(ScrollPane.class) ScrollPaneFill this, @Nullable Bounds viewportBounds)
+    private void fillViewport(ScrollPaneFill this, Bounds viewportBounds)
     {
         if (viewportBounds != null)
         {
@@ -96,8 +93,7 @@ public class ScrollPaneFill extends ScrollPane
     }
 
     // Call this direct if you have altered what is inside the content in the viewport:
-    @OnThread(Tag.FXPlatform)
-    public void fillViewport(@UnknownInitialization(ScrollPane.class) ScrollPaneFill this)
+    public void fillViewport(ScrollPaneFill this)
     {
         fillViewport(getViewportBounds());
     }
@@ -105,7 +101,6 @@ public class ScrollPaneFill extends ScrollPane
     private class ViewportFillListener implements ChangeListener<Bounds>
     {
         @Override
-        @OnThread(value = Tag.FXPlatform, ignoreParent = true)
         public void changed(ObservableValue<? extends Bounds> a, Bounds b, Bounds c)
         {
             fillViewport();

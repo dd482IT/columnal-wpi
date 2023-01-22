@@ -34,10 +34,9 @@ import threadchecker.Tag;
 import xyz.columnal.utility.function.fx.FXPlatformRunnable;
 import xyz.columnal.utility.TranslationUtility;
 
-@OnThread(Tag.FXPlatform)
 public abstract class Clickable extends Style<Clickable>
 {
-    private final @Nullable @LocalizableKey String tooltipKey;
+    private final String tooltipKey;
     private final String[] extraStyleClasses;
 
     public Clickable()
@@ -45,14 +44,13 @@ public abstract class Clickable extends Style<Clickable>
         this("click.to.change");
     }
     
-    public Clickable(@Nullable @LocalizableKey String tooltipKey, String... styleClasses)
+    public Clickable(String tooltipKey, String... styleClasses)
     {
         super(Clickable.class);
         this.tooltipKey = tooltipKey;
         this.extraStyleClasses = styleClasses;
     }
 
-    @OnThread(Tag.FXPlatform)
     protected abstract void onClick(MouseButton mouseButton, Point2D screenPoint);
     
     public final void _test_onClick(MouseButton mouseButton, Point2D screenPoint)
@@ -67,7 +65,7 @@ public abstract class Clickable extends Style<Clickable>
     private class HoverTracker
     {
         private boolean hovering = false;
-        private @Nullable FXPlatformRunnable cancelHover = null;
+        private FXPlatformRunnable cancelHover = null;
         
         public void start(MouseEvent e)
         {
@@ -95,7 +93,6 @@ public abstract class Clickable extends Style<Clickable>
     }
 
     @Override
-    @OnThread(Tag.FXPlatform)
     protected void style(Text t)
     {
         t.getStyleClass().add("styled-text-clickable");
@@ -120,7 +117,6 @@ public abstract class Clickable extends Style<Clickable>
     }
 
     @Override
-    @OnThread(Tag.Any)
     protected Clickable combine(Clickable with)
     {
         // Cannot combine, so make arbitrary choice:
@@ -128,7 +124,6 @@ public abstract class Clickable extends Style<Clickable>
     }
     
     @Override
-    @OnThread(Tag.Any)
     protected boolean equalsStyle(Clickable item)
     {
         return false;

@@ -117,9 +117,9 @@ public class GuessFormat
         {
             public final TrimChoice trimChoice;
             public final RecordSet recordSet;
-            public final @Nullable ImmutableList<@Localized String> columnNameOverrides; // Same length and order as recordSet.getColumns()
+            public final ImmutableList<String> columnNameOverrides; // Same length and order as recordSet.getColumns()
 
-            public SrcDetails(TrimChoice trimChoice, RecordSet recordSet, @Nullable ImmutableList<@Localized String> columnNameOverrides)
+            public SrcDetails(TrimChoice trimChoice, RecordSet recordSet, ImmutableList<String> columnNameOverrides)
             {
                 this.trimChoice = trimChoice;
                 this.recordSet = recordSet;
@@ -127,27 +127,22 @@ public class GuessFormat
             }
         }
         
-        @OnThread(Tag.FXPlatform)
-        public default @Nullable Node getGUI()
+        public default Node getGUI()
         {
             return null;
         }
         
-        @OnThread(Tag.FXPlatform)
-        public ObjectExpression<@Nullable SRC_FORMAT> currentSrcFormat();
+        public ObjectExpression<SRC_FORMAT> currentSrcFormat();
 
         // Get the function which would load the source (import LHS) for the given format.
         // For text files, this will be CSV split into columns, but untrimmed and all columns text
         // For XLS it is original sheet, untrimmed
-        @OnThread(Tag.Simulation)
         SrcDetails loadSource(SRC_FORMAT srcFormat) throws InternalException, UserException;
         
         // Get the function which would load the final record set (import RHS) for the given format and trim.
         // After trimming, the types of the columns are guessed at.
-        @OnThread(Tag.Simulation)
         Pair<DEST_FORMAT, RecordSet> loadDest(SRC_FORMAT srcFormat, TrimChoice trimChoice) throws InternalException, UserException;
         
-        @OnThread(Tag.Simulation)
         public default DEST_FORMAT _test_getResultNoGUI() throws UserException, InternalException, InterruptedException, ExecutionException, TimeoutException
         {
             CompletableFuture<SRC_FORMAT> future = new CompletableFuture<>();
@@ -206,7 +201,7 @@ public class GuessFormat
         }
 
         @Override
-        public boolean equals(@Nullable Object o)
+        public boolean equals(Object o)
         {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
@@ -296,11 +291,11 @@ public class GuessFormat
     {
         public final Charset charset;
         // null means no separator; just one big column
-        public final @Nullable String separator;
+        public final String separator;
         // empty means no quote
-        public final @Nullable String quote;
+        public final String quote;
 
-        public InitialTextFormat(Charset charset, @Nullable String separator, @Nullable String quote)
+        public InitialTextFormat(Charset charset, String separator, String quote)
         {
             this.charset = charset;
             this.separator = (separator != null && separator.isEmpty()) ? null : separator;
@@ -308,7 +303,7 @@ public class GuessFormat
         }
 
         @Override
-        public boolean equals(@Nullable Object o)
+        public boolean equals(Object o)
         {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
@@ -350,7 +345,7 @@ public class GuessFormat
         }
 
         @Override
-        public boolean equals(@Nullable Object o)
+        public boolean equals(Object o)
         {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
@@ -378,35 +373,33 @@ public class GuessFormat
         }
     }
 
-    @OnThread(Tag.Simulation)
-    public static Import<InitialTextFormat, FinalTextFormat> guessTextFormat(TypeManager typeManager, UnitManager unitManager, Map<Charset, List<String>> initialByCharset, @Nullable InitialTextFormat itfOverride, @Nullable TrimChoice trimOverride)
+    public static Import<InitialTextFormat, FinalTextFormat> guessTextFormat(TypeManager typeManager, UnitManager unitManager, Map<Charset, List<String>> initialByCharset, InitialTextFormat itfOverride, TrimChoice trimOverride)
     {
-        final Optional<@KeyFor("initialByCharset") Charset> initialCharsetGuess;
+        final Optional<Charset> initialCharsetGuess;
         if (itfOverride != null)
         {
             @SuppressWarnings("keyfor")
-            @KeyFor("initialByCharset") Charset c = itfOverride.charset;
+            Charset c = itfOverride.charset;
             initialCharsetGuess = Optional.of(c);
         }
         else
         {
             @SuppressWarnings("keyfor")
-            Optional<@KeyFor("initialByCharset") Charset> c = GuessFormat.<@KeyFor("initialByCharset") Charset>guessCharset(initialByCharset.keySet());
+            Optional<Charset> c = GuessFormat.<Charset>guessCharset(initialByCharset.keySet());
             initialCharsetGuess = c;
         }
-        SimpleObjectProperty<@Nullable Charset> charsetChoice = new SimpleObjectProperty<>(initialCharsetGuess.<Charset>map(c -> c).orElse(null));
-        @Nullable Pair<@Nullable String, @Nullable String> sepAndQuot = itfOverride != null ? new Pair<>(itfOverride.separator, itfOverride.quote) :
+        SimpleObjectProperty<Charset> charsetChoice = new SimpleObjectProperty<>(initialCharsetGuess.<Charset>map(c -> c).orElse(null));
+        Pair<String, String> sepAndQuot = itfOverride != null ? new Pair<>(itfOverride.separator, itfOverride.quote) :
             initialCharsetGuess.map(initialByCharset::get).map(GuessFormat::guessSepAndQuot).orElse(null);
-        SimpleObjectProperty<@Nullable String> sepChoice = new SimpleObjectProperty<>(sepAndQuot == null ? null : sepAndQuot.getFirst());
-        SimpleObjectProperty<@Nullable String> quoteChoice = new SimpleObjectProperty<>(sepAndQuot == null ? null : sepAndQuot.getSecond());
-        ObjectProperty<@Nullable InitialTextFormat> srcFormat = new SimpleObjectProperty<>(makeInitialTextFormat(charsetChoice, sepChoice, quoteChoice));
+        SimpleObjectProperty<String> sepChoice = new SimpleObjectProperty<>(sepAndQuot == null ? null : sepAndQuot.getFirst());
+        SimpleObjectProperty<String> quoteChoice = new SimpleObjectProperty<>(sepAndQuot == null ? null : sepAndQuot.getSecond());
+        ObjectProperty<InitialTextFormat> srcFormat = new SimpleObjectProperty<>(makeInitialTextFormat(charsetChoice, sepChoice, quoteChoice));
         
         return new Import<InitialTextFormat, FinalTextFormat>()
         {
-            @MonotonicNonNull LabelledGrid labelledGrid;
+            LabelledGrid labelledGrid;
             
             @Override
-            @OnThread(Tag.FXPlatform)
             public Node getGUI()
             {
                 if (labelledGrid == null)
@@ -417,7 +410,7 @@ public class GuessFormat
                     labelledGrid.addRow(ImporterGUI.makeGUI(quoteChoiceDetails(), quoteChoice));
 
                     
-                    FXPlatformConsumer<@Nullable Object> update = o -> {
+                    FXPlatformConsumer<Object> update = o -> {
                         srcFormat.set(makeInitialTextFormat(charsetChoice, sepChoice, quoteChoice));
                     };
                     FXUtility.addChangeListenerPlatform(charsetChoice, update);
@@ -428,19 +421,18 @@ public class GuessFormat
             }
 
             @Override
-            public ObjectExpression<@Nullable InitialTextFormat> currentSrcFormat()
+            public ObjectExpression<InitialTextFormat> currentSrcFormat()
             {
                 return srcFormat;
             }
 
-            @OnThread(Tag.Simulation)
             public SrcDetails loadSource(InitialTextFormat initialTextFormat) throws InternalException, UserException
             {
                 List<String> initialCheck = initialByCharset.get(initialTextFormat.charset);
                 if (initialCheck == null)
                     throw new InternalException("initialByCharset key lookup returned null");
 
-                @NonNull List<String> initial = initialCheck;
+                List<String> initial = initialCheck;
 
                 String sep = initialTextFormat.separator;
                 String quot = initialTextFormat.quote;
@@ -480,7 +472,7 @@ public class GuessFormat
                         return ChoicePoint.<TextFormat>success(proportionNonText > 0 ? Quality.PROMISING : Quality.FALLBACK, proportionNonText, textFormat); */
             }
 
-            public ImmutableList<ArrayList<String>> loadValues(@NonNull List<String> initial, @Nullable String sep, @Nullable String quot)
+            public ImmutableList<ArrayList<String>> loadValues(List<String> initial, String sep, String quot)
             {
                 List<RowInfo> rowInfos = new ArrayList<>();
                 for (int i = 0; i < initial.size(); i++)
@@ -501,7 +493,7 @@ public class GuessFormat
                 if (initialCheck == null)
                     throw new InternalException("initialByCharset key lookup returned null");
 
-                @NonNull List<String> initial = initialCheck;
+                List<String> initial = initialCheck;
                 
                 ImmutableList<ArrayList<String>> vals = loadValues(initial, initialTextFormat.separator, initialTextFormat.quote);
                 ImporterUtility.rectangulariseAndRemoveBlankRows(vals);
@@ -512,11 +504,11 @@ public class GuessFormat
         };
     }
 
-    public static @Nullable InitialTextFormat makeInitialTextFormat(SimpleObjectProperty<@Nullable Charset> charsetChoice, SimpleObjectProperty<@Nullable String> sepChoice, SimpleObjectProperty<@Nullable String> quoteChoice)
+    public static InitialTextFormat makeInitialTextFormat(SimpleObjectProperty<Charset> charsetChoice, SimpleObjectProperty<String> sepChoice, SimpleObjectProperty<String> quoteChoice)
     {
-        @Nullable Charset charset = charsetChoice.get();
-        @Nullable String sep = sepChoice.get();
-        @Nullable String quote = quoteChoice.get();
+        Charset charset = charsetChoice.get();
+        String sep = sepChoice.get();
+        String quote = quoteChoice.get();
         if (charset != null)
             return new InitialTextFormat(charset, sep, quote);
         return null;
@@ -674,7 +666,7 @@ public class GuessFormat
         return Optional.ofNullable(arbitrary);
     }
 
-    private static Either<@Localized String, Charset> pickCharset(String s)
+    private static Either<String, Charset> pickCharset(String s)
     {
         try
         {
@@ -686,7 +678,7 @@ public class GuessFormat
         }
     }
 
-    private static <T> Function<String, Either<@Localized String, T>> enterSingleChar(Function<String, T> make)
+    private static <T> Function<String, Either<String, T>> enterSingleChar(Function<String, T> make)
     {
         return s -> {
             if (s.length() == 1)
@@ -706,7 +698,7 @@ public class GuessFormat
     }
 
     // Split a row of text into columns, given a separator and a quote character
-    private static RowInfo splitIntoColumns(String row, @Nullable String sep, @Nullable String quote)
+    private static RowInfo splitIntoColumns(String row, String sep, String quote)
     {
         String escapedQuote = quote + quote;
         
@@ -769,7 +761,7 @@ public class GuessFormat
     }
 
     // Note that the trim choice should not already have been applied.  But values should be rectangular
-    private static ImmutableList<ColumnInfo> guessBodyFormat(UnitManager mgr, TrimChoice trimChoice, @NonNull List<@NonNull ? extends List<@NonNull String>> untrimmed, @Nullable BiFunction<TrimChoice, Integer, ColumnId> getColumnName) throws GuessException
+    private static ImmutableList<ColumnInfo> guessBodyFormat(UnitManager mgr, TrimChoice trimChoice, List<? extends List<String>> untrimmed, BiFunction<TrimChoice, Integer, ColumnId> getColumnName) throws GuessException
     {
         // true should be the first item in each sub-list:
         final ImmutableList<ImmutableList<String>> BOOLEAN_SETS = ImmutableList.<ImmutableList<String>>of(ImmutableList.<String>of("t", "f"), ImmutableList.<String>of("true", "false"), ImmutableList.<String>of("y", "n"), ImmutableList.<String>of("yes", "no"));
@@ -796,8 +788,8 @@ public class GuessFormat
                     .map(formatter -> new DateFormat(DateTimeType.TIMEOFDAY, false, formatter, LocalTime::from)).collect(Collectors.<DateFormat>toList())
             );
             ArrayList<ImmutableList<String>> possibleBooleanSets = new ArrayList<>(BOOLEAN_SETS);
-            @Nullable String commonPrefix = null;
-            @Nullable String commonSuffix = null;
+            String commonPrefix = null;
+            String commonSuffix = null;
             List<Integer> decimalPlaces = new ArrayList<>();
             for (int rowIndex = 0; rowIndex < initialVals.size(); rowIndex++)
             {
@@ -1027,8 +1019,8 @@ public class GuessFormat
     {
         ColumnId columnName;
         String fromFile = stringBuilder.toString().trim();
-        @ExpressionIdentifier String validated = IdentifierUtility.fixExpressionIdentifier(fromFile, "C");
-        @ExpressionIdentifier String prospectiveName = 
+        String validated = IdentifierUtility.fixExpressionIdentifier(fromFile, "C");
+        String prospectiveName = 
 validated.equals("C") && !fromFile.equals("C") ? IdentifierUtility.identNum(validated, 1) : validated;
         // Now check if it is taken:
 
@@ -1048,7 +1040,7 @@ validated.equals("C") && !fromFile.equals("C") ? IdentifierUtility.identNum(vali
         private final FORMAT format; 
         //public final boolean linkFile;
 
-        public ImportInfo(@ExpressionIdentifier String suggestedName/*, boolean linkFile*/, FORMAT format)
+        public ImportInfo(String suggestedName/*, boolean linkFile*/, FORMAT format)
         {
             this.suggestedTableId = new TableId(suggestedName);
             this.format = format;
@@ -1066,8 +1058,7 @@ validated.equals("C") && !fromFile.equals("C") ? IdentifierUtility.identNum(vali
         }
     }
 
-    @OnThread(Tag.Simulation)
-    public static void guessTextFormatGUI_Then(@Nullable Window parentWindow, TableManager mgr, File file, String suggestedName, Map<Charset, List<String>> initial, SimulationConsumer<ImportInfo<FinalTextFormat>> then)
+    public static void guessTextFormatGUI_Then(Window parentWindow, TableManager mgr, File file, String suggestedName, Map<Charset, List<String>> initial, SimulationConsumer<ImportInfo<FinalTextFormat>> then)
     {
         Import<InitialTextFormat, FinalTextFormat> imp = guessTextFormat(mgr.getTypeManager(), mgr.getUnitManager(), initial, null, null);
         Platform.runLater(() -> {

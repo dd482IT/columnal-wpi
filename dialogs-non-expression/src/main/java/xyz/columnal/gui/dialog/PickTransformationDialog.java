@@ -40,7 +40,6 @@ import xyz.columnal.utility.gui.LightDialog;
 
 import java.util.Optional;
 
-@OnThread(Tag.FXPlatform)
 public class PickTransformationDialog extends LightDialog<Pair<Point2D, TransformationInfo>>
 {
     private static final int BUTTON_WIDTH = 150;
@@ -78,7 +77,7 @@ public class PickTransformationDialog extends LightDialog<Pair<Point2D, Transfor
         //org.scenicview.ScenicView.show(getDialogPane().getScene());
     }
 
-    private void makeTransformationButtons(@UnknownInitialization(LightDialog.class) PickTransformationDialog this, GridPane gridPane)
+    private void makeTransformationButtons(PickTransformationDialog this, GridPane gridPane)
     {
         int column = 0;
         int row = 0;

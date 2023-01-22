@@ -35,16 +35,14 @@ import static org.junit.Assert.assertEquals;
 /**
  * Created by neil on 26/10/2016.
  */
-@RunWith(JUnitQuickcheck.class)
 public class PropFiles
 {
-    @Property
-    public void testLineCount(@From(GenFile.class) GeneratedTextFile input) throws IOException
+    public void testLineCount(GeneratedTextFile input) throws IOException
     {
         assertEqualsMsg("Counting lines for " + input.getCharset(), input.getLineCount(), Utility.countLines(input.getFile(), input.getCharset()));
     }
 
-    public static <T> void assertEqualsMsg(String msg, @NonNull T exp, @NonNull T act)
+    public static <T> void assertEqualsMsg(String msg, T exp, T act)
     {
         try
         {

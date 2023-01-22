@@ -51,13 +51,13 @@ public class Mean extends SingleNumericSummaryFunction
         return new ValueFunction()
         {
             @Override
-            public @Value Object _call() throws UserException, InternalException
+            public Object _call() throws UserException, InternalException
             {
                 ListEx list = arg(0, ListEx.class);
                 int size = list.size();
                 if (size == 0)
                     throw new UserException("Cannot calculate average of empty list");
-                @Value Number average = DataTypeUtility.value(0L);
+                Number average = DataTypeUtility.value(0L);
                 for (int i = 0; i < size; i++)
                 {
                     // From http://stackoverflow.com/questions/1346824/is-there-any-way-to-find-arithmetic-mean-better-than-sum-n

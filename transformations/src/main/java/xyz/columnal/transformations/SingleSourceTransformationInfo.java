@@ -44,13 +44,12 @@ import java.util.Optional;
  */
 public abstract class SingleSourceTransformationInfo extends TransformationInfo
 {
-    public SingleSourceTransformationInfo(String canonicalName, @LocalizableKey String displayNameKey, String imageFileName, @LocalizableKey String explanationKey, List<String> keywords)
+    public SingleSourceTransformationInfo(String canonicalName, String displayNameKey, String imageFileName, String explanationKey, List<String> keywords)
     {
         super(canonicalName, displayNameKey, imageFileName, explanationKey, keywords);
     }
 
     @Override
-    @OnThread(Tag.Simulation)
     public final Transformation load(TableManager mgr, InitialLoadDetails initialLoadDetails, List<TableId> source, String detail, ExpressionVersion expressionVersion) throws InternalException, UserException
     {
         if (source.size() > 1)
@@ -58,19 +57,16 @@ public abstract class SingleSourceTransformationInfo extends TransformationInfo
         return loadSingle(mgr, initialLoadDetails, source.get(0), detail, expressionVersion);
     }
 
-    @OnThread(Tag.Simulation)
     protected abstract Transformation loadSingle(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, String detail, ExpressionVersion expressionVersion) throws InternalException, UserException;
 
     @Override
-    @OnThread(Tag.FXPlatform)
-    public final @Nullable SimulationSupplier<Transformation> make(TableManager mgr, CellPosition destination, FXPlatformSupplier<Optional<Table>> askForSingleSrcTable)
+    public final SimulationSupplier<Transformation> make(TableManager mgr, CellPosition destination, FXPlatformSupplier<Optional<Table>> askForSingleSrcTable)
     {
-        return askForSingleSrcTable.get().<@Nullable SimulationSupplier<Transformation>>map(srcTable -> {
+        return askForSingleSrcTable.get().<SimulationSupplier<Transformation>>map(srcTable -> {
             SimulationSupplier<Transformation> simulationSupplier = () -> makeWithSource(mgr, destination, srcTable);
             return simulationSupplier;
         }).orElse(null);
     }
 
-    @OnThread(Tag.Simulation)
     protected abstract Transformation makeWithSource(TableManager mgr, CellPosition destination, Table srcTable) throws InternalException;
 }

@@ -71,12 +71,11 @@ import java.util.stream.Stream;
  * - A converter from text to a custom type, which supports giving an error if conversion fails, or warnings with a success
  * - Ability to display an error/warning (either because of conversion failure, or any other reason)
  */
-@OnThread(Tag.FXPlatform)
 public class ErrorableTextField<T> implements TimedFocusable
 {
     private final TextField field = new TextField();
     private final ObjectProperty<ConversionResult<T>> converted;
-    private final ObjectProperty<@Nullable T> value;
+    private final ObjectProperty<T> value;
     private final PopOver popOver = new PopOver();
     private long lastFocusLeft;
     
@@ -133,7 +132,7 @@ public class ErrorableTextField<T> implements TimedFocusable
         return isFocused() ? System.currentTimeMillis() : lastFocusLeft;
     }
 
-    private void updateState(@UnknownInitialization(ErrorableTextField.class) ErrorableTextField<T> this)
+    private void updateState(ErrorableTextField<T> this)
     {
         // I don't understand why this can be null if ErrorableTextField is initialised?
         @SuppressWarnings("nullness")
@@ -171,12 +170,12 @@ public class ErrorableTextField<T> implements TimedFocusable
         return field.disableProperty();
     }
 
-    public ObjectExpression<@Nullable T> valueProperty()
+    public ObjectExpression<T> valueProperty()
     {
         return value;
     }
 
-    public Node getNode(@UnknownInitialization(ErrorableTextField.class) ErrorableTextField<T> this)
+    public Node getNode(ErrorableTextField<T> this)
     {
         return field;
     }
@@ -188,13 +187,13 @@ public class ErrorableTextField<T> implements TimedFocusable
         });
     }
 
-    public void setText(@UnknownInitialization(ErrorableTextField.class) ErrorableTextField<T> this, String text)
+    public void setText(ErrorableTextField<T> this, String text)
     {
         field.setText(text);
     }
 
 
-    public void setPromptText(@UnknownInitialization(ErrorableTextField.class) ErrorableTextField<T> this, @Localized String prompt)
+    public void setPromptText(ErrorableTextField<T> this, String prompt)
     {
         field.setPromptText(prompt);
     }
@@ -206,12 +205,12 @@ public class ErrorableTextField<T> implements TimedFocusable
         return this;
     }
 
-    public List<String> getStyleClass(@UnknownInitialization(ErrorableTextField.class) ErrorableTextField<T> this)
+    public List<String> getStyleClass(ErrorableTextField<T> this)
     {
         return field.getStyleClass();
     }
 
-    public void sizeToFit(@Nullable Double minSizeFocused, @Nullable Double minSizeUnfocused, @Nullable DoubleExpression maxSize)
+    public void sizeToFit(Double minSizeFocused, Double minSizeUnfocused, DoubleExpression maxSize)
     {
         FXUtility.sizeToFit(field, minSizeFocused, minSizeUnfocused, maxSize);
     }
@@ -222,7 +221,7 @@ public class ErrorableTextField<T> implements TimedFocusable
     }
 
     // When focus is lost from field, the given item is called with the new value 
-    public void addOnFocusLoss(FXPlatformConsumer<@Nullable T> updateValue)
+    public void addOnFocusLoss(FXPlatformConsumer<T> updateValue)
     {
         FXUtility.addChangeListenerPlatformNN(field.focusedProperty(), focused -> {
             if (!focused)
@@ -259,12 +258,12 @@ public class ErrorableTextField<T> implements TimedFocusable
 
     public static class ConversionResult<T>
     {
-        private final @Nullable T value;
-        private final @Nullable StyledString error;
+        private final T value;
+        private final StyledString error;
         private final ImmutableList<QuickFix> fixes;
-        private final List<@Localized String> warnings;
+        private final List<String> warnings;
 
-        private ConversionResult(@NonNull T value, @Localized String... warnings)
+        private ConversionResult(T value, String... warnings)
         {
             this.value = value;
             this.error = null;
@@ -280,23 +279,22 @@ public class ErrorableTextField<T> implements TimedFocusable
             this.fixes = ImmutableList.copyOf(fixes);
         }
 
-        public @Nullable T getValue()
+        public T getValue()
         {
             return value;
         }
 
-        @Pure
-        public @Nullable StyledString getError()
+        public StyledString getError()
         {
             return error;
         }
 
-        public List<@Localized String> getWarnings()
+        public List<String> getWarnings()
         {
             return warnings;
         }
 
-        public static <T> ConversionResult<T> success(@NonNull T value, @Localized String... warnings)
+        public static <T> ConversionResult<T> success(T value, String... warnings)
         {
             return new ConversionResult<T>(value, warnings);
         }
@@ -325,7 +323,7 @@ public class ErrorableTextField<T> implements TimedFocusable
     }
 
     @SuppressWarnings("i18n")
-    public static <T> ConversionResult<T> validate(ExSupplier<@NonNull T> getValue)
+    public static <T> ConversionResult<T> validate(ExSupplier<T> getValue)
     {
         try
         {
@@ -348,7 +346,7 @@ public class ErrorableTextField<T> implements TimedFocusable
      * @param makeResult If successful, turn the string into a result
      * @param <T> Type of result
      */
-    protected static <T> ConversionResult<T> checkAlphabet(String src, BiPredicate<Integer, Boolean> validCodepoint, FXPlatformFunction<String, @NonNull T> makeResult)
+    protected static <T> ConversionResult<T> checkAlphabet(String src, BiPredicate<Integer, Boolean> validCodepoint, FXPlatformFunction<String, T> makeResult)
     {
         int[] codePoints = src.codePoints().toArray();
         for (int i = 0; i < codePoints.length; i++)

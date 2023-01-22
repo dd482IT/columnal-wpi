@@ -58,7 +58,6 @@ public class ToString extends FunctionDefinition
     }
 
     @Override
-    @OnThread(Tag.Simulation)
     public ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
     {
         DataType type = paramTypes.apply("t").getRight("Variable t should be type but was unit");
@@ -77,61 +76,54 @@ public class ToString extends FunctionDefinition
         }
         
         @Override
-        public @Value Object _call() throws UserException, InternalException
+        public Object _call() throws UserException, InternalException
         {
             return DataTypeUtility.value(convertToString(type, arg(0)));
         }
 
-        @OnThread(Tag.Simulation)
-        private static String convertToString(DataType type, @Value Object param) throws InternalException, UserException
+        private static String convertToString(DataType type, Object param) throws InternalException, UserException
         {
             return type.apply(new DataTypeVisitorEx<String, UserException>()
             {
                 @Override
-                @OnThread(Tag.Simulation)
                 public String number(NumberInfo numberInfo) throws InternalException, InternalException
                 {
                     return Utility.numberToString(Utility.cast(param, Number.class));
                 }
 
                 @Override
-                @OnThread(Tag.Simulation)
                 public String text() throws InternalException, InternalException
                 {
                     return "\"" + GrammarUtility.escapeChars(Utility.cast(param, String.class)) + "\"";
                 }
 
                 @Override
-                @OnThread(Tag.Simulation)
                 public String date(DateTimeInfo dateTimeInfo) throws InternalException, InternalException
                 {
                     return dateTimeInfo.getStrictFormatter().format(Utility.cast(param, TemporalAccessor.class));
                 }
 
                 @Override
-                @OnThread(Tag.Simulation)
                 public String bool() throws InternalException, InternalException
                 {
                     return param.toString();
                 }
 
                 @Override
-                @OnThread(Tag.Simulation)
                 public String tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
                 {
-                    @Value TaggedValue taggedValue = Utility.cast(param, TaggedValue.class);
+                    TaggedValue taggedValue = Utility.cast(param, TaggedValue.class);
                     TagType<DataType> tag = tags.get(taggedValue.getTagIndex());
                     return tag.getName() + ((taggedValue.getInner() == null || tag.getInner() == null) ? "" : ("(" + convertToString(tag.getInner(), taggedValue.getInner()) + ")"));
                 }
 
                 @Override
-                @OnThread(Tag.Simulation)
-                public String record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, UserException
+                public String record(ImmutableMap<String, DataType> fields) throws InternalException, UserException
                 {
-                    @Value Record values = Utility.cast(param, Record.class);
+                    Record values = Utility.cast(param, Record.class);
                     StringBuilder s = new StringBuilder("(");
                     boolean first = true;
-                    for (Entry<@ExpressionIdentifier String, DataType> entry : fields.entrySet())
+                    for (Entry<String, DataType> entry : fields.entrySet())
                     {
                         if (!first)
                             s.append(", ");
@@ -143,8 +135,7 @@ public class ToString extends FunctionDefinition
                 }
 
                 @Override
-                @OnThread(Tag.Simulation)
-                public String array(@Nullable DataType inner) throws InternalException, UserException
+                public String array(DataType inner) throws InternalException, UserException
                 {
                     if (inner == null)
                         return "[]";

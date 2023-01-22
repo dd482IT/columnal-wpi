@@ -30,7 +30,6 @@ import java.util.ArrayList;
 /**
  * Allows re-use of an expensive-to-construct resource, like WebView.
  */
-@OnThread(Tag.FXPlatform)
 public final class ReusableResourcePool<T>
 {
     private final int maxPooled;

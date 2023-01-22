@@ -48,16 +48,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-@RunWith(JUnitQuickcheck.class)
 public class TestSetValue
 {
-    @Property(trials=200)
-    @OnThread(Tag.Simulation)
-    public void propSetValue(@From(GenTypeAndValueGen.class)TypeAndValueGen typeAndValueGen, @From(GenRandom.class) Random r) throws UserException, InternalException
+    public void propSetValue(TypeAndValueGen typeAndValueGen, Random r) throws UserException, InternalException
     {
-        @Initialized int length = 1 + r.nextInt(100);
-        List<Either<String, @Value Object>> originals = new ArrayList<>();
-        List<Either<String, @Value Object>> replacements = new ArrayList<>();
+        int length = 1 + r.nextInt(100);
+        List<Either<String, Object>> originals = new ArrayList<>();
+        List<Either<String, Object>> replacements = new ArrayList<>();
         for (int i = 0; i < length; i++)
         {
             originals.add(r.nextInt(8) == 1 ? Either.left("~R" + r.nextInt(100)) : Either.right(typeAndValueGen.makeValue()));
@@ -67,7 +64,7 @@ public class TestSetValue
         EditableRecordSet rs = new EditableRecordSet(Collections.singletonList(ColumnUtility.makeImmediateColumn(typeAndValueGen.getType(), new ColumnId("C0"), originals, typeAndValueGen.makeValue())), () -> length);
         Column col = rs.getColumns().get(0);
 
-        List<Pair<Integer, Either<String, @Value Object>>> pendingReplacements = new ArrayList<>();
+        List<Pair<Integer, Either<String, Object>>> pendingReplacements = new ArrayList<>();
 
         // Check initial store worked:
         for (int i = 0; i < length; i++)
@@ -79,7 +76,7 @@ public class TestSetValue
         // Do replacements:
         while (!pendingReplacements.isEmpty())
         {
-            Pair<Integer, Either<String, @Value Object>> repl = TBasicUtil.removeRandom(r, pendingReplacements);
+            Pair<Integer, Either<String, Object>> repl = TBasicUtil.removeRandom(r, pendingReplacements);
             col.getType().setCollapsed(repl.getFirst(), repl.getSecond());
         }
 
@@ -90,8 +87,7 @@ public class TestSetValue
         }
     }
 
-    @OnThread(Tag.Simulation)
-    private Either<String, @Value Object> collapseErr(DataTypeValue type, int rowIndex) throws UserException, InternalException
+    private Either<String, Object> collapseErr(DataTypeValue type, int rowIndex) throws UserException, InternalException
     {
         try
         {

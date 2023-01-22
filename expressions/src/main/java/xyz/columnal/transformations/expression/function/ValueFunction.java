@@ -47,30 +47,27 @@ public abstract class ValueFunction extends ValueFunctionBase
     // This means that an individual ValueFunction is not re-entrant.
     
     // null if we are not recording explanationss
-    private @Nullable ArrayList<ExplanationLocation> usedLocations;
+    private ArrayList<ExplanationLocation> usedLocations;
     // null if we are not recording
-    private @Nullable ImmutableList<ArgumentExplanation> argExplanations;
+    private ImmutableList<ArgumentExplanation> argExplanations;
     // null if we are not recording
-    private @Nullable ArrayList<Explanation> extraExplanations;
+    private ArrayList<Explanation> extraExplanations;
     
-    private @Nullable ExplanationLocation resultIsLocation;
+    private ExplanationLocation resultIsLocation;
     
     // Non-null once we are executing:
-    private @Value Object @MonotonicNonNull[] curArgs;
+    private Object[] curArgs;
     
 
-    @OnThread(Tag.Any)
     protected ValueFunction()
     {
     }
 
     // Not for external calling
-    @OnThread(Tag.Simulation)
-    protected abstract @Value Object _call() throws InternalException, UserException;
+    protected abstract Object _call() throws InternalException, UserException;
 
     // Call without recording an explanation
-    @OnThread(Tag.Simulation)
-    public final @Value Object call(@Value Object[] args) throws InternalException, UserException
+    public final Object call(Object[] args) throws InternalException, UserException
     {
         this.curArgs = args;
         this.argExplanations = null;
@@ -80,23 +77,22 @@ public abstract class ValueFunction extends ValueFunctionBase
     }
 
     // Call and record an explanation
-    @OnThread(Tag.Simulation)
-    public final RecordedFunctionResult callRecord(@Value Object[] args, @Nullable ImmutableList<ArgumentExplanation> argumentExplanations) throws InternalException, UserException
+    public final RecordedFunctionResult callRecord(Object[] args, ImmutableList<ArgumentExplanation> argumentExplanations) throws InternalException, UserException
     {
         this.curArgs = args;
         this.argExplanations = argumentExplanations;
         this.usedLocations = new ArrayList<>();
         ArrayList<Explanation> extra = this.extraExplanations = new ArrayList<>();
-        @Value Object result = _call();
+        Object result = _call();
         return new RecordedFunctionResult(result, Utility.<Explanation>concatI(argumentExplanations == null ? ImmutableList.<Explanation>of() : Utility.<ArgumentExplanation, Explanation>mapListInt(argumentExplanations, e -> e.getValueExplanation()), extra), usedLocations != null ? ImmutableList.copyOf(usedLocations) : ImmutableList.of(), resultIsLocation);
     }
 
-    protected final <T> @Value T arg(int index, Class<T> tClass) throws InternalException
+    protected final <T> T arg(int index, Class<T> tClass) throws InternalException
     {
         return Utility.cast(arg(index), tClass);
     }
     
-    protected final @Value Object arg(int index) throws InternalException
+    protected final Object arg(int index) throws InternalException
     {
         if (curArgs == null)
             throw new InternalException("Function accessing missing arguments");
@@ -105,13 +101,12 @@ public abstract class ValueFunction extends ValueFunctionBase
         return curArgs[index];
     }
     
-    protected @Value int intArg(int index) throws InternalException, UserException
+    protected int intArg(int index) throws InternalException, UserException
     {
         return DataTypeUtility.requireInteger(arg(index, Number.class));
     }
     
-    @OnThread(Tag.Simulation)
-    protected final @Value Object callArg(int index, @Value Object[] arguments) throws InternalException, UserException
+    protected final Object callArg(int index, Object[] arguments) throws InternalException, UserException
     {
         ValueFunction function = arg(index, ValueFunction.class);
         if (extraExplanations == null)
@@ -141,13 +136,11 @@ public abstract class ValueFunction extends ValueFunctionBase
     // of arguments, or of a list element of an argument.
     public static interface ArgumentExplanation
     {
-        @OnThread(Tag.Simulation)
         Explanation getValueExplanation() throws InternalException;
 
         // If this argument is a column, give back the location
         // for the given zero-based index.
-        @OnThread(Tag.Simulation)
-        @Nullable ExplanationLocation getListElementLocation(int index) throws InternalException;
+        ExplanationLocation getListElementLocation(int index) throws InternalException;
     }
     
     protected final void addUsedLocations(FunctionInt<ImmutableList<ArgumentExplanation>, Stream<ExplanationLocation>> extractLocations) throws InternalException
@@ -162,7 +155,6 @@ public abstract class ValueFunction extends ValueFunctionBase
             this.resultIsLocation = explanationLocation;
     }
     
-    @OnThread(Tag.Simulation)
     protected final void addExtraExplanation(SimulationSupplierInt<Explanation> makeExplanation) throws InternalException
     {
         if (extraExplanations != null)
@@ -172,19 +164,19 @@ public abstract class ValueFunction extends ValueFunctionBase
     }
 
     @SuppressWarnings("valuetype")
-    public static @Value ValueFunction value(@UnknownIfValue ValueFunction function)
+    public static ValueFunction value(ValueFunction function)
     {
         return function;
     }
 
     public static class RecordedFunctionResult
     {
-        public final @Value Object result;
+        public final Object result;
         public final ImmutableList<Explanation> childExplanations;
         public final ImmutableList<ExplanationLocation> usedLocations;
-        public final @Nullable ExplanationLocation resultIsLocation;
+        public final ExplanationLocation resultIsLocation;
 
-        public RecordedFunctionResult(@Value Object result, ImmutableList<Explanation> childExplanations, ImmutableList<ExplanationLocation> usedLocations, @Nullable ExplanationLocation resultIsLocation)
+        public RecordedFunctionResult(Object result, ImmutableList<Explanation> childExplanations, ImmutableList<ExplanationLocation> usedLocations, ExplanationLocation resultIsLocation)
         {
             this.result = result;
             this.childExplanations = childExplanations;

@@ -76,11 +76,11 @@ public class BackwardsMatch extends BackwardsProvider
 {
     private static class VarInfo
     {
-        private final @ExpressionIdentifier String name;
+        private final String name;
         private final DataType type;
-        private final @Value Object value;
+        private final Object value;
 
-        public VarInfo(@ExpressionIdentifier String name, DataType type, @Value Object value)
+        public VarInfo(String name, DataType type, Object value)
         {
             this.name = name;
             this.type = type;
@@ -96,7 +96,7 @@ public class BackwardsMatch extends BackwardsProvider
         super(r, parent);
     }
     
-    private @Nullable VarInfo findVarOfType(Predicate<DataType> typePred)
+    private VarInfo findVarOfType(Predicate<DataType> typePred)
     {
         ArrayList<VarInfo> possibles = new ArrayList<>();
         for (ArrayList<VarInfo> varContext : varContexts)
@@ -113,7 +113,7 @@ public class BackwardsMatch extends BackwardsProvider
     }
 
     @Override
-    public List<ExpressionMaker> terminals(DataType targetType, @Value Object targetValue) throws InternalException, UserException
+    public List<ExpressionMaker> terminals(DataType targetType, Object targetValue) throws InternalException, UserException
     {
         // For temporal, numerical, boolean and text, we manipulate them to be what we want.
         // For boolean, we may use an equals expression.
@@ -123,10 +123,10 @@ public class BackwardsMatch extends BackwardsProvider
             @Override
             public List<ExpressionMaker> number(NumberInfo numberInfo) throws InternalException, UserException
             {
-                @Nullable VarInfo numVar = findVarOfType(DataTypeUtility::isNumber);
+                VarInfo numVar = findVarOfType(DataTypeUtility::isNumber);
                 if (numVar == null)
                     return ImmutableList.of();
-                @NonNull VarInfo numVarFinal = numVar;
+                VarInfo numVarFinal = numVar;
                 IdentExpression varRef = IdentExpression.load(numVar.name);
                 return ImmutableList.of(() -> {
                     return new AddSubtractExpression(ImmutableList.of(
@@ -153,12 +153,12 @@ public class BackwardsMatch extends BackwardsProvider
             @Override
             public List<ExpressionMaker> bool() throws InternalException, UserException
             {
-                @Nullable VarInfo boolVar = findVarOfType(t -> t.equals(DataType.BOOLEAN));
+                VarInfo boolVar = findVarOfType(t -> t.equals(DataType.BOOLEAN));
                 if (boolVar == null)
                     return ImmutableList.of();
                 else
                 {
-                    @ExpressionIdentifier String name = boolVar.name;
+                    String name = boolVar.name;
                     // need to negate the value if it doesn't match:
                     if (boolVar.value.equals(targetValue))
                         return ImmutableList.of(() -> IdentExpression.load(name));
@@ -178,7 +178,7 @@ public class BackwardsMatch extends BackwardsProvider
             }
 
             @Override
-            public List<ExpressionMaker> record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, UserException
+            public List<ExpressionMaker> record(ImmutableMap<String, DataType> fields) throws InternalException, UserException
             {
                 return ImmutableList.of();
             }
@@ -192,7 +192,7 @@ public class BackwardsMatch extends BackwardsProvider
     }
 
     @Override
-    public List<ExpressionMaker> deep(int maxLevels, DataType targetType, @Value Object targetValue) throws InternalException, UserException
+    public List<ExpressionMaker> deep(int maxLevels, DataType targetType, Object targetValue) throws InternalException, UserException
     {
         return ImmutableList.of(
             () -> makeMatch(maxLevels, targetType, targetValue),
@@ -208,14 +208,13 @@ public class BackwardsMatch extends BackwardsProvider
      * @throws InternalException
      * @throws UserException
      */
-    @OnThread(Tag.Simulation)
-    private IfThenElseExpression makeMatchIf(int maxLevels, DataType targetType, @Value Object targetValue) throws InternalException, UserException
+    private IfThenElseExpression makeMatchIf(int maxLevels, DataType targetType, Object targetValue) throws InternalException, UserException
     {
         DataType t = parent.makeType();
-        @Value Object actual = parent.makeValue(t);
+        Object actual = parent.makeValue(t);
         // Make a bunch of guards which won't fire:
         List<Pair<PatternInfo, Expression>> clauses = new ArrayList<>(Utility.filterOptional(TBasicUtil.<Optional<Pair<PatternInfo, Expression>>>makeList(r, 0, 4, () -> {
-            @Nullable PatternInfo nonMatch = makeNonMatchingPattern(maxLevels - 1, t, actual);
+            PatternInfo nonMatch = makeNonMatchingPattern(maxLevels - 1, t, actual);
             return nonMatch == null ? Optional.empty() : Optional.of(new Pair<>(nonMatch,
                     parent.make(targetType, parent.makeValue(targetType), maxLevels - 1)));
         }).stream()).collect(Collectors.toList()));
@@ -224,8 +223,8 @@ public class BackwardsMatch extends BackwardsProvider
         varContexts.add(new ArrayList<>());
         PatternInfo match = makePatternMatch(maxLevels - 1, t, actual, true);
         Expression correctOutcome = parent.make(targetType, targetValue, maxLevels - 1);
-        @Nullable Expression guard = r.nextBoolean() ? null : parent.make(DataType.BOOLEAN, true, maxLevels - 1);
-        @Nullable Expression extraGuard = match.guard;
+        Expression guard = r.nextBoolean() ? null : parent.make(DataType.BOOLEAN, true, maxLevels - 1);
+        Expression extraGuard = match.guard;
         if (extraGuard != null)
             guard = (guard == null ? extraGuard : new AndExpression(Arrays.asList(extraGuard, guard)));
         PatternInfo successful = new PatternInfo(match.pattern, guard);
@@ -251,18 +250,17 @@ public class BackwardsMatch extends BackwardsProvider
      * @throws InternalException
      * @throws UserException
      */
-    @OnThread(Tag.Simulation)
-    private Expression makeMatchDefine(int maxLevels, DataType targetType, @Value Object targetValue) throws InternalException, UserException
+    private Expression makeMatchDefine(int maxLevels, DataType targetType, Object targetValue) throws InternalException, UserException
     {
         DataType t = parent.makeType();
-        @Value Object actual = parent.makeValue(t);
+        Object actual = parent.makeValue(t);
         
         // Add var context for successful pattern:
         varContexts.add(new ArrayList<>());
         PatternInfo match = makePatternMatch(maxLevels - 1, t, actual, true);
         Expression correctOutcome = parent.make(targetType, targetValue, maxLevels - 1);
         Expression guard = parent.make(DataType.BOOLEAN, true, maxLevels - 1);
-        @Nullable Expression extraGuard = match.guard;
+        Expression extraGuard = match.guard;
         if (extraGuard != null)
             guard = new AndExpression(Arrays.asList(extraGuard, guard));
         PatternInfo successful = new PatternInfo(match.pattern, guard);
@@ -295,11 +293,10 @@ public class BackwardsMatch extends BackwardsProvider
      * @throws InternalException
      * @throws UserException
      */
-    @OnThread(Tag.Simulation)
-    private MatchExpression makeMatch(int maxLevels, DataType targetType, @Value Object targetValue) throws InternalException, UserException
+    private MatchExpression makeMatch(int maxLevels, DataType targetType, Object targetValue) throws InternalException, UserException
     {
         DataType t = parent.makeType();
-        @Value Object actual = parent.makeValue(t);
+        Object actual = parent.makeValue(t);
         // Make a bunch of guards which won't fire:
         ArrayList<MatchClause> clauses = new ArrayList<>(TBasicUtil.makeList(r, 0, 4, (ExSupplier<Optional<MatchClause>>)() -> {
             // Generate a bunch which can't match the item:
@@ -317,8 +314,8 @@ public class BackwardsMatch extends BackwardsProvider
         varContexts.add(new ArrayList<>());
         PatternInfo match = makePatternMatch(maxLevels - 1, t, actual, true);
         
-        @Nullable Expression guard = r.nextBoolean() ? null : parent.make(DataType.BOOLEAN, true, maxLevels - 1);
-        @Nullable Expression extraGuard = match.guard;
+        Expression guard = r.nextBoolean() ? null : parent.make(DataType.BOOLEAN, true, maxLevels - 1);
+        Expression extraGuard = match.guard;
         if (extraGuard != null)
             guard = (guard == null ? extraGuard : new AndExpression(Arrays.asList(extraGuard, guard)));
         PatternInfo successful = new PatternInfo(match.pattern, guard);
@@ -332,9 +329,9 @@ public class BackwardsMatch extends BackwardsProvider
     class PatternInfo
     {
         private final Expression pattern;
-        private final @Nullable Expression guard;
+        private final Expression guard;
 
-        public PatternInfo(Expression pattern, @Nullable Expression guard)
+        public PatternInfo(Expression pattern, Expression guard)
         {
             this.pattern = pattern;
             this.guard = guard;
@@ -355,7 +352,7 @@ public class BackwardsMatch extends BackwardsProvider
     }
 
     // Pattern and an optional guard
-    private PatternInfo makePatternMatch(int maxLevels, DataType t, @Value Object actual, boolean canMatchMore)
+    private PatternInfo makePatternMatch(int maxLevels, DataType t, Object actual, boolean canMatchMore)
     {
         try
         {
@@ -390,21 +387,20 @@ public class BackwardsMatch extends BackwardsProvider
                 {
                     if (r.nextBoolean())
                     {
-                        @Value TaggedValue p = (TaggedValue) actual;
+                        TaggedValue p = (TaggedValue) actual;
                         return t.apply(new SpecificDataTypeVisitor<PatternInfo>()
                         {
                             @Override
-                            @OnThread(value = Tag.Simulation, ignoreParent = true)
                             public PatternInfo tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tagTypes) throws InternalException
                             {
                                 TagType<DataType> tagType = tagTypes.get(p.getTagIndex());
-                                @Nullable DataType inner = tagType.getInner();
-                                @Nullable TaggedTypeDefinition typeDefinition = parent.getTypeManager().lookupDefinition(typeName);
+                                DataType inner = tagType.getInner();
+                                TaggedTypeDefinition typeDefinition = parent.getTypeManager().lookupDefinition(typeName);
                                 if (typeDefinition == null)
                                     throw new InternalException("Looked up type but null definition: " + typeName);
                                 if (inner == null)
                                     return new PatternInfo(TFunctionUtil.tagged(parent.getTypeManager().getUnitManager(), new TagInfo(typeDefinition, p.getTagIndex()), null, t, false), null);
-                                @Nullable @Value Object innerValue = p.getInner();
+                                Object innerValue = p.getInner();
                                 if (innerValue == null)
                                     throw new InternalException("Type says inner value but is null");
                                 PatternInfo subPattern = makePatternMatch(maxLevels, inner, innerValue, canMatchMore);
@@ -417,17 +413,17 @@ public class BackwardsMatch extends BackwardsProvider
                 }
 
                 @Override
-                public PatternInfo record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, UserException
+                public PatternInfo record(ImmutableMap<String, DataType> fields) throws InternalException, UserException
                 {
                     if (r.nextBoolean())
                     {
-                        ArrayList<Pair<@ExpressionIdentifier String, Expression>> members = new ArrayList<>();
+                        ArrayList<Pair<String, Expression>> members = new ArrayList<>();
                         ImmutableList.Builder<Expression> guards = ImmutableList.builder();
-                        @Value Record values = Utility.cast(actual, Record.class);
+                        Record values = Utility.cast(actual, Record.class);
                         // Note -- important to shuffle here not later, because we may capture a variable then use it later@
-                        ArrayList<Entry<@ExpressionIdentifier String, DataType>> entries = new ArrayList<>(fields.entrySet());
+                        ArrayList<Entry<String, DataType>> entries = new ArrayList<>(fields.entrySet());
                         Collections.shuffle(entries, new Random(r.nextLong()));
-                        for (Entry<@ExpressionIdentifier String, DataType> entry : entries)
+                        for (Entry<String, DataType> entry : entries)
                         {
                             // We don't have to match every item:
                             if (canMatchMore && members.size() >= 1 && r.nextInt(3) == 1)
@@ -482,7 +478,7 @@ public class BackwardsMatch extends BackwardsProvider
                     {
                         Expression rhsVal = parent.make(t, actual, maxLevels);
                         @SuppressWarnings("identifier")
-                        @ExpressionIdentifier String varName = "var" + nextVar++;
+                        String varName = "var" + nextVar++;
                         if (!varContexts.isEmpty())
                             varContexts.get(varContexts.size() - 1).add(new VarInfo(varName, t, actual));
                         return new PatternInfo(IdentExpression.load(varName), new EqualExpression(ImmutableList.of(IdentExpression.load(varName), rhsVal), false));
@@ -500,16 +496,14 @@ public class BackwardsMatch extends BackwardsProvider
         }
     }
 
-    @OnThread(Tag.Simulation)
-    private List<PatternInfo> makeNonMatchingPatterns(final int maxLevels, final DataType t, @Value Object actual) throws InternalException, UserException
+    private List<PatternInfo> makeNonMatchingPatterns(final int maxLevels, final DataType t, Object actual) throws InternalException, UserException
     {
         return Utility.filterOptional(TBasicUtil.<Optional<PatternInfo>>makeList(r, 1, 3, () -> Optional.ofNullable(makeNonMatchingPattern(maxLevels, t, actual))).stream()).collect(ImmutableList.toImmutableList());
     }
 
-    @OnThread(Tag.Simulation)
-    private @Nullable PatternInfo makeNonMatchingPattern(final int maxLevels, final DataType t, @Value Object actual) throws InternalException, UserException
+    private PatternInfo makeNonMatchingPattern(final int maxLevels, final DataType t, Object actual) throws InternalException, UserException
     {
-        @Value Object nonMatchingValue;
+        Object nonMatchingValue;
         int attempts = 0;
         do
         {
@@ -518,17 +512,17 @@ public class BackwardsMatch extends BackwardsProvider
                 return null;
         }
         while (Utility.compareValues(nonMatchingValue, actual) == 0);
-        @Value Object nonMatchingValueFinal = nonMatchingValue;
+        Object nonMatchingValueFinal = nonMatchingValue;
         // Add var context for pattern:
         varContexts.add(new ArrayList<>());
         PatternInfo match = makePatternMatch(maxLevels - 1, t, nonMatchingValueFinal, false);
     
-        @Nullable Expression guard = r.nextBoolean() ? null : parent.make(DataType.BOOLEAN, true, maxLevels - 1);
-        @Nullable Expression extraGuard = match.guard;
+        Expression guard = r.nextBoolean() ? null : parent.make(DataType.BOOLEAN, true, maxLevels - 1);
+        Expression extraGuard = match.guard;
         if (extraGuard != null)
             guard = (guard == null ? extraGuard : new AndExpression(Arrays.asList(extraGuard, guard)));
         varContexts.remove(varContexts.size() - 1);
-        @Nullable Expression guardFinal = guard;
+        Expression guardFinal = guard;
         return new PatternInfo(match.pattern, guardFinal);
     }
 

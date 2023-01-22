@@ -52,10 +52,8 @@ import java.util.List;
  */
 public class TransformationManager implements TransformationLoader
 {
-    @OnThread(value = Tag.Any,requireSynchronized = true)
-    private static @MonotonicNonNull TransformationManager instance;
+    private static TransformationManager instance;
 
-    @OnThread(Tag.Any)
     public synchronized static TransformationManager getInstance()
     {
         if (instance == null)
@@ -63,7 +61,6 @@ public class TransformationManager implements TransformationLoader
         return instance;
     }
 
-    @OnThread(Tag.Any)
     public List<TransformationInfo> getTransformations()
     {
         // Note: the order here is the order they are shown in the transformation edit dialog,
@@ -84,7 +81,6 @@ public class TransformationManager implements TransformationLoader
         );
     }
 
-    @OnThread(Tag.Simulation)
     @Override
     public Transformation loadOne(TableManager mgr, TableContext table, ExpressionVersion expressionVersion) throws UserException, InternalException
     {
@@ -110,7 +106,6 @@ public class TransformationManager implements TransformationLoader
     }
 
     @Override
-    @OnThread(Tag.Simulation)
     public Transformation loadOne(TableManager mgr, SaveTag saveTag, TableTransformationContext table, ExpressionVersion expressionVersion) throws UserException, InternalException
     {
         try
@@ -136,7 +131,6 @@ public class TransformationManager implements TransformationLoader
         }
     }
 
-    @OnThread(Tag.Any)
     private TransformationInfo getTransformation(String text) throws UserException
     {
         for (TransformationInfo t : getTransformations())

@@ -76,7 +76,6 @@ import java.util.Arrays;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-@OnThread(Tag.FXPlatform)
 public class EditRTransformationDialog extends ErrorableLightDialog<RDetails>
 {
     private final View parent;
@@ -221,8 +220,7 @@ public class EditRTransformationDialog extends ErrorableLightDialog<RDetails>
     }
     
     // First is tables, second is columns
-    @RequiresNonNull({"tableList", "parent"})
-    private Pair<ImmutableList<String>, ImmutableList<String>> getAvailableVars(@UnknownInitialization(Object.class) EditRTransformationDialog this)
+    private Pair<ImmutableList<String>, ImmutableList<String>> getAvailableVars(EditRTransformationDialog this)
     {
         ImmutableList.Builder<String> tableVars = ImmutableList.builder();
         ImmutableList.Builder<String> columnVars = ImmutableList.builder();
@@ -230,7 +228,7 @@ public class EditRTransformationDialog extends ErrorableLightDialog<RDetails>
         ImmutableList<String> items = tableList.getItems();
         for (String item : items)
         {
-            @ExpressionIdentifier String ident = IdentifierUtility.asExpressionIdentifier(item);
+            String ident = IdentifierUtility.asExpressionIdentifier(item);
             if (ident != null)
             {
                 TableId tableId = new TableId(ident);
@@ -261,7 +259,7 @@ public class EditRTransformationDialog extends ErrorableLightDialog<RDetails>
         ImmutableList.Builder<TableId> tables = ImmutableList.builder();
         for (String item : tableList.getItems())
         {
-            @ExpressionIdentifier String t = IdentifierUtility.asExpressionIdentifier(item);
+            String t = IdentifierUtility.asExpressionIdentifier(item);
             if (t == null)
                 return Either.<@Localized String, RDetails>left("Invalid table identifier: \"" + t + "\"");
             tables.add(new TableId(t));
@@ -273,21 +271,20 @@ public class EditRTransformationDialog extends ErrorableLightDialog<RDetails>
     }
 
 
-    @OnThread(Tag.FXPlatform)
-    private class TableList extends FancyList<@NonNull String, PickTablePane>
+    private class TableList extends FancyList<String, PickTablePane>
     {
         public TableList(ImmutableList<TableId> originalItems)
         {
             super(Utility.mapListI(originalItems, t -> t.getRaw()), true, true, true);
             getStyleClass().add("table-list");
-            listenForCellChange(new FXPlatformConsumer<ListChangeListener.Change<? extends FancyList<@NonNull String, PickTablePane>.Cell>>() {
+            listenForCellChange(new FXPlatformConsumer<ListChangeListener.Change<? extends FancyList<String, PickTablePane>.Cell>>() {
                 @Override
-                public void consume(ListChangeListener.Change<? extends FancyList<@NonNull String, PickTablePane>.Cell> c) {
+                public void consume(ListChangeListener.Change<? extends FancyList<String, PickTablePane>.Cell> c) {
                     while (c.next()) {
-                        for (FancyList<@NonNull String, PickTablePane>.Cell cell : c.getAddedSubList()) {
+                        for (FancyList<String, PickTablePane>.Cell cell : c.getAddedSubList()) {
                             focusTracker.addNode(cell.getContent());
                         }
-                        for (FancyList<@NonNull String, PickTablePane>.Cell cell : c.getRemoved()) {
+                        for (FancyList<String, PickTablePane>.Cell cell : c.getRemoved()) {
                             focusTracker.removeNode(cell.getContent());
                         }
                     }

@@ -54,14 +54,14 @@ public class BackwardsFunction extends BackwardsProvider
     }
 
     @Override
-    public List<ExpressionMaker> terminals(DataType targetType, @Value Object targetValue) throws InternalException, UserException
+    public List<ExpressionMaker> terminals(DataType targetType, Object targetValue) throws InternalException, UserException
     {
         return ImmutableList.of();
     }
 
     @SuppressWarnings("identifier")
     @Override
-    public List<ExpressionMaker> deep(int maxLevels, DataType targetType, @Value Object targetValue) throws InternalException, UserException
+    public List<ExpressionMaker> deep(int maxLevels, DataType targetType, Object targetValue) throws InternalException, UserException
     {
         return ImmutableList.of(() -> {
             Expression expression = parent.make(targetType, targetValue, maxLevels - 1);
@@ -77,7 +77,7 @@ public class BackwardsFunction extends BackwardsProvider
                 function = new LambdaExpression(Utility.mapListI(paramNames, name -> IdentExpression.load(name)), paramsAndBody.turnFormalNamesIntoBody.apply(Utility.mapListI(paramNames, name -> IdentExpression.load(name))));
             }
             
-            Either<@Recorded HasTypeExpression, Definition> definition = Either.right(new Definition(IdentExpression.load(funcName), function));
+            Either<HasTypeExpression, Definition> definition = Either.right(new Definition(IdentExpression.load(funcName), function));
             return DefineExpression.unrecorded(paramsAndBody.actualParameterTypes == null ? ImmutableList.of(definition)
                 : ImmutableList.of(Either.left(new HasTypeExpression(funcName, new TypeLiteralExpression(TypeExpression.fromDataType(DataType.function(paramsAndBody.actualParameterTypes, targetType))))), definition)
                 , new CallExpression(IdentExpression.load(funcName), paramsAndBody.callActualParameters));
@@ -87,10 +87,10 @@ public class BackwardsFunction extends BackwardsProvider
     class Functioned
     {
         private final ImmutableList<Expression> callActualParameters;
-        private final @Nullable ImmutableList<DataType> actualParameterTypes;
+        private final ImmutableList<DataType> actualParameterTypes;
         private final Function<ImmutableList<Expression>, Expression> turnFormalNamesIntoBody;
 
-        public Functioned(ImmutableList<Expression> callActualParameters, @Nullable ImmutableList<DataType> actualParameterTypes, Function<ImmutableList<Expression>, Expression> turnFormalNamesIntoBody)
+        public Functioned(ImmutableList<Expression> callActualParameters, ImmutableList<DataType> actualParameterTypes, Function<ImmutableList<Expression>, Expression> turnFormalNamesIntoBody)
         {
             this.callActualParameters = callActualParameters;
             this.actualParameterTypes = actualParameterTypes;
@@ -100,7 +100,6 @@ public class BackwardsFunction extends BackwardsProvider
     
     // Gives back list of expressions, and a function that takes replacements for those expressions and reassembles the original.
     // The idea being that you swap the originals for function parameters.
-    @OnThread(Tag.Simulation)
     private class Functioniser extends ExpressionVisitorFlat<Functioned>
     {
         private final Random random;
@@ -114,7 +113,7 @@ public class BackwardsFunction extends BackwardsProvider
         
         // Given a list of expressions, picks N of them (1 <= N <= list size) and returns those expressions, plus a function that given replacements for those expressions,
         // calls make with the right ones in the list replaced.
-        private Functioned pick(ImmutableList<Expression> expressions, @Nullable ImmutableList<DataType> paramTypes, Function<ImmutableList<Expression>, Expression> make)
+        private Functioned pick(ImmutableList<Expression> expressions, ImmutableList<DataType> paramTypes, Function<ImmutableList<Expression>, Expression> make)
         {
             int numPicked = 1 + r.nextInt(expressions.size() - 1);
 
@@ -148,7 +147,6 @@ public class BackwardsFunction extends BackwardsProvider
         }
 
         @Override
-        @OnThread(value = Tag.Simulation, ignoreParent = true)
         protected Functioned makeDef(Expression expression)
         {
             return new Functioned(ImmutableList.of(new BooleanLiteral(true)), ImmutableList.of(DataType.BOOLEAN), ps -> IfThenElseExpression.unrecorded(ps.get(0), expression, expression));
@@ -164,43 +162,37 @@ public class BackwardsFunction extends BackwardsProvider
         */
 
         @Override
-        @OnThread(value = Tag.Simulation, ignoreParent = true)
-        public Functioned addSubtract(AddSubtractExpression self, ImmutableList<@Recorded Expression> expressions, ImmutableList<AddSubtractOp> ops)
+        public Functioned addSubtract(AddSubtractExpression self, ImmutableList<Expression> expressions, ImmutableList<AddSubtractOp> ops)
         {
             return pick(expressions, ImmutableList.copyOf(Utility.replicate(expressions.size(), targetType)), es -> new AddSubtractExpression(es, ops));
         }
 
         @Override
-        @OnThread(value = Tag.Simulation, ignoreParent = true)
-        public Functioned notEqual(NotEqualExpression self, @Recorded Expression lhs, @Recorded Expression rhs)
+        public Functioned notEqual(NotEqualExpression self, Expression lhs, Expression rhs)
         {
             return pick(ImmutableList.of(lhs, rhs), null, es -> new NotEqualExpression(es.get(0), es.get(1)));
         }
 
         @Override
-        @OnThread(value = Tag.Simulation, ignoreParent = true)
-        public Functioned divide(DivideExpression self, @Recorded Expression lhs, @Recorded Expression rhs)
+        public Functioned divide(DivideExpression self, Expression lhs, Expression rhs)
         {
             return pick(ImmutableList.of(lhs, rhs), null, es -> new DivideExpression(es.get(0), es.get(1)));
         }
 
         @Override
-        @OnThread(value = Tag.Simulation, ignoreParent = true)
-        public Functioned or(OrExpression self, ImmutableList<@Recorded Expression> expressions)
+        public Functioned or(OrExpression self, ImmutableList<Expression> expressions)
         {
             return pick(expressions, ImmutableList.copyOf(Utility.replicate(expressions.size(), DataType.BOOLEAN)), es -> new OrExpression(es));
         }
 
         @Override
-        @OnThread(value = Tag.Simulation, ignoreParent = true)
-        public Functioned comparison(ComparisonExpression self, ImmutableList<@Recorded Expression> expressions, ImmutableList<ComparisonOperator> operators)
+        public Functioned comparison(ComparisonExpression self, ImmutableList<Expression> expressions, ImmutableList<ComparisonOperator> operators)
         {
             return pick(expressions, null, es -> new ComparisonExpression(es, operators));
         }
 
         @Override
-        @OnThread(value = Tag.Simulation, ignoreParent = true)
-        public Functioned multiply(TimesExpression self, ImmutableList<@Recorded Expression> expressions)
+        public Functioned multiply(TimesExpression self, ImmutableList<Expression> expressions)
         {
             return pick(expressions, null, es -> new TimesExpression(es));
         }

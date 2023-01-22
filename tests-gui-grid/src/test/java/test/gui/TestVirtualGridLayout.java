@@ -75,7 +75,6 @@ import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
 
-@RunWith(JUnitQuickcheck.class)
 public class TestVirtualGridLayout extends FXApplicationTest
 {
     public static final int WINDOW_WIDTH = 810;
@@ -86,7 +85,6 @@ public class TestVirtualGridLayout extends FXApplicationTest
     private DummySupplier dummySupplier;
 
     @Override
-    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     public void start(Stage _stage) throws Exception
     {
         super.start(_stage);
@@ -101,7 +99,6 @@ public class TestVirtualGridLayout extends FXApplicationTest
         TFXUtil.sleep(500);
     }
     
-    @Test
     public void testBlankNoLayout()
     {
         dummySupplier.layoutCount = 0;
@@ -110,7 +107,6 @@ public class TestVirtualGridLayout extends FXApplicationTest
         assertEquals(0, dummySupplier.layoutCount);
     }
 
-    @Test
     public void testCellsNoLayout()
     {
         TFXUtil.fx_(() -> {
@@ -127,7 +123,6 @@ public class TestVirtualGridLayout extends FXApplicationTest
         assertEquals(0, dummySupplier.layoutCount);
     }
 
-    @Test
     public void testCellsScroll()
     {
         TFXUtil.fx_(() -> {
@@ -176,7 +171,6 @@ public class TestVirtualGridLayout extends FXApplicationTest
         //#error TODO checking that cells are not loaded/reallocated more than needed.
     }
     
-    @Test
     public void testCellAllocation()
     {
         SimpleGridArea simpleGridArea = TFXUtil.fx(() -> new SimpleGridArea());
@@ -209,7 +203,6 @@ public class TestVirtualGridLayout extends FXApplicationTest
         }));
     }
     
-    @Test
     public void testGridLines()
     {
         SimpleGridArea simpleGridArea = TFXUtil.fx(() -> new SimpleGridArea());
@@ -266,7 +259,6 @@ public class TestVirtualGridLayout extends FXApplicationTest
         }
     }
     
-    @Test
     public void testTableMove()
     {
         SimpleGridArea simpleGridArea = TFXUtil.fx(() -> new SimpleGridArea());
@@ -291,9 +283,9 @@ public class TestVirtualGridLayout extends FXApplicationTest
                 Matcher m = posPattern.matcher(content);
                 assertTrue(content, m.matches());
                 @SuppressWarnings({"units", "nullness"})
-                @AbsColIndex int column = Integer.valueOf(m.group(1));
+                int column = Integer.valueOf(m.group(1));
                 @SuppressWarnings({"units", "nullness"})
-                @AbsRowIndex int row = Integer.valueOf(m.group(2));
+                int row = Integer.valueOf(m.group(2));
 
                 Point2D expectedLayoutPos = TFXUtil.fx(() -> {
                     VisibleBounds visibleBounds = virtualGrid.getVisibleBounds();
@@ -310,7 +302,6 @@ public class TestVirtualGridLayout extends FXApplicationTest
         }
     }
     
-    @OnThread(Tag.FXPlatform)
     private static final class BoundsGridArea extends SimpleGridArea
     {
         private final RectangleBounds origBounds;
@@ -358,7 +349,6 @@ public class TestVirtualGridLayout extends FXApplicationTest
         return new RectangleBounds(new CellPosition(CellPosition.row(y0), CellPosition.col(x0)), new CellPosition(CellPosition.row(y1), CellPosition.col(x1)));
     }
     
-    @Test
     public void testOverlap1()
     {
         checkOverlap(ImmutableList.of(
@@ -368,7 +358,6 @@ public class TestVirtualGridLayout extends FXApplicationTest
         ));
     }
 
-    @Test
     public void testOverlap2()
     {
         checkOverlap(ImmutableList.of(
@@ -379,8 +368,7 @@ public class TestVirtualGridLayout extends FXApplicationTest
         ));
     }
     
-    @Property(trials = 30)
-    public void testOverlap(@From(GenRandom.class) Random r)
+    public void testOverlap(Random r)
     {
         ArrayList<RectangleBounds> gridAreas = new ArrayList<>();
         for (int i = 0; i < 20; i++)
@@ -455,13 +443,13 @@ public class TestVirtualGridLayout extends FXApplicationTest
         }
 
         @Override
-        public OptionalDouble getPrefColumnWidth(@AbsColIndex int colIndex)
+        public OptionalDouble getPrefColumnWidth(int colIndex)
         {
             return OptionalDouble.empty();
         }
 
         @Override
-        protected @Nullable Pair<ItemState, @Nullable StyledString> getItemState(CellPosition cellPosition, Point2D screenPosition)
+        protected Pair<ItemState, StyledString> getItemState(CellPosition cellPosition, Point2D screenPosition)
         {
             return null;
         }
@@ -488,19 +476,19 @@ public class TestVirtualGridLayout extends FXApplicationTest
         }
 
         @Override
-        public OptionalDouble getPrefColumnWidth(@AbsColIndex int colIndex)
+        public OptionalDouble getPrefColumnWidth(int colIndex)
         {
             return OptionalDouble.empty();
         }
 
         @Override
-        protected @OnThread(Tag.FX) void adjustStyle(Label item, String style, boolean on)
+        protected void adjustStyle(Label item, String style, boolean on)
         {
 
         }
 
         @Override
-        protected @Nullable Pair<ItemState, @Nullable StyledString> getItemState(Label item, Point2D screenPos)
+        protected Pair<ItemState, StyledString> getItemState(Label item, Point2D screenPos)
         {
             return new Pair<>(ItemState.NOT_CLICKABLE, null);
         }
@@ -511,7 +499,6 @@ public class TestVirtualGridLayout extends FXApplicationTest
         }
     }
 
-    @OnThread(Tag.FXPlatform)
     private static class SimpleGridArea extends GridArea implements GridCellInfo<Label,String>
     {
         private static int nextId = 0;
@@ -524,7 +511,7 @@ public class TestVirtualGridLayout extends FXApplicationTest
         }
         
         @Override
-        protected @OnThread(Tag.FXPlatform) void updateKnownRows(@GridAreaRowIndex int checkUpToRowIncl, FXPlatformRunnable updateSizeAndPositions)
+        protected void updateKnownRows(int checkUpToRowIncl, FXPlatformRunnable updateSizeAndPositions)
         {
             
         }
@@ -536,7 +523,7 @@ public class TestVirtualGridLayout extends FXApplicationTest
         }
 
         @Override
-        public @Nullable CellSelection getSelectionForSingleCell(CellPosition cellPosition)
+        public CellSelection getSelectionForSingleCell(CellPosition cellPosition)
         {
             return null;
         }
@@ -548,7 +535,7 @@ public class TestVirtualGridLayout extends FXApplicationTest
         }
 
         @Override
-        public @Nullable GridAreaCellPosition cellAt(CellPosition cellPosition)
+        public GridAreaCellPosition cellAt(CellPosition cellPosition)
         {
             if (contains(cellPosition))
                 return GridAreaCellPosition.relativeFrom(cellPosition, getPosition());
@@ -563,7 +550,7 @@ public class TestVirtualGridLayout extends FXApplicationTest
         }
 
         @Override
-        public void fetchFor(GridAreaCellPosition cellPosition, FXPlatformFunction<CellPosition, @Nullable Label> getCell, FXPlatformRunnable scheduleStyleTogether)
+        public void fetchFor(GridAreaCellPosition cellPosition, FXPlatformFunction<CellPosition, Label> getCell, FXPlatformRunnable scheduleStyleTogether)
         {
             fetches.add(cellPosition);
             Label label = getCell.apply(cellPosition.from(getPosition()));

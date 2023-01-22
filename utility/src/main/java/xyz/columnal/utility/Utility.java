@@ -127,47 +127,46 @@ public class Utility
     public static final String MRU_FILE_NAME = "recent.mru";
     public static final ReentrantLock saveLock = new ReentrantLock();
 
-    public static <T, R> List<@NonNull R> mapList(List<@NonNull T> list, Function<@NonNull T, @NonNull R> func)
+    public static <T, R> List<R> mapList(List<T> list, Function<T, R> func)
     {
-        ArrayList<@NonNull R> r = new ArrayList<>(list.size());
+        ArrayList<R> r = new ArrayList<>(list.size());
         for (T t : list)
             r.add(func.apply(t));
         return r;
     }
 
-    public static <T, R> ImmutableList<@NonNull R> mapListI(List<@NonNull T> list, Function<@NonNull T, @NonNull R> func)
+    public static <T, R> ImmutableList<R> mapListI(List<T> list, Function<T, R> func)
     {
-        ImmutableList.Builder<@NonNull R> r = ImmutableList.builderWithExpectedSize(list.size());
+        ImmutableList.Builder<R> r = ImmutableList.builderWithExpectedSize(list.size());
         for (T t : list)
             r.add(func.apply(t));
         return r.build();
     }
 
-    public static <T, R> ImmutableList<@NonNull R> mapListInt(List<@NonNull T> list, FunctionInt<@NonNull T, @NonNull R> func) throws InternalException
+    public static <T, R> ImmutableList<R> mapListInt(List<T> list, FunctionInt<T, R> func) throws InternalException
     {
-        ImmutableList.Builder<@NonNull R> r = ImmutableList.builderWithExpectedSize(list.size());
+        ImmutableList.Builder<R> r = ImmutableList.builderWithExpectedSize(list.size());
         for (T t : list)
             r.add(func.apply(t));
         return r.build();
     }
 
-    public static <T, R> List<@NonNull R> mapListEx(List<@NonNull T> list, ExFunction<@NonNull T, @NonNull R> func) throws InternalException, UserException
+    public static <T, R> List<R> mapListEx(List<T> list, ExFunction<T, R> func) throws InternalException, UserException
     {
-        ArrayList<@NonNull R> r = new ArrayList<>(list.size());
+        ArrayList<R> r = new ArrayList<>(list.size());
         for (T t : list)
             r.add(func.apply(t));
         return r;
     }
 
-    public static <T, R> ImmutableList<@NonNull R> mapListExI(List<@NonNull T> list, ExFunction<@NonNull T, @NonNull R> func) throws InternalException, UserException
+    public static <T, R> ImmutableList<R> mapListExI(List<T> list, ExFunction<T, R> func) throws InternalException, UserException
     {
-        return ImmutableList.<@NonNull R>copyOf(Utility.<T, R>mapListEx(list, func));
+        return ImmutableList.<R>copyOf(Utility.<T, R>mapListEx(list, func));
     }
 
-    @OnThread(Tag.Simulation)
-    public static <R> ImmutableList<@NonNull R> mapListExI(ListEx list, ExFunction<@NonNull @Value Object, @NonNull R> func) throws InternalException, UserException
+    public static <R> ImmutableList<R> mapListExI(ListEx list, ExFunction<Object, R> func) throws InternalException, UserException
     {
-        ArrayList<@NonNull R> r = new ArrayList<>(list.size());
+        ArrayList<R> r = new ArrayList<>(list.size());
         for (int i = 0; i < list.size(); i++)
         {
             r.add(func.apply(list.get(i)));
@@ -195,10 +194,10 @@ public class Utility
         return ImmutableList.<R>copyOf(r);
     }
 
-    public static <T, R> @NonNull R @NonNull [] mapArray(Class<R> cls, @NonNull T @NonNull [] src, Function<@NonNull T, @NonNull R> func)
+    public static <T, R> R[] mapArray(Class<R> cls, T[] src, Function<T, R> func)
     {
         @SuppressWarnings("unchecked")
-        @NonNull R @NonNull [] r = (@NonNull R @NonNull [])Array.newInstance(cls, src.length);
+        R[] r = (R[])Array.newInstance(cls, src.length);
         for (int i = 0; i < src.length; i++)
         {
             r[i] = func.apply(src[i]);
@@ -206,27 +205,27 @@ public class Utility
         return r;
     }
     
-    public static <K, T, R> ImmutableMap<@NonNull K, @NonNull R> mapValues(Map<@NonNull K, @NonNull T> original, Function<@NonNull T, @NonNull R> apply)
+    public static <K, T, R> ImmutableMap<K, R> mapValues(Map<K, T> original, Function<T, R> apply)
     {
-        ImmutableMap.Builder<@NonNull K, @NonNull R> r = ImmutableMap.builderWithExpectedSize(original.size());
+        ImmutableMap.Builder<K, R> r = ImmutableMap.builderWithExpectedSize(original.size());
         original.forEach((k, v) -> r.put(k, apply.apply(v)));
         return r.build();
     }
 
-    public static <K, T, R> ImmutableMap<@NonNull K, @NonNull R> mapValuesInt(Map<@NonNull K, @NonNull T> original, FunctionInt<@NonNull T, @NonNull R> apply) throws InternalException
+    public static <K, T, R> ImmutableMap<K, R> mapValuesInt(Map<K, T> original, FunctionInt<T, R> apply) throws InternalException
     {
-        ImmutableMap.Builder<@NonNull K, @NonNull R> r = ImmutableMap.builderWithExpectedSize(original.size());
-        for (Entry<@NonNull K, @NonNull T> entry : original.entrySet())
+        ImmutableMap.Builder<K, R> r = ImmutableMap.builderWithExpectedSize(original.size());
+        for (Entry<K, T> entry : original.entrySet())
         {
             r.put(entry.getKey(), apply.apply(entry.getValue()));
         }
         return r.build();
     }
 
-    public static <K, T, R> ImmutableMap<@NonNull K, @NonNull R> mapValuesEx(Map<@NonNull K, @NonNull T> original, ExFunction<@NonNull T, @NonNull R> apply) throws InternalException, UserException
+    public static <K, T, R> ImmutableMap<K, R> mapValuesEx(Map<K, T> original, ExFunction<T, R> apply) throws InternalException, UserException
     {
-        ImmutableMap.Builder<@NonNull K, @NonNull R> r = ImmutableMap.builderWithExpectedSize(original.size());
-        for (Entry<@NonNull K, @NonNull T> entry : original.entrySet())
+        ImmutableMap.Builder<K, R> r = ImmutableMap.builderWithExpectedSize(original.size());
+        for (Entry<K, T> entry : original.entrySet())
         {
             r.put(entry.getKey(), apply.apply(entry.getValue()));
         }
@@ -279,8 +278,7 @@ public class Utility
         return items;
     }
 
-    @OnThread(Tag.FX)
-    public static void addStyleClass(@UnknownInitialization(Styleable.class) Styleable styleable, String... classes)
+    public static void addStyleClass(Styleable styleable, String... classes)
     {
         styleable.getStyleClass().addAll(classes);
     }
@@ -290,9 +288,7 @@ public class Utility
         return new Point2D((bounds.getMinX() + bounds.getMaxX()) * 0.5, (bounds.getMinY() + bounds.getMaxY()) * 0.5);
     }
 
-    @Pure
-    @OnThread(Tag.Simulation)
-    public static int compareLists(List<@NonNull @Value ?> a, List<@NonNull @Value ?> b) throws InternalException, UserException
+    public static int compareLists(List<?> a, List<?> b) throws InternalException, UserException
     {
         return compareLists(a, b, null);
     }
@@ -315,16 +311,14 @@ public class Utility
      * of the same type (e.g. String, Temporal, etc). Numbers are compared using compareNumbers;
      * see that method for more details.
      */
-    @Pure
-    @OnThread(Tag.Simulation)
-    public static int compareLists(List<@NonNull @Value ?> a, List<@NonNull @Value ?> b, @Nullable Pair<EpsilonType, BigDecimal> epsilon) throws InternalException, UserException
+    public static int compareLists(List<?> a, List<?> b, Pair<EpsilonType, BigDecimal> epsilon) throws InternalException, UserException
     {
         for (int i = 0; i < a.size(); i++)
         {
             if (i >= b.size())
                 return 1; // A was larger
-            @Value Object ax = a.get(i);
-            @Value Object bx = b.get(i);
+            Object ax = a.get(i);
+            Object bx = b.get(i);
             int cmp = compareValues(ax, bx, epsilon);
             if (cmp != 0)
                 return cmp;
@@ -336,16 +330,14 @@ public class Utility
             return -1; // B must have been longer
     }
 
-    @Pure
-    @OnThread(Tag.Simulation)
-    public static int compareLists(ListEx a, ListEx b, @Nullable Pair<EpsilonType, BigDecimal> epsilon) throws InternalException, UserException
+    public static int compareLists(ListEx a, ListEx b, Pair<EpsilonType, BigDecimal> epsilon) throws InternalException, UserException
     {
         for (int i = 0; i < a.size(); i++)
         {
             if (i >= b.size())
                 return 1; // A was larger
-            @Value Object ax = a.get(i);
-            @Value Object bx = b.get(i);
+            Object ax = a.get(i);
+            Object bx = b.get(i);
             int cmp = compareValues(ax, bx, epsilon);
             if (cmp != 0)
                 return cmp;
@@ -357,14 +349,12 @@ public class Utility
             return -1; // B must have been longer
     }
 
-    @OnThread(Tag.Simulation)
-    public static int compareValues(@Value Object ax, @Value Object bx) throws InternalException, UserException
+    public static int compareValues(Object ax, Object bx) throws InternalException, UserException
     {
         return compareValues(ax, bx, null);
     }
 
-    @OnThread(Tag.Simulation)
-    public static int compareValues(@Value Object ax, @Value Object bx, @Nullable Pair<EpsilonType, BigDecimal> epsilon) throws InternalException, UserException
+    public static int compareValues(Object ax, Object bx, Pair<EpsilonType, BigDecimal> epsilon) throws InternalException, UserException
     {
         int cmp;
         if (ax instanceof Number)
@@ -387,30 +377,30 @@ public class Utility
         }
         else if (ax instanceof TaggedValue)
         {
-            @Value TaggedValue at = cast(ax, TaggedValue.class);
-            @Value TaggedValue bt = cast(bx, TaggedValue.class);
+            TaggedValue at = cast(ax, TaggedValue.class);
+            TaggedValue bt = cast(bx, TaggedValue.class);
             cmp = Integer.compare(at.getTagIndex(), bt.getTagIndex());
             if (cmp != 0)
                 return cmp;
-            @Value Object a2 = at.getInner();
-            @Value Object b2 = bt.getInner();
+            Object a2 = at.getInner();
+            Object b2 = bt.getInner();
             if (a2 != null && b2 != null)
                 return compareValues(a2, b2, epsilon);
             return 0; // Assume bx null too, if types match.
         }
         else if (ax instanceof Record)
         {
-            @Value Record ao = cast(ax, Record.class);
-            @Value Record bo = cast(bx, Record.class);
-            ImmutableList<Entry<@ExpressionIdentifier String, @Value Object>> aoByName = ao.getFullContent().entrySet().stream().sorted(Comparator.<Entry<@ExpressionIdentifier String, @Value Object>, @ExpressionIdentifier String>comparing(e -> e.getKey())).collect(ImmutableList.<Entry<@ExpressionIdentifier String, @Value Object>>toImmutableList());
-            ImmutableList<Entry<@ExpressionIdentifier String, @Value Object>> boByName = bo.getFullContent().entrySet().stream().sorted(Comparator.<Entry<@ExpressionIdentifier String, @Value Object>, @ExpressionIdentifier String>comparing(e -> e.getKey())).collect(ImmutableList.<Entry<@ExpressionIdentifier String, @Value Object>>toImmutableList());
+            Record ao = cast(ax, Record.class);
+            Record bo = cast(bx, Record.class);
+            ImmutableList<Entry<String, Object>> aoByName = ao.getFullContent().entrySet().stream().sorted(Comparator.<Entry<String, Object>, String>comparing(e -> e.getKey())).collect(ImmutableList.<Entry<String, Object>>toImmutableList());
+            ImmutableList<Entry<String, Object>> boByName = bo.getFullContent().entrySet().stream().sorted(Comparator.<Entry<String, Object>, String>comparing(e -> e.getKey())).collect(ImmutableList.<Entry<String, Object>>toImmutableList());
             
             if (aoByName.size() != boByName.size())
                 throw new InternalException("Trying to compare records of different size");
             for (int i = 0; i < aoByName.size(); i++)
             {
-                Entry<@ExpressionIdentifier String, @Value Object> ae = aoByName.get(i);
-                Entry<@ExpressionIdentifier String, @Value Object> be = boByName.get(i);
+                Entry<String, Object> ae = aoByName.get(i);
+                Entry<String, Object> be = boByName.get(i);
                 if (!ae.getKey().equals(be.getKey()))
                     throw new InternalException("Record field names do not match: " + ae.getKey() + " vs " + be.getKey());
                 cmp = compareValues(ae.getValue(), be.getValue(), epsilon);
@@ -482,12 +472,12 @@ public class Utility
             return 0;
     }
 
-    public static @Value Number getIntegerPart(@Value Number number)
+    public static Number getIntegerPart(Number number)
     {
         if (number instanceof BigDecimal)
         {
             @SuppressWarnings("valuetype")
-            @Value BigDecimal bigDecimal = new BigDecimal(((BigDecimal) number).toBigInteger());
+            BigDecimal bigDecimal = new BigDecimal(((BigDecimal) number).toBigInteger());
             return bigDecimal;
         }
         else
@@ -495,7 +485,7 @@ public class Utility
     }
 
     @SuppressWarnings("valuetype")
-    public static @Value BigDecimal toBigDecimal(@Value Number n)
+    public static BigDecimal toBigDecimal(Number n)
     {
         if (n instanceof BigDecimal)
             return (BigDecimal) n;
@@ -554,7 +544,7 @@ public class Utility
      * If the key was already in the map, it will be replaced, and the new value will still appear at the end.
      * Additionally, removeKey will be removed if it is present.
      */
-    public static <K, V> ImmutableMap<K, V> appendToMap(Map<K, V> data, K key, V value, @Nullable K removeKey)
+    public static <K, V> ImmutableMap<K, V> appendToMap(Map<K, V> data, K key, V value, K removeKey)
     {
         ImmutableMap.Builder<K, V> builder = ImmutableMap.builderWithExpectedSize(data.size() + 1);
         for (Entry<K, V> entry : data.entrySet())
@@ -585,13 +575,13 @@ public class Utility
     }
     
     @SuppressWarnings("optional")
-    public static @ImmediateValue Number parseNumber(String number) throws UserException
+    public static Number parseNumber(String number) throws UserException
     {
         return parseNumberOpt(number).orElseThrow(() -> new UserException("Problem parsing number \"" + number + "\""));
     }
 
     @SuppressWarnings("valuetype")
-    public static Optional<@ImmediateValue Number> parseNumberOpt(String number)
+    public static Optional<Number> parseNumberOpt(String number)
     {
         // First try as a long:
         try
@@ -661,7 +651,7 @@ public class Utility
     }
 
     @SuppressWarnings("valuetype")
-    public static @Value Number negate(@Value Number n)
+    public static Number negate(Number n)
     {
         if (n instanceof BigDecimal)
             return toBigDecimal(n).negate(MathContext.DECIMAL128);
@@ -671,7 +661,7 @@ public class Utility
     
     // If !add, subtract
     @SuppressWarnings("valuetype")
-    public static @Value Number addSubtractNumbers(@Value Number lhs, @Value Number rhs, boolean add)
+    public static Number addSubtractNumbers(Number lhs, Number rhs, boolean add)
     {
         if (lhs instanceof BigDecimal || rhs instanceof BigDecimal)
         {
@@ -697,7 +687,7 @@ public class Utility
     }
 
     @SuppressWarnings("valuetype")
-    public static @Value Number multiplyNumbers(@Value Number lhs, @Value Number rhs)
+    public static Number multiplyNumbers(Number lhs, Number rhs)
     {
         if (lhs instanceof BigDecimal || rhs instanceof BigDecimal)
         {
@@ -717,11 +707,11 @@ public class Utility
     }
 
     @SuppressWarnings("valuetype")
-    public static @Value Number divideNumbers(@Value Number lhs, @Value Number rhs) throws UserException
+    public static Number divideNumbers(Number lhs, Number rhs) throws UserException
     {
         if (lhs instanceof BigDecimal || rhs instanceof BigDecimal)
         {
-            @Value BigDecimal denom = toBigDecimal(rhs);
+            BigDecimal denom = toBigDecimal(rhs);
             if (denom.compareTo(BigDecimal.ZERO) == 0)
                 throw new UserException("Division by zero");
             else
@@ -740,7 +730,7 @@ public class Utility
     }
 
     @SuppressWarnings("valuetype")
-    public static @Value Number raiseNumber(@Value Number lhs, @Value Number rhs) throws UserException
+    public static Number raiseNumber(Number lhs, Number rhs) throws UserException
     {
         // It must fit in an int and not be massive/tiny:
         if (((rhs instanceof BigDecimal && !rhs.equals(BigDecimal.valueOf(((BigDecimal)rhs).intValue())))
@@ -775,7 +765,7 @@ public class Utility
     }
 
     @SuppressWarnings("valuetype")
-    public static <T> T withNumber(@Value Object num, ExFunction<@Value Long, T> withLong, ExFunction<@Value BigDecimal, T> withBigDecimal) throws InternalException, UserException
+    public static <T> T withNumber(Object num, ExFunction<Long, T> withLong, ExFunction<BigDecimal, T> withBigDecimal) throws InternalException, UserException
     {
         if (num instanceof BigDecimal)
             return withBigDecimal.apply(Utility.cast(num, BigDecimal.class));
@@ -783,7 +773,7 @@ public class Utility
             return withLong.apply(Utility.cast(num, Number.class).longValue());
     }
 
-    public static <T> T withNumberInt(@Value Object num, FunctionInt<Long, T> withLong, FunctionInt<BigDecimal, T> withBigDecimal) throws InternalException
+    public static <T> T withNumberInt(Object num, FunctionInt<Long, T> withLong, FunctionInt<BigDecimal, T> withBigDecimal) throws InternalException
     {
         if (num instanceof BigDecimal)
             return withBigDecimal.apply(Utility.cast(num, BigDecimal.class));
@@ -791,7 +781,7 @@ public class Utility
             return withLong.apply(Utility.cast(num, Number.class).longValue());
     }
 
-    public static boolean isIntegral(@Value Object o) throws InternalException
+    public static boolean isIntegral(Object o) throws InternalException
     {
         // From http://stackoverflow.com/a/12748321/412908
         return withNumberInt(o, x -> true, bd -> {
@@ -823,7 +813,7 @@ public class Utility
     }
 
     @SuppressWarnings("valuetype")
-    public static @Value ListEx valueList(@Value Object value) throws InternalException
+    public static ListEx valueList(Object value) throws InternalException
     {
         if (!(value instanceof ListEx))
             throw new InternalException("Unexpected type problem: expected list but found " + value.getClass());
@@ -831,15 +821,14 @@ public class Utility
     }
 
     @SuppressWarnings("valuetype")
-    public static @Value Record valueRecord(@Value Object value) throws InternalException
+    public static Record valueRecord(Object value) throws InternalException
     {
         if (!(value instanceof Record))
             throw new InternalException("Unexpected type problem: expected record but found " + value.getClass());
         return (Record) value;
     }
 
-    @OnThread(Tag.Simulation)
-    public static @Value Object getAtIndex(@Value ListEx objects, @UserIndex int userIndex) throws UserException, InternalException
+    public static Object getAtIndex(ListEx objects, int userIndex) throws UserException, InternalException
     {
         if (userIndex < 1)
             throw new UserException("List index " + userIndex + " out of bounds, should be between 1 and " + objects.size() + " (inclusive)");
@@ -854,44 +843,44 @@ public class Utility
         }
     }
 
-    public static @Value Number valueNumber(@Value Object o) throws InternalException
+    public static Number valueNumber(Object o) throws InternalException
     {
         if (o instanceof Number)
-            return (@Value Number)o;
+            return (Number)o;
         throw new InternalException("Expected number but found " + o.getClass());
     }
 
-    public static @Value Boolean valueBoolean(@Value Object o) throws InternalException
+    public static Boolean valueBoolean(Object o) throws InternalException
     {
         if (o instanceof Boolean)
-            return (@Value Boolean)o;
+            return (Boolean)o;
         throw new InternalException("Expected boolean but found " + o.getClass());
     }
 
-    public static @Value String valueString(@Value Object o) throws InternalException
+    public static String valueString(Object o) throws InternalException
     {
         if (o instanceof String)
-            return (@Value String)o;
+            return (String)o;
         throw new InternalException("Expected text but found " + o.getClass());
     }
 
-    public static @Value TemporalAccessor valueTemporal(@Value Object o) throws InternalException
+    public static TemporalAccessor valueTemporal(Object o) throws InternalException
     {
         if (o instanceof TemporalAccessor)
-            return (@Value TemporalAccessor)o;
+            return (TemporalAccessor)o;
         throw new InternalException("Expected temporal but found " + o.getClass());
     }
 
-    public static @Value TaggedValue valueTagged(@Value Object o) throws InternalException
+    public static TaggedValue valueTagged(Object o) throws InternalException
     {
         if (o instanceof TaggedValue)
-            return (@Value TaggedValue)o;
+            return (TaggedValue)o;
         throw new InternalException("Expected tagged value but found " + o.getClass());
     }
 
     // Like indexOf on lists, but uses only reference equality, and thus doesn't mind about initialization
     @SuppressWarnings("interned")
-    public static <T> int indexOfRef(List<T> list, @UnknownInitialization T item)
+    public static <T> int indexOfRef(List<T> list, T item)
     {
         for (int i = 0; i < list.size(); i++)
         {
@@ -901,8 +890,7 @@ public class Utility
         return -1;
     }
 
-    @Pure
-    public static <T> boolean containsRef(List<T> list, @UnknownInitialization T item)
+    public static <T> boolean containsRef(List<T> list, T item)
     {
         return indexOfRef(list, item) != -1;
     }
@@ -925,7 +913,6 @@ public class Utility
         };
     }
 
-    @OnThread(Tag.FXPlatform)
     public static void usedFile(File src)
     {
         ArrayList<File> mruList = new ArrayList<>(readRecentFilesList());
@@ -939,7 +926,7 @@ public class Utility
 
         try
         {
-            List<@NonNull File> newContent = Utility.mapList(mruList, File::getAbsoluteFile);
+            List<File> newContent = Utility.mapList(mruList, File::getAbsoluteFile);
             FileUtils.writeLines(new File(getStorageDirectory(), MRU_FILE_NAME), "UTF-8", newContent);
         }
         catch (IOException e)
@@ -949,15 +936,15 @@ public class Utility
     }
 
     // If item is null, returns empty stream, otherwise stream containing that item
-    public static <T> Stream<@NonNull T> streamNullable(@Nullable T item)
+    public static <T> Stream<T> streamNullable(T item)
     {
         return item == null ? Stream.empty() : Stream.of(item);
     }
 
     // Returns stream of all non-null values
-    public static <T> Stream<@NonNull T> streamNullable(@Nullable T a, @Nullable T b)
+    public static <T> Stream<T> streamNullable(T a, T b)
     {
-        List<@NonNull T> r = new ArrayList<>();
+        List<T> r = new ArrayList<>();
         if (a != null)
             r.add(a);
         if (b != null)
@@ -966,9 +953,9 @@ public class Utility
     }
 
     // Returns stream of all non-null values
-    public static <T> Stream<@NonNull T> streamNullable(@Nullable T a, @Nullable T b, @Nullable T c)
+    public static <T> Stream<T> streamNullable(T a, T b, T c)
     {
-        List<@NonNull T> r = new ArrayList<>();
+        List<T> r = new ArrayList<>();
         if (a != null)
             r.add(a);
         if (b != null)
@@ -979,9 +966,9 @@ public class Utility
     }
 
     // Returns stream of all non-null values
-    public static <T> Stream<@NonNull T> streamNullable(@Nullable T a, @Nullable T b, @Nullable T c, @Nullable T d)
+    public static <T> Stream<T> streamNullable(T a, T b, T c, T d)
     {
-        List<@NonNull T> r = new ArrayList<>();
+        List<T> r = new ArrayList<>();
         if (a != null)
             r.add(a);
         if (b != null)
@@ -1029,14 +1016,14 @@ public class Utility
     /**
      * Filters a stream down to only the items of the given class
      */
-    public static <S, T extends S /*precludes interfaces*/> Stream<@NonNull T> filterClass(Stream<@NonNull S> stream, Class<T> targetClass)
+    public static <S, T extends S /*precludes interfaces*/> Stream<T> filterClass(Stream<S> stream, Class<T> targetClass)
     {
-        return stream.<@NonNull T>flatMap(x ->
+        return stream.<T>flatMap(x ->
         {
             if (targetClass.isInstance(x))
-                return Stream.<@NonNull T>of(targetClass.cast(x));
+                return Stream.<T>of(targetClass.cast(x));
             else
-                return Stream.<@NonNull T>empty();
+                return Stream.<T>empty();
         });
     }
     
@@ -1051,7 +1038,7 @@ public class Utility
         return stream.filter(x -> x != null);
     }
 
-    public static <T extends @NonNull Object> Stream<T> filterOptional(Stream<Optional<T>> stream)
+    public static <T extends Object> Stream<T> filterOptional(Stream<Optional<T>> stream)
     {
         return stream.flatMap(Optional::stream);
     }
@@ -1102,7 +1089,7 @@ public class Utility
     }
 
     @SuppressWarnings("valuetype") // Input is @Value, so output will be too
-    public static <T> @Value T cast(@Value Object x, Class<T> cls) throws InternalException
+    public static <T> T cast(Object x, Class<T> cls) throws InternalException
     {
         if (cls.isInstance(x))
         {
@@ -1111,7 +1098,7 @@ public class Utility
         throw new InternalException("Cannot cast " + x.getClass() + " into " + cls);
     }
 
-    public static <T> @Nullable T castOrNull(@Nullable Object x, Class<T> cls)
+    public static <T> T castOrNull(Object x, Class<T> cls)
     {
         if (cls.isInstance(x))
         {
@@ -1121,7 +1108,7 @@ public class Utility
     }
 
     @SuppressWarnings("valuetype")
-    public static @Value Object @Value [] castTuple(@Value Object x, int tupleSize) throws InternalException
+    public static Object[] castTuple(Object x, int tupleSize) throws InternalException
     {
         Object[] tuple = cast(x, Object[].class);
         if (tuple.length != tupleSize)
@@ -1129,13 +1116,13 @@ public class Utility
         return tuple;
     }
 
-    public static @Value Object replaceNull(@Nullable @Value Object x, @Value Object y)
+    public static Object replaceNull(Object x, Object y)
     {
         return x == null ? y : x;
     }
     
     // Could this be merged with replaceNull, above?
-    public static <T> T orElse(@Nullable T x, T y)
+    public static <T> T orElse(T x, T y)
     {
         return x != null ? x : y; 
     }
@@ -1218,7 +1205,7 @@ public class Utility
         return count;
     }
 
-    public static <T> Optional<T> getLast(List<@NonNull T> list)
+    public static <T> Optional<T> getLast(List<T> list)
     {
         return list.isEmpty() ? Optional.empty() : Optional.of(list.get(list.size() - 1));
     }
@@ -1336,40 +1323,40 @@ public class Utility
 
     // If item present in map, wrap it in optional, otherwise return empty optional
     // Added bonus: this method is type-safe in the key type, unlike Map.get.
-    public static <K extends @NonNull Object, V> Optional<V> getIfPresent(Map<K, V> map, K key)
+    public static <K extends Object, V> Optional<V> getIfPresent(Map<K, V> map, K key)
     {
         // We can't use Optional.ofNullable because the checker (wrongly IMO) rejects that:
-        @Nullable V value = map.get(key);
+        V value = map.get(key);
         if (value != null)
             return Optional.of(value);
         else
             return Optional.empty();
     }
 
-    public static @AbsRowIndex int minRow(@AbsRowIndex int a, @AbsRowIndex int b)
+    public static int minRow(int a, int b)
     {
         return (a <= b) ? a : b;
     }
     
-    public static @AbsRowIndex int maxRow(@AbsRowIndex int a, @AbsRowIndex int b)
+    public static int maxRow(int a, int b)
     {
         return (a >= b) ? a : b;
     }
 
-    public static @AbsColIndex int minCol(@AbsColIndex int a, @AbsColIndex int b)
+    public static int minCol(int a, int b)
     {
         return (a <= b) ? a : b;
     }
 
-    public static @AbsColIndex int maxCol(@AbsColIndex int a, @AbsColIndex int b)
+    public static int maxCol(int a, int b)
     {
         return (a >= b) ? a : b;
     }
 
-    public static <T extends @NonNull Object> @Initialized T later(@UnknownInitialization T t)
+    public static <T extends Object> T later(T t)
     {
         @SuppressWarnings("assignment")
-        @Initialized T r = t; 
+        T r = t; 
         return r;
     }
 
@@ -1679,7 +1666,7 @@ public class Utility
             //Files.lines(file.toPath(), charset).skip(firstLine).iterator();
         }
 
-        public @Nullable String nextLine() throws IOException
+        public String nextLine() throws IOException
         {
             return lineStream.hasNext() ? lineStream.next() : null;
         }
@@ -1702,7 +1689,7 @@ public class Utility
         }
     }
 
-    public static ReadState readColumnChunk(ReadState readState, @Nullable String delimiter, @Nullable String quote, int columnIndex, ArrayList<String> fill) throws IOException
+    public static ReadState readColumnChunk(ReadState readState, String delimiter, String quote, int columnIndex, ArrayList<String> fill) throws IOException
     {
         // This would send us into an infinite loop, so guard against it:
         if (quote != null && quote.isEmpty())
@@ -1724,7 +1711,7 @@ public class Utility
                 int currentColStart = 0;
                 boolean inQuote = false;
                 // If null, unused for this column:
-                @Nullable StringBuilder withoutQuotes = null;
+                StringBuilder withoutQuotes = null;
                 for (int i = 0; i < line.length(); i++)
                 {
                     if (!inQuote && line.regionMatches(i, delimiter, 0, delimiter.length()))
@@ -1809,7 +1796,7 @@ public class Utility
     
     public static enum EpsilonType { ABSOLUTE, RELATIVE };
 
-    public static int compareNumbers(final Number a, final Number b, @Nullable Pair<EpsilonType, BigDecimal> epsilon)
+    public static int compareNumbers(final Number a, final Number b, Pair<EpsilonType, BigDecimal> epsilon)
     {
         if (a instanceof BigDecimal || b instanceof BigDecimal || epsilon != null)
         {
@@ -1876,37 +1863,37 @@ public class Utility
     
     public static abstract class Record
     {
-        public abstract @Value Object getField(@ExpressionIdentifier String name) throws InternalException;
+        public abstract Object getField(String name) throws InternalException;
         
-        public abstract ImmutableMap<@ExpressionIdentifier String, @Value Object> getFullContent() throws InternalException;
+        public abstract ImmutableMap<String, Object> getFullContent() throws InternalException;
     }
     
     public static final class RecordMap extends Record
     {
-        private final ImmutableMap<@ExpressionIdentifier String, @Value Object> values;
+        private final ImmutableMap<String, Object> values;
 
-        public RecordMap(Map<@ExpressionIdentifier String, @Value Object> values)
+        public RecordMap(Map<String, Object> values)
         {
             this.values = ImmutableMap.copyOf(values);
         }
         
         @SuppressWarnings("valuetype")
-        public static @ImmediateValue RecordMap immediate(Map<@ExpressionIdentifier String, @ImmediateValue Object> values)
+        public static RecordMap immediate(Map<String, Object> values)
         {
             return new RecordMap(values);
         }
 
         @Override
-        public @Value Object getField(@ExpressionIdentifier String name) throws InternalException
+        public Object getField(String name) throws InternalException
         {
-            @Value Object value = values.get(name);
+            Object value = values.get(name);
             if (value == null)
                 throw new InternalException("Record unexpectedly lacking field: \"" + name + "\"");
             return value;
         }
 
         @Override
-        public ImmutableMap<@ExpressionIdentifier String, @Value Object> getFullContent() throws InternalException
+        public ImmutableMap<String, Object> getFullContent() throws InternalException
         {
             return values;
         }
@@ -1926,14 +1913,12 @@ public class Utility
     {
     }
 
-    @OnThread(Tag.Simulation)
     public static abstract class ListEx
     {
-        @OnThread(Tag.Any)
         public ListEx() {}
 
         public abstract int size() throws InternalException, UserException;
-        public abstract @Value Object get(int index) throws InternalException, UserException;
+        public abstract Object get(int index) throws InternalException, UserException;
 
         // For comparison during testing
         @Override
@@ -1957,7 +1942,7 @@ public class Utility
 
         // For comparison during testing
         @Override
-        public boolean equals(@Nullable Object obj)
+        public boolean equals(Object obj)
         {
             if (obj == null || !(obj instanceof ListEx))
                 return false;
@@ -2001,7 +1986,7 @@ public class Utility
         }
 
         @SuppressWarnings("valuetype")
-        public static @Value ListEx empty()
+        public static ListEx empty()
         {
             return new ListEx()
             {
@@ -2012,7 +1997,7 @@ public class Utility
                 }
 
                 @Override
-                public @Value Object get(int index) throws InternalException, UserException
+                public Object get(int index) throws InternalException, UserException
                 {
                     throw new InternalException("Cannot access element of empty list");
                 }
@@ -2020,18 +2005,18 @@ public class Utility
         }
     }
 
-    public static final @Value class ListExList extends ListEx
+    public static final class ListExList extends ListEx
     {
-        private final List<? extends @Value Object> items;
+        private final List<? extends Object> items;
 
         @SuppressWarnings({"valuetype", "nullness"})
-        public @Value <@Value T> ListExList(List<T> items)
+        public <T> ListExList(List<T> items)
         {
             this.items = items;
         }
 
         @SuppressWarnings({"valuetype", "nullness"})
-        public static @ImmediateValue <T extends @ImmediateValue Object> ListExList immediate(List<T> items)
+        public static <T extends Object> ListExList immediate(List<T> items)
         {
             return new ListExList(items);
         }
@@ -2043,7 +2028,7 @@ public class Utility
         }
 
         @Override
-        public @Value Object get(int index) throws InternalException, UserException
+        public Object get(int index) throws InternalException, UserException
         {
             return items.get(index);
         }
@@ -2095,8 +2080,7 @@ public class Utility
         }
     }
 
-    @OnThread(Tag.FXPlatform)
-    public static @NonNull ImmutableList<File> readRecentFilesList()
+    public static ImmutableList<File> readRecentFilesList()
     {
         try
         {
@@ -2116,7 +2100,7 @@ public class Utility
     // All loaded properties (each one is stored in a separate file)
     private static Map<String, Properties> properties = new HashMap<>();
 
-    public static @Nullable String getProperty(String fileName, String propertyName)
+    public static String getProperty(String fileName, String propertyName)
     {
         Properties props = getPropertiesFile(fileName);
         return props.getProperty(propertyName);
@@ -2171,7 +2155,7 @@ public class Utility
     public static <T> Stream<T> intercalateStreamM(Stream<T> original, Supplier<T> makeSpacer)
     {
         // Not ideal, but it works:
-        @UnknownKeyFor ImmutableList<T> origList = original.collect(ImmutableList.<T>toImmutableList());
+        ImmutableList<T> origList = original.collect(ImmutableList.<T>toImmutableList());
         ArrayList<T> inclSpacers = new ArrayList<>();
         for (int i = 0; i < origList.size(); i++)
         {
@@ -2193,7 +2177,7 @@ public class Utility
     }
     
     
-    public static <T, R> @PolyNull R onNullable(@PolyNull T t, Function<@NonNull T, @NonNull R> f)
+    public static <T, R> R onNullable(T t, Function<T, R> f)
     {
         if (t == null)
         {
@@ -2201,7 +2185,7 @@ public class Utility
         }
         else
         {
-            @NonNull R r = f.apply(t);
+            R r = f.apply(t);
             return r;
         }
     }
@@ -2235,7 +2219,7 @@ public class Utility
     /**
      * Type-safe get method for Map.  Note important that it's Map[K,V] and not Map[? super K, V]
      */
-    public static <K extends @NonNull Object, V> @Nullable V get(Map<K, V> map, K key)
+    public static <K extends Object, V> V get(Map<K, V> map, K key)
     {
         return map.get(key);
     }
@@ -2243,7 +2227,7 @@ public class Utility
     /**
      * Type-safe get method for Map.  Note important that it's Map[K,V] and not Map[? super K, V]
      */
-    public static <K extends @NonNull Object, V, E extends Throwable> V getOrThrow(Map<K, V> map, K key, Supplier<E> makeException) throws E
+    public static <K extends Object, V, E extends Throwable> V getOrThrow(Map<K, V> map, K key, Supplier<E> makeException) throws E
     {
         V v = map.get(key);
         if (v != null)
@@ -2255,7 +2239,7 @@ public class Utility
     /**
      * Type-safe contains method for Set.  Note important that it's Map[K,V] and not Map[? super K, V]
      */
-    public static <K extends @NonNull Object> boolean contains(Set<K> set, K key)
+    public static <K extends Object> boolean contains(Set<K> set, K key)
     {
         return set.contains(key);
     }
@@ -2263,7 +2247,6 @@ public class Utility
     /**
      * For running simulation on FX; only to be used where you're certain it's safe.
      */
-    @OnThread(Tag.Any)
     public static <T> T launderSimulationEx(SimulationSupplier<T> simulationSupplier) throws UserException, InternalException
     {
         return ((ExSupplier<T>)simulationSupplier::get).get();

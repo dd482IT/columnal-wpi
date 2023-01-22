@@ -28,14 +28,13 @@ import xyz.columnal.utility.adt.Pair;
 
 public interface ProgressListener
 {
-    @OnThread(Tag.Simulation)
     public void progressUpdate(double progress);
 
-    public static Pair<@Nullable ProgressListener, @Nullable ProgressListener> split(final @Nullable ProgressListener prog)
+    public static Pair<ProgressListener, ProgressListener> split(final ProgressListener prog)
     {
         if (prog == null)
-            return new Pair<@Nullable ProgressListener, @Nullable ProgressListener>(null, null);
-        @NonNull ProgressListener progFinal = prog;
+            return new Pair<ProgressListener, ProgressListener>(null, null);
+        ProgressListener progFinal = prog;
         return new Pair<>(a -> progFinal.progressUpdate(a * 0.5), b -> progFinal.progressUpdate(b * 0.5 + 0.5));
     }
 }

@@ -29,6 +29,5 @@ import threadchecker.Tag;
  */
 public interface FXPlatformFunctionInt<T, R>
 {
-    @OnThread(Tag.FXPlatform)
     public R apply(T t) throws InternalException;
 }

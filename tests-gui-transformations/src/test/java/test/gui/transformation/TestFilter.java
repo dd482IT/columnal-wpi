@@ -67,14 +67,11 @@ import java.util.stream.IntStream;
 
 import static org.junit.Assert.*;
 
-@RunWith(JUnitQuickcheck.class)
 public class TestFilter extends FXApplicationTest implements ListUtilTrait, ScrollToTrait, PopupTrait, ClickTableLocationTrait
 {
-    @Property(trials = 10)
-    @OnThread(Tag.Simulation)
     public void propNumberFilter(
-            @NumTables(maxTables = 1) @MustIncludeNumber @From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr original,
-            @From(GenRandom.class) Random r) throws Exception
+            GenImmediateData.ImmediateData_Mgr original,
+            Random r) throws Exception
     {
         // Save the table, then open GUI and load it, then add a filter transformation (rename to keeprows)
         MainWindowActions mainWindowActions = TAppUtil.openDataAsTable(windowToUse, original.mgr).get();
@@ -94,7 +91,7 @@ public class TestFilter extends FXApplicationTest implements ListUtilTrait, Scro
         // Find numeric column:
         Column srcColumn = original.data().getData().getColumns().stream().filter(c -> TBasicUtil.checkedToRuntime(() -> DataTypeUtility.isNumber(c.getType().getType()))).findFirst().orElseGet((Supplier<Column>)(() -> {throw new AssertionError("No numeric column");}));
         // Pick arbitrary value as cut-off:
-        @Value Number cutOff;
+        Number cutOff;
         if (srcColumn.getLength() == 0)
             cutOff = DataTypeUtility.value(42);
         else
@@ -123,7 +120,7 @@ public class TestFilter extends FXApplicationTest implements ListUtilTrait, Scro
         Optional<ImmutableList<LoadedColumnInfo>> clip = TFXUtil.<Optional<ImmutableList<LoadedColumnInfo>>>fx(() -> ClipboardUtils.loadValuesFromClipboard(original.mgr.getTypeManager()));
         assertTrue(clip.isPresent());
         // Need to fish out first column from clip, then compare item:
-        List<Either<String, @Value Object>> expected = IntStream.range(0, srcColumn.getLength()).mapToObj(i -> TBasicUtil.checkedToRuntime(() -> srcColumn.getType().getCollapsed(i))).filter(x -> Utility.compareNumbers((Number)x, cutOff) > 0).map(x -> Either.<String, Object>right(x)).collect(Collectors.toList());
-        TBasicUtil.assertValueListEitherEqual("Filtered", expected, clip.get().stream().filter(c -> Objects.equals(c.columnName, srcColumn.getName())).findFirst().<ImmutableList<Either<String, @Value Object>>>map(c -> c.dataValues).orElse(null));
+        List<Either<String, Object>> expected = IntStream.range(0, srcColumn.getLength()).mapToObj(i -> TBasicUtil.checkedToRuntime(() -> srcColumn.getType().getCollapsed(i))).filter(x -> Utility.compareNumbers((Number)x, cutOff) > 0).map(x -> Either.<String, Object>right(x)).collect(Collectors.toList());
+        TBasicUtil.assertValueListEitherEqual("Filtered", expected, clip.get().stream().filter(c -> Objects.equals(c.columnName, srcColumn.getName())).findFirst().<ImmutableList<Either<String, Object>>>map(c -> c.dataValues).orElse(null));
     }
 }

@@ -52,20 +52,20 @@ public class MinIndex extends FunctionDefinition
     private static class Instance extends ValueFunction
     {
         @Override
-        public @Value Object _call() throws UserException, InternalException
+        public Object _call() throws UserException, InternalException
         {
-            @Value ListEx list = arg(0, ListEx.class);
+            ListEx list = arg(0, ListEx.class);
             if (list.size() == 0)
             {
                 throw new UserException("Cannot take minimum of empty list");
             }
             else
             {
-                @Value Object min = list.get(0);
+                Object min = list.get(0);
                 int zeroIndexMin = 0;
                 for (int i = 1; i < list.size(); i++)
                 {
-                    @Value Object val = list.get(i);
+                    Object val = list.get(i);
                     if (Utility.compareValues(min, val) > 0)
                     {
                         min = val;

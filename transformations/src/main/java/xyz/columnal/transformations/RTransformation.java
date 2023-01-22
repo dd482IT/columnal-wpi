@@ -62,21 +62,16 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-@OnThread(Tag.Simulation)
 public class RTransformation extends VisitableTransformation
 {
     public static final String NAME = "runr";
     // Each table id maps to an R variable by replacing space with dot.
-    @OnThread(Tag.Any)
     private final ImmutableList<TableId> srcTableIds;
     // The packages to load first.
-    @OnThread(Tag.Any)
     private final ImmutableList<String> packagesToLoad;
     // This is the expression to calculate in R:
-    @OnThread(Tag.Any)
     private final String rExpression;
     
-    @OnThread(Tag.Any)
     private final Either<StyledString, RecordSet> result;
     
     public RTransformation(TableManager tableManager, InitialLoadDetails initialLoadDetails, ImmutableList<TableId> srcTableIds, ImmutableList<String> packagesToLoad, String rExpression) throws InternalException
@@ -89,28 +84,25 @@ public class RTransformation extends VisitableTransformation
     }
 
     @Override
-    @OnThread(Tag.Any)
     protected Stream<TableId> getSourcesFromExpressions()
     {
         return Stream.of();
     }
 
     @Override
-    @OnThread(Tag.Any)
     protected Stream<TableId> getPrimarySources()
     {
         return srcTableIds.stream();
     }
 
     @Override
-    @OnThread(Tag.Any)
     protected String getTransformationName()
     {
         return NAME;
     }
 
     @Override
-    protected List<String> saveDetail(@Nullable File destination, TableAndColumnRenames renames)
+    protected List<String> saveDetail(File destination, TableAndColumnRenames renames)
     {
         return Stream.<String>concat(
             packagesToLoad.stream().<String>map(pkg -> "@PACKAGE " + pkg),
@@ -125,7 +117,7 @@ public class RTransformation extends VisitableTransformation
     }
 
     @Override
-    protected boolean transformationEquals(@Nullable Transformation obj)
+    protected boolean transformationEquals(Transformation obj)
     {
         if (!(obj instanceof RTransformation))
             return false;
@@ -135,15 +127,12 @@ public class RTransformation extends VisitableTransformation
     }
 
     @Override
-    @OnThread(Tag.Any)
     public RecordSet getData() throws UserException, InternalException
     {
         return result.eitherEx(err -> {throw new UserException(err);}, r -> r);
     }
     
-    @RequiresNonNull({"srcTableIds", "rExpression", "packagesToLoad"})
-    @OnThread(Tag.Simulation)
-    private Either<StyledString, RecordSet> runR(@UnknownInitialization(Transformation.class) RTransformation this) throws InternalException
+    private Either<StyledString, RecordSet> runR(RTransformation this) throws InternalException
     {
         try
         {
@@ -176,15 +165,13 @@ public class RTransformation extends VisitableTransformation
     }
 
     @Override
-    @OnThread(Tag.Any)
     public <T> T visit(TransformationVisitor<T> visitor)
     {
         return visitor.runR(this);
     }
 
     @Override
-    @OnThread(Tag.Any)
-    public @Nullable SimulationRunnable getReevaluateOperation()
+    public SimulationRunnable getReevaluateOperation()
     {
         return () -> {
             getManager().unban(rExpression);
@@ -199,22 +186,16 @@ public class RTransformation extends VisitableTransformation
         };
     }
 
-    @Pure
-    @OnThread(Tag.Any)
     public String getRExpression()
     {
         return rExpression;
     }
     
-    @Pure
-    @OnThread(Tag.Any)
     public ImmutableList<String> getPackagesToLoad()
     {
         return packagesToLoad;
     }
 
-    @Pure
-    @OnThread(Tag.Any)
     public ImmutableList<TableId> getInputTables()
     {
         return srcTableIds;
@@ -239,7 +220,7 @@ public class RTransformation extends VisitableTransformation
         }
 
         @Override
-        public @Nullable SimulationSupplier<Transformation> make(TableManager mgr, CellPosition destination, FXPlatformSupplier<Optional<Table>> askForSingleSrcTable)
+        public SimulationSupplier<Transformation> make(TableManager mgr, CellPosition destination, FXPlatformSupplier<Optional<Table>> askForSingleSrcTable)
         {
             return () -> new RTransformation(mgr, new InitialLoadDetails(destination), ImmutableList.of(), ImmutableList.of(), "1+2");
         }

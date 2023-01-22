@@ -64,22 +64,18 @@ import static org.junit.Assert.assertThrows;
 /**
  * Created by neil on 14/12/2016.
  */
-@RunWith(JUnitQuickcheck.class)
 public class PropDateFunctions
 {
-    private @MonotonicNonNull UnitManager mgr;
+    private UnitManager mgr;
     private List<Pair<LocalDate, String>> dates = new ArrayList<>();
     private List<Pair<LocalTime, String>> times = new ArrayList<>();
 
-    @Before
     public void init() throws UserException, InternalException
     {
         mgr = new UnitManager();
     }
 
-    @Property
-    @OnThread(Tag.Simulation)
-    public void testStringToDate(@From(GenDate.class) LocalDate src) throws Throwable
+    public void testStringToDate(LocalDate src) throws Throwable
     {
         // Test with string input:
         Object o = strTo(src.toString(), DateTimeType.YEARMONTHDAY);
@@ -87,8 +83,6 @@ public class PropDateFunctions
         assertEquals(src, o);
     }
 
-    @Property
-    @OnThread(Tag.Simulation)
     public void testStringToTime(LocalTime src) throws Throwable
     {
         // Test with string input:
@@ -97,9 +91,7 @@ public class PropDateFunctions
         assertEquals(src, o);
     }
 
-    @Property
-    @OnThread(Tag.Simulation)
-    public void testStringToDateTime(@From(GenDate.class) LocalDate date, LocalTime time) throws Throwable
+    public void testStringToDateTime(LocalDate date, LocalTime time) throws Throwable
     {
         LocalDateTime src = LocalDateTime.of(date, time);
         // Test with string input:
@@ -109,14 +101,12 @@ public class PropDateFunctions
     }
 
     // Shorthand for Utility.value
-    private @Value String v(String string)
+    private String v(String string)
     {
         return DataTypeUtility.value(string);
     }
 
-    @Property
-    @OnThread(Tag.Simulation)
-    public void testStringToDateTimeZone(@From(GenDate.class) LocalDate date, LocalTime time, @From(GenZoneId.class) ZoneId zone) throws Throwable
+    public void testStringToDateTimeZone(LocalDate date, LocalTime time, ZoneId zone) throws Throwable
     {
         ZonedDateTime src = ZonedDateTime.of(date, time, zone);
         // Test with string input:
@@ -125,8 +115,6 @@ public class PropDateFunctions
         assertEquals(src, o);
     }
 
-    @Test
-    @OnThread(Tag.Simulation)
     public void testFromString() throws Throwable
     {
         checkDate(LocalDate.of(2016, 12, 01), "2016-12-01");
@@ -173,7 +161,6 @@ public class PropDateFunctions
         checkDateTimes();
     }
 
-    @OnThread(Tag.Simulation)
     private void checkDateTimes() throws Throwable
     {
         for (Pair<LocalTime, String> time : times)
@@ -189,53 +176,47 @@ public class PropDateFunctions
         }
     }
 
-    @OnThread(Tag.Simulation)
     private void checkTime(LocalTime of, String src) throws Throwable
     {
         times.add(new Pair<>(of, src));
         assertEquals(of, strTo(src, DateTimeType.TIMEOFDAY));
     }
 
-    @OnThread(Tag.Simulation)
     private void checkDate(LocalDate of, String src) throws Throwable
     {
         dates.add(new Pair<>(of, src));
         assertEquals(of, strTo(src, DateTimeType.YEARMONTHDAY));
     }
 
-    @OnThread(Tag.Simulation)
     private void checkDateTime(LocalDateTime of, String src) throws Throwable
     {
         assertEquals(of, strTo(src, DateTimeType.DATETIME));
     }
 
-    @OnThread(Tag.Simulation)
     private void checkDateTimeZone(ZonedDateTime of, String src) throws Throwable
     {
         assertEquals(of, strTo(src, DateTimeType.DATETIMEZONED));
     }
 
-    @OnThread(Tag.Simulation)
     private Object strTo(String src, DateTimeType dateTimeType) throws Throwable
     {
-        @Nullable FunctionDefinition fromText = FunctionList.lookup(DummyManager.make().getUnitManager(), "from text to");
+        FunctionDefinition fromText = FunctionList.lookup(DummyManager.make().getUnitManager(), "from text to");
         if (fromText == null)
             throw new RuntimeException("Cannot find from text to function");
         // First param should be Type Date, but it shouldn't be used....
-        ImmutableList<@Value Object> args = ImmutableList.of(v(""), v(src));
+        ImmutableList<Object> args = ImmutableList.of(v(""), v(src));
         return runFunction1(args, ImmutableList.of(DummyManager.make().getTypeManager().typeGADTFor(DataType.date(new DateTimeInfo(dateTimeType))), DataType.TEXT), fromText);
     }
 
     // Tests single numeric input, numeric output function
     @SuppressWarnings({"nullness", "value"})
-    @OnThread(Tag.Simulation)
-    private Object runFunction1(ImmutableList<@Value Object> src, ImmutableList<DataType> srcType, FunctionDefinition function) throws InternalException, UserException, Throwable
+    private Object runFunction1(ImmutableList<Object> src, ImmutableList<DataType> srcType, FunctionDefinition function) throws InternalException, UserException, Throwable
     {
         try
         {
             @Nullable Pair<ValueFunction, DataType> instance = TFunctionUtil.typeCheckFunction(function, srcType);
             assertNotNull(instance);
-            return instance.getFirst().call(src.toArray(new @Value Object[0]));
+            return instance.getFirst().call(src.toArray(new Object[0]));
         }
         catch (RuntimeException e)
         {

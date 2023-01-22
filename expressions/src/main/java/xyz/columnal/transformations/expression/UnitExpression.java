@@ -48,11 +48,11 @@ import java.util.stream.Stream;
 public abstract class UnitExpression implements StyledShowable, Replaceable<UnitExpression>
 {
     @SuppressWarnings("recorded")
-    public static @Recorded UnitExpression load(Unit unit)
+    public static UnitExpression load(Unit unit)
     {
         ImmutableList<UnitExpression> top = unit.getDetails().entrySet().stream()
-            .filter((Entry<@KeyFor("unit.getDetails()") SingleUnit, Integer> p) -> p.getValue() > 0)
-            .<UnitExpression>map((Entry<@KeyFor("unit.getDetails()") SingleUnit, Integer> p) -> {
+            .filter((Entry<SingleUnit, Integer> p) -> p.getValue() > 0)
+            .<UnitExpression>map((Entry<SingleUnit, Integer> p) -> {
                 SingleUnitExpression single = new SingleUnitExpression(p.getKey().getName());
                 return p.getValue().intValue() == 1 ? single : new UnitRaiseExpression(single, new UnitExpressionIntLiteral(p.getValue().intValue()));
             }).collect(ImmutableList.<UnitExpression>toImmutableList());
@@ -60,8 +60,8 @@ public abstract class UnitExpression implements StyledShowable, Replaceable<Unit
         UnitExpression r = top.isEmpty() ? new UnitExpressionIntLiteral(1) : (top.size() == 1 ? top.get(0) : new UnitTimesExpression(top));
         
         ImmutableList<UnitExpression> bottom = unit.getDetails().entrySet().stream()
-            .filter((Entry<@KeyFor("unit.getDetails()")SingleUnit, Integer> p) -> p.getValue() < 0)
-            .<UnitExpression>map((Entry<@KeyFor("unit.getDetails()")SingleUnit, Integer> p) -> {
+            .filter((Entry<SingleUnit, Integer> p) -> p.getValue() < 0)
+            .<UnitExpression>map((Entry<SingleUnit, Integer> p) -> {
                 SingleUnitExpression single = new SingleUnitExpression(p.getKey().getName());
                 return p.getValue().intValue() == -1 ? single : new UnitRaiseExpression(single, new UnitExpressionIntLiteral(0 - p.getValue().intValue()));
             }).collect(ImmutableList.<UnitExpression>toImmutableList());
@@ -75,11 +75,11 @@ public abstract class UnitExpression implements StyledShowable, Replaceable<Unit
     }
 
     @SuppressWarnings("recorded") // Don't record when loading from Jelly
-    public static @Recorded UnitExpression load(JellyUnit unit)
+    public static UnitExpression load(JellyUnit unit)
     {
         ImmutableList<UnitExpression> top = unit.getDetails().entrySet().stream()
-            .filter((Entry<@KeyFor("unit.getDetails()") ComparableEither<String, SingleUnit>, Integer> p) -> p.getValue() > 0)
-            .<UnitExpression>map((Entry<@KeyFor("unit.getDetails()") ComparableEither<String, SingleUnit>, Integer> p) -> {
+            .filter((Entry<ComparableEither<String, SingleUnit>, Integer> p) -> p.getValue() > 0)
+            .<UnitExpression>map((Entry<ComparableEither<String, SingleUnit>, Integer> p) -> {
                 UnitExpression single = p.getKey().either(n -> InvalidSingleUnitExpression.identOrUnfinished(n), u -> new SingleUnitExpression(u.getName()));
                 return p.getValue().intValue() == 1 ? single : new UnitRaiseExpression(single, new UnitExpressionIntLiteral(p.getValue().intValue()));
             }).collect(ImmutableList.<UnitExpression>toImmutableList());
@@ -87,8 +87,8 @@ public abstract class UnitExpression implements StyledShowable, Replaceable<Unit
         UnitExpression r = top.isEmpty() ? new UnitExpressionIntLiteral(1) : (top.size() == 1 ? top.get(0) : new UnitTimesExpression(top));
 
         ImmutableList<UnitExpression> bottom = unit.getDetails().entrySet().stream()
-            .filter((Entry<@KeyFor("unit.getDetails()")ComparableEither<String, SingleUnit>, Integer> p) -> p.getValue() < 0)
-            .<UnitExpression>map((Entry<@KeyFor("unit.getDetails()")ComparableEither<String, SingleUnit>, Integer> p) -> {
+            .filter((Entry<ComparableEither<String, SingleUnit>, Integer> p) -> p.getValue() < 0)
+            .<UnitExpression>map((Entry<ComparableEither<String, SingleUnit>, Integer> p) -> {
                 UnitExpression single = p.getKey().either(n -> InvalidSingleUnitExpression.identOrUnfinished(n), u -> new SingleUnitExpression(u.getName()));
                 return p.getValue().intValue() == -1 ? single : new UnitRaiseExpression(single, new UnitExpressionIntLiteral(0 - p.getValue().intValue()));
             }).collect(ImmutableList.<UnitExpression>toImmutableList());
@@ -104,7 +104,7 @@ public abstract class UnitExpression implements StyledShowable, Replaceable<Unit
     // We mark as Recorded because constructors require
     // that, even though it's not actually reached GUI yet:
     @SuppressWarnings("recorded")
-    public static @Recorded UnitExpression load(String text) throws InternalException, UserException
+    public static UnitExpression load(String text) throws InternalException, UserException
     {
         return loadUnbracketed(Utility.<UnbracketedUnitContext, UnitParser>parseAsOne(text, UnitLexer::new, UnitParser::new, p -> p.unitUse().unbracketedUnit()));
     }
@@ -173,11 +173,11 @@ public abstract class UnitExpression implements StyledShowable, Replaceable<Unit
     
     public static class UnitLookupException extends Exception
     {
-        public final @Nullable StyledString errorMessage;
-        public final @Recorded UnitExpression errorItem;
+        public final StyledString errorMessage;
+        public final UnitExpression errorItem;
         public final ImmutableList<QuickFix<UnitExpression>> quickFixes;
 
-        public UnitLookupException(@Nullable StyledString errorMessage, @Recorded UnitExpression errorItem, ImmutableList<QuickFix<UnitExpression>> quickFixes)
+        public UnitLookupException(StyledString errorMessage, UnitExpression errorItem, ImmutableList<QuickFix<UnitExpression>> quickFixes)
         {
             this.errorMessage = errorMessage;
             this.errorItem = errorItem;
@@ -185,7 +185,7 @@ public abstract class UnitExpression implements StyledShowable, Replaceable<Unit
         }
     }
 
-    public abstract JellyUnit asUnit(@Recorded UnitExpression this, UnitManager unitManager) throws UnitLookupException;
+    public abstract JellyUnit asUnit(UnitExpression this, UnitManager unitManager) throws UnitLookupException;
     
     public abstract String save(SaveDestination saveDestination, boolean topLevel);
 
@@ -199,7 +199,7 @@ public abstract class UnitExpression implements StyledShowable, Replaceable<Unit
     public abstract int hashCode();
 
     @Override
-    public abstract boolean equals(@Nullable Object obj);
+    public abstract boolean equals(Object obj);
 
     public abstract boolean isEmpty();
 

@@ -41,7 +41,6 @@ import xyz.columnal.utility.gui.LightDialog;
 
 import java.util.Optional;
 
-@OnThread(Tag.FXPlatform)
 public class PickTypeTransformDialog extends LightDialog<TypeTransform>
 {
     public static class TypeTransform

@@ -59,11 +59,11 @@ public abstract class Explanation
     private final ExplanationSource expression;
     protected final ExecutionType executionType;
     private final EvaluateState evaluateState;
-    private final @Nullable @Value Object result;
+    private final Object result;
     private final ImmutableList<ExplanationLocation> directlyUsedLocations;
-    private final @Nullable ExplanationLocation resultIsLocation;
+    private final ExplanationLocation resultIsLocation;
 
-    protected Explanation(ExplanationSource expression, ExecutionType executionType, EvaluateState evaluateState, @Nullable @Value Object result,  ImmutableList<ExplanationLocation> directlyUsedLocations, @Nullable ExplanationLocation resultIsLocation)
+    protected Explanation(ExplanationSource expression, ExecutionType executionType, EvaluateState evaluateState, Object result,  ImmutableList<ExplanationLocation> directlyUsedLocations, ExplanationLocation resultIsLocation)
     {
         this.expression = expression;
         this.executionType = executionType;
@@ -86,20 +86,18 @@ public abstract class Explanation
      * @throws InternalException
      * @throws UserException
      */
-    @OnThread(Tag.Simulation)
-    public abstract @Nullable StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation, ExpressionStyler expressionStyler, ImmutableList<ExplanationLocation> extraLocations, boolean skipIfTrivial) throws InternalException, UserException;
+    public abstract StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation, ExpressionStyler expressionStyler, ImmutableList<ExplanationLocation> extraLocations, boolean skipIfTrivial) throws InternalException, UserException;
 
     public final ImmutableList<ExplanationLocation> getDirectlyUsedLocations()
     {
         return directlyUsedLocations;
     }
 
-    public final @Nullable ExplanationLocation getResultIsLocation()
+    public final ExplanationLocation getResultIsLocation()
     {
         return resultIsLocation;
     }
 
-    @OnThread(Tag.Simulation)
     public abstract ImmutableList<Explanation> getDirectSubExplanations() throws InternalException;
 
     /**
@@ -115,8 +113,7 @@ public abstract class Explanation
     }
 
     @Override
-    @OnThread(value = Tag.Simulation, ignoreParent = true)
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || !(o instanceof Explanation)) return false;
@@ -145,7 +142,6 @@ public abstract class Explanation
     }
 
     @Override
-    @OnThread(value = Tag.Simulation, ignoreParent = true)
     public int hashCode()
     {
         int result1 = expression.hashCode();
@@ -168,7 +164,6 @@ public abstract class Explanation
 
     // Only used for testing:
     @Override
-    @OnThread(value = Tag.Simulation,ignoreParent = true)
     public String toString()
     {
         try

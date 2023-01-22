@@ -80,13 +80,12 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-@OnThread(Tag.FXPlatform)
 public class AggregateSplitByPane extends BorderPane
 {
-    private final @Nullable Table srcTable;
+    private final Table srcTable;
     private final SplitList splitList;
     
-    public AggregateSplitByPane(@Nullable Table srcTable, ImmutableList<ColumnId> originalSplitBy, @Nullable Pair<ColumnId, ImmutableList<String>> example)
+    public AggregateSplitByPane(Table srcTable, ImmutableList<ColumnId> originalSplitBy, Pair<ColumnId, ImmutableList<String>> example)
     {
         this.srcTable = srcTable;
         getStyleClass().add("split-by-pane");
@@ -139,7 +138,7 @@ public class AggregateSplitByPane extends BorderPane
         splitList.pickColumnIfEditing(t);
     }
 
-    public @Nullable ImmutableList<ColumnId> getItems()
+    public ImmutableList<ColumnId> getItems()
     {
         ImmutableList.Builder<ColumnId> r = ImmutableList.builder();
         for (Optional<ColumnId> item : splitList.getItems())
@@ -152,7 +151,6 @@ public class AggregateSplitByPane extends BorderPane
     }
 
 
-    @OnThread(Tag.FXPlatform)
     private class SplitList extends FancyList<Optional<ColumnId>, ColumnPane>
     {
         public SplitList(ImmutableList<ColumnId> initialItems)
@@ -203,14 +201,13 @@ public class AggregateSplitByPane extends BorderPane
         }
     }
 
-    @OnThread(Tag.FXPlatform)
     private class ColumnPane extends BorderPane
     {
         private final ColumnNameTextField columnField;
         private final AutoComplete autoComplete;
         private long lastEditTimeMillis = -1;
 
-        public ColumnPane(@Nullable ColumnId initialContent, boolean editImmediately)
+        public ColumnPane(ColumnId initialContent, boolean editImmediately)
         {
             columnField = new ColumnNameTextField(initialContent);
             if (editImmediately)
@@ -248,7 +245,7 @@ public class AggregateSplitByPane extends BorderPane
             return columnField.isFocused() ? System.currentTimeMillis() : lastEditTimeMillis;
         }
 
-        private CompletionListener<ColumnCompletion> getListener(@UnknownInitialization ColumnPane this)
+        private CompletionListener<ColumnCompletion> getListener(ColumnPane this)
         {
             return new CompletionListener<ColumnCompletion>()
             {
@@ -260,7 +257,7 @@ public class AggregateSplitByPane extends BorderPane
                 }
 
                 @Override
-                public @Nullable String keyboardSelect(String textBefore, String textAfter, @Nullable ColumnCompletion selectedItem, boolean tabPressed)
+                public String keyboardSelect(String textBefore, String textAfter, ColumnCompletion selectedItem, boolean tabPressed)
                 {
                     if (selectedItem != null)
                         return selectedItem.c.getName().getOutput();
@@ -275,7 +272,7 @@ public class AggregateSplitByPane extends BorderPane
             autoComplete.setContentDirect(columnId.getRaw(), true);
         }
 
-        public ObjectExpression<@Nullable ColumnId> currentValue()
+        public ObjectExpression<ColumnId> currentValue()
         {
             return columnField.valueProperty();
         }
@@ -292,26 +289,25 @@ public class AggregateSplitByPane extends BorderPane
         }
     }
     
-    @OnThread(Tag.FXPlatform)
     private static class EditColumnSidePane implements EditColumnExpressionDialog.SidePane<ImmutableList<ColumnId>>
     {
         private final AggregateSplitByPane pane;
-        private final @Nullable Table srcTable;
+        private final Table srcTable;
 
-        public EditColumnSidePane(@Nullable Table srcTable, ImmutableList<ColumnId> initialSplitBy, @Nullable Pair<ColumnId, ImmutableList<String>> example)
+        public EditColumnSidePane(Table srcTable, ImmutableList<ColumnId> initialSplitBy, Pair<ColumnId, ImmutableList<String>> example)
         {
             this.srcTable = srcTable;
             this.pane = new AggregateSplitByPane(srcTable, initialSplitBy, example);
         }
 
         @Override
-        public @Nullable Node getSidePane()
+        public Node getSidePane()
         {
             return pane;
         }
 
         @Override
-        public @Nullable ImmutableList<ColumnId> calculateResult()
+        public ImmutableList<ColumnId> calculateResult()
         {
             return pane.getItems();
         }
@@ -348,11 +344,11 @@ public class AggregateSplitByPane extends BorderPane
     }
 
 
-    public static EditColumnExpressionDialog<ImmutableList<ColumnId>> editColumn(View parent, @Nullable Table srcTable, @Nullable ColumnId initialName, @Nullable Expression initialExpression, Function<@Nullable ColumnId, ColumnLookup> makeColumnLookup, FXPlatformSupplierInt<TypeState> makeTypeState, @Nullable DataType expectedType, ImmutableList<ColumnId> initialSplitBy)
+    public static EditColumnExpressionDialog<ImmutableList<ColumnId>> editColumn(View parent, Table srcTable, ColumnId initialName, Expression initialExpression, Function<ColumnId, ColumnLookup> makeColumnLookup, FXPlatformSupplierInt<TypeState> makeTypeState, DataType expectedType, ImmutableList<ColumnId> initialSplitBy)
     {
         ExpressionRecipe count = new ExpressionRecipe("expression.recipe.count") {
             @Override
-            public @Nullable Expression makeExpression(Window parentWindow, ColumnPicker columnPicker)
+            public Expression makeExpression(Window parentWindow, ColumnPicker columnPicker)
             {
                 return IdentExpression.load(TypeState.GROUP_COUNT);
             }
@@ -381,12 +377,12 @@ public class AggregateSplitByPane extends BorderPane
         };
     }
 
-    private static ExpressionRecipe numberColumnRecipe(@LocalizableKey String nameKey, @Nullable Table srcTable, Function<ColumnId, Expression> makeExpression)
+    private static ExpressionRecipe numberColumnRecipe(String nameKey, Table srcTable, Function<ColumnId, Expression> makeExpression)
     {
         return new ExpressionRecipe(nameKey)
         {
             @Override
-            public @Nullable Expression makeExpression(Window parentWindow, ColumnPicker columnPicker)
+            public Expression makeExpression(Window parentWindow, ColumnPicker columnPicker)
             {
                 return new SelectColumnDialog(parentWindow, srcTable, columnPicker, ImmutableList.of(new SelectInfo("agg.recipe.pick.calc", (Column c) -> {
                     try
@@ -406,12 +402,12 @@ public class AggregateSplitByPane extends BorderPane
         };
     }
 
-    private static ExpressionRecipe dualColumnRecipe(@LocalizableKey String nameKey, @Nullable Table srcTable, BiFunction<ColumnId, ColumnId, Expression> makeExpression)
+    private static ExpressionRecipe dualColumnRecipe(String nameKey, Table srcTable, BiFunction<ColumnId, ColumnId, Expression> makeExpression)
     {
         return new ExpressionRecipe(nameKey)
         {
             @Override
-            public @Nullable Expression makeExpression(Window parentWindow, ColumnPicker columnPicker)
+            public Expression makeExpression(Window parentWindow, ColumnPicker columnPicker)
             {
                 return new SelectColumnDialog(parentWindow, srcTable, columnPicker, ImmutableList.of(
                         new SelectInfo("agg.recipe.pick.compare", "agg-recipe/calc-column", t -> true, false),

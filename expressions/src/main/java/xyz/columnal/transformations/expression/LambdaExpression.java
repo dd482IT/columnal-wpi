@@ -46,23 +46,23 @@ import java.util.stream.Stream;
 
 public class LambdaExpression extends Expression
 {
-    private final ImmutableList<@Recorded Expression> parameters;
-    private final @Recorded Expression body;
+    private final ImmutableList<Expression> parameters;
+    private final Expression body;
 
-    public LambdaExpression(ImmutableList<@Recorded Expression> parameters, @Recorded Expression body)
+    public LambdaExpression(ImmutableList<Expression> parameters, Expression body)
     {
         this.parameters = parameters;
         this.body = body;
     }
 
     @Override
-    public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState original, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public CheckedExp check(ColumnLookup dataLookup, TypeState original, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         ImmutableList.Builder<TypeExp> paramTypes = ImmutableList.builder();
 
         TypeState typeState = original;
         
-        for (@Recorded Expression parameter : parameters)
+        for (Expression parameter : parameters)
         {
             CheckedExp checkedExp = parameter.check(dataLookup, typeState, ExpressionKind.PATTERN, LocationInfo.UNIT_DEFAULT, onError);
             if (checkedExp == null)
@@ -79,12 +79,12 @@ public class LambdaExpression extends Expression
     }
 
     @Override
-    public @OnThread(Tag.Simulation) ValueResult calculateValue(EvaluateState original) throws EvaluationException, InternalException
+    public ValueResult calculateValue(EvaluateState original) throws EvaluationException, InternalException
     {
         ValueFunction valueFunction = new ValueFunction()
         {
             @Override
-            protected @OnThread(Tag.Simulation) @Value Object _call() throws InternalException, UserException
+            protected Object _call() throws InternalException, UserException
             {
             EvaluateState state = original;
             ImmutableList.Builder<ValueResult> args = ImmutableList.builderWithExpectedSize(parameters.size());
@@ -126,13 +126,13 @@ public class LambdaExpression extends Expression
     }
 
     @Override
-    public @Nullable Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
+    public Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
     {
         return null;
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;

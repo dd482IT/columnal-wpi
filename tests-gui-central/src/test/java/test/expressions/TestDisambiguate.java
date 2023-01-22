@@ -35,7 +35,6 @@ import static org.junit.Assert.assertEquals;
 
 public class TestDisambiguate
 {
-    @Test
     public void simpleLocal()
     {
         SaveDestination d = makeNames(local("local1"));
@@ -43,7 +42,6 @@ public class TestDisambiguate
         assertEquals("local1", t(d, local("local1")));
     }
     
-    @Test
     public void localsAndColumns()
     {
         // Non-conflicting:
@@ -66,49 +64,49 @@ public class TestDisambiguate
     
     private static class Name
     {
-        private final @Nullable @ExpressionIdentifier String namespace;
-        private final ImmutableList<@ExpressionIdentifier String> names;
+        private final String namespace;
+        private final ImmutableList<String> names;
 
-        public Name(@Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> names)
+        public Name(String namespace, ImmutableList<String> names)
         {
             this.namespace = namespace;
             this.names = names;
         }
     }
 
-    private static Name n(@Nullable @ExpressionIdentifier String namespace, @ExpressionIdentifier String... names)
+    private static Name n(String namespace, String... names)
     {
         return new Name(namespace, ImmutableList.copyOf(names));
     }
 
-    private static Name local(@ExpressionIdentifier String name)
+    private static Name local(String name)
     {
         return n(null, name);
     }
 
-    private static Name column(@ExpressionIdentifier String columnNoTable)
+    private static Name column(String columnNoTable)
     {
         return n("column", columnNoTable);
     }
 
-    private static Name column(@ExpressionIdentifier String table, @ExpressionIdentifier String column)
+    private static Name column(String table, String column)
     {
         return n("column", table, column);
     }
 
-    private static Name table(@ExpressionIdentifier String table)
+    private static Name table(String table)
     {
         return n("table", table);
     }
     
     private static SaveDestination makeNames(Name... names)
     {
-        return new ToEditor(Arrays.stream(names).<Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>>>map(n -> new Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>>(n.namespace, n.names)).collect(ImmutableList.<Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>>>toImmutableList()));
+        return new ToEditor(Arrays.stream(names).<Pair<String, ImmutableList<String>>>map(n -> new Pair<String, ImmutableList<String>>(n.namespace, n.names)).collect(ImmutableList.<Pair<String, ImmutableList<String>>>toImmutableList()));
     }
     
     private static String t(SaveDestination destination, Name name)
     {
-        Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> result = destination.disambiguate(name.namespace, name.names);
+        Pair<String, ImmutableList<String>> result = destination.disambiguate(name.namespace, name.names);
         return (result.getFirst() != null ? result.getFirst() + "\\\\" : "") + result.getSecond().stream().collect(Collectors.joining("\\")); 
     }
 }

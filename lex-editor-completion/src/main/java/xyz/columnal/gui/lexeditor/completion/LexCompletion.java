@@ -37,20 +37,20 @@ import java.util.Objects;
  */
 public class LexCompletion
 {
-    public final @CanonicalLocation int startPos;
-    public final @CanonicalLocation int lastShowPosIncl;
+    public final int startPos;
+    public final int lastShowPosIncl;
     // If null, completing does not change content, but rather opens the further details in a new window 
-    public @MonotonicNonNull String content;
+    public String content;
     StyledString display;
     public int relativeCaretPos;
     LexSelectionBehaviour selectionBehaviour;
     // Either:
     //   - Left(HTML content)
     //   - Right(HTML file name (e.g. function-abs.html), optional anchor)
-    public @MonotonicNonNull Either<String, Pair<String, @Nullable String>> furtherDetails;
+    public Either<String, Pair<String, String>> furtherDetails;
     String sideText;
 
-    private LexCompletion(@CanonicalLocation int startPos, @CanonicalLocation int lastShowPosIncl, @Nullable String content, StyledString display, int relativeCaretPos, LexSelectionBehaviour selectionBehaviour, @Nullable Either<String, Pair<String, @Nullable String>> furtherDetails, String sideText)
+    private LexCompletion(int startPos, int lastShowPosIncl, String content, StyledString display, int relativeCaretPos, LexSelectionBehaviour selectionBehaviour, Either<String, Pair<String, String>> furtherDetails, String sideText)
     {
         this.startPos = startPos;
         this.lastShowPosIncl = lastShowPosIncl;
@@ -64,11 +64,11 @@ public class LexCompletion
         this.sideText = sideText;
     }
 
-    public LexCompletion(@CanonicalLocation int startPos, int lengthToShowFor, String content)
+    public LexCompletion(int startPos, int lengthToShowFor, String content)
     {
         this.startPos = startPos;
         @SuppressWarnings("units")
-        @CanonicalLocation int lastShowPosIncl = startPos + lengthToShowFor;
+        int lastShowPosIncl = startPos + lengthToShowFor;
         this.lastShowPosIncl = lastShowPosIncl;
         this.content = content;
         this.display = StyledString.s(content);
@@ -77,9 +77,9 @@ public class LexCompletion
         this.sideText = "";
     }
     
-    public LexCompletion(@CanonicalLocation int startIncl, @CanonicalLocation int endIncl, StyledString display, String htmlPageName)
+    public LexCompletion(int startIncl, int endIncl, StyledString display, String htmlPageName)
     {
-        this(startIncl, endIncl, null, display, 0, LexSelectionBehaviour.NO_AUTO_SELECT, Either.right(new Pair<String, @Nullable String>(htmlPageName, null)), "");
+        this(startIncl, endIncl, null, display, 0, LexSelectionBehaviour.NO_AUTO_SELECT, Either.right(new Pair<String, String>(htmlPageName, null)), "");
     }
     
     public LexCompletion withReplacement(String newContent)
@@ -114,10 +114,10 @@ public class LexCompletion
         return this;
     }
     
-    public LexCompletion withFurtherDetailsURL(@Nullable String url)
+    public LexCompletion withFurtherDetailsURL(String url)
     {
         if (url != null)
-            this.furtherDetails = Either.right(new Pair<String, @Nullable String>(url, null));
+            this.furtherDetails = Either.right(new Pair<String, String>(url, null));
         return this;
     }
 
@@ -134,7 +134,7 @@ public class LexCompletion
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -171,19 +171,19 @@ public class LexCompletion
             '}';
     }
 
-    public LexCompletion offsetBy(@CanonicalLocation int offsetBy)
+    public LexCompletion offsetBy(int offsetBy)
     {
         final LexCompletion original = this;
         return new LexCompletion(startPos + offsetBy, lastShowPosIncl + offsetBy, content, display, relativeCaretPos, selectionBehaviour, furtherDetails, sideText) {
             @Override
-            public boolean showFor(@CanonicalLocation int caretPos)
+            public boolean showFor(int caretPos)
             {
                 return original.showFor(caretPos - offsetBy);
             }
         };
     }
 
-    public boolean showFor(@CanonicalLocation int caretPos)
+    public boolean showFor(int caretPos)
     {
         return startPos <= caretPos && caretPos <= lastShowPosIncl;
     }
@@ -192,7 +192,7 @@ public class LexCompletion
     {
         return new LexCompletion(startPos, lastShowPosIncl, content, display, relativeCaretPos, selectionBehaviour, furtherDetails, sideText) {
             @Override
-            public boolean showFor(@CanonicalLocation int caretPos)
+            public boolean showFor(int caretPos)
             {
                 return caretPos == startPos ? false : super.showFor(caretPos);
             }

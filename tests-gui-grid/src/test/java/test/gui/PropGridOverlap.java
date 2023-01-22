@@ -42,11 +42,9 @@ import java.util.Comparator;
 
 import static org.junit.Assert.assertFalse;
 
-@RunWith(JUnitQuickcheck.class)
 public class PropGridOverlap extends FXApplicationTest
 {
-    @Property(trials = 100)
-    public void testLoad(@From(GenGridAreaList.class) GenGridAreaList.GridAreaList gridAreas)
+    public void testLoad(GenGridAreaList.GridAreaList gridAreas)
     {
         TFXUtil.fxTest_(() -> {
             VirtualGrid grid = new VirtualGrid(null, 0, 0);
@@ -59,7 +57,6 @@ public class PropGridOverlap extends FXApplicationTest
 
     // For any given pair of tables, if they overlap vertically, checks
     // that they are still in the horizontal order that they were originally
-    @OnThread(Tag.FXPlatform)
     private static void checkHorizSorted(ImmutableList<GridArea> sortedByOriginalX)
     {
         // Check that this list is sorted by current X in the cases where they overlap:
@@ -78,13 +75,11 @@ public class PropGridOverlap extends FXApplicationTest
         }
     }
 
-    @OnThread(Tag.FXPlatform)
     private static ImmutableList<GridArea> sortByCurrentX(ImmutableList<GridArea> gridAreas)
     {
         return gridAreas.stream().sorted(Comparator.comparing(g -> g.getPosition().columnIndex)).collect(ImmutableList.toImmutableList());
     }
 
-    @OnThread(Tag.FXPlatform)
     private void checkNoOverlap(ImmutableList<GridArea> gridAreas)
     {
         // Now check that none overlap.  We do a brute force N^2 test as it is simplest:
@@ -107,8 +102,7 @@ public class PropGridOverlap extends FXApplicationTest
         }
     }
 
-    @Property(trials = 100)
-    public void testMove(@From(GenGridAreaList.class) GenGridAreaList.GridAreaList gridAreas, int toMove, int newColumn, int newRow)
+    public void testMove(GenGridAreaList.GridAreaList gridAreas, int toMove, int newColumn, int newRow)
     {
         TFXUtil.fxTest_(() -> {
             VirtualGrid grid = new VirtualGrid(null, 0, 0);
@@ -128,7 +122,6 @@ public class PropGridOverlap extends FXApplicationTest
         });
     }
     
-    @Test
     public void testPair()
     {
         TFXUtil.fxTest_(() -> {

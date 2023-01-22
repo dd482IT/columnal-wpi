@@ -87,12 +87,11 @@ import java.util.List;
 /**
  * Created by neil on 17/04/2017.
  */
-@OnThread(Tag.FXPlatform)
 public class GUI
 {
-    private static @MonotonicNonNull Image rightClickImage = null;
+    private static Image rightClickImage = null;
 
-    public static Button button(@LocalizableKey String msgKey, FXPlatformRunnable onAction, String... styleClasses)
+    public static Button button(String msgKey, FXPlatformRunnable onAction, String... styleClasses)
     {
         Button button = new Button(TranslationUtility.getString(msgKey));
         button.setOnAction(e -> onAction.run());
@@ -101,7 +100,7 @@ public class GUI
         return button;
     }
 
-    public static Button buttonLocal(@Localized String title, FXPlatformRunnable onAction, String... styleClasses)
+    public static Button buttonLocal(String title, FXPlatformRunnable onAction, String... styleClasses)
     {
         Button button = new Button(title);
         button.setOnAction(e -> onAction.run());
@@ -113,12 +112,12 @@ public class GUI
      * Makes a button which, when pressed, shows a context menu immediately beneath it.  If the menu is
      * already showing, hides it instead.
      */
-    public static Button buttonMenu(@LocalizableKey String msgKey, FXPlatformSupplier<ContextMenu> makeMenu, String... styleClasses)
+    public static Button buttonMenu(String msgKey, FXPlatformSupplier<ContextMenu> makeMenu, String... styleClasses)
     {
         Button button = new Button(TranslationUtility.getString(msgKey));
-        SimpleObjectProperty<@Nullable ContextMenu> currentlyShowing = new SimpleObjectProperty<>(null);
+        SimpleObjectProperty<ContextMenu> currentlyShowing = new SimpleObjectProperty<>(null);
         button.setOnAction(e -> {
-            @Nullable ContextMenu current = currentlyShowing.get();
+            ContextMenu current = currentlyShowing.get();
             if (current == null)
             {
                 current = makeMenu.get();
@@ -139,13 +138,13 @@ public class GUI
     }
 
     // Used by TestFX to identify items in the GUI
-    public static <T extends Styleable> T addIdClass(T node, @LocalizableKey String msgKey)
+    public static <T extends Styleable> T addIdClass(T node, String msgKey)
     {
         node.getStyleClass().add(makeId(msgKey));
         return node;
     }
     
-    public static String makeId(@LocalizableKey String msgKey)
+    public static String makeId(String msgKey)
     {
         return "id-" + msgKey.replace(".", "-");
     }
@@ -153,44 +152,44 @@ public class GUI
     /**
      * Looks up key and makes label with it.
      */
-    public static Label label(@Nullable @LocalizableKey String msgKey, String... styleClasses)
+    public static Label label(String msgKey, String... styleClasses)
     {
-        @Localized String text = msgKey == null ? Utility.universal("") : TranslationUtility.getString(msgKey);
+        String text = msgKey == null ? Utility.universal("") : TranslationUtility.getString(msgKey);
         return labelRaw(text, styleClasses);
     }
 
     /**
      * Makes label with exact given text
      */
-    public static Label labelRaw(@Localized String text, String... styleClasses)
+    public static Label labelRaw(String text, String... styleClasses)
     {
         Label label = new Label(text);
         label.getStyleClass().addAll(styleClasses);
         return label;
     }
 
-    public static Menu menu(@LocalizableKey String menuNameKey, MenuItem... menuItems)
+    public static Menu menu(String menuNameKey, MenuItem... menuItems)
     {
         Menu menu = new Menu(TranslationUtility.getString(menuNameKey), null, menuItems);
         menu.setId(makeId(menuNameKey));
         return addIdClass(menu, menuNameKey);
     }
 
-    public static CheckMenuItem checkMenuItem(@LocalizableKey String menuItemKey, MenuItem... menuItems)
+    public static CheckMenuItem checkMenuItem(String menuItemKey, MenuItem... menuItems)
     {
         CheckMenuItem menu = new CheckMenuItem(TranslationUtility.getString(menuItemKey));
         menu.setId(makeId(menuItemKey));
         return addIdClass(menu, menuItemKey);
     }
 
-    public static MenuItem menuItem(@LocalizableKey String menuItemKey, FXPlatformRunnable onAction, String... styleClasses)
+    public static MenuItem menuItem(String menuItemKey, FXPlatformRunnable onAction, String... styleClasses)
     {
         return menuItemPos(menuItemKey, pos -> onAction.run(), styleClasses);
     }
 
-    public static MenuItem menuItemPos(@LocalizableKey String menuItemKey, FXPlatformConsumer<Point2D> onActionWithItemCentre, String... styleClasses)
+    public static MenuItem menuItemPos(String menuItemKey, FXPlatformConsumer<Point2D> onActionWithItemCentre, String... styleClasses)
     {
-        Pair<@Localized String, @Nullable KeyCombination> stringAndShortcut = FXUtility.getStringAndShortcut(menuItemKey);
+        Pair<String, KeyCombination> stringAndShortcut = FXUtility.getStringAndShortcut(menuItemKey);
         MenuItem item = new MenuItem(stringAndShortcut.getFirst());
         item.setOnAction(e -> {
             ContextMenu parentPopup = item.getParentPopup();
@@ -234,7 +233,7 @@ public class GUI
     /**
      * Makes a BorderPane with given top, center and bottom, other items left null.
      */
-    public static BorderPane borderTopCenterBottom(@Nullable Node top, @Nullable Node center, @Nullable Node bottom, String... styleClasses)
+    public static BorderPane borderTopCenterBottom(Node top, Node center, Node bottom, String... styleClasses)
     {
         BorderPane borderPane = new BorderPane(center, top, null, bottom, null);
         borderPane.getStyleClass().addAll(styleClasses);
@@ -244,7 +243,7 @@ public class GUI
     /**
      * Makes a BorderPane with given left and right, other items left null.
      */
-    public static BorderPane borderLeftRight(@Nullable Node left, @Nullable Node right, String... styleClasses)
+    public static BorderPane borderLeftRight(Node left, Node right, String... styleClasses)
     {
         BorderPane borderPane = new BorderPane(null, null, right, null, left);
         borderPane.getStyleClass().addAll(styleClasses);
@@ -254,7 +253,7 @@ public class GUI
     /**
      * Makes a BorderPane with given left and right, other items left null.
      */
-    public static BorderPane borderLeftCenterRight(@Nullable Node left, @Nullable Node center, @Nullable Node right, String... styleClasses)
+    public static BorderPane borderLeftCenterRight(Node left, Node center, Node right, String... styleClasses)
     {
         BorderPane borderPane = new BorderPane(center, null, right, null, left);
         borderPane.getStyleClass().addAll(styleClasses);
@@ -265,7 +264,7 @@ public class GUI
     /**
      * A label but the text is permitted to wrap
      */
-    public static Label labelWrap(@LocalizableKey String contentKey, String... styleClasses)
+    public static Label labelWrap(String contentKey, String... styleClasses)
     {
         Label label = new Label(TranslationUtility.getString(contentKey));
         label.setWrapText(true);
@@ -273,28 +272,28 @@ public class GUI
         return label;
     }
 
-    public static Node labelWrapParam(@LocalizableKey String contentKey, String... params)
+    public static Node labelWrapParam(String contentKey, String... params)
     {
         Label label = new Label(TranslationUtility.getString(contentKey, params));
         label.setWrapText(true);
         return label;
     }
 
-    public static Node labelled(@LocalizableKey String labelKey, @HelpKey String helpId, Node choiceNode)
+    public static Node labelled(String labelKey, String helpId, Node choiceNode)
     {
         HBox hBox = new HBox(label(labelKey), helpBox(helpId, choiceNode), choiceNode);
         hBox.getStyleClass().add("labelled-wrapper");
         return hBox;
     }
 
-    public static Node labelWrapHelp(@LocalizableKey String labelKey, @HelpKey String helpId)
+    public static Node labelWrapHelp(String labelKey, String helpId)
     {
         HBox hBox = new HBox(labelWrap(labelKey), helpBox(helpId, null));
         hBox.getStyleClass().add("labelled-wrapper");
         return hBox;
     }
 
-    public static Node labelled(@LocalizableKey String labelKey, Node choiceNode, String... styleClasses)
+    public static Node labelled(String labelKey, Node choiceNode, String... styleClasses)
     {
         Label label = label(labelKey);
         HBox pane = new HBox(label, choiceNode);
@@ -305,14 +304,14 @@ public class GUI
     }
 
 
-    public static Node labelledAbove(@LocalizableKey String labelKey, Node item)
+    public static Node labelledAbove(String labelKey, Node item)
     {
         BorderPane borderPane = new BorderPane(item, label(labelKey), null, null, null);
         borderPane.getStyleClass().add("labelled-wrapper-vertical");
         return borderPane;
     }
 
-    public static HelpBox helpBox(@HelpKey String helpId, @Nullable Node relevantNode)
+    public static HelpBox helpBox(String helpId, Node relevantNode)
     {
         List<Node> nodes = new ArrayList<>();
         if (relevantNode != null)
@@ -355,8 +354,7 @@ public class GUI
         FXPlatformSupplier<ListCell<C>> cellFactory = () -> {
             return new ListCell<C>() {
                 @Override
-                @OnThread(Tag.FX)
-                public void updateItem(@Nullable C item, boolean empty)
+                public void updateItem(C item, boolean empty)
                 {
                     super.updateItem(item, empty);
                     if (empty || item == null)
@@ -388,7 +386,7 @@ public class GUI
         return comboBox;
     }
 
-    public static RadioButton radioButton(ToggleGroup toggleGroup, @LocalizableKey String labelKey, String... styleClasses)
+    public static RadioButton radioButton(ToggleGroup toggleGroup, String labelKey, String... styleClasses)
     {
         RadioButton item = new RadioButton(TranslationUtility.getString(labelKey));
         item.setToggleGroup(toggleGroup);
@@ -397,14 +395,14 @@ public class GUI
         return item;
     }
 
-    public static RadioMenuItem radioMenuItem(@LocalizableKey String labelKey, ToggleGroup toggleGroup)
+    public static RadioMenuItem radioMenuItem(String labelKey, ToggleGroup toggleGroup)
     {
         RadioMenuItem item = new RadioMenuItem(TranslationUtility.getString(labelKey));
         item.setToggleGroup(toggleGroup);
         return item;
     }
     
-    public static RadioMenuItem radioMenuItem(@LocalizableKey String labelKey, FXPlatformRunnable runWhenSelected)
+    public static RadioMenuItem radioMenuItem(String labelKey, FXPlatformRunnable runWhenSelected)
     {
         RadioMenuItem item = new RadioMenuItem(TranslationUtility.getString(labelKey));
         item.setOnAction(e -> {
@@ -495,7 +493,7 @@ public class GUI
         return splitPane;
     }
     
-    public static TextFlow textFlowKey(@LocalizableKey String msgKey, String... styleClasses)
+    public static TextFlow textFlowKey(String msgKey, String... styleClasses)
     {
         TextFlow textFlow = new TextFlow(new Text(TranslationUtility.getString(msgKey)));
         textFlow.getStyleClass().addAll(styleClasses);

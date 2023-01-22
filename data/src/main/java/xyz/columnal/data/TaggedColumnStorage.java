@@ -50,17 +50,16 @@ import java.util.stream.Stream;
 /**
  * Created by neil on 05/11/2016.
  */
-public class TaggedColumnStorage extends SparseErrorColumnStorage<@Value TaggedValue> implements ColumnStorage<@Value TaggedValue>
+public class TaggedColumnStorage extends SparseErrorColumnStorage<TaggedValue> implements ColumnStorage<TaggedValue>
 {
     // This stores the tag index of each item.
     private final NumericColumnStorage tagStore;
     // This stores the inner values
     private final ImmutableList<TagType<ColumnStorage<?>>> tagTypes;
     // Effectively a cached version of tagTypes:
-    @OnThread(Tag.Any)
     private final DataTypeValue dataType;
 
-    public <DT extends DataType> TaggedColumnStorage(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, List<TagType<DT>> copyTagTypes, @Nullable BeforeGet<TaggedColumnStorage> beforeGet, boolean isImmediateData) throws InternalException
+    public <DT extends DataType> TaggedColumnStorage(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, List<TagType<DT>> copyTagTypes, BeforeGet<TaggedColumnStorage> beforeGet, boolean isImmediateData) throws InternalException
     {
         super(isImmediateData);
         tagStore = new NumericColumnStorage(isImmediateData);
@@ -83,14 +82,14 @@ public class TaggedColumnStorage extends SparseErrorColumnStorage<@Value TaggedV
         dataType = DataTypeValue.tagged(typeName, typeVars, Utility.<TagType<ColumnStorage<?>>, TagType<DataType>>mapListI(tagTypes, (TagType<ColumnStorage<?>> tt) -> tt.<DataType>map(t -> t.getType().getType())), new GetValueOrError<TaggedValue>()
         {
             @Override
-            protected @OnThread(Tag.Simulation) void _beforeGet(int i, @Nullable ProgressListener prog) throws UserException, InternalException
+            protected void _beforeGet(int i, ProgressListener prog) throws UserException, InternalException
             {
                 if (beforeGet != null)
                     beforeGet.beforeGet(Utility.later(TaggedColumnStorage.this), i, prog);
             }
 
             @Override
-            public TaggedValue _getWithProgress(int i, @Nullable ProgressListener prog) throws UserException, InternalException
+            public TaggedValue _getWithProgress(int i, ProgressListener prog) throws UserException, InternalException
             {
                 int tagIndex = tagStore.getInt(i);
                 if (tagIndex >= tagTypes.size())
@@ -103,10 +102,10 @@ public class TaggedColumnStorage extends SparseErrorColumnStorage<@Value TaggedV
             }
 
             @Override
-            public void _set(int index, @Nullable TaggedValue newValue) throws InternalException, UserException
+            public void _set(int index, TaggedValue newValue) throws InternalException, UserException
             {
                 int oldTag = tagStore.getInt(index);
-                @Nullable Integer newTag = newValue == null ? null : newValue.getTagIndex();
+                Integer newTag = newValue == null ? null : newValue.getTagIndex();
 
                 tagStore.set(OptionalInt.of(index), newTag == null ? 0 : newTag);
 
@@ -118,7 +117,7 @@ public class TaggedColumnStorage extends SparseErrorColumnStorage<@Value TaggedV
                         // Remember that newTag may be null, hence this comparison of boxed integers:
                         if (Objects.equals((Integer) tagIndex, newTag) && newValue != null)
                         {
-                            @Value Object newValueInner = newValue.getInner();
+                            Object newValueInner = newValue.getInner();
                             if (newValueInner == null)
                                 throw new InternalException("Found blank inner value for tag which expects an inner value, tag " + tagIndex + " type: " + typeName);
                             colStore.getType().setCollapsed(index, Either.right(newValueInner));
@@ -137,7 +136,6 @@ public class TaggedColumnStorage extends SparseErrorColumnStorage<@Value TaggedV
         this(typeName, typeVars, copyTagTypes, null, isImmediateData);
     }
     
-    @OnThread(Tag.Any)
     public DataTypeValue getType()
     {
         return dataType;
@@ -145,7 +143,7 @@ public class TaggedColumnStorage extends SparseErrorColumnStorage<@Value TaggedV
 
     @SuppressWarnings("unchecked")
     @Override
-    public SimulationRunnable _insertRows(int insertAtOriginalIndex, List<@Nullable TaggedValue> insertItems) throws InternalException
+    public SimulationRunnable _insertRows(int insertAtOriginalIndex, List<TaggedValue> insertItems) throws InternalException
     {
         int insertAtIndex = insertAtOriginalIndex;
         tagStore.addAll(insertAtIndex, insertItems.stream().map(t -> t == null ? 0 : t.getTagIndex()));
@@ -154,7 +152,7 @@ public class TaggedColumnStorage extends SparseErrorColumnStorage<@Value TaggedV
             int iFinal = i;
             ColumnStorage colStore = tagTypes.get(i).getInner();
             if (colStore != null)
-                colStore.insertRows(insertAtIndex, insertItems.stream().map((@Nullable TaggedValue t) -> {
+                colStore.insertRows(insertAtIndex, insertItems.stream().map((TaggedValue t) -> {
                     if (t == null)
                         return Either.<String, Object>left("Internal tagged error");
                     else if (t.getTagIndex() == iFinal && t.getInner() != null)

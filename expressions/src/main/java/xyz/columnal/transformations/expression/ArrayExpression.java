@@ -59,17 +59,17 @@ import java.util.stream.Stream;
  */
 public class ArrayExpression extends Expression
 {
-    private final ImmutableList<@Recorded Expression> items;
-    private @Nullable TypeExp elementType;
-    private @MonotonicNonNull List<TypeExp> _test_originalTypes;
+    private final ImmutableList<Expression> items;
+    private TypeExp elementType;
+    private List<TypeExp> _test_originalTypes;
 
-    public ArrayExpression(ImmutableList<@Recorded Expression> items)
+    public ArrayExpression(ImmutableList<Expression> items)
     {
         this.items = items;
     }
 
     @Override
-    public @Nullable CheckedExp check(@Recorded ArrayExpression this, ColumnLookup dataLookup, TypeState state, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public CheckedExp check(ArrayExpression this, ColumnLookup dataLookup, TypeState state, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         // Empty array - special case:
         if (items.isEmpty())
@@ -77,7 +77,7 @@ public class ArrayExpression extends Expression
         TypeExp[] typeArray = new TypeExp[items.size()];
         for (int i = 0; i < typeArray.length; i++)
         {
-            @Nullable CheckedExp c = items.get(i).check(dataLookup, state, kind, LocationInfo.UNIT_DEFAULT, onError);
+            CheckedExp c = items.get(i).check(dataLookup, state, kind, LocationInfo.UNIT_DEFAULT, onError);
             if (c == null)
                 return null;
             typeArray[i] = c.typeExp;
@@ -91,8 +91,7 @@ public class ArrayExpression extends Expression
     }
 
     @Override
-    @OnThread(Tag.Simulation)
-    public ValueResult matchAsPattern(@Value Object value, EvaluateState state) throws InternalException, EvaluationException
+    public ValueResult matchAsPattern(Object value, EvaluateState state) throws InternalException, EvaluationException
     {
         ListEx list = Utility.cast(value, ListEx.class);
         try
@@ -105,11 +104,11 @@ public class ArrayExpression extends Expression
             throw new EvaluationException(e, this, ExecutionType.MATCH, state, ImmutableList.of());
         }
         
-        @Nullable EvaluateState curState = state;
+        EvaluateState curState = state;
         ImmutableList.Builder<ValueResult> itemValues = ImmutableList.builderWithExpectedSize(items.size());
         for (int i = 0; i < items.size(); i++)
         {
-            @Value Object matchAgainst;
+            Object matchAgainst;
             try
             {
                 matchAgainst = list.get(i);
@@ -127,7 +126,6 @@ public class ArrayExpression extends Expression
     }
 
     @Override
-    @OnThread(Tag.Simulation)
     public ValueResult calculateValue(EvaluateState state) throws EvaluationException, InternalException
     {
         ImmutableList.Builder<ValueResult> valuesBuilder = ImmutableList.builderWithExpectedSize(items.size());
@@ -136,7 +134,7 @@ public class ArrayExpression extends Expression
             fetchSubExpression(item, state, valuesBuilder);
         }
         ImmutableList<ValueResult> values = valuesBuilder.build();
-        return result(DataTypeUtility.value(Utility.<ValueResult, @Value Object>mapList(values, v -> v.value)), state, values);
+        return result(DataTypeUtility.value(Utility.<ValueResult, Object>mapList(values, v -> v.value)), state, values);
     }
 
     @Override
@@ -161,7 +159,7 @@ public class ArrayExpression extends Expression
 
     @SuppressWarnings("recorded")
     @Override
-    public @Nullable Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
+    public Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
     {
         if (items.size() <= 1)
             return null; // Can't cause a failure with 1 or less items; need 2+ to have a mismatch
@@ -196,7 +194,7 @@ public class ArrayExpression extends Expression
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -212,7 +210,7 @@ public class ArrayExpression extends Expression
         return items.hashCode();
     }
 
-    public ImmutableList<@Recorded Expression> getElements()
+    public ImmutableList<Expression> getElements()
     {
         return items;
     }

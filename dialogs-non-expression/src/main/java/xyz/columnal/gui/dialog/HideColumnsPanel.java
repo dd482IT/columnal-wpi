@@ -66,7 +66,6 @@ import java.util.List;
  * and one on the right with shown columns.  Drag and drop is allowed between the
  * two lists, and there's also a button to hide columns.
  */
-@OnThread(Tag.FXPlatform)
 public final class HideColumnsPanel
 {
     private final ListView<ColumnId> hiddenColumns;
@@ -75,7 +74,7 @@ public final class HideColumnsPanel
     private final ListView<ColumnId> shownColumns;
     private final Pane pane;
 
-    public HideColumnsPanel(TableManager mgr, @Nullable TableId srcId, ImmutableList<ColumnId> initiallyHidden)
+    public HideColumnsPanel(TableManager mgr, TableId srcId, ImmutableList<ColumnId> initiallyHidden)
     {
         this.hiddenColumns = new ListView<>(FXCollections.observableArrayList(initiallyHidden));
         this.shownColumns = new ListView<>();
@@ -168,9 +167,9 @@ public final class HideColumnsPanel
         {
             @Override
             @SuppressWarnings("unchecked")
-            public @OnThread(Tag.FXPlatform) boolean dragEnded(Dragboard db, Point2D pointInScene)
+            public boolean dragEnded(Dragboard db, Point2D pointInScene)
             {
-                @Nullable Object content = db.getContent(FXUtility.getTextDataFormat("ColumnId"));
+                Object content = db.getContent(FXUtility.getTextDataFormat("ColumnId"));
                 if (content != null && content instanceof List)
                 {
                     FXUtility.mouse(HideColumnsPanel.this).addAllItemsToHidden((List<ColumnId>) content);
@@ -235,7 +234,6 @@ public final class HideColumnsPanel
     }
 
 
-    @OnThread(Tag.FXPlatform)
     public void addAllItemsToHidden(List<ColumnId> items)
     {
         for (ColumnId selected : items)

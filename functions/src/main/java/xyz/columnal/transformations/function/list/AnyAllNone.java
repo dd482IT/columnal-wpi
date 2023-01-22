@@ -40,11 +40,11 @@ public abstract class AnyAllNone
 {
     private static class Processor extends ValueFunction
     {
-        private final @Nullable @Value Boolean returnIfTrueFound;
-        private final @Nullable @Value Boolean returnIfFalseFound;
-        private final @Value Boolean returnAtEnd;
+        private final Boolean returnIfTrueFound;
+        private final Boolean returnIfFalseFound;
+        private final Boolean returnAtEnd;
 
-        private Processor(@Nullable Boolean returnIfTrueFound, @Nullable Boolean returnIfFalseFound, Boolean returnAtEnd)
+        private Processor(Boolean returnIfTrueFound, Boolean returnIfFalseFound, Boolean returnAtEnd)
         {
             this.returnIfTrueFound = returnIfTrueFound == null ? null : DataTypeUtility.value(returnIfTrueFound);
             this.returnIfFalseFound = returnIfFalseFound == null ? null : DataTypeUtility.value(returnIfFalseFound);
@@ -52,13 +52,13 @@ public abstract class AnyAllNone
         }
 
         @Override
-        public @Value Object _call() throws UserException, InternalException
+        public Object _call() throws UserException, InternalException
         {
             ListEx list = arg(0, ListEx.class);
             for (int i = 0; i < list.size(); i++)
             {
                 int iFinal = i;
-                @Value Boolean result = Utility.cast(callArg(1, new @Value Object [] {list.get(i)}), Boolean.class);
+                Boolean result = Utility.cast(callArg(1, new Object [] {list.get(i)}), Boolean.class);
                 if (result && returnIfTrueFound != null)
                 {
                     addUsedLocations(args -> Utility.streamNullable(args.get(0).getListElementLocation(iFinal)));

@@ -32,7 +32,7 @@ import xyz.columnal.utility.function.fx.FXPlatformConsumer;
 
 public class TypeEditor extends TopLevelEditor<TypeExpression, TypeLexer, CodeCompletionContext>
 {
-    public TypeEditor(TypeManager typeManager, @Nullable TypeExpression originalContent, boolean requireConcreteType, boolean emptyAllowed, FXPlatformConsumer<@NonNull @Recorded TypeExpression> onChange)
+    public TypeEditor(TypeManager typeManager, TypeExpression originalContent, boolean requireConcreteType, boolean emptyAllowed, FXPlatformConsumer<TypeExpression> onChange)
     {
         super(originalContent == null ? null : originalContent.save(SaveDestination.toTypeEditor(typeManager), new TableAndColumnRenames(ImmutableMap.of())), new TypeLexer(typeManager, requireConcreteType, emptyAllowed), typeManager, onChange, "type-editor");
     }

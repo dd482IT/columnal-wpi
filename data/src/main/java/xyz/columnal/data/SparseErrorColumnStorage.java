@@ -55,37 +55,37 @@ public abstract class SparseErrorColumnStorage<T> implements ColumnStorage<T>
         this.isImmediateData = isImmediateData;
     }
 
-    protected final @Nullable String getError(int row)
+    protected final String getError(int row)
     {
         return errorEntries.get(row);
     }
     
-    protected final void setError(@UnknownInitialization(SparseErrorColumnStorage.class) SparseErrorColumnStorage<T> this, int row, String error)
+    protected final void setError(SparseErrorColumnStorage<T> this, int row, String error)
     {
         errorEntries.put(row, error);
         if (row > latestError)
             latestError = row;
     }
 
-    private void recalculateLatestError(@UnknownInitialization(SparseErrorColumnStorage.class) SparseErrorColumnStorage<T> this)
+    private void recalculateLatestError(SparseErrorColumnStorage<T> this)
     {
         latestError = errorEntries.keySet().stream().mapToInt(i -> i).max().orElse(-1);
     }
 
-    protected final void unsetError(@UnknownInitialization(SparseErrorColumnStorage.class) SparseErrorColumnStorage<T> this, int row)
+    protected final void unsetError(SparseErrorColumnStorage<T> this, int row)
     {
         errorEntries.remove(row);
         if (row >= latestError)
             recalculateLatestError();
     }
     
-    private final HashMap<Integer, String> mapErrors(Function<Integer, @Nullable Integer> rowChange)
+    private final HashMap<Integer, String> mapErrors(Function<Integer, Integer> rowChange)
     {
         // Need to be careful here not to overwrite keys which are swapping:
         HashMap<Integer, String> modified = new HashMap<>();
         HashMap<Integer, String> removed = new HashMap<>();
         errorEntries.forEach((k, v) -> {
-            @Nullable Integer newKey = rowChange.apply(k);
+            Integer newKey = rowChange.apply(k);
             if (newKey != null)
                 modified.put(newKey, v);
             else
@@ -124,7 +124,7 @@ public abstract class SparseErrorColumnStorage<T> implements ColumnStorage<T>
     }
 
     // Insert, but without doing errors at all, other than to add blanks where there is null
-    protected abstract SimulationRunnable _insertRows(int index, List<@Nullable T> items) throws InternalException;
+    protected abstract SimulationRunnable _insertRows(int index, List<T> items) throws InternalException;
     
 
     // Remove, but without doing errors at all
@@ -138,12 +138,12 @@ public abstract class SparseErrorColumnStorage<T> implements ColumnStorage<T>
         if (index <= latestError)
             mapErrors(i -> i < index ? i : i + itemsSize);
         
-        ArrayList<@Nullable T> items = new ArrayList<>();
+        ArrayList<T> items = new ArrayList<>();
         for (int i = 0; i < itemsErr.size(); i++)
         {
             Either<String, T> errOrValue = itemsErr.get(i);
             int iFinal = i;
-            items.add(errOrValue.<@Nullable T>either(err -> {
+            items.add(errOrValue.<T>either(err -> {
                 setError(index + iFinal, err);
                 return null;
             }, v -> {
@@ -171,15 +171,14 @@ public abstract class SparseErrorColumnStorage<T> implements ColumnStorage<T>
         };
     }
     
-    protected abstract class GetValueOrError<V extends @Value @NonNull Object> implements GetValue<@Value V>
+    protected abstract class GetValueOrError<V extends Object> implements GetValue<V>
     {
-        @OnThread(Tag.Any)
         public GetValueOrError()
         {
         }
 
         @Override
-        public final @NonNull @Value V getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
+        public final V getWithProgress(int index, ProgressListener progressListener) throws UserException, InternalException
         {
             // Must do this first in case it finds an error:
             _beforeGet(index, progressListener);
@@ -195,21 +194,17 @@ public abstract class SparseErrorColumnStorage<T> implements ColumnStorage<T>
                 return _getWithProgress(index, progressListener);
         }
 
-        @OnThread(Tag.Simulation)
-        protected abstract void _beforeGet(int index, @Nullable ProgressListener progressListener) throws InternalException, UserException;
+        protected abstract void _beforeGet(int index, ProgressListener progressListener) throws InternalException, UserException;
 
         @Override
-        @OnThread(Tag.Simulation)
-        public final void set(int index, Either<String, @Value V> value) throws InternalException, UserException
+        public final void set(int index, Either<String, V> value) throws InternalException, UserException
         {
             value.eitherEx_(err -> {setError(index, err); _set(index, null);},
                 v -> {errorEntries.remove(index); _set(index, v);});
         }
 
-        @OnThread(Tag.Simulation)
-        protected abstract @NonNull @Value V _getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException;
+        protected abstract V _getWithProgress(int index, ProgressListener progressListener) throws UserException, InternalException;
 
-        @OnThread(Tag.Simulation)
-        protected abstract void _set(int index, @Nullable @Value V value) throws InternalException, UserException;
+        protected abstract void _set(int index, V value) throws InternalException, UserException;
     }
 }

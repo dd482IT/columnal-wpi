@@ -59,17 +59,17 @@ public class BackwardsTemporal extends BackwardsProvider
     }
 
     @Override
-    public List<ExpressionMaker> terminals(DataType targetType, @Value Object targetValue) throws InternalException, UserException
+    public List<ExpressionMaker> terminals(DataType targetType, Object targetValue) throws InternalException, UserException
     {
         return ImmutableList.of();
     }
 
     @Override
-    public List<ExpressionMaker> deep(int maxLevels, DataType targetType, @Value Object targetValue) throws InternalException, UserException
+    public List<ExpressionMaker> deep(int maxLevels, DataType targetType, Object targetValue) throws InternalException, UserException
     {
-        DateTimeInfo dateTimeInfo = targetType.apply(new FlatDataTypeVisitor<@Nullable DateTimeInfo>(null) {
+        DateTimeInfo dateTimeInfo = targetType.apply(new FlatDataTypeVisitor<DateTimeInfo>(null) {
             @Override
-            public @Nullable DateTimeInfo date(DateTimeInfo dateTimeInfo) throws InternalException, InternalException
+            public DateTimeInfo date(DateTimeInfo dateTimeInfo) throws InternalException, InternalException
             {
                 return dateTimeInfo;
             }

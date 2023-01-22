@@ -52,19 +52,19 @@ import java.util.Objects;
 // An Nary expression applying a tagged type, e.g. Either-Int-String.  That would have three args.
 public class TypeApplyExpression extends TypeExpression
 {
-    private final @ExpressionIdentifier String typeName;
-    private final ImmutableList<Either<@Recorded UnitExpression, @Recorded TypeExpression>> arguments;
+    private final String typeName;
+    private final ImmutableList<Either<UnitExpression, TypeExpression>> arguments;
 
-    public TypeApplyExpression(@ExpressionIdentifier String typeName,  ImmutableList<Either<@Recorded UnitExpression, @Recorded TypeExpression>> arguments)
+    public TypeApplyExpression(String typeName,  ImmutableList<Either<UnitExpression, TypeExpression>> arguments)
     {
         this.typeName = typeName;
         // Turn any units which are encased in a type expression wrapper
         // back into actual units:
-        this.arguments = Utility.<Either<@Recorded UnitExpression, @Recorded TypeExpression>, Either<@Recorded UnitExpression, @Recorded TypeExpression>>mapListI(arguments, arg -> arg.<@Recorded TypeExpression>flatMap(t -> {
+        this.arguments = Utility.<Either<UnitExpression, TypeExpression>, Either<UnitExpression, TypeExpression>>mapListI(arguments, arg -> arg.<TypeExpression>flatMap(t -> {
             if (t instanceof UnitLiteralTypeExpression)
-                return Either.<@Recorded UnitExpression, @Recorded TypeExpression>left(((UnitLiteralTypeExpression)t).getUnitExpression());
+                return Either.<UnitExpression, TypeExpression>left(((UnitLiteralTypeExpression)t).getUnitExpression());
             else
-                return Either.<@Recorded UnitExpression, @Recorded TypeExpression>right(t);
+                return Either.<UnitExpression, TypeExpression>right(t);
         }));
         if (arguments.isEmpty())
             Log.logStackTrace("Empty arguments in type apply");
@@ -83,14 +83,14 @@ public class TypeApplyExpression extends TypeExpression
         for (int i = 0; i < arguments.size(); i++)
         {
             // Bit of a hack to look for RecordTypeExpression exactly...
-            Either<@Recorded UnitExpression, @Recorded TypeExpression> e = arguments.get(i);
+            Either<UnitExpression, TypeExpression> e = arguments.get(i);
             sb.append(e.<String>either(u -> "({" + u.save(saveDestination,  true) + "})", x -> x instanceof RecordTypeExpression ? x.save(saveDestination, renames) : "(" + x.save(saveDestination, renames) + ")"));
         }
         return sb.toString();
     }
 
     @Override
-    public @Nullable DataType toDataType(TypeManager typeManager)
+    public DataType toDataType(TypeManager typeManager)
     {
         // Shouldn't happen:
         if (arguments.isEmpty())
@@ -107,12 +107,12 @@ public class TypeApplyExpression extends TypeExpression
         
         // If we're here, right number of arguments!
         List<Either<Unit, DataType>> typeArgs = new ArrayList<>();
-        for (Either<@Recorded UnitExpression, @Recorded TypeExpression> arg : arguments)
+        for (Either<UnitExpression, TypeExpression> arg : arguments)
         {
-            @Nullable Either<Unit, DataType> type = null;
+            Either<Unit, DataType> type = null;
             try
             {
-                type = Either.surfaceNull(arg.<@Nullable Unit, @Nullable DataType, InternalException, UnitLookupException>mapBothEx2(u -> u.asUnit(typeManager.getUnitManager()).makeUnit(ImmutableMap.of()), t -> t.toDataType(typeManager)));
+                type = Either.surfaceNull(arg.<Unit, DataType, InternalException, UnitLookupException>mapBothEx2(u -> u.asUnit(typeManager.getUnitManager()).makeUnit(ImmutableMap.of()), t -> t.toDataType(typeManager)));
             }
             catch (InternalException e)
             {
@@ -138,18 +138,18 @@ public class TypeApplyExpression extends TypeExpression
     }
 
     @Override
-    public @Recorded JellyType toJellyType(@Recorded TypeApplyExpression this, TypeManager typeManager, JellyRecorder jellyRecorder) throws InternalException, UnJellyableTypeExpression
+    public JellyType toJellyType(TypeApplyExpression this, TypeManager typeManager, JellyRecorder jellyRecorder) throws InternalException, UnJellyableTypeExpression
     {
         if (arguments.isEmpty())
             throw new InternalException("Empty type-apply expression");
 
-        ImmutableList.Builder<Either<JellyUnit, @Recorded JellyType>> args = ImmutableList.builderWithExpectedSize(arguments.size());
+        ImmutableList.Builder<Either<JellyUnit, JellyType>> args = ImmutableList.builderWithExpectedSize(arguments.size());
 
         for (int i = 0; i < arguments.size(); i++)
         {
-            Either<@Recorded UnitExpression, @Recorded TypeExpression> arg = arguments.get(i);
+            Either<UnitExpression, TypeExpression> arg = arguments.get(i);
             int iFinal = i;
-            args.add(arg.<JellyUnit, @Recorded JellyType, InternalException, UnJellyableTypeExpression>mapBothEx2(u -> {
+            args.add(arg.<JellyUnit, JellyType, InternalException, UnJellyableTypeExpression>mapBothEx2(u -> {
                 try
                 {
                     return u.asUnit(typeManager.getUnitManager());
@@ -158,7 +158,7 @@ public class TypeApplyExpression extends TypeExpression
                 {
                     throw new UnJellyableTypeExpression(e.errorMessage == null ? StyledString.s("Invalid unit") : e.errorMessage, e.errorItem, e.quickFixes);
                 }
-            }, (@Recorded TypeExpression t) -> t.toJellyType(typeManager, jellyRecorder)));
+            }, (TypeExpression t) -> t.toJellyType(typeManager, jellyRecorder)));
             
         }
         
@@ -177,19 +177,19 @@ public class TypeApplyExpression extends TypeExpression
         return StyledString.concat(StyledString.s(typeName), arguments.stream().map(e -> StyledString.roundBracket(e.either(u -> StyledString.concat(StyledString.s("{"), u.toStyledString(), StyledString.s("}")), TypeExpression::toStyledString))).collect(StyledString.joining("")));
     }
 
-    public @ExpressionIdentifier String getTypeName()
+    public String getTypeName()
     {
         return typeName;
     }
 
     // Gets arguments, without the leading identifier
-    public ImmutableList<Either<@Recorded UnitExpression, @Recorded TypeExpression>> getArgumentsOnly()
+    public ImmutableList<Either<UnitExpression, TypeExpression>> getArgumentsOnly()
     {
         return arguments;
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -211,7 +211,7 @@ public class TypeApplyExpression extends TypeExpression
     }
 
     @Override
-    public @Nullable @ExpressionIdentifier String asIdent()
+    public String asIdent()
     {
         return null;
     }

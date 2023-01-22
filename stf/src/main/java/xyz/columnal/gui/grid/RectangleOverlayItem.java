@@ -44,7 +44,6 @@ import java.util.Optional;
  * This implements the positioning conversion from cells to pixels, and implements
  * makeCell to delegate the relevant setup to styleNewRectangle.
  */
-@OnThread(Tag.FXPlatform)
 public abstract class RectangleOverlayItem extends FloatingItem<ResizableRectangle>
 {
     protected RectangleOverlayItem(ViewOrder viewOrder)
@@ -93,7 +92,7 @@ public abstract class RectangleOverlayItem extends FloatingItem<ResizableRectang
     protected abstract void styleNewRectangle(Rectangle r, VisibleBounds visibleBounds);
 
     @Override
-    public final @Nullable Pair<ItemState, @Nullable StyledString> getItemState(CellPosition cellPosition, Point2D screenPos)
+    public final Pair<ItemState, StyledString> getItemState(CellPosition cellPosition, Point2D screenPos)
     {
         return null;
     }

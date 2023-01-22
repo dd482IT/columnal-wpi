@@ -64,10 +64,9 @@ import java.util.function.Consumer;
 /**
  * Created by neil on 17/04/2017.
  */
-@OnThread(Tag.FXPlatform)
 public class InitialWindow
 {
-    public static void show(Stage stage, @Nullable CompletionStage<Optional<UpgradeInfo>> upgradeInfo)
+    public static void show(Stage stage, CompletionStage<Optional<UpgradeInfo>> upgradeInfo)
     {
         MenuBar menuBar = new MenuBar(
             GUI.menu("menu.project",
@@ -104,7 +103,7 @@ public class InitialWindow
         mruListView.setOnMouseClicked(e -> {
             if (e.getButton() == MouseButton.PRIMARY && e.getClickCount() == 2)
             {
-                @Nullable File selected = mruListView.getSelectionModel().getSelectedItem();
+                File selected = mruListView.getSelectionModel().getSelectedItem();
                 if (selected != null)
                 {
                     openProject(stage, selected, upgradeInfo);
@@ -114,7 +113,7 @@ public class InitialWindow
         mruListView.addEventHandler(KeyEvent.KEY_PRESSED, e -> {
             if (e.getCode() == KeyCode.ENTER || e.getCode() == KeyCode.SPACE)
             {
-                @Nullable File selected = mruListView.getSelectionModel().getSelectedItem();
+                File selected = mruListView.getSelectionModel().getSelectedItem();
                 if (selected != null)
                 {
                     openProject(stage, selected, upgradeInfo);
@@ -141,7 +140,6 @@ public class InitialWindow
             upgradeInfo.thenAccept(new Consumer<Optional<UpgradeInfo>>()
             {
                 @Override
-                @OnThread(value = Tag.Worker, ignoreParent = true)
                 public void accept(Optional<UpgradeInfo> opt)
                 {
                     opt.ifPresent(u -> Platform.runLater(() -> u.showIn(content, 2)));
@@ -170,7 +168,7 @@ public class InitialWindow
     }
 
     // Returns true if successfully opened a project
-    public static boolean chooseAndOpenProject(Stage parent, @Nullable CompletionStage<Optional<UpgradeInfo>> upgradeInfo)
+    public static boolean chooseAndOpenProject(Stage parent, CompletionStage<Optional<UpgradeInfo>> upgradeInfo)
     {
         File src = FXUtility.chooseFileOpen("project.open.dialogTitle", "projectOpen", parent, FXUtility.getProjectExtensionFilter(Main.EXTENSION_INCL_DOT));
         if (src != null)
@@ -181,7 +179,7 @@ public class InitialWindow
     }
 
     // Returns true if successfully opened a project
-    private static boolean openProject(Stage parent, File src, @Nullable CompletionStage<Optional<UpgradeInfo>> upgradeInfo)
+    private static boolean openProject(Stage parent, File src, CompletionStage<Optional<UpgradeInfo>> upgradeInfo)
     {
         try
         {
@@ -198,12 +196,11 @@ public class InitialWindow
         }
     }
 
-    @OnThread(Tag.FXPlatform)
-    public static MainWindow.@Nullable MainWindowActions newProject(@Nullable Stage parent, @Nullable CompletionStage<Optional<UpgradeInfo>> upgradeInfo)
+    public static MainWindow.MainWindowActions newProject(Stage parent, CompletionStage<Optional<UpgradeInfo>> upgradeInfo)
     {
-        return FXUtility.<MainWindow.@Nullable MainWindowActions>alertOnErrorFX(TranslationUtility.getString("error.creating.new.file"), () ->
+        return FXUtility.<MainWindow.MainWindowActions>alertOnErrorFX(TranslationUtility.getString("error.creating.new.file"), () ->
         {
-            @Nullable File dest;
+            File dest;
             try
             {
                 dest = Utility.getNewAutoSaveFile();
@@ -220,7 +217,7 @@ public class InitialWindow
         });
     }
     
-    static ImmutableList<MenuItem> makeRecentProjectMenu(Stage window, @Nullable CompletionStage<Optional<UpgradeInfo>> upgradeInfo)
+    static ImmutableList<MenuItem> makeRecentProjectMenu(Stage window, CompletionStage<Optional<UpgradeInfo>> upgradeInfo)
     {
         return Utility.mapListI(Utility.readRecentFilesList(), recent -> {
             MenuItem menuItem = new MenuItem(recent.getAbsolutePath());

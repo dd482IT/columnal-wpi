@@ -40,11 +40,10 @@ import xyz.columnal.utility.TranslationUtility;
  * either an error or the result.  Prevents OK button doing anything if we are currently
  * in the error state.
  */
-@OnThread(Tag.FXPlatform)
 public abstract class ErrorableLightDialog<R> extends LightDialog<R>
 {
     private final ErrorLabel errorLabel = new ErrorLabel();
-    private @Nullable R result;
+    private R result;
 
     public ErrorableLightDialog(DimmableParent parent, boolean buttonsToSide)
     {
@@ -72,7 +71,7 @@ public abstract class ErrorableLightDialog<R> extends LightDialog<R>
             }, r -> {result = r;});
         });
         //We bind so that if subclass mistakenly tries to set, it will get an error:
-        resultConverterProperty().bind(new ReadOnlyObjectWrapper<Callback<ButtonType, @Nullable R>>(bt -> {
+        resultConverterProperty().bind(new ReadOnlyObjectWrapper<Callback<ButtonType, R>>(bt -> {
             if (bt == ButtonType.OK)
             {
                 if (result != null)
@@ -90,18 +89,17 @@ public abstract class ErrorableLightDialog<R> extends LightDialog<R>
 
     // Given back as Node because it's only meant for adding to GUI.  Subclasses don't set
     // the text, we do.
-    @OnThread(Tag.FXPlatform)
-    protected final Node getErrorLabel(@UnknownInitialization(ErrorableLightDialog.class) ErrorableLightDialog<R>this)
+    protected final Node getErrorLabel(ErrorableLightDialog<R>this)
     {
         return errorLabel;
     }
     
-    protected void clearErrorLabel(@UnknownInitialization(ErrorableLightDialog.class) ErrorableLightDialog<R> this)
+    protected void clearErrorLabel(ErrorableLightDialog<R> this)
     {
         errorLabel.setText("");
     }
 
-    protected void clearErrorLabelOnChange(@UnknownInitialization(ErrorableLightDialog.class) ErrorableLightDialog<R> this, ErrorableTextField<?> field)
+    protected void clearErrorLabelOnChange(ErrorableLightDialog<R> this, ErrorableTextField<?> field)
     {
         field.onTextChange(() -> {
             clearErrorLabel();
@@ -112,6 +110,5 @@ public abstract class ErrorableLightDialog<R> extends LightDialog<R>
      * Gets either an error or the result.  If there is an error, it may be called again.  If a
      * result is returned, it will not be called again.
      */
-    @OnThread(Tag.FXPlatform)
-    protected abstract Either<@Localized String, R> calculateResult();
+    protected abstract Either<String, R> calculateResult();
 }

@@ -45,15 +45,15 @@ public class SecondsBetween extends FunctionDefinition
     }
 
     @Override
-    public @OnThread(Tag.Simulation) ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
+    public ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
     {
         return new ValueFunction()
         {
             @Override
-            public @OnThread(Tag.Simulation) @Value Object _call() throws InternalException, UserException
+            public Object _call() throws InternalException, UserException
             {
-                @Value Temporal lhs = arg(0, Temporal.class);
-                @Value Temporal rhs = arg(1, Temporal.class);
+                Temporal lhs = arg(0, Temporal.class);
+                Temporal rhs = arg(1, Temporal.class);
                 return DataTypeUtility.value(ChronoUnit.SECONDS.between(lhs, rhs));
             }
         };

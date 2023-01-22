@@ -74,20 +74,19 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-@OnThread(Tag.FXPlatform)
 public class EditSortDialog extends ErrorableLightDialog<ImmutableList<Pair<ColumnId, Direction>>>
 {
-    private final @Nullable Table srcTable;
-    private final @Nullable RecordSet dataWithColumns;
+    private final Table srcTable;
+    private final RecordSet dataWithColumns;
     private final SortList sortList;
 
-    public EditSortDialog(View parent, @Nullable Point2D lastScreenPos, @Nullable Table srcTable, Table destTable, @Nullable ImmutableList<Pair<ColumnId, Direction>> originalSortBy)
+    public EditSortDialog(View parent, Point2D lastScreenPos, Table srcTable, Table destTable, ImmutableList<Pair<ColumnId, Direction>> originalSortBy)
     {
         super(parent, true);
         setResizable(true);
         initModality(Modality.NONE);
         this.srcTable = srcTable;
-        @Nullable RecordSet d = null;
+        RecordSet d = null;
         try
         {
             d = srcTable == null ? destTable.getData() : srcTable.getData();
@@ -127,18 +126,17 @@ public class EditSortDialog extends ErrorableLightDialog<ImmutableList<Pair<Colu
     }
 
     @Override
-    protected @OnThread(Tag.FXPlatform) Either<@Localized String, ImmutableList<Pair<ColumnId, Direction>>> calculateResult()
+    protected Either<String, ImmutableList<Pair<ColumnId, Direction>>> calculateResult()
     {
-        return Either.<@Localized String, Pair<ColumnId, Direction>, Pair<String, Direction>>mapM(sortList.getItems(), item -> {
-            @ExpressionIdentifier String columnId = IdentifierUtility.asExpressionIdentifier(item.getFirst());
+        return Either.<String, Pair<ColumnId, Direction>, Pair<String, Direction>>mapM(sortList.getItems(), item -> {
+            String columnId = IdentifierUtility.asExpressionIdentifier(item.getFirst());
             if (columnId == null)
-                return Either.<@Localized String, Pair<ColumnId, Direction>>left(TranslationUtility.getString("edit.column.invalid.column.name"));
+                return Either.<String, Pair<ColumnId, Direction>>left(TranslationUtility.getString("edit.column.invalid.column.name"));
             else
-                return Either.<@Localized String, Pair<ColumnId, Direction>>right(item.<ColumnId>mapFirst(c -> new ColumnId(columnId)));
+                return Either.<String, Pair<ColumnId, Direction>>right(item.<ColumnId>mapFirst(c -> new ColumnId(columnId)));
         });
     }
 
-    @OnThread(Tag.FXPlatform)
     private class SortList extends FancyList<Pair<String, Direction>, SortPane>
     {
         public SortList(ImmutableList<Pair<String, Direction>> initialItems)
@@ -184,7 +182,7 @@ public class EditSortDialog extends ErrorableLightDialog<ImmutableList<Pair<Colu
             }
         }
 
-        public void updateButtonWidths(@UnknownInitialization(FancyList.class) SortList this)
+        public void updateButtonWidths(SortList this)
         {
             ImmutableList<SortPane.DirectionButton> buttons = streamCells().map(c -> c.getContent().button).collect(ImmutableList.<SortPane.DirectionButton>toImmutableList());
             if (buttons.isEmpty())
@@ -199,7 +197,6 @@ public class EditSortDialog extends ErrorableLightDialog<ImmutableList<Pair<Colu
         }
     }
 
-    @OnThread(Tag.FXPlatform)
     private class SortPane extends BorderPane
     {
         private final TextField columnField;
@@ -207,7 +204,7 @@ public class EditSortDialog extends ErrorableLightDialog<ImmutableList<Pair<Colu
         private final DirectionButton button;
         private long lastEditTimeMillis = -1;
 
-        public SortPane(@Nullable Pair<String, Direction> initialContent)
+        public SortPane(Pair<String, Direction> initialContent)
         {
             columnField = new TextField(initialContent == null ? "" : initialContent.getFirst());
             BorderPane.setMargin(columnField, new Insets(0, 2, 2, 5));
@@ -248,7 +245,7 @@ public class EditSortDialog extends ErrorableLightDialog<ImmutableList<Pair<Colu
             return columnField.isFocused() ? System.currentTimeMillis() : lastEditTimeMillis;
         }
 
-        private CompletionListener<ColumnCompletion> getListener(@UnknownInitialization SortPane this)
+        private CompletionListener<ColumnCompletion> getListener(SortPane this)
         {
             return new CompletionListener<ColumnCompletion>()
             {
@@ -260,7 +257,7 @@ public class EditSortDialog extends ErrorableLightDialog<ImmutableList<Pair<Colu
                 }
 
                 @Override
-                public @Nullable String keyboardSelect(String textBefore, String textAfter, @Nullable ColumnCompletion selectedItem, boolean tabPressed)
+                public String keyboardSelect(String textBefore, String textAfter, ColumnCompletion selectedItem, boolean tabPressed)
                 {
                     if (selectedItem != null)
                         return selectedItem.c.getName().getOutput();
@@ -280,7 +277,6 @@ public class EditSortDialog extends ErrorableLightDialog<ImmutableList<Pair<Colu
             return new Pair<>(columnField.getText(), button.direction);
         }
 
-        @OnThread(Tag.FXPlatform)
         private final class DirectionButton extends Button
         {
             private final Label topLabel;
@@ -316,7 +312,7 @@ public class EditSortDialog extends ErrorableLightDialog<ImmutableList<Pair<Colu
                 bottomLabel.setText(direction == Direction.ASCENDING ? largeItem : smallItem);
             }
             
-            public void setType(@Nullable DataType dataType)
+            public void setType(DataType dataType)
             {
                 if (dataType == null)
                     dataType = DataType.TEXT;
@@ -391,10 +387,10 @@ public class EditSortDialog extends ErrorableLightDialog<ImmutableList<Pair<Colu
                         }
 
                         @Override
-                        public UnitType record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, UserException
+                        public UnitType record(ImmutableMap<String, DataType> fields) throws InternalException, UserException
                         {
                             @SuppressWarnings("optional")
-                            Entry<@ExpressionIdentifier String, DataType> first = fields.entrySet().stream().sorted(Comparator.comparing(e -> e.getKey())).findFirst().orElseThrow(() -> new UserException("Empty record type"));
+                            Entry<String, DataType> first = fields.entrySet().stream().sorted(Comparator.comparing(e -> e.getKey())).findFirst().orElseThrow(() -> new UserException("Empty record type"));
                             // Recurse first:
                             first.getValue().apply(this);
                             // Then wrap:
@@ -404,7 +400,7 @@ public class EditSortDialog extends ErrorableLightDialog<ImmutableList<Pair<Colu
                         }
 
                         @Override
-                        public UnitType array(@Nullable DataType inner) throws InternalException, UserException
+                        public UnitType array(DataType inner) throws InternalException, UserException
                         {
                             if (inner == null)
                             {
@@ -435,14 +431,14 @@ public class EditSortDialog extends ErrorableLightDialog<ImmutableList<Pair<Colu
         }
     }
 
-    private @Nullable DataType calculateTypeOf(@Nullable String columnId)
+    private DataType calculateTypeOf(String columnId)
     {
         if (columnId == null || dataWithColumns == null)
             return null;
-        @ExpressionIdentifier String s = IdentifierUtility.asExpressionIdentifier(columnId);
+        String s = IdentifierUtility.asExpressionIdentifier(columnId);
         if (s == null)
             return null;
-        @Nullable Column c = dataWithColumns.getColumnOrNull(new ColumnId(s));
+        Column c = dataWithColumns.getColumnOrNull(new ColumnId(s));
         if (c == null)
             return null;
         try

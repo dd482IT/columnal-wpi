@@ -70,7 +70,7 @@ public class AsUnit extends FunctionDefinition
             return new ValueFunction()
             {
                 @Override
-                public @OnThread(Tag.Simulation) @Value Object _call() throws InternalException, UserException
+                public Object _call() throws InternalException, UserException
                 {
                     throw e;
                 }
@@ -80,7 +80,7 @@ public class AsUnit extends FunctionDefinition
 
     private static class Instance extends ValueFunction
     {
-        private final @Value BigDecimal scaleFactor;
+        private final BigDecimal scaleFactor;
 
         private Instance(Rational scaleFactor)
         {
@@ -88,9 +88,9 @@ public class AsUnit extends FunctionDefinition
         }
 
         @Override
-        public @OnThread(Tag.Simulation) @Value Object _call() throws InternalException, UserException
+        public Object _call() throws InternalException, UserException
         {
-            @Value Number src = arg(1, Number.class);
+            Number src = arg(1, Number.class);
             return Utility.multiplyNumbers(src, scaleFactor);
         }
     }

@@ -45,7 +45,7 @@ import java.util.stream.Collectors;
 public class HTMLExporter implements Exporter
 {
     @Override
-    public @OnThread(Tag.Simulation) void exportData(File destination, Table data) throws UserException, InternalException
+    public void exportData(File destination, Table data) throws UserException, InternalException
     {
         String header = "<!DOCTYPE html>\n<html>\n<head><title>" + e(data.getId().getRaw()) + "</title></head>\n<body>\n<table>\n<caption>" + e(data.getId().getRaw()) + "</caption>\n";
         RecordSet rs = data.getData();
@@ -58,7 +58,7 @@ public class HTMLExporter implements Exporter
             for (Column column : rs.getColumns())
             {
                 tableBody.append("<td>");
-                @Value Object collapsed = column.getType().getCollapsed(i);
+                Object collapsed = column.getType().getCollapsed(i);
                 // Don't quote Text type unless part of compound type:
                 if (collapsed instanceof String)
                     tableBody.append(e((String)collapsed));
@@ -86,12 +86,11 @@ public class HTMLExporter implements Exporter
     }
 
     @Override
-    public @Localized String getName()
+    public String getName()
     {
         return TranslationUtility.getString("importer.html.files");
     }
 
-    @OnThread(Tag.Any)
     @Override
     public ImmutableList<String> getSupportedFileTypes()
     {

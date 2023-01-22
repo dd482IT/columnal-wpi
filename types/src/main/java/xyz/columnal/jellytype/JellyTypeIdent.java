@@ -57,9 +57,9 @@ import java.util.stream.Stream;
  */
 class JellyTypeIdent extends JellyType
 {
-    private final @ExpressionIdentifier String name;
+    private final String name;
 
-    JellyTypeIdent(@ExpressionIdentifier String name)
+    JellyTypeIdent(String name)
     {
         this.name = name;
     }
@@ -76,7 +76,7 @@ class JellyTypeIdent extends JellyType
     }
 
     @Override
-    public DataType makeDataType(@Recorded JellyTypeIdent this, ImmutableMap<String, Either<Unit, DataType>> typeVariables, TypeManager mgr) throws InternalException, UnknownTypeException, TaggedInstantiationException
+    public DataType makeDataType(JellyTypeIdent this, ImmutableMap<String, Either<Unit, DataType>> typeVariables, TypeManager mgr) throws InternalException, UnknownTypeException, TaggedInstantiationException
     {
         Either<Unit, DataType> var = typeVariables.get(name);
         if (var != null)
@@ -121,7 +121,7 @@ class JellyTypeIdent extends JellyType
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;

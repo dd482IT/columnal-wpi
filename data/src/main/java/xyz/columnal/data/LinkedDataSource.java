@@ -49,14 +49,13 @@ public abstract class LinkedDataSource extends DataSource
     }
 
     @Override
-    @OnThread(Tag.Any)
     public RecordSet getData()
     {
         return data;
     }
 
     @Override
-    public @OnThread(Tag.Simulation) void save(@Nullable File destination, Saver then, TableAndColumnRenames renames)
+    public void save(File destination, Saver then, TableAndColumnRenames renames)
     {
         //dataSourceLinkHeader : DATA tableId LINKED importType filePath NEWLINE;
         OutputBuilder b = new OutputBuilder();
@@ -79,7 +78,7 @@ public abstract class LinkedDataSource extends DataSource
     }
 
     @Override
-    public @OnThread(Tag.Any) TableOperations getOperations()
+    public TableOperations getOperations()
     {
         // TODO prompt to transform to non-linked table
         return new TableOperations(null, c -> null, null, null, null);

@@ -64,7 +64,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 // Will become a replacement for FlexibleTextField
-@OnThread(Tag.FXPlatform)
 public class DocumentTextField extends TextEditorBase implements DocumentListener
 {
     private Document.TrackedPosition anchorPosition;
@@ -80,10 +79,10 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
     protected boolean expanded;
     protected boolean scrollable;
     protected TextAlignment unfocusedAlignment = TextAlignment.LEFT;
-    private @Nullable Double idealWidth = null;
-    private final @Nullable FXPlatformRunnable onExpand;
+    private Double idealWidth = null;
+    private final FXPlatformRunnable onExpand;
 
-    public DocumentTextField(@Nullable FXPlatformRunnable onExpand)
+    public DocumentTextField(FXPlatformRunnable onExpand)
     {
         super(makeTextNodes(new ReadOnlyDocument("").getStyledSpans(false)));
         this.onExpand = onExpand;
@@ -101,7 +100,7 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
     }
 
     @Override
-    public @OnThread(value = Tag.FXPlatform) void focusChanged(boolean focused)
+    public void focusChanged(boolean focused)
     {
         document.focusChanged(focused);
         if (!focused)
@@ -279,14 +278,13 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
     }
 
     @Override
-    @OnThread(Tag.FXPlatform)
     protected void replaceSelection(String character)
     {
         document.replaceText(Math.min(caretPosition.getPosition(), anchorPosition.getPosition()), Math.min(document.getLength(), Math.max(caretPosition.getPosition(), anchorPosition.getPosition())), character);
     }
 
     @Override
-    protected @OnThread(Tag.FXPlatform) String getSelectedText()
+    protected String getSelectedText()
     {
         return document.getText().substring(Math.min(getCaretPosition(), getAnchorPosition()), Math.max(getCaretPosition(), getAnchorPosition()));
     }
@@ -318,7 +316,6 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
     }
 
     @Override
-    @OnThread(Tag.FXPlatform)
     public void documentChanged(Document document)
     {
         textFlow.getChildren().setAll(makeTextNodes(document.getStyledSpans(isEffectivelyFocused())));
@@ -337,53 +334,49 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
         }).collect(ImmutableList.<Text>toImmutableList());
     }
     
-    @OnThread(Tag.FXPlatform)
-    public @CanonicalLocation int getAnchorPosition()
+    public int getAnchorPosition()
     {
         return anchorPosition.getPosition();
     }
     
-    @OnThread(Tag.FXPlatform)
-    public @CanonicalLocation int getCaretPosition()
+    public int getCaretPosition()
     {
         return caretPosition.getPosition();
     }
 
     @Override
     @SuppressWarnings("units") // Because display and canonical are the same
-    public @OnThread(Tag.FXPlatform) @DisplayLocation int getDisplayCaretPosition()
+    public int getDisplayCaretPosition()
     {
         return getCaretPosition();
     }
 
     @Override
     @SuppressWarnings("units") // Because display and canonical are the same
-    public @OnThread(Tag.FXPlatform) @DisplayLocation int getDisplayAnchorPosition()
+    public int getDisplayAnchorPosition()
     {
         return getAnchorPosition();
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) BitSet getErrorCharacters()
+    public BitSet getErrorCharacters()
     {
         return new BitSet();
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) ImmutableList<BackgroundInfo> getBackgrounds()
+    public ImmutableList<BackgroundInfo> getBackgrounds()
     {
         return ImmutableList.of();
     }
 
     @Override
-    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     protected double computePrefHeight(double width)
     {
         return textFlow.prefHeight(-1);
     }
 
     @Override
-    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     protected double computePrefWidth(double height)
     {
         if (idealWidth != null)
@@ -491,7 +484,7 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
     }
     
     @SuppressWarnings("unchecked")
-    public <T> @Nullable RecogniserDocument<T> getRecogniserDocument(Class<T> itemClass)
+    public <T> RecogniserDocument<T> getRecogniserDocument(Class<T> itemClass)
     {
         if (document instanceof RecogniserDocument<?> && ((RecogniserDocument<?>)document).getItemClass().equals(itemClass))
             return (RecogniserDocument<T>)document;
@@ -533,13 +526,12 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
     }
 
     @Override
-    protected @OnThread(Tag.FXPlatform) Point2D translateHit(double x, double y)
+    protected Point2D translateHit(double x, double y)
     {
         return new Point2D(x + horizTranslation, y + vertTranslation);
     }
 
     @Override
-    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     protected void layoutChildren()
     {
         if (expanded || idealWidth != null)
@@ -656,7 +648,7 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) double calcWidthToFitContent()
+    public double calcWidthToFitContent()
     {
         if (idealWidth != null)
             return idealWidth;
@@ -664,7 +656,7 @@ public class DocumentTextField extends TextEditorBase implements DocumentListene
             return super.calcWidthToFitContent();
     }
 
-    public @Nullable StyledString getHoverText()
+    public StyledString getHoverText()
     {
         if (calcWidthToFitContent() > getWidth() + 3)
             return StyledString.s(document.getText());

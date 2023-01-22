@@ -71,7 +71,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-@OnThread(Tag.FXPlatform)
 public class ClipboardUtils
 {
 
@@ -79,11 +78,11 @@ public class ClipboardUtils
 
     public static class LoadedColumnInfo
     {
-        public final @Nullable ColumnId columnName; // May not be known
+        public final ColumnId columnName; // May not be known
         public final DataType dataType;
-        public final ImmutableList<Either<String, @Value Object>> dataValues;
+        public final ImmutableList<Either<String, Object>> dataValues;
 
-        public LoadedColumnInfo(@Nullable ColumnId columnName, DataType dataType, ImmutableList<Either<String, @Value Object>> dataValues)
+        public LoadedColumnInfo(ColumnId columnName, DataType dataType, ImmutableList<Either<String, Object>> dataValues)
         {
             this.columnName = columnName;
             this.dataType = dataType;
@@ -99,10 +98,9 @@ public class ClipboardUtils
     }
     
     // Returns column-major, i.e. a list of columns
-    @OnThread(Tag.FXPlatform)
     public static Optional<ImmutableList<LoadedColumnInfo>> loadValuesFromClipboard(TypeManager typeManager)
     {
-        @Nullable Object content = Clipboard.getSystemClipboard().getContent(DATA_FORMAT);
+        Object content = Clipboard.getSystemClipboard().getContent(DATA_FORMAT);
 
         if (content == null)
             return Optional.empty();
@@ -137,10 +135,10 @@ public class ClipboardUtils
         if (formatLines == null)
             throw new UserException("Missing FORMAT on clipboard (not copied from here?)");
         List<LoadedFormat> format = DataSource.loadFormat(typeManager, formatLines, false);
-        List<Pair<LoadedFormat, ImmutableList.Builder<Either<String, @Value Object>>>> cols = new ArrayList<>();
+        List<Pair<LoadedFormat, ImmutableList.Builder<Either<String, Object>>>> cols = new ArrayList<>();
         for (int i = 0; i < format.size(); i++)
         {
-            cols.add(new Pair<>(format.get(i), ImmutableList.<Either<String, @Value Object>>builder()));
+            cols.add(new Pair<>(format.get(i), ImmutableList.<Either<String, Object>>builder()));
         }
         List<String> valueLines = sections.get("VALUES");
         if (valueLines == null)
@@ -159,18 +157,17 @@ public class ClipboardUtils
     
     public static class RowRange
     {
-        private final @TableDataRowIndex int startRowIncl;
-        private final @TableDataRowIndex int endRowIncl;
+        private final int startRowIncl;
+        private final int endRowIncl;
 
-        public RowRange(@TableDataRowIndex int startRowIncl, @TableDataRowIndex int endRowIncl)
+        public RowRange(int startRowIncl, int endRowIncl)
         {
             this.startRowIncl = startRowIncl;
             this.endRowIncl = endRowIncl;
         }
     }
 
-    @OnThread(Tag.FXPlatform)
-    public static void copyValuesToClipboard(UnitManager unitManager, TypeManager typeManager, List<Pair<ColumnId, DataTypeValue>> columns, SimulationSupplier<RowRange> rowRangeSupplier, @Nullable CompletableFuture<Boolean> onCompletion)
+    public static void copyValuesToClipboard(UnitManager unitManager, TypeManager typeManager, List<Pair<ColumnId, DataTypeValue>> columns, SimulationSupplier<RowRange> rowRangeSupplier, CompletableFuture<Boolean> onCompletion)
     {
         if (columns.isEmpty())
         {

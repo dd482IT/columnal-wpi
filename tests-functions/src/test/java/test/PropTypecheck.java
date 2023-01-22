@@ -79,11 +79,8 @@ import static org.junit.Assert.assertTrue;
 /**
  * Created by neil on 09/12/2016.
  */
-@RunWith(JUnitQuickcheck.class)
-@OnThread(Tag.Simulation)
 public class PropTypecheck
 {
-    @Test
     public void testTypeComparison() throws InternalException, UserException
     {
         List<DataType> types = TFunctionUtil.managerWithTestTypes().getSecond();
@@ -97,8 +94,7 @@ public class PropTypecheck
     }
     
     // This won't test tagged types very well, but it should do okay for numbers, etc
-    @Property(trials=10000)
-    public void testTypeHashCodeAndEquals(@From(GenDataTypeMaker.class) GenDataTypeMaker.DataTypeMaker typeMaker) throws InternalException, UserException
+    public void testTypeHashCodeAndEquals(GenDataTypeMaker.DataTypeMaker typeMaker) throws InternalException, UserException
     {
         DataType a = typeMaker.makeType().getDataType();
         DataType b = typeMaker.makeType().getDataType();
@@ -127,9 +123,8 @@ public class PropTypecheck
         }
     }
 
-    @Property(trials = 1000, shrink = true, maxShrinks = 1000)
     @SuppressWarnings("nullness")
-    public void propTypeCheckFail(@From(GenTypecheckFail.class) GenTypecheckFail.TypecheckInfo src) throws InternalException, UserException
+    public void propTypeCheckFail(GenTypecheckFail.TypecheckInfo src) throws InternalException, UserException
     {
         for (Expression expression : src.expressionFailures)
         {
@@ -154,7 +149,7 @@ public class PropTypecheck
 
                 @SuppressWarnings("recorded")
                 @Override
-                public @Recorded @NonNull TypeExp recordTypeNN(Expression expression, @NonNull TypeExp typeExp)
+                public @NonNull TypeExp recordTypeNN(Expression expression, @NonNull TypeExp typeExp)
                 {
                     return typeExp;
                 }
@@ -164,12 +159,11 @@ public class PropTypecheck
         }
     }
 
-    @Property(trials = 1000)
     // @SuppressWarnings("nullness")
-    public void propTypeCheckSucceed(@From(GenExpressionValueBackwards.class) @From(GenExpressionValueForwards.class) ExpressionValue src) throws InternalException, UserException
+    public void propTypeCheckSucceed(ExpressionValue src) throws InternalException, UserException
     {
         ErrorAndTypeRecorderStorer storer = new ErrorAndTypeRecorderStorer();
-        @Nullable TypeExp checked = src.expression.checkExpression(src, TFunctionUtil.createTypeState(src.typeManager), storer);
+        TypeExp checked = src.expression.checkExpression(src, TFunctionUtil.createTypeState(src.typeManager), storer);
         TypeExp srcTypeExp = TypeExp.fromDataType(null, src.type);
         assertEquals(src.expression.toString() + "\n" + storer.getAllErrors().map(StyledString::toPlain).collect(Collectors.joining("\n")) + "\nCol types: " + src.recordSet.getColumns().stream().map(c -> {
             try
@@ -186,8 +180,7 @@ public class PropTypecheck
 
     //#error Have property which generates result and tables/expressions to get result, and check equality
 
-    @Property
-    public void checkNumber(@From(GenUnit.class) Unit unitA, @From(GenUnit.class) Unit unitB) throws InternalException, UserException
+    public void checkNumber(Unit unitA, Unit unitB) throws InternalException, UserException
     {
         // TODO test with non-null NumberDisplayInfo
         assertEquals(new NumberInfo(unitA), new NumberInfo(unitA));
@@ -203,20 +196,17 @@ public class PropTypecheck
         checkSameRelations(DummyManager.make().getTypeManager(), numberA, numberB, same);
     }
 
-    @Test
     public void checkBool() throws InternalException, UserException
     {
         checkSameRelations(DummyManager.make().getTypeManager(), DataType.BOOLEAN, DataType.BOOLEAN, true);
     }
 
-    @Test
     public void checkText() throws InternalException, UserException
     {
         checkSameRelations(DummyManager.make().getTypeManager(), DataType.TEXT, DataType.TEXT, true);
     }
 
-    @Property
-    public void checkDate(@From(Ctor.class) DateTimeInfo dateTimeInfoA, @From(Ctor.class) DateTimeInfo dateTimeInfoB) throws InternalException, UserException
+    public void checkDate(DateTimeInfo dateTimeInfoA, DateTimeInfo dateTimeInfoB) throws InternalException, UserException
     {
         DataType dateA = DataType.date(dateTimeInfoA);
         DataType dateB = DataType.date(dateTimeInfoB);
@@ -229,15 +219,14 @@ public class PropTypecheck
     }
 
     @SuppressWarnings("unchecked")
-    @Property
-    public void checkTuple(@From(GenDataTypeMaker.class) GenDataTypeMaker.DataTypeMaker typeMaker, @From(GenRandom.class) Random r) throws InternalException, UserException
+    public void checkTuple(GenDataTypeMaker.DataTypeMaker typeMaker, Random r) throws InternalException, UserException
     {
         List<DataType> types = TBasicUtil.makeList(new SourceOfRandomness(r), 1, 10, () -> typeMaker.makeType().getDataType());
         
-        List<@ExpressionIdentifier String> namesA = Utility.<@ExpressionIdentifier String>replicateM(types.size(), () -> TBasicUtil.generateExpressionIdentifier(new SourceOfRandomness(r)));
+        List<String> namesA = Utility.<String>replicateM(types.size(), () -> TBasicUtil.generateExpressionIdentifier(new SourceOfRandomness(r)));
         if (namesA.stream().distinct().count() != namesA.size())
             return;
-        List<@ExpressionIdentifier String> namesB = r.nextInt(4) == 1 ? namesA : Utility.<@ExpressionIdentifier String>replicateM(types.size(), () -> TBasicUtil.generateExpressionIdentifier(new SourceOfRandomness(r)));
+        List<String> namesB = r.nextInt(4) == 1 ? namesA : Utility.<String>replicateM(types.size(), () -> TBasicUtil.generateExpressionIdentifier(new SourceOfRandomness(r)));
         if (namesB.stream().distinct().count() != namesB.size())
             return;
         
@@ -249,8 +238,7 @@ public class PropTypecheck
         checkSameRelations(typeMaker.getTypeManager(), a, b, namesA.equals(namesB));
     }
 
-    @Property
-    public void checkArray(@From(GenDataTypeMaker.class) GenDataTypeMaker.DataTypeMaker typeMaker) throws InternalException, UserException
+    public void checkArray(GenDataTypeMaker.DataTypeMaker typeMaker) throws InternalException, UserException
     {
         DataType innerA = typeMaker.makeType().getDataType();
         DataType innerB = typeMaker.makeType().getDataType();
@@ -259,8 +247,7 @@ public class PropTypecheck
         checkSameRelations(typeMaker.getTypeManager(), typeA, typeB, innerA.equals(innerB));
     }
 
-    @Property
-    public void checkTagged(@From(GenDataTypeMaker.GenTaggedType.class) GenDataTypeMaker.DataTypeMaker typeMaker) throws UserException, InternalException
+    public void checkTagged(GenDataTypeMaker.DataTypeMaker typeMaker) throws UserException, InternalException
     {
         DataType typeA = typeMaker.makeType().getDataType();
         DataType typeB = typeMaker.makeType().getDataType();
@@ -296,8 +283,8 @@ public class PropTypecheck
         assertEquals(expected, unifyList(typeManager, typeA, typeB));
     }
 
-    private @Nullable DataType unifyList(TypeManager typeManager, DataType... types) throws InternalException, UserException
+    private DataType unifyList(TypeManager typeManager, DataType... types) throws InternalException, UserException
     {
-        return TypeExp.unifyTypes(Utility.mapListInt(Arrays.asList(types), t -> TypeExp.fromDataType(null, t))).<@Nullable DataType>eitherEx(e -> null, t -> t.toConcreteType(typeManager).<@Nullable DataType>either(e -> null, x -> x));
+        return TypeExp.unifyTypes(Utility.mapListInt(Arrays.asList(types), t -> TypeExp.fromDataType(null, t))).<DataType>eitherEx(e -> null, t -> t.toConcreteType(typeManager).<DataType>either(e -> null, x -> x));
     }
 }

@@ -59,12 +59,9 @@ import java.util.stream.IntStream;
 import static com.google.common.collect.ImmutableList.of;
 import static org.junit.Assert.*;
 
-@OnThread(Tag.Simulation)
-@RunWith(JUnitQuickcheck.class)
 public class TestNumberColumnDisplay extends FXApplicationTest
 {
     // The inside items are the centre-side of the ellipsis
-    @OnThread(Tag.Any)
     private static enum Target { FAR_LEFT, FAR_LEFT_AFTER_MINUS, INSIDE_LEFT, MIDDLE, INSIDE_RIGHT, FAR_RIGHT }
     
     /**
@@ -82,13 +79,13 @@ public class TestNumberColumnDisplay extends FXApplicationTest
         
         TFXUtil.sleep(2000);
 
-        ArrayList<@Nullable VersionedSTF> cells = new ArrayList<>(expectedGUI.size());
+        ArrayList<VersionedSTF> cells = new ArrayList<>(expectedGUI.size());
 
         for (int i = 0; i < expectedGUI.size(); i++)
         {
             final int iFinal = i;
-            @Nullable String cellText = TFXUtil.<@Nullable String>fx(() -> {
-                @Nullable VersionedSTF cell = mwa._test_getDataCell(tablePos.offsetByRowCols(3 + iFinal, 0));
+            String cellText = TFXUtil.<String>fx(() -> {
+                VersionedSTF cell = mwa._test_getDataCell(tablePos.offsetByRowCols(3 + iFinal, 0));
                 synchronized (this)
                 {
                     cells.add(cell);
@@ -102,7 +99,7 @@ public class TestNumberColumnDisplay extends FXApplicationTest
         }
         
         ArrayList<Double> rightOfLowestIntDigit = new ArrayList<>();
-        for (@Nullable VersionedSTF cell : cells)
+        for (VersionedSTF cell : cells)
         {
             if (cell != null)
             {
@@ -122,8 +119,8 @@ public class TestNumberColumnDisplay extends FXApplicationTest
 
         for (int i = 0; i < expectedGUI.size(); i++)
         {
-            @Nullable VersionedSTF cell = cells.get(i);            
-            final @Nullable String cellText;
+            VersionedSTF cell = cells.get(i);            
+            final String cellText;
             if (cell != null)
             {
                 // Click twice to edit:
@@ -148,12 +145,12 @@ public class TestNumberColumnDisplay extends FXApplicationTest
         {
             for (int i = 0; i < expectedGUI.size(); i++)
             {
-                @Nullable VersionedSTF cell = cells.get(i);
-                final @Nullable String cellText;
+                VersionedSTF cell = cells.get(i);
+                final String cellText;
                 String actual = actualValues.get(i);
                 if (cell != null)
                 {
-                    @NonNull VersionedSTF cellFinal = cell;
+                    VersionedSTF cellFinal = cell;
                     // Click twice to edit, so click once now:
                     clickOn(cell);
                     TFXUtil.sleep(400);
@@ -236,99 +233,84 @@ public class TestNumberColumnDisplay extends FXApplicationTest
                 push(KeyCode.ESCAPE);
                 // Wait for batched re-layout:
                 TFXUtil.sleep(2000);
-                assertEquals("Row " + i, expectedGUI.get(i), TFXUtil.<@Nullable String>fx(() -> cell == null ? null : getText(cell)));
+                assertEquals("Row " + i, expectedGUI.get(i), TFXUtil.<String>fx(() -> cell == null ? null : getText(cell)));
             }
         }
 
     }
 
-    @OnThread(Tag.FXPlatform)
     private String getText(VersionedSTF cell)
     {
         return cell._test_getGraphicalText();
     }
 
-    @Test
     public void testUnaltered() throws Exception
     {
         testNumbers(of("0.1", "1.1", "2.1"), of("0.1", "1.1", "2.1"));
     }
 
-    @Test
     public void testNegative() throws Exception
     {
         testNumbers(of("0.1", "-0.1", "2"), of("0.1", "-0.1", "2. "));
     }
 
     // Note: need to have stylesheets in place or this will fail.
-    @Test
     public void testAllTruncated() throws Exception
     {
         testNumbers(of("0.112233445566778899", "1.112233445566778899", "2.112233445566778899"), of("0.11223344\u2026", "1.11223344\u2026", "2.11223344\u2026"));
     }
 
-    @Test
     public void testAllTruncatedNeg() throws Exception
     {
         testNumbers(of("-0.112233445566778899", "1.112233445566778899", "-2.112233445566778899"), of("-0.1122334\u2026", "1.1122334\u2026", "-2.1122334\u2026"));
     }
 
-    @Test
     public void testSomeTruncated() throws Exception
     {
         testNumbers(of("0.112233445566778899", "1.112233445", "2.11223344", "3.11223344"), of("0.11223344\u2026", "1.112233445", "2.11223344 ", "3.11223344 "));
     }
 
-    @Test
     public void testSomeTruncatedNeg() throws Exception
     {
         testNumbers(of("-0.112233445566778899", "1.112233445", "-2.11223344", "3.112233"), of("-0.1122334\u2026", "1.1122334\u2026", "-2.11223344", "3.112233  "));
     }
     
-    @Test
     public void testAllAbbreviated() throws Exception
     {
         testNumbers(of("1234567890", "2234567890", "3234567890"), of("\u202634567890", "\u202634567890", "\u202634567890"));
     }
 
-    @Test
     public void testAllAbbreviatedNeg() throws Exception
     {
         testNumbers(of("1234567890", "-2234567890", "3234567890"), of("\u202634567890", "-\u20264567890", "\u202634567890"));
     }
 
-    @Test
     public void testSomeAbbreviated() throws Exception
     {
         testNumbers(of("1234567890", "234567890", "34567890"), of("\u202634567890", "234567890", "34567890"));
     }
 
-    @Test
     public void testSomeAbbreviatedNeg() throws Exception
     {
         testNumbers(of("-1234567890", "234567890", "34567890"), of("-\u20264567890", "234567890", "34567890"));
     }
 
-    @Test
     public void testMixedUnaltered() throws Exception
     {
         testNumbers(of("123.456", "2", "0.3456"), of("123.456 ", "2.    ", "0.3456"));
     }
 
-    @Test
     public void testBothEnds() throws Exception
     {
         testNumbers(of("1234567890.112233445566778899", "2.3", "3.45", "4.567", "1234567890"), of("\u2026567890.1\u2026", "2.3 ", "3.45", "4.5\u2026", "\u2026567890.  "));
     }
 
-    @Test
     public void testBothEndsNeg() throws Exception
     {
         testNumbers(of("-1234567890.112233445566778899", "2.3", "3.45", "-4.567", "1234567890"), of("-\u202667890.1\u2026", "2.3 ", "3.45", "-4.5\u2026", "\u2026567890.  "));
     }
     
-    @Property(trials = 1)
-    public void testScrollUpDown(@From(GenRandom.class) Random r) throws Exception
+    public void testScrollUpDown(Random r) throws Exception
     {
         // Make some columns of ascending numbers and text,
         // then scroll up and down and check relation.

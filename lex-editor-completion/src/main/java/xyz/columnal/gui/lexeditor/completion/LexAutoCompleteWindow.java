@@ -52,7 +52,6 @@ import java.util.function.Consumer;
 
 
 // public for testing purposes
-@OnThread(Tag.FXPlatform)
 public final class LexAutoCompleteWindow extends PopupControl
 {
     private final HBox pane;
@@ -101,10 +100,10 @@ public final class LexAutoCompleteWindow extends PopupControl
                 selected.furtherDetails.either_(htmlContent -> {
                     webView.getEngine().loadContent(htmlContent);
                     webView.setVisible(true);
-                }, new Consumer<Pair<String, @Nullable String>>()
+                }, new Consumer<Pair<String, String>>()
                 {
                     @Override
-                    public void accept(Pair<String, @Nullable String> fileNameAndAnchor)
+                    public void accept(Pair<String, String> fileNameAndAnchor)
                     {
                         URL url = ResourceUtility.getResource(fileNameAndAnchor.getFirst());
                         if (url != null)
@@ -134,7 +133,7 @@ public final class LexAutoCompleteWindow extends PopupControl
         })));
     }
     
-    public static void enableInsertLinks(@Nullable Document doc, InsertListener insertListener, FXPlatformSupplier<@Nullable @CanonicalLocation Integer> getInsertPosition)
+    public static void enableInsertLinks(Document doc, InsertListener insertListener, FXPlatformSupplier<Integer> getInsertPosition)
     {
         if (doc != null)
         {
@@ -175,8 +174,7 @@ public final class LexAutoCompleteWindow extends PopupControl
         }
     }
 
-    @OnThread(Tag.FXPlatform)
-    public @Nullable String _test_getSelectedContent()
+    public String _test_getSelectedContent()
     {
         LexCompletion selectedItem = listView.getSelectedItem();
         if (selectedItem == null)
@@ -196,7 +194,6 @@ public final class LexAutoCompleteWindow extends PopupControl
         FXUtility.returnWebViewForReuse(webView);
     }
 
-    @OnThread(Tag.FX)
     private class LexAutoCompleteSkin implements Skin<LexAutoCompleteWindow>
     {
         @Override

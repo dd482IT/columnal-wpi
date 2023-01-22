@@ -46,13 +46,13 @@ import java.util.Random;
  */
 public class OrExpression extends NaryOpShortCircuitExpression
 {
-    public OrExpression(List<@Recorded Expression> expressions)
+    public OrExpression(List<Expression> expressions)
     {
         super(expressions);
     }
 
     @Override
-    public NaryOpExpression copyNoNull(List<@Recorded Expression> replacements)
+    public NaryOpExpression copyNoNull(List<Expression> replacements)
     {
         return new OrExpression(replacements);
     }
@@ -64,24 +64,23 @@ public class OrExpression extends NaryOpShortCircuitExpression
     }
 
     @Override
-    public @Nullable CheckedExp checkNaryOp(ColumnLookup dataLookup, TypeState state, ExpressionKind kind, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public CheckedExp checkNaryOp(ColumnLookup dataLookup, TypeState state, ExpressionKind kind, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         return onError.recordType(this, state, checkAllOperandsSameTypeAndNotPatterns(TypeExp.bool(this), dataLookup, state, LocationInfo.UNIT_DEFAULT, onError, (typeAndExpression) -> {
             TypeExp ourType = typeAndExpression.getOurType();
             if (ourType == null || Objects.equals(ourType.prune(), TypeExp.bool(null)))
             {
                 // We're fine or we have no idea.
-                return ImmutableMap.<@Recorded Expression, Pair<@Nullable TypeError, ImmutableList<QuickFix<Expression>>>>of();
+                return ImmutableMap.<Expression, Pair<TypeError, ImmutableList<QuickFix<Expression>>>>of();
             }
             else
             {
-                return ImmutableMap.<@Recorded Expression, Pair<@Nullable TypeError, ImmutableList<QuickFix<Expression>>>>of(typeAndExpression.getOurExpression(), new Pair<@Nullable TypeError, ImmutableList<QuickFix<Expression>>>(new TypeError(StyledString.concat(StyledString.s("Operands to '|' must be boolean but found "), ourType.toStyledString()), typeAndExpression.getAvailableTypesForError()), ImmutableList.of()));
+                return ImmutableMap.<Expression, Pair<TypeError, ImmutableList<QuickFix<Expression>>>>of(typeAndExpression.getOurExpression(), new Pair<TypeError, ImmutableList<QuickFix<Expression>>>(new TypeError(StyledString.concat(StyledString.s("Operands to '|' must be boolean but found "), ourType.toStyledString()), typeAndExpression.getAvailableTypesForError()), ImmutableList.of()));
             }
         }));
     }
 
     @Override
-    @OnThread(Tag.Simulation)
     public ValueResult getValueNaryOp(EvaluateState state) throws EvaluationException, InternalException
     {
         ImmutableList.Builder<ValueResult> values = ImmutableList.builderWithExpectedSize(expressions.size());

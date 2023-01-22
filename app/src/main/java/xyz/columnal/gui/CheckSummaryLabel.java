@@ -54,11 +54,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
 
-@OnThread(Tag.FXPlatform)
 public final class CheckSummaryLabel extends BorderPane
 {
     // Note that weakKeys makes an identity hash map, deliberately: 
-    @OnThread(Tag.Simulation)
     private final Map<Check, Optional<Boolean>> currentResults = new MapMaker().weakKeys().makeMap();
     private final Label counts = GUI.label("checks.no.checks", "check-summary-counts");
     private final BooleanProperty hasChecksProperty = new SimpleBooleanProperty(false);
@@ -98,7 +96,7 @@ public final class CheckSummaryLabel extends BorderPane
                         
                         try
                         {
-                            @Value Boolean result = check.getResult();
+                            Boolean result = check.getResult();
                             // Only replace if still in the map:
                             currentResults.replace(check, Optional.empty(), Optional.of(result));
                             Utility.later(CheckSummaryLabel.this).update();
@@ -125,7 +123,6 @@ public final class CheckSummaryLabel extends BorderPane
         });
     }
     
-    @OnThread(Tag.Simulation)
     private void update()
     {
         int total = currentResults.size();
@@ -162,13 +159,11 @@ public final class CheckSummaryLabel extends BorderPane
         return this.hasChecksProperty;
     }
 
-    @OnThread(Tag.Simulation)
     public ImmutableList<Check> getFailingChecks()
     {
         return currentResults.entrySet().stream().filter(e -> e.getValue().isPresent() && !e.getValue().get()).map(e -> e.getKey()).sorted(Comparator.comparing(c -> c.getId().getRaw())).collect(ImmutableList.<Check>toImmutableList());
     }
 
-    @OnThread(Tag.Simulation)
     public ImmutableList<Check> getPassingChecks()
     {
         return currentResults.entrySet().stream().filter(e -> e.getValue().isPresent() && e.getValue().get()).map(e -> e.getKey()).sorted(Comparator.comparing(c -> c.getId().getRaw())).collect(ImmutableList.<Check>toImmutableList());
@@ -176,7 +171,6 @@ public final class CheckSummaryLabel extends BorderPane
     
     public static interface ChecksStateListener
     {
-        @OnThread(Tag.FXPlatform)
         public void checksChanged();
     }
 

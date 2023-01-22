@@ -56,12 +56,12 @@ public class GetElementOrDefault extends FunctionDefinition
     private static class Instance extends ValueFunction
     {
         @Override
-        public @Value Object _call() throws UserException, InternalException
+        public Object _call() throws UserException, InternalException
         {
-            @Value int oneBasedIndex = intArg(1);
-            @Value Object def = arg(2);
-            @UserIndex int userIndex = DataTypeUtility.userIndex(oneBasedIndex);
-            @Value ListEx list = arg(0, ListEx.class);
+            int oneBasedIndex = intArg(1);
+            Object def = arg(2);
+            int userIndex = DataTypeUtility.userIndex(oneBasedIndex);
+            ListEx list = arg(0, ListEx.class);
             if (userIndex < 1 || userIndex > list.size())
                 return def;
             else

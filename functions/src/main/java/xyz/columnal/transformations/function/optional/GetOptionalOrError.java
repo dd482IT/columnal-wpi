@@ -43,11 +43,11 @@ public class GetOptionalOrError extends FunctionDefinition
     }
     
     @Override
-    public @OnThread(Tag.Simulation) ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
+    public ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
     {
         return new ValueFunction1<TaggedValue>(TaggedValue.class) {
             @Override
-            public @OnThread(Tag.Simulation) @Value Object call1(@Value TaggedValue taggedValue) throws InternalException, UserException
+            public Object call1(TaggedValue taggedValue) throws InternalException, UserException
             {
                 if (taggedValue.getTagIndex() == 1 && taggedValue.getInner() != null)
                     return taggedValue.getInner();

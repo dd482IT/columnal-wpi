@@ -46,7 +46,7 @@ import java.util.Random;
  */
 public class DivideExpression extends BinaryOpExpression
 {
-    public DivideExpression(@Recorded Expression lhs, @Recorded Expression rhs)
+    public DivideExpression(Expression lhs, Expression rhs)
     {
         super(lhs, rhs);
     }
@@ -58,17 +58,16 @@ public class DivideExpression extends BinaryOpExpression
     }
 
     @Override
-    public BinaryOpExpression copy(@Nullable @Recorded Expression replaceLHS, @Nullable @Recorded Expression replaceRHS)
+    public BinaryOpExpression copy(Expression replaceLHS, Expression replaceRHS)
     {
         return new DivideExpression(replaceLHS == null ? lhs : replaceLHS, replaceRHS == null ? rhs : replaceRHS);
     }
 
     @Override
-    @RequiresNonNull({"lhsType", "rhsType"})
-    protected @Nullable CheckedExp checkBinaryOp(@Recorded DivideExpression this, ColumnLookup data, TypeState state, ExpressionKind kind, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    protected CheckedExp checkBinaryOp(DivideExpression this, ColumnLookup data, TypeState state, ExpressionKind kind, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        @NonNull TypeExp lhsTypeFinal = lhsType.typeExp;
-        @NonNull TypeExp rhsTypeFinal = rhsType.typeExp;
+        TypeExp lhsTypeFinal = lhsType.typeExp;
+        TypeExp rhsTypeFinal = rhsType.typeExp;
         UnitExp topUnit = UnitExp.makeVariable();
         UnitExp bottomUnit = UnitExp.makeVariable();
         // You can divide any number by any other number
@@ -87,8 +86,7 @@ public class DivideExpression extends BinaryOpExpression
     }
 
     @Override
-    @OnThread(Tag.Simulation)
-    public @Value Object getValueBinaryOp(ValueResult lhsValue, ValueResult rhsValue) throws UserException, InternalException
+    public Object getValueBinaryOp(ValueResult lhsValue, ValueResult rhsValue) throws UserException, InternalException
     {
         return Utility.divideNumbers(Utility.cast(lhsValue.value, Number.class), Utility.cast(rhsValue.value, Number.class));
     }

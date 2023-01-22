@@ -67,7 +67,6 @@ import java.util.stream.Collectors;
 /**
  * Base helper class for text editors
  */
-@OnThread(value = Tag.FXPlatform, ignoreParent = true)
 public abstract class TextEditorBase extends Region
 {
     protected final HelpfulTextFlow textFlow;
@@ -148,7 +147,7 @@ public abstract class TextEditorBase extends Region
             caretBlink.setCycleCount(Animation.INDEFINITE);
             
             FXUtility.addChangeListenerPlatformNNAndCallNow(textFlow.insetsProperty(), insets -> {
-                for (Pane pane : ImmutableList.<@NonNull Pane>of(selectionPane, inverterPane, errorUnderlinePane, backgroundsPane))
+                for (Pane pane : ImmutableList.<Pane>of(selectionPane, inverterPane, errorUnderlinePane, backgroundsPane))
                 {
                     pane.setTranslateX(insets.getLeft());
                     pane.setTranslateY(insets.getTop());
@@ -306,36 +305,29 @@ public abstract class TextEditorBase extends Region
 
     protected abstract ImmutableList<MenuItem> getAdditionalMenuItems(boolean focused);
 
-    @OnThread(Tag.FXPlatform)
-    protected boolean isEffectivelyFocused(@UnknownInitialization(Region.class) TextEditorBase this)
+    protected boolean isEffectivelyFocused(TextEditorBase this)
     {
         return isFocused() || showingContextMenuWhileFocused;
     }
 
     @Override
-    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     public Orientation getContentBias()
     {
         return Orientation.HORIZONTAL;
     }
 
-    @OnThread(Tag.FXPlatform)
-    public abstract @DisplayLocation int getDisplayCaretPosition();
+    public abstract int getDisplayCaretPosition();
 
-    @OnThread(Tag.FXPlatform)
     protected abstract Point2D translateHit(double x, double y);
     
-    @OnThread(Tag.FXPlatform)
-    protected @Nullable HitInfo hitTest(double x, double y)
+    protected HitInfo hitTest(double x, double y)
     {
         Point2D translated = translateHit(x, y);
         return textFlow.hitTest(new Point2D((float) translated.getX(), (float) translated.getY()));
     }
 
-    @OnThread(Tag.FXPlatform)
-    public abstract @DisplayLocation int getDisplayAnchorPosition();
+    public abstract int getDisplayAnchorPosition();
 
-    @OnThread(Tag.FXPlatform)
     public abstract BitSet getErrorCharacters();
     
     public static class BackgroundInfo
@@ -352,14 +344,11 @@ public abstract class TextEditorBase extends Region
         }
     }
     
-    @OnThread(Tag.FXPlatform)
     public abstract ImmutableList<BackgroundInfo> getBackgrounds();
     
     @Override
-    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     protected abstract void layoutChildren();
 
-    @OnThread(value = Tag.FXPlatform)
     public void focusChanged(boolean focused)
     {
         CaretAndSelectionNodes cs = caretAndSelectionNodes;
@@ -374,26 +363,21 @@ public abstract class TextEditorBase extends Region
         }
     }
 
-    @OnThread(Tag.FXPlatform)
     public double calcWidthToFitContent()
     {
         return textFlow.prefWidth(-1);
     }
 
-    @OnThread(Tag.FXPlatform)
     protected abstract String getSelectedText();
     
-    @OnThread(Tag.FXPlatform)
     protected abstract void replaceSelection(String replacement);
 
-    @OnThread(Tag.FXPlatform)
     protected void cut()
     {
         copy();
         replaceSelection("");
     }
 
-    @OnThread(Tag.FXPlatform)
     protected void copy()
     {
         String selection = getSelectedText();
@@ -403,7 +387,6 @@ public abstract class TextEditorBase extends Region
         }
     }
 
-    @OnThread(Tag.FXPlatform)
     protected void paste()
     {
         String content = Clipboard.getSystemClipboard().getString();

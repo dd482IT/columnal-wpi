@@ -34,7 +34,6 @@ import static org.junit.Assert.assertTrue;
 
 public interface TextFieldTrait extends FxRobotInterface, FocusOwnerTrait
 {
-    @OnThread(Tag.Any)
     public default TextInputControl selectAllCurrentTextField()
     {
         Node focusOwner = getFocusOwner();

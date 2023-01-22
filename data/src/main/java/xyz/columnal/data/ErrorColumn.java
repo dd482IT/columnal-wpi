@@ -35,7 +35,6 @@ import threadchecker.Tag;
  */
 public class ErrorColumn extends Column
 {
-    @OnThread(Tag.Any)
     private final DataTypeValue dataTypeValue;
     
     public ErrorColumn(RecordSet recordSet, TypeManager typeManager, ColumnId columnId, StyledString errorText) throws InternalException
@@ -54,19 +53,18 @@ public class ErrorColumn extends Column
     }
     
     @Override
-    public @OnThread(Tag.Any) DataTypeValue getType() throws InternalException, UserException
+    public DataTypeValue getType() throws InternalException, UserException
     {
         return dataTypeValue;
     }
 
     @Override
-    public @OnThread(Tag.Any) AlteredState getAlteredState()
+    public AlteredState getAlteredState()
     {
         // We are an error column because we failed to be a calculation, so count as overwriting:
         return AlteredState.OVERWRITTEN;
     }
 
-    @OnThread(Tag.Any)
     public EditableStatus getEditableStatus()
     {
         return new EditableStatus(false, null);

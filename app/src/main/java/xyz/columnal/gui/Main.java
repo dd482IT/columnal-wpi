@@ -84,7 +84,6 @@ public class Main extends Application
     public static final String DOMAIN = "www.columnal.xyz";
     public static final String EXTENSION_INCL_DOT = ".clml";
 
-    @OnThread(Tag.Any)
     public static class UpgradeInfo
     {
         private final String version;
@@ -98,14 +97,13 @@ public class Main extends Application
             this.downloadLink = downloadLink;
         }
 
-        @OnThread(Tag.FXPlatform)
         public void showIn(Pane pane, int childPosition)
         {
             BorderPane borderPane = new BorderPane();
             StyledString s = StyledString.concat(StyledString.s("Version " + version + " available.  "),
                 StyledString.s("Download now").withStyle(new Clickable(null) {
                     @Override
-                    protected @OnThread(Tag.FXPlatform) void onClick(MouseButton mouseButton, Point2D screenPoint)
+                    protected void onClick(MouseButton mouseButton, Point2D screenPoint)
                     {
                         pane.getChildren().remove(borderPane);
                         SwingUtilities.invokeLater(() -> {
@@ -140,7 +138,6 @@ public class Main extends Application
     }
     
     @Override
-    @OnThread(value = Tag.FXPlatform,ignoreParent = true)
     public void start(final Stage primaryStage) throws Exception
     {
         System.setProperty("storageDirectory", Utility.getStorageDirectory().getAbsolutePath());
@@ -148,7 +145,7 @@ public class Main extends Application
         ErrorHandler.setErrorHandler(new ErrorHandler()
         {
             @Override
-            public @OnThread(Tag.Simulation) void showError(@Localized String title, Function<@Localized String, @Localized String> errWrap, Exception e)
+            public void showError(String title, Function<String, String> errWrap, Exception e)
             {
                 Platform.runLater(() -> FXUtility.showError(title, errWrap, e));
             }
@@ -162,7 +159,6 @@ public class Main extends Application
         CompletableFuture<Optional<UpgradeInfo>> upgradeInfo = new CompletableFuture<>();
         Thread thread = new Thread()
         {
-            @OnThread(Tag.Worker)
             public void run()
             {
                 upgradeInfo.complete(fetchUpgradeInfo(System.getProperty("columnal.version")));
@@ -190,7 +186,7 @@ public class Main extends Application
                 else if (!param.startsWith("-") && !param.equals(getClass().getName()))
                 {
                     Log.normal("Showing main window, to import file: \"" + paramFile.getAbsolutePath() + "\"");
-                    @Nullable MainWindowActions mainWindowActions = InitialWindow.newProject(null, upgradeInfo);
+                    MainWindowActions mainWindowActions = InitialWindow.newProject(null, upgradeInfo);
                     if (mainWindowActions != null)
                     {
                         mainWindowActions.importFile(paramFile);
@@ -209,7 +205,6 @@ public class Main extends Application
         }
     }
 
-    @OnThread(Tag.FXPlatform)
     public static void initialise()
     {
         FXUtility.ensureFontLoaded("Kalam-Regular.ttf");
@@ -236,8 +231,7 @@ public class Main extends Application
         Log.normal("Registered exporters");
     }
 
-    @OnThread(Tag.Worker)
-    private Optional<UpgradeInfo> fetchUpgradeInfo(@Nullable String currentVersion)
+    private Optional<UpgradeInfo> fetchUpgradeInfo(String currentVersion)
     {
         // If in development or version totally broken, don't worry about checking:
         if (currentVersion == null)
@@ -254,7 +248,7 @@ public class Main extends Application
             return Optional.empty();
         
         final String uuid;
-        @Nullable String readUuid = Utility.getProperty("usage.stats", "uuid");
+        String readUuid = Utility.getProperty("usage.stats", "uuid");
         if (readUuid == null || readUuid.length() < 10 || readUuid.length() > 50)
         {
             uuid = UUID.randomUUID().toString();
@@ -283,7 +277,6 @@ public class Main extends Application
         return Optional.empty();
     }
 
-    @OnThread(Tag.Any)
     private HashMap<String, String> toLowerCaseTrimmedProperties(String[] lines)
     {
         HashMap<String, String> r = new HashMap<>();
@@ -302,7 +295,6 @@ public class Main extends Application
         return r;
     }
 
-    @OnThread(Tag.Any)
     private boolean sameVersion(String currentVersion, String latestVersion)
     {
         // We allow for things like leading zeroes
@@ -311,8 +303,7 @@ public class Main extends Application
         return cur != null && latest != null && Arrays.equals(cur, latest);
     }
 
-    @OnThread(Tag.Any)
-    private int @Nullable[] extractVersion(String currentVersion)
+    private int[] extractVersion(String currentVersion)
     {
         try
         {

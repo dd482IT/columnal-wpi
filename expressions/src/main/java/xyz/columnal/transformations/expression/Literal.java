@@ -38,16 +38,16 @@ import java.util.stream.Stream;
 public abstract class Literal extends NonOperatorExpression
 {
     @Override
-    public final @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState typeState, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public final CheckedExp check(ColumnLookup dataLookup, TypeState typeState, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        @Recorded TypeExp typeExp = onError.recordType(this, checkType(typeState, locationInfo, onError));
+        TypeExp typeExp = onError.recordType(this, checkType(typeState, locationInfo, onError));
         if (typeExp == null)
             return null;
         else
             return new CheckedExp(typeExp, typeState);
     }
 
-    protected abstract @Nullable TypeExp checkType(TypeState typeState, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws InternalException;
+    protected abstract TypeExp checkType(TypeState typeState, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws InternalException;
 
     @Override
     public Stream<Pair<Expression, Function<Expression, Expression>>> _test_childMutationPoints()
@@ -56,7 +56,7 @@ public abstract class Literal extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
+    public Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
     {
         return null;
     }

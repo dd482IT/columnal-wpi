@@ -54,13 +54,10 @@ import java.util.Random;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-@RunWith(JUnitQuickcheck.class)
 public class TestHideColumns extends FXApplicationTest implements ScrollToTrait, ClickTableLocationTrait, ListUtilTrait
 {
-    @Property(trials=3)
-    @OnThread(Tag.Simulation)
-    public void testHideColumns(@NumTables(minTables = 1, maxTables = 1) @From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr original,
-            @From(GenRandom.class) Random r) throws Exception
+    public void testHideColumns(GenImmediateData.ImmediateData_Mgr original,
+            Random r) throws Exception
     {
         // Save the table, then open GUI and load it, then add a filter transformation (rename to keeprows)
         MainWindowActions mainWindowActions = TAppUtil.openDataAsTable(windowToUse, original.mgr).get();

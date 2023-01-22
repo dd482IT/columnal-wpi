@@ -78,10 +78,10 @@ public class EditorLocationAndErrorRecorder
 
     public static final class DisplaySpan
     {
-        public final @DisplayLocation int start;
-        public final @DisplayLocation int end;
+        public final int start;
+        public final int end;
 
-        public DisplaySpan(@DisplayLocation int start, @DisplayLocation int end)
+        public DisplaySpan(int start, int end)
         {
             this.start = start;
             this.end = end;
@@ -90,14 +90,14 @@ public class EditorLocationAndErrorRecorder
         // Even though end is typically exclusive, this checks
         // if <= end because for errors etc we still want to display
         // if we touch the extremity.
-        public boolean touches(@DisplayLocation int position)
+        public boolean touches(int position)
         {
             return start <= position && position <= end;
         }
 
         // Used in testing:
         @Override
-        public boolean equals(@Nullable Object o)
+        public boolean equals(Object o)
         {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
@@ -122,7 +122,7 @@ public class EditorLocationAndErrorRecorder
     // We use IdentityHashMap because we want to distinguish between multiple duplicate sub-expressions,
     // e.g. in the expression 2 + abs(2), we want to assign any error to the right 2.  Because of this
     // we use identity hash map, and we cannot use Either (which would break this property).  So two maps it is:
-    private final IdentityHashMap<@Recorded Object, CanonicalSpan> positions = new IdentityHashMap<>();
+    private final IdentityHashMap<Object, CanonicalSpan> positions = new IdentityHashMap<>();
     private final IdentityHashMap<Expression, Either<TypeConcretisationError, TypeExp>> types = new IdentityHashMap<>();
     // Function takes node that documentation should appear to the right of
     private final ArrayList<Pair<CanonicalSpan, FXPlatformFunction<Node, StyledString>>> entryPrompts = new ArrayList<>();
@@ -140,7 +140,7 @@ public class EditorLocationAndErrorRecorder
     {
         public final CanonicalSpan location;
         // Mutable for ease of processing:
-        public @MonotonicNonNull DisplaySpan displayLocation;
+        public DisplaySpan displayLocation;
         public final StyledString error;
         public final ImmutableList<TextQuickFix> quickFixes;
         // Note -- mutable field.
@@ -153,7 +153,7 @@ public class EditorLocationAndErrorRecorder
             this.quickFixes = quickFixes;
         }
 
-        public ErrorDetails offsetBy(@CanonicalLocation int caretPosOffset, @DisplayLocation int displayCaretPosOffset)
+        public ErrorDetails offsetBy(int caretPosOffset, int displayCaretPosOffset)
         {
             ErrorDetails r = new ErrorDetails(location.offsetBy(caretPosOffset), error, Utility.mapListI(quickFixes, f -> f.offsetBy(caretPosOffset)));
             r.caretHasLeftSinceEdit = caretHasLeftSinceEdit;
@@ -183,7 +183,7 @@ public class EditorLocationAndErrorRecorder
     }
 
     @SuppressWarnings("recorded")
-    public <EXPRESSION> @NonNull @Recorded EXPRESSION record(CanonicalSpan location,  @NonNull EXPRESSION e)
+    public <EXPRESSION> EXPRESSION record(CanonicalSpan location,  EXPRESSION e)
     {
         if (positions.containsKey(e))
             Log.logStackTrace("Double position record for: " + e);
@@ -191,10 +191,10 @@ public class EditorLocationAndErrorRecorder
         return e;
     }
 
-    private void showUnresolvedError(Expression e, @Nullable StyledString error, ImmutableList<QuickFix<Expression>> quickFixes)
+    private void showUnresolvedError(Expression e, StyledString error, ImmutableList<QuickFix<Expression>> quickFixes)
     {
         errorsToShow.add(() -> {
-            @Nullable CanonicalSpan resolvedLocation = positions.get(e);
+            CanonicalSpan resolvedLocation = positions.get(e);
             if (resolvedLocation != null)
             {
                 return new ErrorDetails(resolvedLocation, error == null ? StyledString.s("") : error, Utility.mapListInt(quickFixes, q -> {
@@ -211,10 +211,10 @@ public class EditorLocationAndErrorRecorder
         });
     }
 
-    private void showUnresolvedError(TypeExpression e, @Nullable StyledString error, ImmutableList<QuickFix<TypeExpression>> quickFixes)
+    private void showUnresolvedError(TypeExpression e, StyledString error, ImmutableList<QuickFix<TypeExpression>> quickFixes)
     {
         errorsToShow.add(() -> {
-            @Nullable CanonicalSpan resolvedLocation = positions.get(e);
+            CanonicalSpan resolvedLocation = positions.get(e);
             if (resolvedLocation != null)
             {
                 return new ErrorDetails(resolvedLocation, error == null ? StyledString.s("") : error, Utility.mapListInt(quickFixes, q -> {
@@ -231,10 +231,10 @@ public class EditorLocationAndErrorRecorder
         });
     }
 
-    private void showUnresolvedError(UnitExpression e, @Nullable StyledString error, ImmutableList<QuickFix<UnitExpression>> quickFixes)
+    private void showUnresolvedError(UnitExpression e, StyledString error, ImmutableList<QuickFix<UnitExpression>> quickFixes)
     {
         errorsToShow.add(() -> {
-            @Nullable CanonicalSpan resolvedLocation = positions.get(e);
+            CanonicalSpan resolvedLocation = positions.get(e);
             if (resolvedLocation != null)
             {
                 return new ErrorDetails(resolvedLocation, error == null ? StyledString.s("") : error, Utility.mapListInt(quickFixes, q -> {
@@ -291,7 +291,6 @@ public class EditorLocationAndErrorRecorder
         types.put(src, errorOrType);
     }
     
-    @OnThread(Tag.Any)
     public ErrorAndTypeRecorder getRecorder()
     {
         return new ErrorAndTypeRecorder()
@@ -314,7 +313,7 @@ public class EditorLocationAndErrorRecorder
             }
 
             @Override
-            public <EXPRESSION extends StyledShowable> void recordInformation(@Recorded EXPRESSION src, Pair<StyledString, @Nullable QuickFix<EXPRESSION>> info)
+            public <EXPRESSION extends StyledShowable> void recordInformation(EXPRESSION src, Pair<StyledString, QuickFix<EXPRESSION>> info)
             {
                 if (src instanceof Expression)
                     information.put((Expression)src, info.mapSecond(qf -> qf == null ? ImmutableList.<TextQuickFix>of() : ImmutableList.<TextQuickFix>of(new <EXPRESSION>TextQuickFix(recorderFor(src), e -> e.toStyledString().toPlain(), qf))));
@@ -340,16 +339,16 @@ public class EditorLocationAndErrorRecorder
 
             @Override
             @SuppressWarnings("recorded")
-            public @Recorded @NonNull TypeExp recordTypeNN(Expression expression, @NonNull TypeExp typeExp)
+            public TypeExp recordTypeNN(Expression expression, TypeExp typeExp)
             {
                 EditorLocationAndErrorRecorder.this.recordType(expression, Either.right(typeExp));
                 return typeExp;
             }
 
             @Override
-            public @Nullable TypeExp recordError(@Recorded Expression src, Either<@Nullable TypeError, TypeExp> errorOrType)
+            public TypeExp recordError(Expression src, Either<TypeError, TypeExp> errorOrType)
             {
-                return errorOrType.<@Nullable TypeExp>either(err -> {
+                return errorOrType.<TypeExp>either(err -> {
                     if (err != null)
                     {
                         
@@ -398,17 +397,17 @@ public class EditorLocationAndErrorRecorder
     }
 
     @SuppressWarnings("nullness")
-    public CanonicalSpan recorderFor(@Recorded Object expression)
+    public CanonicalSpan recorderFor(Object expression)
     {
         return positions.get(expression);
     }
 
-    public void addNestedError(ErrorDetails nestedError, @CanonicalLocation int caretPosOffset, @DisplayLocation int displayCaretPosOffset)
+    public void addNestedError(ErrorDetails nestedError, int caretPosOffset, int displayCaretPosOffset)
     {
         errorsToShow.add(() -> nestedError.offsetBy(caretPosOffset, displayCaretPosOffset));
     }
     
-    public void addNestedLocations(EditorLocationAndErrorRecorder nested, @CanonicalLocation int caretPosOffset)
+    public void addNestedLocations(EditorLocationAndErrorRecorder nested, int caretPosOffset)
     {
         nested.positions.forEach((e, s) -> positions.put(e, s.offsetBy(caretPosOffset)));
     }
@@ -433,7 +432,7 @@ public class EditorLocationAndErrorRecorder
     }
 
 
-    public ImmutableMap<DisplayType, Pair<StyledString, ImmutableList<TextQuickFix>>> getDisplayFor(@CanonicalLocation int canonIndex, Node toRightOf)
+    public ImmutableMap<DisplayType, Pair<StyledString, ImmutableList<TextQuickFix>>> getDisplayFor(int canonIndex, Node toRightOf)
     {
         ArrayList<Pair<StyledString, CanonicalSpan>> relevantPrompts = new ArrayList<>();
         ArrayList<Pair<Pair<StyledString, ImmutableList<TextQuickFix>>, CanonicalSpan>> relevantInformation = new ArrayList<>();
@@ -468,13 +467,13 @@ public class EditorLocationAndErrorRecorder
         return ImmutableMap.copyOf(combined);
     }
 
-    public <EXPRESSION> void recordEntryPromptG(@Recorded EXPRESSION expression, FXPlatformFunction<Node, StyledString> prompt)
+    public <EXPRESSION> void recordEntryPromptG(EXPRESSION expression, FXPlatformFunction<Node, StyledString> prompt)
     {
         if (expression instanceof Expression)
             recordEntryPrompt((Expression)expression, prompt);
     }
 
-    public void recordEntryPrompt(@Recorded Expression expression, FXPlatformFunction<Node, StyledString> prompt)
+    public void recordEntryPrompt(Expression expression, FXPlatformFunction<Node, StyledString> prompt)
     {
         CanonicalSpan canonicalSpan = positions.get(expression);
         if (canonicalSpan != null)

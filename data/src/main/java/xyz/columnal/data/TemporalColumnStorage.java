@@ -47,25 +47,23 @@ import java.util.stream.Stream;
  */
 public class TemporalColumnStorage extends SparseErrorColumnStorage<TemporalAccessor> implements ColumnStorage<TemporalAccessor>
 {
-    private final ArrayList<@Value TemporalAccessor> values;
-    private final DumbObjectPool<@Value TemporalAccessor> pool;
-    @OnThread(Tag.Any)
+    private final ArrayList<TemporalAccessor> values;
+    private final DumbObjectPool<TemporalAccessor> pool;
     private final DateTimeInfo dateTimeInfo;
     
-    @OnThread(value = Tag.Any,requireSynchronized = true)
-    private @MonotonicNonNull DataTypeValue dataType;
-    private final @Nullable BeforeGet<TemporalColumnStorage> beforeGet;
+    private DataTypeValue dataType;
+    private final BeforeGet<TemporalColumnStorage> beforeGet;
 
     public TemporalColumnStorage(DateTimeInfo dateTimeInfo, boolean isImmediateData) throws InternalException
     {
         this(dateTimeInfo, null, isImmediateData);
     }
 
-    public TemporalColumnStorage(DateTimeInfo dateTimeInfo, @Nullable BeforeGet<TemporalColumnStorage> beforeGet, boolean isImmediateData) throws InternalException
+    public TemporalColumnStorage(DateTimeInfo dateTimeInfo, BeforeGet<TemporalColumnStorage> beforeGet, boolean isImmediateData) throws InternalException
     {
         super(isImmediateData);
         this.values = new ArrayList<>();
-        this.pool = new DumbObjectPool<>((Class<@Value TemporalAccessor>)TemporalAccessor.class, 1000, (Comparator<@Value TemporalAccessor>)dateTimeInfo.getComparator(true));
+        this.pool = new DumbObjectPool<>((Class<TemporalAccessor>)TemporalAccessor.class, 1000, (Comparator<TemporalAccessor>)dateTimeInfo.getComparator(true));
         this.dateTimeInfo = dateTimeInfo;
         this.beforeGet = beforeGet;
     }
@@ -76,7 +74,7 @@ public class TemporalColumnStorage extends SparseErrorColumnStorage<TemporalAcce
         return values.size();
     }
 
-    private @Value TemporalAccessor get(int index, @Nullable ProgressListener progressListener) throws InternalException, UserException
+    private TemporalAccessor get(int index, ProgressListener progressListener) throws InternalException, UserException
     {
         if (index < 0 || index >= filled())
             throw new UserException("Attempting to access invalid element: " + index + " of " + filled());
@@ -92,7 +90,7 @@ public class TemporalColumnStorage extends SparseErrorColumnStorage<TemporalAcce
                 setError(values.size(), err);
                 return dateTimeInfo.getDefaultValue();
             }, v -> v);
-            @Value TemporalAccessor value = DataTypeUtility.value(dateTimeInfo, t);
+            TemporalAccessor value = DataTypeUtility.value(dateTimeInfo, t);
             if (value == null)
             {
                 setError(values.size(), t.toString());
@@ -102,7 +100,6 @@ public class TemporalColumnStorage extends SparseErrorColumnStorage<TemporalAcce
         }
     }
 
-    @OnThread(Tag.Any)
     public synchronized DataTypeValue getType()
     {
         /*
@@ -115,23 +112,23 @@ public class TemporalColumnStorage extends SparseErrorColumnStorage<TemporalAcce
         */
         if (dataType == null)
         {
-            dataType = DataTypeValue.date(dateTimeInfo, new GetValueOrError<@Value TemporalAccessor>()
+            dataType = DataTypeValue.date(dateTimeInfo, new GetValueOrError<TemporalAccessor>()
             {
                 @Override
-                protected @OnThread(Tag.Simulation) void _beforeGet(int index, @Nullable ProgressListener progressListener) throws InternalException, UserException
+                protected void _beforeGet(int index, ProgressListener progressListener) throws InternalException, UserException
                 {
                     if (beforeGet != null)
                         beforeGet.beforeGet(TemporalColumnStorage.this, index, progressListener);
                 }
 
                 @Override
-                public @Value TemporalAccessor _getWithProgress(int i, @Nullable ProgressListener prog) throws UserException, InternalException
+                public TemporalAccessor _getWithProgress(int i, ProgressListener prog) throws UserException, InternalException
                 {
                     return TemporalColumnStorage.this.get(i, prog);
                 }
 
                 @Override
-                public void _set(int index, @Nullable @Value TemporalAccessor value) throws InternalException, UserException
+                public void _set(int index, TemporalAccessor value) throws InternalException, UserException
                 {
                     if (value != null)
                         values.set(index, value);
@@ -142,18 +139,18 @@ public class TemporalColumnStorage extends SparseErrorColumnStorage<TemporalAcce
     }
 
     @Override
-    public SimulationRunnable _insertRows(int index, List<@Nullable TemporalAccessor> items) throws InternalException
+    public SimulationRunnable _insertRows(int index, List<TemporalAccessor> items) throws InternalException
     {
         if (index < 0 || index > values.size())
             throw new InternalException("Trying to insert rows at invalid index: " + index + " length is: " + values.size());
         values.ensureCapacity(values.size() + items.size());
         int curIndex = index;
-        for (@Nullable TemporalAccessor item : items)
+        for (TemporalAccessor item : items)
         {
-            @Value TemporalAccessor itemValue = item == null ? null : DataTypeUtility.value(dateTimeInfo, item);
+            TemporalAccessor itemValue = item == null ? null : DataTypeUtility.value(dateTimeInfo, item);
             if (itemValue == null)
             {
-                @Value TemporalAccessor dummy = dateTimeInfo.getDefaultValue();
+                TemporalAccessor dummy = dateTimeInfo.getDefaultValue();
                 values.add(curIndex, pool.pool(dummy));
             }
             else
@@ -170,7 +167,7 @@ public class TemporalColumnStorage extends SparseErrorColumnStorage<TemporalAcce
     {
         if (index < 0 || index > values.size())
             throw new InternalException("Trying to remove rows at invalid index: " + index + " length is: " + values.size());
-        List<@Value TemporalAccessor> old = new ArrayList<>(values.subList(index, index + count));
+        List<TemporalAccessor> old = new ArrayList<>(values.subList(index, index + count));
         values.subList(index, index + count).clear();
         return () -> values.addAll(index, old);
     }

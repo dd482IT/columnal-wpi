@@ -52,7 +52,7 @@ public class RoundSF extends FunctionDefinition
         return new ValueFunction()
         {
             @Override
-            public @Value Object _call() throws UserException, InternalException
+            public Object _call() throws UserException, InternalException
             {
                 // From https://stackoverflow.com/questions/7572309/any-neat-way-to-limit-significant-figures-with-bigdecimal
                 BigDecimal bd = Utility.toBigDecimal(arg(0, Number.class));

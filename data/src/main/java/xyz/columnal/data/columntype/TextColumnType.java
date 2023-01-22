@@ -34,7 +34,7 @@ public class TextColumnType extends ColumnType
     }
 
     @Override
-    public boolean equals(@Nullable Object obj)
+    public boolean equals(Object obj)
     {
         return obj != null && obj instanceof TextColumnType;
     }

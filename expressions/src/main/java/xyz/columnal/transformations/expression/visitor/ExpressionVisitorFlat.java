@@ -75,73 +75,73 @@ public abstract class ExpressionVisitorFlat<T> implements ExpressionVisitor<T>
     protected abstract T makeDef(Expression expression);
 
     @Override
-    public T notEqual(NotEqualExpression self, @Recorded Expression lhs, @Recorded Expression rhs)
+    public T notEqual(NotEqualExpression self, Expression lhs, Expression rhs)
     {
         return makeDef(self);
     }
 
     @Override
-    public T divide(DivideExpression self, @Recorded Expression lhs, @Recorded Expression rhs)
+    public T divide(DivideExpression self, Expression lhs, Expression rhs)
     {
         return makeDef(self);
     }
 
     @Override
-    public T addSubtract(AddSubtractExpression self, ImmutableList<@Recorded Expression> expressions, ImmutableList<AddSubtractOp> ops)
+    public T addSubtract(AddSubtractExpression self, ImmutableList<Expression> expressions, ImmutableList<AddSubtractOp> ops)
     {
         return makeDef(self);
     }
 
     @Override
-    public T and(AndExpression self, ImmutableList<@Recorded Expression> expressions)
+    public T and(AndExpression self, ImmutableList<Expression> expressions)
     {
         return makeDef(self);
     }
 
     @Override
-    public T or(OrExpression self, ImmutableList<@Recorded Expression> expressions)
+    public T or(OrExpression self, ImmutableList<Expression> expressions)
     {
         return makeDef(self);
     }
 
     @Override
-    public T list(ArrayExpression self, ImmutableList<@Recorded Expression> items)
+    public T list(ArrayExpression self, ImmutableList<Expression> items)
     {
         return makeDef(self);
     }
 
     @Override
-    public T litBoolean(BooleanLiteral self, @Value Boolean value)
+    public T litBoolean(BooleanLiteral self, Boolean value)
     {
         return makeDef(self);
     }
 
     @Override
-    public T call(CallExpression self, @Recorded Expression callTarget, ImmutableList<@Recorded Expression> arguments)
+    public T call(CallExpression self, Expression callTarget, ImmutableList<Expression> arguments)
     {
         return makeDef(self);
     }
 
     @Override
-    public T comparison(ComparisonExpression self, ImmutableList<@Recorded Expression> expressions, ImmutableList<ComparisonOperator> operators)
+    public T comparison(ComparisonExpression self, ImmutableList<Expression> expressions, ImmutableList<ComparisonOperator> operators)
     {
         return makeDef(self);
     }
 
     @Override
-    public T equal(EqualExpression self, ImmutableList<@Recorded Expression> expressions, boolean lastIsPattern)
+    public T equal(EqualExpression self, ImmutableList<Expression> expressions, boolean lastIsPattern)
     {
         return makeDef(self);
     }
 
     @Override
-    public T ident(IdentExpression self, @Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents, boolean isVariable)
+    public T ident(IdentExpression self, String namespace, ImmutableList<String> idents, boolean isVariable)
     {
         return makeDef(self);
     }
 
     @Override
-    public T ifThenElse(IfThenElseExpression self, @Recorded Expression condition, @Recorded Expression thenExpression, @Recorded Expression elseExpression)
+    public T ifThenElse(IfThenElseExpression self, Expression condition, Expression thenExpression, Expression elseExpression)
     {
         return makeDef(self);
     }
@@ -159,7 +159,7 @@ public abstract class ExpressionVisitorFlat<T> implements ExpressionVisitor<T>
     }
 
     @Override
-    public T invalidOps(InvalidOperatorExpression self, ImmutableList<@Recorded Expression> items)
+    public T invalidOps(InvalidOperatorExpression self, ImmutableList<Expression> items)
     {
         return makeDef(self);
     }
@@ -171,25 +171,25 @@ public abstract class ExpressionVisitorFlat<T> implements ExpressionVisitor<T>
     }
 
     @Override
-    public T litNumber(NumericLiteral self, @Value Number value, @Nullable UnitExpression unit)
+    public T litNumber(NumericLiteral self, Number value, UnitExpression unit)
     {
         return makeDef(self);
     }
 
     @Override
-    public T plusMinus(PlusMinusPatternExpression self, @Recorded Expression lhs, @Recorded Expression rhs)
+    public T plusMinus(PlusMinusPatternExpression self, Expression lhs, Expression rhs)
     {
         return makeDef(self);
     }
 
     @Override
-    public T raise(RaiseExpression self, @Recorded Expression lhs, @Recorded Expression rhs)
+    public T raise(RaiseExpression self, Expression lhs, Expression rhs)
     {
         return makeDef(self);
     }
 
     @Override
-    public T concatText(StringConcatExpression self, ImmutableList<@Recorded Expression> expressions)
+    public T concatText(StringConcatExpression self, ImmutableList<Expression> expressions)
     {
         return makeDef(self);
     }
@@ -207,50 +207,50 @@ public abstract class ExpressionVisitorFlat<T> implements ExpressionVisitor<T>
     }
 
     @Override
-    public T multiply(TimesExpression self, ImmutableList<@Recorded Expression> expressions)
+    public T multiply(TimesExpression self, ImmutableList<Expression> expressions)
     {
         return makeDef(self);
     }
 
 
     @Override
-    public T record(RecordExpression self, ImmutableList<Pair<@ExpressionIdentifier String, @Recorded Expression>> members)
+    public T record(RecordExpression self, ImmutableList<Pair<String, Expression>> members)
     {
         return makeDef(self);
     }
 
     @Override
-    public T litType(TypeLiteralExpression self, @Recorded TypeExpression type)
+    public T litType(TypeLiteralExpression self, TypeExpression type)
     {
         return makeDef(self);
     }
 
     @Override
-    public T litUnit(UnitLiteralExpression self, @Recorded UnitExpression unitExpression)
+    public T litUnit(UnitLiteralExpression self, UnitExpression unitExpression)
     {
         return makeDef(self);
     }
 
     @Override
-    public T match(MatchExpression self, @Recorded Expression expression, ImmutableList<MatchClause> clauses)
+    public T match(MatchExpression self, Expression expression, ImmutableList<MatchClause> clauses)
     {
         return makeDef(self);
     }
 
     @Override
-    public T define(DefineExpression self, ImmutableList<DefineItem> defines, @Recorded Expression body)
+    public T define(DefineExpression self, ImmutableList<DefineItem> defines, Expression body)
     {
         return makeDef(self);
     }
 
     @Override
-    public T hasType(@Recorded HasTypeExpression self, @ExpressionIdentifier String lhsVar, @Recorded Expression rhsType)
+    public T hasType(HasTypeExpression self, String lhsVar, Expression rhsType)
     {
         return makeDef(self);
     }
 
     @Override
-    public T lambda(LambdaExpression self, ImmutableList<@Recorded Expression> parameters, @Recorded Expression body)
+    public T lambda(LambdaExpression self, ImmutableList<Expression> parameters, Expression body)
     {
         return makeDef(self);
     }

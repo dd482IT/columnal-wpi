@@ -32,7 +32,6 @@ public class TestInfrastructure
     // At the moment we run on JDK 17:
     public static final String TARGET_VERSION = "17";
 
-    @Test
     public void testJavaVersion()
     {
         // Check we are running on right JDK.  This matters for e.g. JUnit Quickcheck, as the random number

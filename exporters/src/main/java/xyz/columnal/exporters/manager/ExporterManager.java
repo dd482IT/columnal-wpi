@@ -51,7 +51,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-@OnThread(Tag.FXPlatform)
 public class ExporterManager
 {
     // Singleton:
@@ -71,7 +70,7 @@ public class ExporterManager
             filters.add(new ExtensionFilter(exporter.getName(), exporter.getSupportedFileTypes()));
             filters.add(new ExtensionFilter(TranslationUtility.getString("exporter.all.files"), "*.*"));
             
-            File file = parent.<@Nullable File>dimAndWait(w -> FXUtility.chooseFileSave("data.export.dialogTitle", "dataExport", w, filters.toArray(new ExtensionFilter[0])));
+            File file = parent.<File>dimAndWait(w -> FXUtility.chooseFileSave("data.export.dialogTitle", "dataExport", w, filters.toArray(new ExtensionFilter[0])));
             if (file != null)
             {
                 final File fileNonNull = file;
@@ -102,7 +101,7 @@ public class ExporterManager
             exporterList.setCellFactory(lv -> {
                 return new ListCell<Exporter>() {
                     @Override
-                    protected void updateItem(@Nullable Exporter item, boolean empty)
+                    protected void updateItem(Exporter item, boolean empty)
                     {
                         super.updateItem(item, empty);
                         if (item != null && !empty)
@@ -125,13 +124,12 @@ public class ExporterManager
             setCenter(exporterList);
         }
 
-        public @Nullable Exporter get()
+        public Exporter get()
         {
             return exporterList.getSelectionModel().getSelectedItem();
         }
     }
 
-    @OnThread(Tag.FXPlatform)
     private class PickExporterDialog extends ErrorableDialog<Exporter>
     {
         private final PickExporterPane pickExporterPane;
@@ -147,9 +145,9 @@ public class ExporterManager
         }
 
         @Override
-        protected Either<@Localized String, Exporter> calculateResult()
+        protected Either<String, Exporter> calculateResult()
         {
-            @Nullable Exporter sel = pickExporterPane.get();
+            Exporter sel = pickExporterPane.get();
             if (sel != null)
                 return Either.right(sel);
             else

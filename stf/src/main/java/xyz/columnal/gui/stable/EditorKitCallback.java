@@ -28,6 +28,5 @@ import threadchecker.Tag;
 
 public interface EditorKitCallback
 {
-    @OnThread(Tag.FXPlatform)
-    public void loadedValue(@TableDataRowIndex int rowIndex, @TableDataColIndex int colIndex, Document document);
+    public void loadedValue(int rowIndex, int colIndex, Document document);
 }

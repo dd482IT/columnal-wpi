@@ -51,13 +51,13 @@ public class ImmediateDataSource extends DataSource
     }
 
     @Override
-    public @OnThread(Tag.Any) EditableRecordSet getData()
+    public EditableRecordSet getData()
     {
         return data;
     }
 
     @Override
-    public @OnThread(Tag.Simulation) void save(@Nullable File destination, Saver then, TableAndColumnRenames renames)
+    public void save(File destination, Saver then, TableAndColumnRenames renames)
     {
         //dataSourceImmedate : DATA tableId BEGIN NEWLINE;
         //immediateDataLine : ITEM+ NEWLINE;
@@ -69,7 +69,7 @@ public class ImmediateDataSource extends DataSource
         b.nl();
         b.id(renames.tableId(getId())).nl();
         b.t(MainLexer.FORMAT, MainLexer.VOCABULARY).begin().nl();
-        @Localized String errorTitle = TranslationUtility.getString("error.saving.table", getId().getRaw());
+        String errorTitle = TranslationUtility.getString("error.saving.table", getId().getRaw());
         ErrorHandler.getErrorHandler().alertOnError_(errorTitle, () ->
         {
             for (Column c : data.getColumns())
@@ -78,7 +78,7 @@ public class ImmediateDataSource extends DataSource
                 b.t(FormatLexer.TYPE, FormatLexer.VOCABULARY);
                 c.getType().getType().save(b);
 
-                @Nullable @Value Object defaultValue = c.getDefaultValue();
+                Object defaultValue = c.getDefaultValue();
                 if (defaultValue != null)
                 {
                     b.t(FormatLexer.DEFAULT, FormatLexer.VOCABULARY);
@@ -112,13 +112,13 @@ public class ImmediateDataSource extends DataSource
     }
 
     @Override
-    public @OnThread(Tag.Any) TableOperations getOperations()
+    public TableOperations getOperations()
     {
         return new TableOperations(getManager().getRenameTableOperation(this)
         , _c -> new DeleteColumn()
         {
             @Override
-            public @OnThread(Tag.Simulation) void deleteColumn(ColumnId deleteColumnName)
+            public void deleteColumn(ColumnId deleteColumnName)
             {
                 data.deleteColumn(deleteColumnName);
             }

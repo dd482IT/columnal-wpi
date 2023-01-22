@@ -30,20 +30,19 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.TranslationUtility;
 
-@OnThread(Tag.FXPlatform)
 public abstract class ExpressionRecipe
 {
-    private final @Localized String title;
+    private final String title;
 
-    public ExpressionRecipe(@LocalizableKey String titleKey)
+    public ExpressionRecipe(String titleKey)
     {
         this.title = TranslationUtility.getString(titleKey);
     }
 
-    public @Localized String getTitle()
+    public String getTitle()
     {
         return title;
     }
 
-    public abstract @Nullable Expression makeExpression(Window parentWindow, ColumnPicker columnPicker);
+    public abstract Expression makeExpression(Window parentWindow, ColumnPicker columnPicker);
 }

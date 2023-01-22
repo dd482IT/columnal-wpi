@@ -49,12 +49,9 @@ import static org.junit.Assert.assertEquals;
 /**
  * Created by neil on 05/11/2016.
  */
-@RunWith(JUnitQuickcheck.class)
 public class PropNumericStorage
 {
-    @Property
-    @OnThread(Tag.Simulation)
-    public void testNumbersFromString(@From(GenNumbersAsString.class) List<String> input) throws IOException, InternalException, UserException
+    public void testNumbersFromString(List<String> input) throws IOException, InternalException, UserException
     {
         NumericColumnStorage storage = new NumericColumnStorage(NumberInfo.DEFAULT, true);
         for (String s : input)
@@ -73,9 +70,7 @@ public class PropNumericStorage
         TBasicUtil.assertEqualList(inputLessTrailingZeroes, out);
     }
 
-    @Property
-    @OnThread(Tag.Simulation)
-    public void testNumbers(@From(GenNumbers.class) List<@Value Number> input) throws IOException, InternalException, UserException
+    public void testNumbers(List<Number> input) throws IOException, InternalException, UserException
     {
         NumericColumnStorage storage = new NumericColumnStorage(NumberInfo.DEFAULT, true);
         for (Number n : input)
@@ -86,12 +81,10 @@ public class PropNumericStorage
         List<Number> out = new ArrayList<>();
         for (int i = 0; i < input.size(); i++)
             out.add(Utility.toBigDecimal(Utility.cast(storage.getType().getCollapsed(i), Number.class)));
-        TBasicUtil.assertEqualList(Utility.<@Value Number, @Value BigDecimal>mapList(input, Utility::toBigDecimal), out);
+        TBasicUtil.assertEqualList(Utility.<Number, BigDecimal>mapList(input, Utility::toBigDecimal), out);
     }
 
-    @Property(trials = 1000)
-    @OnThread(Tag.Simulation)
-    public void testNumbersAdd(@From(GenNumbers.class) List<@Value Number> input, @From(GenNumber.class) @Value Number n) throws IOException, InternalException, UserException
+    public void testNumbersAdd(List<Number> input, Number n) throws IOException, InternalException, UserException
     {
         // These numbers come from a fixed bit size, so may lack
         // a high number
@@ -103,8 +96,7 @@ public class PropNumericStorage
         testNumbers(input);
     }
 
-    @OnThread(Tag.Simulation)
-    private void testSet(List<@Value Number> input, int index, @Value Number n) throws InternalException, UserException
+    private void testSet(List<Number> input, int index, Number n) throws InternalException, UserException
     {
         NumericColumnStorage storage = new NumericColumnStorage(NumberInfo.DEFAULT, true);
         for (Number orig : input)
@@ -112,7 +104,7 @@ public class PropNumericStorage
 
         storage.set(OptionalInt.of(index), n);
 
-        List<@Value Number> expected = new ArrayList<>(input);
+        List<Number> expected = new ArrayList<>(input);
         expected.set(index, n);
 
         assertEquals(expected.size(), storage.filled());
@@ -123,9 +115,7 @@ public class PropNumericStorage
         TBasicUtil.assertEqualList(Utility.mapList(expected, Utility::toBigDecimal), out);
     }
 
-    @Property(trials = 1000)
-    @OnThread(Tag.Simulation)
-    public void testNumbersSet(@From(GenNumbers.class) List<@Value Number> input, int index, @From(GenNumber.class) @Value Number n) throws IOException, InternalException, UserException
+    public void testNumbersSet(List<Number> input, int index, Number n) throws IOException, InternalException, UserException
     {
         // These numbers come from a fixed bit size, so may lack
         // a high number

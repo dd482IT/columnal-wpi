@@ -41,7 +41,7 @@ import xyz.columnal.utility.Utility;
 
 public class ExtractNumberOrNone extends FunctionDefinition
 {
-    public static final @FuncDocKey String NAME = "conversion:extract number or none";
+    public static final String NAME = "conversion:extract number or none";
 
     public ExtractNumberOrNone() throws InternalException
     {
@@ -49,19 +49,18 @@ public class ExtractNumberOrNone extends FunctionDefinition
     }
 
     @Override
-    public @OnThread(Tag.Simulation) ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
+    public ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
     {
         return getInstance(typeManager);
     }
 
-    @OnThread(Tag.Simulation)
     public ValueFunction getInstance(TypeManager typeManager)
     {
         return new ValueFunction1<String>(String.class) {
             @Override
-            public @OnThread(Tag.Simulation) @Value Object call1(@Value String s) throws InternalException, UserException
+            public Object call1(String s) throws InternalException, UserException
             {
-                @MonotonicNonNull @Value Number result = null;
+                Number result = null;
                 for (int i = 0; i < s.length(); i++)
                 {
                     if ('0' <= s.charAt(i) && s.charAt(i) <= '9')
@@ -80,7 +79,7 @@ public class ExtractNumberOrNone extends FunctionDefinition
                             while (i < s.length() && ('0' <= s.charAt(i) && s.charAt(i) <= '9'))
                                 i += 1;
                         }
-                        @Value Number parsed = null;
+                        Number parsed = null;
                         try
                         {
                             parsed = Utility.parseNumber(s.substring(start, i).replaceAll(",", ""));

@@ -54,19 +54,19 @@ public abstract class Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_C
 {
     // First is all caret pos, second is word boundary
     @SuppressWarnings("units")
-    protected static Pair<ArrayList<CaretPos>, ImmutableList<@CanonicalLocation Integer>> calculateCaretPos(ArrayList<ContentChunk> chunks)
+    protected static Pair<ArrayList<CaretPos>, ImmutableList<Integer>> calculateCaretPos(ArrayList<ContentChunk> chunks)
     {
         ArrayList<CaretPos> caretPos = new ArrayList<>();
-        ArrayList<@CanonicalLocation Integer> wordBoundaryCaretPos = new ArrayList<>();
-        @CanonicalLocation int internalLenSoFar = 0;
-        @DisplayLocation int displayLenSoFar = 0;
+        ArrayList<Integer> wordBoundaryCaretPos = new ArrayList<>();
+        int internalLenSoFar = 0;
+        int displayLenSoFar = 0;
         for (ContentChunk chunk : chunks)
         {
             for (CaretPos caretPosition : chunk.caretPositions)
             {
                 addCaretPos(caretPos, new CaretPos(caretPosition.positionInternal + internalLenSoFar, caretPosition.positionDisplay + displayLenSoFar));
             }
-            for (@CanonicalLocation int caretPosition : chunk.wordBoundaryCaretPositions)
+            for (int caretPosition : chunk.wordBoundaryCaretPositions)
             {
                 if (!wordBoundaryCaretPos.contains(caretPosition + internalLenSoFar))
                     wordBoundaryCaretPos.add(caretPosition + internalLenSoFar);
@@ -105,7 +105,7 @@ public abstract class Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_C
     
     protected static interface MakeCompletions<CCC extends CodeCompletionContext>
     {
-        public CCC makeCompletions(String chunk, @CanonicalLocation int canonIndex, ChunkType curChunk, ChunkType precedingChunk);
+        public CCC makeCompletions(String chunk, int canonIndex, ChunkType curChunk, ChunkType precedingChunk);
     }
     
     protected static <CCC extends CodeCompletionContext> ImmutableList<AutoCompleteDetails<CCC>> makeCompletions(List<ContentChunk> chunks, MakeCompletions<CCC> makeCompletions)
@@ -136,19 +136,19 @@ public abstract class Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_C
         //   - Opening keyword/bracket (including partial keywords and operators)
         //   - Closing keyword/bracket
         //   - Nested
-        @CanonicalLocation int curPos = CanonicalLocation.ZERO;
+        int curPos = CanonicalLocation.ZERO;
         ChunkType prevChunkType = ChunkType.OPENING;
-        @Nullable String prevChunk = null;
+        String prevChunk = null;
         for (ContentChunk chunk : chunks)
         {
             //Log.debug("Chunk: {" + chunk.internalContent + "} type: " + chunk.chunkType);
             
             @SuppressWarnings("units")
-            @CanonicalLocation int nextPos = curPos + chunk.internalContent.length();
+            int nextPos = curPos + chunk.internalContent.length();
             if (chunk.chunkType != ChunkType.NESTED)
             {
                 @SuppressWarnings("units")
-                @CanonicalLocation int start = curPos;
+                int start = curPos;
                 CanonicalSpan location = new CanonicalSpan(start, chunk.chunkType == ChunkType.NESTED_START ? start : nextPos);
                 CCC context = makeCompletions.makeCompletions(chunk.internalContent, curPos, chunk.chunkType, prevChunkType);
                 acd.add(new AutoCompleteDetails<>(location, context));
@@ -173,10 +173,10 @@ public abstract class Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_C
     {
         public static class CaretPos
         {
-            public final @CanonicalLocation int positionInternal;
-            public final @DisplayLocation int positionDisplay;
+            public final int positionInternal;
+            public final int positionDisplay;
 
-            public CaretPos(@CanonicalLocation int positionInternal, @DisplayLocation int positionDisplay)
+            public CaretPos(int positionInternal, int positionDisplay)
             {
                 this.positionInternal = positionInternal;
                 this.positionDisplay = positionDisplay;
@@ -192,7 +192,7 @@ public abstract class Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_C
         }
         
         // Save result of parsing the content.  Never null because we save invalid items:
-        public final @Recorded EXPRESSION result;
+        public final EXPRESSION result;
         // The internal canonical content after parsing:
         public final String adjustedContent;
         // The removed characters (indexes in original string to process):
@@ -200,7 +200,7 @@ public abstract class Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_C
         public final boolean reLexOnCaretMove;
         // Valid caret positions
         public final ImmutableList<CaretPos> caretPositions;
-        public final ImmutableList<@CanonicalLocation Integer> wordBoundaryCaretPositions;
+        public final ImmutableList<Integer> wordBoundaryCaretPositions;
         // The content to display in the TextFlow
         public final StyledString display;
         
@@ -212,10 +212,10 @@ public abstract class Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_C
         // types a ({[ opening bracket then do not insert the closing bracket.
         public final BitSet suppressBracketMatching;
         public final boolean bracketsAreBalanced;
-        public final FXPlatformBiFunction<@CanonicalLocation Integer, Node, ImmutableMap<DisplayType, Pair<StyledString, ImmutableList<TextQuickFix>>>> infoAndPromptForPosition;
+        public final FXPlatformBiFunction<Integer, Node, ImmutableMap<DisplayType, Pair<StyledString, ImmutableList<TextQuickFix>>>> infoAndPromptForPosition;
 
         @SuppressWarnings("units")
-        public LexerResult(@Recorded EXPRESSION result, String adjustedContent, RemovedCharacters removedChars, boolean reLexOnCaretMove, ImmutableList<CaretPos> caretPositions, ImmutableList<@CanonicalLocation Integer> wordBoundaryCaretPositions, StyledString display, ImmutableList<ErrorDetails> errors, EditorLocationAndErrorRecorder locationRecorder, ImmutableList<AutoCompleteDetails<CODE_COMPLETION_CONTEXT>> completeDetails, BitSet suppressBracketMatching, boolean bracketsBalanced, FXPlatformBiFunction<@CanonicalLocation Integer, Node,  ImmutableMap<DisplayType, Pair<StyledString, ImmutableList<TextQuickFix>>>> infoAndPromptForPosition)
+        public LexerResult(EXPRESSION result, String adjustedContent, RemovedCharacters removedChars, boolean reLexOnCaretMove, ImmutableList<CaretPos> caretPositions, ImmutableList<Integer> wordBoundaryCaretPositions, StyledString display, ImmutableList<ErrorDetails> errors, EditorLocationAndErrorRecorder locationRecorder, ImmutableList<AutoCompleteDetails<CODE_COMPLETION_CONTEXT>> completeDetails, BitSet suppressBracketMatching, boolean bracketsBalanced, FXPlatformBiFunction<Integer, Node,  ImmutableMap<DisplayType, Pair<StyledString, ImmutableList<TextQuickFix>>>> infoAndPromptForPosition)
         {
             this.result = result;
             this.adjustedContent = adjustedContent;
@@ -234,12 +234,12 @@ public abstract class Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_C
                 Log.debug("Showing errors: " + Utility.listToString(errors));
         }
         
-        public ImmutableList<LexCompletionGroup> getCompletionsFor(@CanonicalLocation int pos)
+        public ImmutableList<LexCompletionGroup> getCompletionsFor(int pos)
         {
             return autoCompleteDetails.stream().filter(a -> a.location.touches(pos)).flatMap(a -> a.codeCompletionContext.getCompletionsFor(pos).stream()).collect(ImmutableList.<LexCompletionGroup>toImmutableList());
         }
 
-        public @DisplayLocation int mapContentToDisplay(@CanonicalLocation int contentPos)
+        public int mapContentToDisplay(int contentPos)
         {
             // We assume that the position is a caret position when mapping from content
             for (CaretPos caretPosition : caretPositions)
@@ -250,17 +250,17 @@ public abstract class Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_C
             // Uh-oh!  Inaccurate, but will do as a fallback:
             Log.logStackTrace("Trying to find non-caret content position " + contentPos + " in {{{" + adjustedContent + "}}} positions are: " + Utility.listToString(caretPositions));
             @SuppressWarnings("units")
-            @DisplayLocation int fallback = contentPos;
+            int fallback = contentPos;
             return fallback;
         }
 
-        public @CanonicalLocation int mapDisplayToContent(@DisplayLocation int clickedCaret, boolean biasEarlier)
+        public int mapDisplayToContent(int clickedCaret, boolean biasEarlier)
         {
             // Shouldn't happen, but try to stay sane:
             if (caretPositions.isEmpty())
             {
                 @SuppressWarnings("units")
-                @CanonicalLocation int zero = 0;
+                int zero = 0;
                 return zero;
             }
             // We need to find the nearest display caret position
@@ -300,24 +300,24 @@ public abstract class Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_C
         private final BitSet removedChars = new BitSet();
 
         @SuppressWarnings("units")
-        public @CanonicalLocation int map(@RawInputLocation int location)
+        public int map(int location)
         {
             return location - removedChars.get(0, location).cardinality();
         }
 
-        public CanonicalSpan map(@RawInputLocation int startIncl, @RawInputLocation int endExcl)
+        public CanonicalSpan map(int startIncl, int endExcl)
         {
             return new CanonicalSpan(map(startIncl), map(endExcl));
         }
 
-        public CanonicalSpan map(@RawInputLocation int startIncl, String skipString)
+        public CanonicalSpan map(int startIncl, String skipString)
         {
             @SuppressWarnings("units")
-            @RawInputLocation int length = skipString.length();
+            int length = skipString.length();
             return new CanonicalSpan(map(startIncl), map(startIncl + length));
         }
         
-        public void set(@RawInputLocation int index)
+        public void set(int index)
         {
             removedChars.set(index);
         }
@@ -338,13 +338,13 @@ public abstract class Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_C
     }
 
     @SuppressWarnings("units")
-    protected static @RawInputLocation int rawLength(String content)
+    protected static int rawLength(String content)
     {
         return content.length();
     }
     
     // Takes latest content, lexes it, returns result
-    public abstract LexerResult<EXPRESSION, CODE_COMPLETION_CONTEXT> process(String content, @Nullable @RawInputLocation Integer caretPos, InsertListener insertListener);
+    public abstract LexerResult<EXPRESSION, CODE_COMPLETION_CONTEXT> process(String content, Integer caretPos, InsertListener insertListener);
 
     protected static StyledString padZeroWidthErrors(StyledString display, ArrayList<CaretPos> caretPos, ImmutableList<ErrorDetails> errors)
     {
@@ -358,7 +358,7 @@ public abstract class Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_C
             if (error.location.start == error.location.end && (error.displayLocation == null || error.displayLocation.start == error.displayLocation.end))
             {
                 // Find caret pos:
-                @DisplayLocation int displayOffset = DisplayLocation.ZERO;
+                int displayOffset = DisplayLocation.ZERO;
                 for (int i = 0; i < caretPos.size(); i++)
                 {
                     if (displayOffset != 0)
@@ -394,7 +394,7 @@ public abstract class Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_C
         protected final String internalContent;
         // Positions are relative to this chunk:
         protected final ImmutableList<CaretPos> caretPositions;
-        protected final ImmutableList<@CanonicalLocation Integer> wordBoundaryCaretPositions;
+        protected final ImmutableList<Integer> wordBoundaryCaretPositions;
         protected final StyledString displayContent;
         protected final ChunkType chunkType;
 
@@ -424,7 +424,7 @@ public abstract class Lexer<EXPRESSION extends StyledShowable, CODE_COMPLETION_C
             this.chunkType = chunkType;
         }
 
-        public ContentChunk(String internalContent, StyledString displayContent, ImmutableList<CaretPos> caretPositions, ImmutableList<@CanonicalLocation Integer> wordBoundaryCaretPositions, ChunkType chunkType)
+        public ContentChunk(String internalContent, StyledString displayContent, ImmutableList<CaretPos> caretPositions, ImmutableList<Integer> wordBoundaryCaretPositions, ChunkType chunkType)
         {
             this.internalContent = internalContent;
             this.caretPositions = caretPositions;

@@ -49,15 +49,15 @@ import java.util.stream.Stream;
 // Same distinction as IdentExpression/InvalidIdentExpression
 public class SingleUnitExpression extends UnitExpression
 {
-    private final @UnitIdentifier String name;
+    private final String name;
 
-    public SingleUnitExpression(@UnitIdentifier String text)
+    public SingleUnitExpression(String text)
     {
         this.name = text;
     }
 
     @Override
-    public JellyUnit asUnit(@Recorded SingleUnitExpression this, UnitManager unitManager) throws UnitLookupException
+    public JellyUnit asUnit(SingleUnitExpression this, UnitManager unitManager) throws UnitLookupException
     {
         try
         {
@@ -70,9 +70,9 @@ public class SingleUnitExpression extends UnitExpression
             QuickFix<UnitExpression> makeNew = new QuickFix<UnitExpression>(StyledString.s("Create unit \"" + name + "\""), ImmutableList.<String>of(), this, new QuickFixAction()
             {
                 @Override
-                public @OnThread(Tag.FXPlatform) @Nullable SimulationConsumer<Pair<@Nullable ColumnId, Expression>> doAction(TypeManager typeManager, ObjectExpression<Scene> editorSceneProperty)
+                public SimulationConsumer<Pair<ColumnId, Expression>> doAction(TypeManager typeManager, ObjectExpression<Scene> editorSceneProperty)
                 {
-                    typeManager.getUnitManager().addUserUnit(new Pair<>(name, Either.<@UnitIdentifier String, UnitDeclaration>right(new UnitDeclaration(new SingleUnit(name, "", "", ""), null, ""))));
+                    typeManager.getUnitManager().addUserUnit(new Pair<>(name, Either.<String, UnitDeclaration>right(new UnitDeclaration(new SingleUnit(name, "", "", ""), null, ""))));
                     return null;
                 }
             });
@@ -88,7 +88,7 @@ public class SingleUnitExpression extends UnitExpression
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;

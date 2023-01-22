@@ -98,11 +98,10 @@ public class HTMLImporter implements Importer
     public static final String FOOTNOTE_REGEX = "(\\[[A-Za-z0-9]+( [0-9]+)?\\]\\s*)+$";
 
     // Gives back an HTML document to display, and a function which takes a table index then imports that.
-    @OnThread(Tag.Simulation)
     public static Pair<Document, FXPlatformConsumer<Integer>> importHTMLFile(
-        @Nullable Window parentWindow, TableManager mgr, File htmlFile, URL source, CellPosition destination, SimulationConsumer<ImmutableList<DataSource>> withDataSources) throws IOException
+        Window parentWindow, TableManager mgr, File htmlFile, URL source, CellPosition destination, SimulationConsumer<ImmutableList<DataSource>> withDataSources) throws IOException
     {
-        ArrayList<FXPlatformSupplier<@Nullable SimulationSupplier<DataSource>>> results = new ArrayList<>();
+        ArrayList<FXPlatformSupplier<SimulationSupplier<DataSource>>> results = new ArrayList<>();
         Document doc = parse(htmlFile);
         URL parent = source;
         try
@@ -136,8 +135,7 @@ public class HTMLImporter implements Importer
     
     private enum TableState { HEAD, BODY };
 
-    @OnThread(Tag.FXPlatform)
-    protected static void importTable(@Nullable Window parentWindow, TableManager mgr, File htmlFile, CellPosition destination, SimulationConsumer<ImmutableList<DataSource>> withDataSources, ArrayList<FXPlatformSupplier<@Nullable SimulationSupplier<DataSource>>> results, Elements tables, Integer tableIndex, boolean fromWikipedia)
+    protected static void importTable(Window parentWindow, TableManager mgr, File htmlFile, CellPosition destination, SimulationConsumer<ImmutableList<DataSource>> withDataSources, ArrayList<FXPlatformSupplier<SimulationSupplier<DataSource>>> results, Elements tables, Integer tableIndex, boolean fromWikipedia)
     {
         Element table = tables.get(tableIndex);
         // vals is a list of rows:
@@ -147,11 +145,11 @@ public class HTMLImporter implements Importer
         final Map<GridAreaCellPosition, String> pendingSpanItems = new HashMap<>();
 
         @SuppressWarnings("units")
-        final @GridAreaRowIndex int ROW = 1;
+        final int ROW = 1;
         @SuppressWarnings("units")
-        final @GridAreaColIndex int COL = 1;
+        final int COL = 1;
         
-        ArrayList<@Localized String> columnNames = new ArrayList<>();
+        ArrayList<String> columnNames = new ArrayList<>();
         
         
         TableState tableState = null;
@@ -170,7 +168,7 @@ public class HTMLImporter implements Importer
 
             Elements tableChildren = tableBit.children();
             @SuppressWarnings("units")
-            @GridAreaRowIndex int rowIndex = 0;
+            int rowIndex = 0;
             for (Element row : tableChildren)
             {
                 if (!row.tagName().equals("tr"))
@@ -178,7 +176,7 @@ public class HTMLImporter implements Importer
                 ArrayList<String> rowVals = new ArrayList<>();
                 Elements children = row.children();
                 @SuppressWarnings("units")
-                @GridAreaColIndex int columnIndex = 0;
+                int columnIndex = 0;
                 GridAreaCellPosition nextPos = new GridAreaCellPosition(rowIndex, columnIndex);
                 while (pendingSpanItems.containsKey(nextPos))
                 {
@@ -225,7 +223,7 @@ public class HTMLImporter implements Importer
                     // add to current row (though it will just be removed by while loop beneath):
                     if (colSpan > 1)
                     {
-                        for (@GridAreaColIndex int extraCol = 1 * COL; extraCol < colSpan; extraCol += 1 * COL)
+                        for (int extraCol = 1 * COL; extraCol < colSpan; extraCol += 1 * COL)
                         {
                             pendingSpanItems.put(new GridAreaCellPosition(rowIndex, columnIndex + extraCol), cell.text());
                         }
@@ -233,9 +231,9 @@ public class HTMLImporter implements Importer
                     // Add to future rows:
                     if (rowSpan > 1)
                     {
-                        for (@GridAreaRowIndex int extraRow = 1 * ROW; extraRow < rowSpan; extraRow += 1 * ROW)
+                        for (int extraRow = 1 * ROW; extraRow < rowSpan; extraRow += 1 * ROW)
                         {
-                            for (@GridAreaColIndex int extraCol = 0 * COL; extraCol < colSpan; extraCol += 1 * COL)
+                            for (int extraCol = 0 * COL; extraCol < colSpan; extraCol += 1 * COL)
                             {
                                 pendingSpanItems.put(new GridAreaCellPosition(rowIndex + extraRow, columnIndex + extraCol), cell.text());
                             }
@@ -270,14 +268,11 @@ public class HTMLImporter implements Importer
         ImportPlainTable imp = new ImportPlainTable(vals.isEmpty() ? 0 : vals.get(0).size(), mgr, vals)
         {
             // By default, trim:
-            @OnThread(Tag.Any)
             AtomicBoolean trimWhitespace = new AtomicBoolean(true);
-            @OnThread(Tag.Any)
             AtomicBoolean removeWikipediaFootnotes = new AtomicBoolean(fromWikipedia);
-            @MonotonicNonNull LabelledGrid labelledGrid;
+            LabelledGrid labelledGrid;
 
             @Override
-            @OnThread(Tag.FXPlatform)
             public Node getGUI()
             {
                 if (labelledGrid == null)
@@ -310,7 +305,7 @@ public class HTMLImporter implements Importer
             }
 
             @Override
-            public Pair<ColumnId, @Localized String> srcColumnName(int index)
+            public Pair<ColumnId, String> srcColumnName(int index)
             {
                 if (index < columnNames.size())
                     return new Pair<>(new ColumnId(IdentifierUtility.fixExpressionIdentifier(columnNames.get(index), IdentifierUtility.identNum("Col", index))), columnNames.get(index));
@@ -326,7 +321,7 @@ public class HTMLImporter implements Importer
             {
                 if (index < columnNames.size())
                 {
-                    @Localized String orig = columnNames.get(index);
+                    String orig = columnNames.get(index);
                     if (removeWikipediaFootnotes.get())
                     {
                         @SuppressWarnings("i18n")
@@ -345,7 +340,6 @@ public class HTMLImporter implements Importer
             }
 
             @Override
-            @OnThread(Tag.Simulation)
             public List<? extends List<String>> processTrimmed(List<List<String>> all)
             {
                 boolean trimWS = trimWhitespace.get();
@@ -363,21 +357,19 @@ public class HTMLImporter implements Importer
             }
         };
 
-        results.add(new FXPlatformSupplier<@Nullable SimulationSupplier<DataSource>>()
+        results.add(new FXPlatformSupplier<SimulationSupplier<DataSource>>()
         {
             @Override
-            @OnThread(Tag.FXPlatform)
-            public @Nullable SimulationSupplier<DataSource> get()
+            public SimulationSupplier<DataSource> get()
             {
-                @Nullable ImportInfo<PlainImportInfo> outcome = new ImportChoicesDialog<>(parentWindow, htmlFile.getName(), imp).showAndWait().orElse(null);
+                ImportInfo<PlainImportInfo> outcome = new ImportChoicesDialog<>(parentWindow, htmlFile.getName(), imp).showAndWait().orElse(null);
 
                 if (outcome != null)
                 {
-                    @NonNull ImportInfo<PlainImportInfo> outcomeNonNull = outcome;
+                    ImportInfo<PlainImportInfo> outcomeNonNull = outcome;
                     SimulationSupplier<DataSource> makeDataSource = new SimulationSupplier<DataSource>()
                     {
                         @Override
-                        @OnThread(Tag.Simulation)
                         public DataSource get() throws InternalException, UserException
                         {
                             return new ImmediateDataSource(mgr, outcomeNonNull.getInitialLoadDetails(destination), ImporterUtility.makeEditableRecordSet(mgr.getTypeManager(), imp.processTrimmed(outcomeNonNull.getFormat().trim.trim(vals)), outcomeNonNull.getFormat().columnInfo));
@@ -390,11 +382,10 @@ public class HTMLImporter implements Importer
             }
         });
 
-        List<SimulationSupplier<DataSource>> sources = results.stream().flatMap((FXPlatformSupplier<@Nullable SimulationSupplier<DataSource>> s) -> Utility.streamNullable(s.get())).collect(Collectors.<SimulationSupplier<DataSource>>toList());
+        List<SimulationSupplier<DataSource>> sources = results.stream().flatMap((FXPlatformSupplier<SimulationSupplier<DataSource>> s) -> Utility.streamNullable(s.get())).collect(Collectors.<SimulationSupplier<DataSource>>toList());
         Workers.onWorkerThread("Loading HTML", Priority.LOAD_FROM_DISK, () -> FXUtility.alertOnError_(TranslationUtility.getString("error.loading.html"), () -> withDataSources.consume(Utility.<SimulationSupplier<DataSource>, DataSource>mapListExI(sources, s -> s.get()))));
     }
 
-    @OnThread(Tag.Simulation)
     private static void importHTMLFileThen(Window parentWindow, TableManager mgr, File htmlFile, CellPosition destination, URL source, SimulationConsumer<ImmutableList<DataSource>> withDataSources) throws IOException, InternalException, UserException
     {
         Pair<Document, FXPlatformConsumer<Integer>> p = importHTMLFile(parentWindow, mgr, htmlFile, source, destination, withDataSources);
@@ -404,8 +395,7 @@ public class HTMLImporter implements Importer
         });
     }
     
-    @OnThread(Tag.FXPlatform)
-    private static void enableGUIImportLinks(org.w3c.dom.@Nullable Document doc, FXPlatformConsumer<Integer> importTable)
+    private static void enableGUIImportLinks(org.w3c.dom.Document doc, FXPlatformConsumer<Integer> importTable)
     {
         if (doc != null)
         {
@@ -442,19 +432,19 @@ public class HTMLImporter implements Importer
     }
 
     @Override
-    public @Localized String getName()
+    public String getName()
     {
         return TranslationUtility.getString("importer.html.files");
     }
 
     @Override
-    public @OnThread(Tag.Any) ImmutableList<String> getSupportedFileTypes()
+    public ImmutableList<String> getSupportedFileTypes()
     {
         return ImmutableList.of("*.html", "*.htm");
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) void importFile(Window parent, TableManager tableManager, CellPosition destination, File src, URL origin, SimulationConsumerNoError<DataSource> recordLoadedTable)
+    public void importFile(Window parent, TableManager tableManager, CellPosition destination, File src, URL origin, SimulationConsumerNoError<DataSource> recordLoadedTable)
     {
         Workers.onWorkerThread("Importing HTML", Priority.LOAD_FROM_DISK, () -> FXUtility.alertOnError_(TranslationUtility.getString("error.importing.html"), () -> {
             try
@@ -473,7 +463,6 @@ public class HTMLImporter implements Importer
         }));
     }
     
-    @OnThread(Tag.FXPlatform)
     private static class PickHTMLTableDialog extends Dialog<Integer>
     {
         public PickHTMLTableDialog(Window parent, Document doc)

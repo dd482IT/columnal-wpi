@@ -51,16 +51,16 @@ public class Combine extends FunctionDefinition
     private static class Instance extends ValueFunction
     {
         @Override
-        public @OnThread(Tag.Simulation) @Value Object _call() throws InternalException, UserException
+        public Object _call() throws InternalException, UserException
         {
             ListEx list = arg(0, ListEx.class);
             if (list.size() == 0)
                 throw new UserException("Called combine with empty list");
-            @Value Object acc = list.get(0);
+            Object acc = list.get(0);
             ValueFunction function = arg(1, ValueFunction.class);
             for (int i = 1; i < list.size(); i++)
             {
-                acc = function.call(new @Value Object[] {acc, list.get(i)});
+                acc = function.call(new Object[] {acc, list.get(i)});
             }
             return acc;
         }

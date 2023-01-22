@@ -56,7 +56,6 @@ import java.util.Set;
 /**
  * Created by neil on 29/04/2017.
  */
-@SupportedOptions({"helpfiles"})
 public class HelpFileChecker extends BaseTypeChecker
 {
     @Override

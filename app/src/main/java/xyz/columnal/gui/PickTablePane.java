@@ -47,7 +47,6 @@ import xyz.columnal.utility.gui.TimedFocusable;
 
 import java.util.List;
 
-@OnThread(Tag.FXPlatform)
 public class PickTablePane extends BorderPane implements TimedFocusable
 {
     private final TextField tableField = new TextField();
@@ -81,20 +80,17 @@ public class PickTablePane extends BorderPane implements TimedFocusable
         tableField.requestFocus();
     }
 
-    @RequiresNonNull("setResultAndClose")
-    private CompletionListener<TableCompletion> getListener(@UnknownInitialization(BorderPane.class) PickTablePane this, List<Table> tables)
+    private CompletionListener<TableCompletion> getListener(PickTablePane this, List<Table> tables)
     {
-        @NonNull FXPlatformConsumer<Table> setResultAndCloseFinal = setResultAndClose;
+        FXPlatformConsumer<Table> setResultAndCloseFinal = setResultAndClose;
         return new CompletionListener<TableCompletion>()
         {
             @Override
-            @OnThread(Tag.FXPlatform)
             public String doubleClick(String currentText, TableCompletion selectedItem)
             {
                 return complete(selectedItem.t);
             }
 
-            @OnThread(Tag.FXPlatform)
             protected String complete(Table t)
             {
                 setResultAndCloseFinal.consume(t);
@@ -102,8 +98,7 @@ public class PickTablePane extends BorderPane implements TimedFocusable
             }
 
             @Override
-            @OnThread(Tag.FXPlatform)
-            public @Nullable String keyboardSelect(String textBefore, String textAfter, @Nullable TableCompletion selectedItem, boolean wasTab)
+            public String keyboardSelect(String textBefore, String textAfter, TableCompletion selectedItem, boolean wasTab)
             {
                 if (selectedItem != null)
                     return complete(selectedItem.t);
@@ -118,16 +113,16 @@ public class PickTablePane extends BorderPane implements TimedFocusable
         };
     }
 
-    public void setContent(@Nullable Table table)
+    public void setContent(Table table)
     {
         autoComplete.setContentDirect(table == null ? "" : table.getId().getRaw(), true);
         if (table != null)
             setResultAndClose.consume(table);
     }
     
-    public @Nullable TableId getValue()
+    public TableId getValue()
     {
-        @ExpressionIdentifier String valid = IdentifierUtility.asExpressionIdentifier(tableField.getText());
+        String valid = IdentifierUtility.asExpressionIdentifier(tableField.getText());
         if (valid == null)
             return null;
         else
@@ -140,7 +135,6 @@ public class PickTablePane extends BorderPane implements TimedFocusable
     }
     
     @Override
-    @OnThread(Tag.FXPlatform)
     public long lastFocusedTime()
     {
         return tableField.isFocused() ? System.currentTimeMillis() : lastEditTimeMillis;

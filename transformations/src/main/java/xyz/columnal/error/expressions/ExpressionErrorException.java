@@ -47,12 +47,12 @@ public class ExpressionErrorException extends UserException
     public static abstract class EditableExpression
     {
         public final Expression current;
-        public final @Nullable TableId srcTableId;
+        public final TableId srcTableId;
         public final ColumnLookup columnLookup;
         public final FXPlatformSupplierInt<TypeState> makeTypeState;
-        public final @Nullable DataType expectedType;
+        public final DataType expectedType;
 
-        protected EditableExpression(Expression current, @Nullable TableId srcTableId, ColumnLookup columnLookup, FXPlatformSupplierInt<TypeState> makeTypeState, @Nullable DataType expectedType)
+        protected EditableExpression(Expression current, TableId srcTableId, ColumnLookup columnLookup, FXPlatformSupplierInt<TypeState> makeTypeState, DataType expectedType)
         {
             this.current = current;
             this.srcTableId = srcTableId;
@@ -61,7 +61,6 @@ public class ExpressionErrorException extends UserException
             this.expectedType = expectedType;
         }
 
-        @OnThread(Tag.Simulation)
         public abstract Table replaceExpression(Expression changed) throws InternalException;
     }
 }

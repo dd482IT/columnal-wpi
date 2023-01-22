@@ -35,9 +35,9 @@ import java.util.Objects;
 
 public class ListTypeExpression extends TypeExpression
 {
-    private final @Recorded TypeExpression innerType;
+    private final TypeExpression innerType;
 
-    public ListTypeExpression(@Recorded TypeExpression innerType)
+    public ListTypeExpression(TypeExpression innerType)
     {
         this.innerType = innerType;
     }
@@ -55,7 +55,7 @@ public class ListTypeExpression extends TypeExpression
     }
 
     @Override
-    public @Nullable DataType toDataType(TypeManager typeManager)
+    public DataType toDataType(TypeManager typeManager)
     {
         // Be careful here; null is a valid value inside a list type, but we don't want to pass null!
         DataType inner = innerType.toDataType(typeManager);
@@ -65,7 +65,7 @@ public class ListTypeExpression extends TypeExpression
     }
 
     @Override
-    public @Recorded JellyType toJellyType(@Recorded ListTypeExpression this, TypeManager typeManager, JellyRecorder jellyRecorder) throws InternalException, UnJellyableTypeExpression
+    public JellyType toJellyType(ListTypeExpression this, TypeManager typeManager, JellyRecorder jellyRecorder) throws InternalException, UnJellyableTypeExpression
     {
         return jellyRecorder.record(JellyType.list(innerType.toJellyType(typeManager, jellyRecorder)), this);
     }
@@ -82,7 +82,7 @@ public class ListTypeExpression extends TypeExpression
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -108,7 +108,7 @@ public class ListTypeExpression extends TypeExpression
     }
 
     @Override
-    public @Nullable @ExpressionIdentifier String asIdent()
+    public String asIdent()
     {
         return null;
     }

@@ -94,15 +94,15 @@ public class EditableRecordSet extends RecordSet
         this(Utility.<Column, SimulationFunction<RecordSet, EditableColumn>>mapList(copyFrom.getColumns(), EditableRecordSet::copyColumn), copyFrom::getLength);
     }
 
-    public static SimulationFunction<RecordSet, EditableColumn> copyColumn(@NonNull Column original)
+    public static SimulationFunction<RecordSet, EditableColumn> copyColumn(Column original)
     {
-        @Nullable @Value Object defaultValue = (original instanceof EditableColumn) ? ((EditableColumn)original).getDefaultValue() : null;
+        Object defaultValue = (original instanceof EditableColumn) ? ((EditableColumn)original).getDefaultValue() : null;
 
         return rs -> original.getType().applyGet(new DataTypeVisitorGet<EditableColumn>()
         {
-            private <T extends @NonNull Object> List<Either<String, @UnknownIfValue T>> getAll(GetValue<@Value T> g) throws InternalException, UserException
+            private <T extends Object> List<Either<String, T>> getAll(GetValue<T> g) throws InternalException, UserException
             {
-                List<Either<String, @UnknownIfValue T>> r = new ArrayList<>();
+                List<Either<String, T>> r = new ArrayList<>();
                 for (int i = 0; original.indexValid(i); i++)
                 {
                     try
@@ -120,31 +120,31 @@ public class EditableRecordSet extends RecordSet
             }
 
             @Override
-            public EditableColumn number(GetValue<@Value Number> g, NumberInfo displayInfo) throws InternalException, UserException
+            public EditableColumn number(GetValue<Number> g, NumberInfo displayInfo) throws InternalException, UserException
             {
                 return new MemoryNumericColumn(rs, original.getName(), displayInfo, getAll(g), Utility.cast(Utility.replaceNull(defaultValue, DataTypeUtility.value(Integer.valueOf(0))), Number.class));
             }
 
             @Override
-            public EditableColumn text(GetValue<@Value String> g) throws InternalException, UserException
+            public EditableColumn text(GetValue<String> g) throws InternalException, UserException
             {
                 return new MemoryStringColumn(rs, original.getName(), getAll(g), Utility.cast(Utility.replaceNull(defaultValue, DataTypeUtility.value("")), String.class));
             }
 
             @Override
-            public EditableColumn bool(GetValue<@Value Boolean> g) throws InternalException, UserException
+            public EditableColumn bool(GetValue<Boolean> g) throws InternalException, UserException
             {
                 return new MemoryBooleanColumn(rs, original.getName(), getAll(g), Utility.cast(Utility.replaceNull(defaultValue, DataTypeUtility.value(Boolean.FALSE)), Boolean.class));
             }
 
             @Override
-            public EditableColumn date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> g) throws InternalException, UserException
+            public EditableColumn date(DateTimeInfo dateTimeInfo, GetValue<TemporalAccessor> g) throws InternalException, UserException
             {
                 return new MemoryTemporalColumn(rs, original.getName(), dateTimeInfo, getAll(g), Utility.cast(Utility.replaceNull(defaultValue, dateTimeInfo.getDefaultValue()), TemporalAccessor.class));
             }
 
             @Override
-            public EditableColumn tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tagTypes, GetValue<@Value TaggedValue> g) throws InternalException, UserException
+            public EditableColumn tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tagTypes, GetValue<TaggedValue> g) throws InternalException, UserException
             {
                 List<Either<String, TaggedValue>> r = new ArrayList<>();
                 for (int i = 0; original.indexValid(i); i++)
@@ -162,56 +162,56 @@ public class EditableRecordSet extends RecordSet
             }
 
             @Override
-            public EditableColumn record(ImmutableMap<@ExpressionIdentifier String, DataType> types, GetValue<@Value Record> g) throws InternalException, UserException
+            public EditableColumn record(ImmutableMap<String, DataType> types, GetValue<Record> g) throws InternalException, UserException
             {
-                List<Either<String, @Value Record>> r = new ArrayList<>();
+                List<Either<String, Record>> r = new ArrayList<>();
                 for (int index = 0; original.indexValid(index); index++)
                 {
                     try
                     {
-                        r.add(Either.<String, @Value Record>right(Utility.<Record>cast(g.get(index), Record.class)));
+                        r.add(Either.<String, Record>right(Utility.<Record>cast(g.get(index), Record.class)));
                     }
                     catch (InvalidImmediateValueException e)
                     {
                         r.add(Either.left(e.getInvalid()));
                     }
                 }
-                Map<@ExpressionIdentifier String, @Value Object> recordOfDefaults = new HashMap<>();
-                for (Entry<@ExpressionIdentifier String, DataType> entry : types.entrySet())
+                Map<String, Object> recordOfDefaults = new HashMap<>();
+                for (Entry<String, DataType> entry : types.entrySet())
                 {
                     recordOfDefaults.put(entry.getKey(), DataTypeUtility.makeDefaultValue(entry.getValue()));
                 }
-                return new MemoryRecordColumn(rs, original.getName(), types, r, Utility.cast(Utility.replaceNull(defaultValue, DataTypeUtility.value(new RecordMap(recordOfDefaults))), (Class<@Value Record>) Record.class));
+                return new MemoryRecordColumn(rs, original.getName(), types, r, Utility.cast(Utility.replaceNull(defaultValue, DataTypeUtility.value(new RecordMap(recordOfDefaults))), (Class<Record>) Record.class));
             }
 
             @Override
-            public EditableColumn array(DataType inner, GetValue<@Value ListEx> g) throws InternalException, UserException
+            public EditableColumn array(DataType inner, GetValue<ListEx> g) throws InternalException, UserException
             {
                 List<Either<String, ListEx>> r = new ArrayList<>();
                 for (int index = 0; original.indexValid(index); index++)
                 {
                     try
                     {
-                        @NonNull @Value ListEx details = g.get(index);
-                        ImmutableList.Builder<@Value Object> array = ImmutableList.builderWithExpectedSize(details.size());
+                        ListEx details = g.get(index);
+                        ImmutableList.Builder<Object> array = ImmutableList.builderWithExpectedSize(details.size());
                         for (int indexInArray = 0; indexInArray < details.size(); indexInArray++)
                         {
                             // Need to look for indexInArray, not index, to get full list:
                             array.add(details.get(indexInArray));
                         }
-                        r.add(Either.right(DataTypeUtility.<@Value Object>value(array.build())));
+                        r.add(Either.right(DataTypeUtility.<Object>value(array.build())));
                     }
                     catch (InvalidImmediateValueException e)
                     {
                         r.add(Either.left(e.getInvalid()));
                     }
                 }
-                return new MemoryArrayColumn(rs, original.getName(), inner, r, Utility.cast(Utility.replaceNull(defaultValue, new <@Value Object>ListExList(Collections.<@Value Object>emptyList())), ListEx.class));
+                return new MemoryArrayColumn(rs, original.getName(), inner, r, Utility.cast(Utility.replaceNull(defaultValue, new <Object>ListExList(Collections.<Object>emptyList())), ListEx.class));
             }
         });
     }
 
-    public static EditableRecordSet newRecordSetSingleColumn(ColumnId name, DataType type, @Value Object defaultValue) throws InternalException, UserException
+    public static EditableRecordSet newRecordSetSingleColumn(ColumnId name, DataType type, Object defaultValue) throws InternalException, UserException
     {
         return new EditableRecordSet(Collections.<SimulationFunction<RecordSet, EditableColumn>>singletonList(ColumnUtility.makeImmediateColumn(type, name, defaultValue)::apply), () -> 0);
     }
@@ -224,13 +224,13 @@ public class EditableRecordSet extends RecordSet
 
     @Override
     @SuppressWarnings("units")
-    public @TableDataRowIndex int getLength() throws UserException, InternalException
+    public int getLength() throws UserException, InternalException
     {
         return curLength;
     }
 
     // The return is for testing
-    public @Nullable SimulationRunnable insertRows(int index, int count)
+    public SimulationRunnable insertRows(int index, int count)
     {
         List<SimulationRunnable> revert = new ArrayList<>();
         try
@@ -276,7 +276,7 @@ public class EditableRecordSet extends RecordSet
     }
 
     // The return is for testing
-    public @Nullable SimulationRunnable removeRows(int deleteIndex, int count)
+    public SimulationRunnable removeRows(int deleteIndex, int count)
     {
         List<SimulationRunnable> revert = new ArrayList<>();
         try
@@ -321,7 +321,7 @@ public class EditableRecordSet extends RecordSet
         };
     }
 
-    public void addColumn(@Nullable ColumnId addBefore, SimulationFunctionInt<RecordSet, ? extends EditableColumn> makeNewColumn) throws InternalException, UserException
+    public void addColumn(ColumnId addBefore, SimulationFunctionInt<RecordSet, ? extends EditableColumn> makeNewColumn) throws InternalException, UserException
     {
         EditableColumn col = makeNewColumn.apply(this);
         col.insertRows(0, getLength());

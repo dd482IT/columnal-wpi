@@ -82,12 +82,12 @@ public class NumericColumnStorage extends SparseErrorColumnStorage<Number> imple
 {
     private int filled = 0;
     // We only use bytes, shorts, ints if all the numbers fit.
-    private byte @Nullable [] bytes = new byte[8];
-    private short @Nullable [] shorts;
-    private int @Nullable [] ints;
+    private byte[] bytes = new byte[8];
+    private short[] shorts;
+    private int[] ints;
     // We use longs if most of them fit.  Long.MAX_VALUE means consult bigIntegers array.
     // Long.MIN_VALUE means consult bigDecimals array.
-    private long @Nullable [] longs;
+    private long[] longs;
     private static final byte BYTE_MIN = Byte.MIN_VALUE;
     private static final byte BYTE_MAX = Byte.MAX_VALUE;
     private static final short SHORT_MIN = Short.MIN_VALUE;
@@ -100,13 +100,11 @@ public class NumericColumnStorage extends SparseErrorColumnStorage<Number> imple
     // If any are non-integer, we use bigDecimals
     // Note that bigDecimals.length <= longs.length, not ==
     // That is, bigDecimals may not be as long as the longs array if it doesn't have to be.
-    private @Nullable BigDecimal @Nullable [] bigDecimals;
+    private BigDecimal[] bigDecimals;
     
-    @OnThread(value = Tag.Any, requireSynchronized = true)
-    private @MonotonicNonNull DataTypeValue dataType;
-    @OnThread(value = Tag.Any)
+    private DataTypeValue dataType;
     private final NumberInfo displayInfo;
-    private final @Nullable BeforeGet<NumericColumnStorage> beforeGet;
+    private final BeforeGet<NumericColumnStorage> beforeGet;
 
     public NumericColumnStorage(NumberInfo displayInfo, boolean isImmediateData)
     {
@@ -118,7 +116,7 @@ public class NumericColumnStorage extends SparseErrorColumnStorage<Number> imple
         this(NumberInfo.DEFAULT, null, isImmediateData);
     }
 
-    public NumericColumnStorage(NumberInfo displayInfo, @Nullable BeforeGet<NumericColumnStorage> beforeGet, boolean isImmediateData)
+    public NumericColumnStorage(NumberInfo displayInfo, BeforeGet<NumericColumnStorage> beforeGet, boolean isImmediateData)
     {
         super(isImmediateData);
         this.displayInfo = displayInfo;
@@ -222,7 +220,6 @@ public class NumericColumnStorage extends SparseErrorColumnStorage<Number> imple
 
     // For some reason index.isPresent() won't count as pure,
     // even with the @Pure annotation in the stubs file.  So we use this method:
-    @Pure
     private static boolean isPresent(OptionalInt index)
     {
         return index.isPresent();
@@ -230,23 +227,19 @@ public class NumericColumnStorage extends SparseErrorColumnStorage<Number> imple
 
     // For some reason index.getAsInt() won't count as pure,
     // even with the @Pure annotation in the stubs file.  So we use this method:
-    @Pure
     private static int getAsInt(OptionalInt index)
     {
         return index.getAsInt();
     }
 
-    @Pure
     private short byteToShort(byte b)
     {
         return b < BYTE_MIN ? (short)(SHORT_MIN - (BYTE_MIN - b)) : b;
     }
-    @Pure
     private int shortToInt(short s)
     {
         return s < SHORT_MIN ? (INT_MIN - (SHORT_MIN - s)) : s;
     }
-    @Pure
     private long intToLong(int x)
     {
         return x < INT_MIN ? (LONG_MIN - (long)(INT_MIN - x)) : x;
@@ -291,7 +284,6 @@ public class NumericColumnStorage extends SparseErrorColumnStorage<Number> imple
         }
     }
 
-    @EnsuresNonNull("longs")
     private final void addLong(OptionalInt index, long n, boolean special) throws InternalException
     {
         // If it overlaps our special values but isn't special, store as biginteger:
@@ -344,7 +336,6 @@ public class NumericColumnStorage extends SparseErrorColumnStorage<Number> imple
         assert longs != null : "@AssumeAssertion(nullness)";
     }
 
-    @EnsuresNonNull({"longs", "bigDecimals"})
     private final void addBigDecimal(OptionalInt index, BigDecimal bigDecimal) throws InternalException
     {
         // This will convert to LONG_OR_BIG if needed:
@@ -407,7 +398,7 @@ public class NumericColumnStorage extends SparseErrorColumnStorage<Number> imple
     }
     */
 
-    private @ImmediateValue Number getNonBlank(int index, @Nullable ProgressListener progressListener) throws InternalException, UserException
+    private Number getNonBlank(int index, ProgressListener progressListener) throws InternalException, UserException
     {
         checkRange(index);
 
@@ -427,7 +418,7 @@ public class NumericColumnStorage extends SparseErrorColumnStorage<Number> imple
                     throw new InternalException("SEE_BIGDEC but null BigDecimal array");
                 if (index >= bigDecimals.length)
                     throw new InternalException("SEE_BIGDEC but BigDecimal array not long enough");
-                @Nullable BigDecimal bigDecimal = bigDecimals[index];
+                BigDecimal bigDecimal = bigDecimals[index];
                 if (bigDecimal == null)
                     throw new InternalException("SEE_BIGDEC but null BigDecimal");
                 return DataTypeUtility.value(bigDecimal);
@@ -438,7 +429,6 @@ public class NumericColumnStorage extends SparseErrorColumnStorage<Number> imple
         throw new InternalException("All arrays null in NumericColumnStorage");
     }
     // Returns numericTag if that item is not a tag
-    @Pure
     public int getInt(int index) throws UserException, InternalException
     {
         checkRange(index);
@@ -460,7 +450,6 @@ public class NumericColumnStorage extends SparseErrorColumnStorage<Number> imple
             throw new UserException("Trying to access zero-based element " + index + " but only have "+ filled);
     }
 
-    @OnThread(Tag.Any)
     public synchronized DataTypeValue getType()
     {
         /*
@@ -473,23 +462,23 @@ public class NumericColumnStorage extends SparseErrorColumnStorage<Number> imple
         */
         if (dataType == null)
         {
-            dataType = DataTypeValue.number(displayInfo, new GetValueOrError<@Value Number>()
+            dataType = DataTypeValue.number(displayInfo, new GetValueOrError<Number>()
             {
                 @Override
-                protected @OnThread(Tag.Simulation) void _beforeGet(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
+                protected void _beforeGet(int index, ProgressListener progressListener) throws UserException, InternalException
                 {
                     if (beforeGet != null)
                         beforeGet.beforeGet(NumericColumnStorage.this, index, progressListener);
                 }
 
                 @Override
-                public @Value Number _getWithProgress(int i, @Nullable ProgressListener prog) throws UserException, InternalException
+                public Number _getWithProgress(int i, ProgressListener prog) throws UserException, InternalException
                 {
                     return NumericColumnStorage.this.getNonBlank(i, prog);
                 }
 
                 @Override
-                public @OnThread(Tag.Simulation) void _set(int index, @Nullable @Value Number value) throws InternalException, UserException
+                public void _set(int index, Number value) throws InternalException, UserException
                 {
                     if (value == null)
                         value = DataTypeUtility.value(0);
@@ -509,7 +498,7 @@ public class NumericColumnStorage extends SparseErrorColumnStorage<Number> imple
     }
 
     @Override
-    public SimulationRunnable _insertRows(int index, List<@Nullable Number> items) throws InternalException
+    public SimulationRunnable _insertRows(int index, List<Number> items) throws InternalException
     {
         addAll(index, items.stream().map(n -> n == null ? 0 : n));
         int count = items.size();
@@ -534,7 +523,7 @@ public class NumericColumnStorage extends SparseErrorColumnStorage<Number> imple
         }
         filled -= count;
         // Can't use ImmutableList because of nulls: 
-        return () -> _insertRows(index, old.stream().<@Nullable Number>map(e -> e.<@Nullable Number>either(s -> null, n -> n)).collect(Collectors.<@Nullable Number>toList()));
+        return () -> _insertRows(index, old.stream().<Number>map(e -> e.<Number>either(s -> null, n -> n)).collect(Collectors.<Number>toList()));
     }
 
     @Override
@@ -669,7 +658,7 @@ public class NumericColumnStorage extends SparseErrorColumnStorage<Number> imple
                     bigDecimals = Arrays.copyOf(bigDecimals, filled);
 
                 // New to temp:
-                @Nullable BigDecimal @Nullable[] newValsBD = Arrays.copyOfRange(bigDecimals, originalLength, filled);
+                BigDecimal[] newValsBD = Arrays.copyOfRange(bigDecimals, originalLength, filled);
                 // Old to new:
                 System.arraycopy(bigDecimals, insertAtIndex, bigDecimals, insertAtIndex + newNumbersSize, originalLength - insertAtIndex);
                 // New [temp] to old:

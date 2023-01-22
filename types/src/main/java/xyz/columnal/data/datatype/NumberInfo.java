@@ -39,7 +39,7 @@ public class NumberInfo
     public static final NumberInfo DEFAULT = new NumberInfo(Unit.SCALAR);
     
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -60,7 +60,7 @@ public class NumberInfo
         return unit;
     }
 
-    public boolean sameType(@Nullable NumberInfo numberInfo)
+    public boolean sameType(NumberInfo numberInfo)
     {
         if (numberInfo == null)
             return false;

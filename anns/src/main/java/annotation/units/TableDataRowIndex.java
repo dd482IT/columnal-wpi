@@ -33,11 +33,10 @@ import java.lang.annotation.Target;
  * ignoring any table headers or similar.  Only valid for data, not for expand arrows, headers, etc.
  */
 @Documented
-@SubtypeOf(RowOrColIndex.class)
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE_USE, ElementType.TYPE_PARAMETER})
 public @interface TableDataRowIndex
 {
-    public static final @TableDataRowIndex int ZERO = 0;
-    public static final @TableDataRowIndex int ONE = 1;
+    public static final int ZERO = 0;
+    public static final int ONE = 1;
 }

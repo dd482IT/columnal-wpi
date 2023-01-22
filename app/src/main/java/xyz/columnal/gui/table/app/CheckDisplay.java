@@ -90,18 +90,16 @@ import java.util.concurrent.atomic.AtomicReference;
  * Display of a Check transformation.  Has two cells: a title
  * above a cell showing the result.
  */
-@OnThread(Tag.FXPlatform)
 public final class CheckDisplay extends HeadedDisplay implements TableDisplayBase, SelectionListener
 {
     private final Check check;
-    @OnThread(Tag.Any)
     private final AtomicReference<CellPosition> mostRecentBounds;
     private final View parent;
     private final TableHat tableHat;
     private final TableBorderOverlay tableBorderOverlay;
     private final FloatingItem<Label> resultFloatingItem;
     private final StringProperty resultContent = new SimpleStringProperty("");
-    private final ObjectProperty<@Nullable Explanation> failExplanationProperty = new SimpleObjectProperty<>(null);
+    private final ObjectProperty<Explanation> failExplanationProperty = new SimpleObjectProperty<>(null);
 
     public CheckDisplay(View parent, VirtualGridSupplierFloating floatingSupplier, Check check)
     {
@@ -112,7 +110,7 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
         
         this.resultFloatingItem = new FloatingItem<Label>(ViewOrder.STANDARD_CELLS) {
 
-            private @MonotonicNonNull Label label;
+            private Label label;
 
             @Override
             protected Optional<BoundingBox> calculatePosition(VisibleBounds visibleBounds)
@@ -149,10 +147,9 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
                 return label;
             }
 
-            @OnThread(Tag.FXPlatform)
             private void showExplanation()
             {
-                @Nullable Explanation explanation = failExplanationProperty.get();
+                Explanation explanation = failExplanationProperty.get();
                 if (explanation != null)
                 {
                     parent.showExplanationDisplay(check, check.getSrcTableId(), getPosition().offsetByRowCols(1, 0), explanation);
@@ -160,9 +157,9 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
             }
 
             @Override
-            public @Nullable Pair<ItemState, @Nullable StyledString> getItemState(CellPosition cellPosition, Point2D screenPos)
+            public Pair<ItemState, StyledString> getItemState(CellPosition cellPosition, Point2D screenPos)
             {
-                @Nullable StyledString prompt = null;
+                StyledString prompt = null;
                 if (label != null && label.prefWidth(-1) > label.getWidth() + 3)
                     prompt = StyledString.s(label.getText());
                 return getPosition().offsetByRowCols(1, 0).equals(cellPosition) ? new Pair<>(ItemState.DIRECTLY_CLICKABLE, prompt) : null;
@@ -182,7 +179,7 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
         floatingSupplier.addItem(tableBorderOverlay);
 
         @SuppressWarnings("assignment") // Don't understand why I need this
-        @Initialized TableHat hat = new TableHat(this, parent, check);
+        TableHat hat = new TableHat(this, parent, check);
         this.tableHat = hat;
         floatingSupplier.addItem(this.tableHat);
 
@@ -190,7 +187,7 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
             try
             {
                 boolean pass = Utility.cast(check.getData().getColumns().get(0).getType().getCollapsed(0), Boolean.class);
-                @Nullable Explanation failExplanation = pass ? null : check.getExplanation();
+                Explanation failExplanation = pass ? null : check.getExplanation();
                 Platform.runLater(() -> {
                     resultContent.set(pass ? "OK" : "Fail");
                     failExplanationProperty.set(failExplanation);
@@ -200,7 +197,7 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
             }
             catch (UserException | InternalException e)
             {
-                @Nullable Explanation errorExplanation = check.getExplanation();
+                Explanation errorExplanation = check.getExplanation();
                 if (errorExplanation != null)
                 {
                     Platform.runLater(() -> {
@@ -221,7 +218,7 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
         });
 
         // Must be done as last item:
-        @Initialized CheckDisplay usInit = this;
+        CheckDisplay usInit = this;
         this.check.setDisplay(usInit);
     }
 
@@ -263,24 +260,24 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
 
     @Override
     @SuppressWarnings("units")
-    protected @TableDataRowIndex int getCurrentKnownRows()
+    protected int getCurrentKnownRows()
     {
         return 1;
     }
 
     @Override
-    protected CellPosition getDataPosition(@TableDataRowIndex int rowIndex, @TableDataColIndex int columnIndex)
+    protected CellPosition getDataPosition(int rowIndex, int columnIndex)
     {
         return getPosition().offsetByRowCols(1 + rowIndex, columnIndex);
     }
 
     @Override
-    protected @Nullable FXPlatformConsumer<TableId> renameTableOperation(Table table)
+    protected FXPlatformConsumer<TableId> renameTableOperation(Table table)
     {
-        @Nullable RenameTable renameTable = table.getOperations().renameTable;
+        RenameTable renameTable = table.getOperations().renameTable;
         if (renameTable == null)
             return null;
-        @NonNull RenameTable renameTableFinal = renameTable;
+        RenameTable renameTableFinal = renameTable;
 
         return newTableId -> {
             if (Objects.equals(newTableId, check.getId()))
@@ -292,13 +289,13 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
     }
 
     @Override
-    public void gotoRow(Window parent, @AbsColIndex int column)
+    public void gotoRow(Window parent, int column)
     {
         // Only one row...
     }
 
     @Override
-    public void doCopy(@Nullable RectangleBounds bounds)
+    public void doCopy(RectangleBounds bounds)
     {
         // Nothing really to copy
     }
@@ -322,25 +319,25 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) void loadPosition(CellPosition position, Pair<Display, ImmutableList<ColumnId>> display)
+    public void loadPosition(CellPosition position, Pair<Display, ImmutableList<ColumnId>> display)
     {
         this.setPosition(position);
     }
 
     @Override
-    public @OnThread(Tag.Any) CellPosition getMostRecentPosition()
+    public CellPosition getMostRecentPosition()
     {
         return mostRecentBounds.get();
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) void promptForTransformationEdit(int index, Pair<ColumnId, DataType> column, Either<String, Object> value)
+    public void promptForTransformationEdit(int index, Pair<ColumnId, DataType> column, Either<String, Object> value)
     {
         // Not applicable for CheckDisplay, so do nothing
     }
 
     @Override
-    protected @OnThread(Tag.FXPlatform) void updateKnownRows(@GridAreaRowIndex int checkUpToRowIncl, FXPlatformRunnable updateSizeAndPositions)
+    protected void updateKnownRows(int checkUpToRowIncl, FXPlatformRunnable updateSizeAndPositions)
     {
         // Nothing to do
     }
@@ -352,7 +349,7 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
     }
 
     @Override
-    public @Nullable CellSelection getSelectionForSingleCell(CellPosition cellPosition)
+    public CellSelection getSelectionForSingleCell(CellPosition cellPosition)
     {
         if (cellPosition.equals(getPosition()))
             return new EntireTableSelection(this, cellPosition.columnIndex);
@@ -410,7 +407,7 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
             }
 
             @Override
-            public @Nullable CellSelection extendTo(CellPosition cellPosition)
+            public CellSelection extendTo(CellPosition cellPosition)
             {
                 return null;
             }
@@ -434,7 +431,7 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
             }
 
             @Override
-            public boolean includes(@UnknownInitialization(GridArea.class) GridArea tableDisplay)
+            public boolean includes(GridArea tableDisplay)
             {
                 return tableDisplay == CheckDisplay.this;
             }
@@ -454,7 +451,7 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
     }
 
     @Override
-    public void setPosition(@UnknownInitialization(GridArea.class) CheckDisplay this, CellPosition cellPosition)
+    public void setPosition(CheckDisplay this, CellPosition cellPosition)
     {
         super.setPosition(cellPosition);
         if (mostRecentBounds != null)
@@ -468,14 +465,13 @@ public final class CheckDisplay extends HeadedDisplay implements TableDisplayBas
     }
 
     @Override
-    @OnThread(Tag.Any)
     public Table getTable()
     {
         return check;
     }
 
     @Override
-    protected @Nullable ContextMenu getTableHeaderContextMenu()
+    protected ContextMenu getTableHeaderContextMenu()
     {
         return new ContextMenu(
             GUI.menuItem("tableDisplay.menu.delete", () -> {

@@ -42,7 +42,6 @@ public class GenGridAreaList extends Generator<GridAreaList>
     }
     
     @Override
-    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     public GridAreaList generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
     {
         int length = sourceOfRandomness.nextInt(2, 40);
@@ -59,13 +58,12 @@ public class GenGridAreaList extends Generator<GridAreaList>
         return new GridAreaList(r.build());
     }
 
-    @OnThread(Tag.FXPlatform)
     public static GridArea makeGridArea(int x0, int y0, int x1, int y1)
     {
         GridArea gridArea = new GridArea()
         {
             @Override
-            protected @OnThread(Tag.FXPlatform) void updateKnownRows(int checkUpToRowIncl, FXPlatformRunnable updateSizeAndPositions)
+            protected void updateKnownRows(int checkUpToRowIncl, FXPlatformRunnable updateSizeAndPositions)
             {
                 
             }
@@ -77,7 +75,7 @@ public class GenGridAreaList extends Generator<GridAreaList>
             }
             
             @Override
-            public @Nullable CellSelection getSelectionForSingleCell(CellPosition cellPosition)
+            public CellSelection getSelectionForSingleCell(CellPosition cellPosition)
             {
                 return null;
             }

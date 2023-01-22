@@ -56,7 +56,7 @@ public class ImplicitLambdaArg extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState typeState, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public CheckedExp check(ColumnLookup dataLookup, TypeState typeState, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         assignId(typeState);
         ImmutableList<TypeExp> questTypes = typeState.findVarType(getVarName());
@@ -79,7 +79,7 @@ public class ImplicitLambdaArg extends NonOperatorExpression
         return "?" + id;
     }
 
-    protected @Nullable String getVarNameOrNull()
+    protected String getVarNameOrNull()
     {
         if (id < 0)
             return null;
@@ -105,13 +105,13 @@ public class ImplicitLambdaArg extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
+    public Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
     {
         return null;
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         return o instanceof ImplicitLambdaArg;
     }
@@ -131,14 +131,14 @@ public class ImplicitLambdaArg extends NonOperatorExpression
     // If any of the list are implicit lambda args ('?'), returns a new type state
     // with a type for '?' and a wrap function which will turn the item into a function.
     // If none are, returns null and unaltered type state.
-    protected static Pair<@Nullable UnaryOperator<@Recorded TypeExp>, TypeState> detectImplicitLambda(Expression src, ImmutableList<@Recorded Expression> args, TypeState typeState, ErrorAndTypeRecorder errorAndTypeRecorder) throws InternalException
+    protected static Pair<UnaryOperator<TypeExp>, TypeState> detectImplicitLambda(Expression src, ImmutableList<Expression> args, TypeState typeState, ErrorAndTypeRecorder errorAndTypeRecorder) throws InternalException
     {
-        ImmutableList<@Recorded ImplicitLambdaArg> lambdaArgs = getLambdaArgsFrom(args);
+        ImmutableList<ImplicitLambdaArg> lambdaArgs = getLambdaArgsFrom(args);
         
         if (!lambdaArgs.isEmpty())
         {
             ImmutableList<TypeExp> argTypes = Utility.mapListI(lambdaArgs, arg -> new MutVar(arg));
-            return new Pair<@Nullable UnaryOperator<@Recorded TypeExp>, TypeState>(t -> errorAndTypeRecorder.recordTypeNN(src, TypeExp.function(src, argTypes, t)), typeState.addImplicitLambdas(lambdaArgs, argTypes));
+            return new Pair<UnaryOperator<TypeExp>, TypeState>(t -> errorAndTypeRecorder.recordTypeNN(src, TypeExp.function(src, argTypes, t)), typeState.addImplicitLambdas(lambdaArgs, argTypes));
         }
         else
         {
@@ -148,7 +148,6 @@ public class ImplicitLambdaArg extends NonOperatorExpression
 
     public interface ImplicitLambdaFunction<T, R>
     {
-        @OnThread(Tag.Simulation)
         public R apply(T t) throws InternalException, EvaluationException;
     }
     
@@ -163,10 +162,9 @@ public class ImplicitLambdaArg extends NonOperatorExpression
      * @param body
      * @return
      */
-    @OnThread(Tag.Simulation)
-    public static ValueResult makeImplicitFunction(Expression outer, ImmutableList<@Recorded Expression> possibleArgs, EvaluateState state, ImplicitLambdaFunction<EvaluateState, ValueResult> body) throws EvaluationException, InternalException
+    public static ValueResult makeImplicitFunction(Expression outer, ImmutableList<Expression> possibleArgs, EvaluateState state, ImplicitLambdaFunction<EvaluateState, ValueResult> body) throws EvaluationException, InternalException
     {
-        ImmutableList<@Recorded ImplicitLambdaArg> lambdaArgs = getLambdaArgsFrom(possibleArgs);
+        ImmutableList<ImplicitLambdaArg> lambdaArgs = getLambdaArgsFrom(possibleArgs);
         if (lambdaArgs.size() == 0)
         {
             // Not an implicit lambda, we shouldn't have been called,
@@ -179,7 +177,7 @@ public class ImplicitLambdaArg extends NonOperatorExpression
             return outer.explanation(ValueFunction.value(new ValueFunction()
             {
                 @Override
-                public @OnThread(Tag.Simulation) @Value Object _call() throws InternalException, UserException
+                public Object _call() throws InternalException, UserException
                 {
                     EvaluateState argState = state;
                     for (int i = 0; i < lambdaArgs.size(); i++)
@@ -194,9 +192,9 @@ public class ImplicitLambdaArg extends NonOperatorExpression
         }
     }
 
-    public static ImmutableList<@Recorded ImplicitLambdaArg> getLambdaArgsFrom(ImmutableList<@Recorded Expression> possibleArgs)
+    public static ImmutableList<ImplicitLambdaArg> getLambdaArgsFrom(ImmutableList<Expression> possibleArgs)
     {
-        return Utility.<@Recorded Expression, @Recorded ImplicitLambdaArg>filterClass(possibleArgs.stream(), (Class<@Recorded ImplicitLambdaArg>)ImplicitLambdaArg.class).collect(ImmutableList.<@Recorded ImplicitLambdaArg>toImmutableList());
+        return Utility.<Expression, ImplicitLambdaArg>filterClass(possibleArgs.stream(), (Class<ImplicitLambdaArg>)ImplicitLambdaArg.class).collect(ImmutableList.<ImplicitLambdaArg>toImmutableList());
     }
 
     @Override

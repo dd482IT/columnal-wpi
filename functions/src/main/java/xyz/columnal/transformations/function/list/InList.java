@@ -39,7 +39,7 @@ import xyz.columnal.transformations.expression.function.ValueFunction;
 
 public class InList extends FunctionDefinition
 {
-    public static final @FuncDocKey String NAME = "listprocess:list contains";
+    public static final String NAME = "listprocess:list contains";
 
     public InList() throws InternalException
     {
@@ -47,7 +47,7 @@ public class InList extends FunctionDefinition
     }
     
     @Override
-    public @OnThread(Tag.Simulation) ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
+    public ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
     {
         return new Instance();
     }
@@ -55,10 +55,10 @@ public class InList extends FunctionDefinition
     private static class Instance extends ValueFunction
     {
         @Override
-        public @OnThread(Tag.Simulation) @Value Object _call() throws InternalException, UserException
+        public Object _call() throws InternalException, UserException
         {
             ListEx list = Utility.cast(arg(0), ListEx.class);
-            @Value Object target = arg(1);
+            Object target = arg(1);
             for (int i = 0; i < list.size(); i++)
             {
                 if (Utility.compareValues(list.get(i), target) == 0)

@@ -68,25 +68,24 @@ import xyz.columnal.utility.TranslationUtility;
 /**
  * Edits an immediate column, which has a name, type, and default value
  */
-@OnThread(Tag.FXPlatform)
 public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetails>
 {
-    private @Nullable DataType customDataType = null;
+    private DataType customDataType = null;
     private final ColumnNameTextField columnNameTextField;
     private final TypeEditor typeEditor;
-    private @Nullable DataType latestType;
-    private final @Nullable TableNameTextField tableNameTextField;
-    private @MonotonicNonNull RecogniserDocument<?> defaultValueDocument;
+    private DataType latestType;
+    private final TableNameTextField tableNameTextField;
+    private RecogniserDocument<?> defaultValueDocument;
 
     public static class ColumnDetails
     {
         // Null if not creating table, or if blank
-        public final @Nullable TableId tableId;
+        public final TableId tableId;
         public final ColumnId columnId;
         public final DataType dataType;
-        public final @Value Object defaultValue;
+        public final Object defaultValue;
 
-        public ColumnDetails(@Nullable TableId tableId, ColumnId columnId, DataType dataType, @Value Object defaultValue)
+        public ColumnDetails(TableId tableId, ColumnId columnId, DataType dataType, Object defaultValue)
         {
             this.tableId = tableId;
             this.columnId = columnId;
@@ -95,12 +94,11 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
         }
     }
     
-    private @Nullable @Value Object defaultValue;
+    private Object defaultValue;
     
     public static enum InitialFocus { FOCUS_TABLE_NAME, FOCUS_COLUMN_NAME, FOCUS_TYPE }
     
-    @OnThread(Tag.FXPlatform)
-    public EditImmediateColumnDialog(View parent, TableManager tableManager, @Nullable ColumnId initial, @Nullable DataType dataType, boolean creatingNewTable, InitialFocus initialFocus)
+    public EditImmediateColumnDialog(View parent, TableManager tableManager, ColumnId initial, DataType dataType, boolean creatingNewTable, InitialFocus initialFocus)
     {
         super(parent, true);
         setResizable(true);
@@ -115,7 +113,7 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
         
         DocumentTextField defaultValueField = new DocumentTextField(null) {
             @Override
-            public @OnThread(Tag.FXPlatform) void documentChanged(Document document)
+            public void documentChanged(Document document)
             {
                 super.documentChanged(document);
                 clearErrorLabel();
@@ -213,20 +211,20 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
         });
     }
 
-    private void focusColumnNameField(@UnknownInitialization(Object.class) EditImmediateColumnDialog this)
+    private void focusColumnNameField(EditImmediateColumnDialog this)
     {
         if (columnNameTextField != null)
             columnNameTextField.requestFocusWhenInScene();
     }
 
     @Override
-    protected @OnThread(Tag.FXPlatform) Either<@Localized String, ColumnDetails> calculateResult()
+    protected Either<String, ColumnDetails> calculateResult()
     {
         typeEditor.showAllErrors();
         // Check whether some conditions are fulfilled
         DataType dataType = customDataType;
         
-        @Nullable TableId tableId = null;
+        TableId tableId = null;
         if (tableNameTextField != null)
         {
             tableId = tableNameTextField.valueProperty().get();
@@ -235,7 +233,7 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
                 return Either.left(TranslationUtility.getString("edit.column.invalid.table.name"));
         }
 
-        @Nullable ColumnId columnId = columnNameTextField.valueProperty().getValue();
+        ColumnId columnId = columnNameTextField.valueProperty().getValue();
         
         //Log.debug("Col: " + columnId + " type: " + dataType + " default: " + defaultValue);
         
@@ -249,8 +247,7 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
         return Either.right(new ColumnDetails(tableId, columnId, dataType, defaultValue));
     }
 
-    @OnThread(Tag.FXPlatform)
-    private void updateType(@UnknownInitialization(LightDialog.class)EditImmediateColumnDialog this, DocumentTextField textField, @Nullable DataType t)
+    private void updateType(EditImmediateColumnDialog this, DocumentTextField textField, DataType t)
     {
         if (t == null)
             textField.setDisable(true);
@@ -274,13 +271,13 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
         }
     }
 
-    private RecogniserDocument<?> makeEditorKit(@UnknownInitialization(LightDialog.class)EditImmediateColumnDialog this, DataType dataType) throws InternalException
+    private RecogniserDocument<?> makeEditorKit(EditImmediateColumnDialog this, DataType dataType) throws InternalException
     {
         try
         {
             defaultValue = DataTypeUtility.makeDefaultValue(dataType);
             // Bit of a hack to work around thread checker:
-            return makeEditorKit(((ExBiFunction<DataType, @Value Object, String>)EditImmediateColumnDialog::defaultAsString).apply(dataType, defaultValue), TableDisplayUtility.recogniser(dataType, true));
+            return makeEditorKit(((ExBiFunction<DataType, Object, String>)EditImmediateColumnDialog::defaultAsString).apply(dataType, defaultValue), TableDisplayUtility.recogniser(dataType, true));
             //return fieldFromComponent(TableDisplayUtility.component(ImmutableList.of(), dataType, defaultValue), TableDisplayUtility.stfStylesFor(dataType));
         }
         catch (UserException e)
@@ -291,15 +288,14 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
         }
     }
 
-    @OnThread(Tag.Simulation)
-    private static String defaultAsString(DataType dataType, @Value Object defValue) throws UserException, InternalException
+    private static String defaultAsString(DataType dataType, Object defValue) throws UserException, InternalException
     {
         return DataTypeUtility.valueToString(defValue);
     }
 
-    private <T extends @NonNull @ImmediateValue Object> RecogniserDocument<@Value T> makeEditorKit(@UnknownInitialization(LightDialog.class) EditImmediateColumnDialog this, String initialValue, RecogniserAndType<T> recogniser)
+    private <T extends Object> RecogniserDocument<T> makeEditorKit(EditImmediateColumnDialog this, String initialValue, RecogniserAndType<T> recogniser)
     {
-        RecogniserDocument<@Value T> editorKit = new RecogniserDocument<@Value T>(initialValue, (Class<@Value T>)recogniser.itemClass, (Recogniser<@Value T>)recogniser.recogniser, null, (String s, @Value T v, FXPlatformRunnable reset) -> {defaultValue = v;}, k -> getDialogPane().lookupButton(ButtonType.OK).requestFocus(), null);
+        RecogniserDocument<T> editorKit = new RecogniserDocument<T>(initialValue, (Class<T>)recogniser.itemClass, (Recogniser<T>)recogniser.recogniser, null, (String s, T v, FXPlatformRunnable reset) -> {defaultValue = v;}, k -> getDialogPane().lookupButton(ButtonType.OK).requestFocus(), null);
         defaultValue = editorKit.getLatestValue().leftToNull();
         return editorKit;
     }

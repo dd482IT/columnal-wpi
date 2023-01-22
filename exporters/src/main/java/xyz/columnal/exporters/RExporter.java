@@ -49,7 +49,7 @@ public class RExporter implements Exporter
     }
 
     @Override
-    public @Localized String getName()
+    public String getName()
     {
         return TranslationUtility.getString("importer.r.files");
     }

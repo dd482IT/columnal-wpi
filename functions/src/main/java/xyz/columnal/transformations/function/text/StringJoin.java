@@ -50,9 +50,9 @@ public class StringJoin extends FunctionDefinition
     private static class Instance extends ValueFunction
     {
         @Override
-        public @Value Object _call() throws UserException, InternalException
+        public Object _call() throws UserException, InternalException
         {
-            @Value ListEx textList = arg(0, ListEx.class);
+            ListEx textList = arg(0, ListEx.class);
             StringBuilder b = new StringBuilder();
             for (int i = 0; i < textList.size(); i++)
             {

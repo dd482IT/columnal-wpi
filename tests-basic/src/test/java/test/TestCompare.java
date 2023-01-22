@@ -39,8 +39,6 @@ import static org.junit.Assert.assertEquals;
  */
 public class TestCompare
 {
-    @Test
-    @OnThread(Tag.Simulation)
     public void testCompareList() throws InternalException, UserException
     {
         equal(o(), o());
@@ -66,42 +64,40 @@ public class TestCompare
         less(o(i(1)), o(d(1.01)));
     }
 
-    private @Value BigDecimal d(double v)
+    private BigDecimal d(double v)
     {
         return DataTypeUtility.value(new BigDecimal(v));
     }
 
-    private @Value Long l(int i)
+    private Long l(int i)
     {
         return DataTypeUtility.value((long)i);
     }
 
-    private @Value Byte by(int i)
+    private Byte by(int i)
     {
         return DataTypeUtility.value((byte)i);
     }
 
-    private @Value Integer i(int i)
+    private Integer i(int i)
     {
         return DataTypeUtility.value(i);
     }
 
-    private @Value String s(String str) { return DataTypeUtility.value(str); }
+    private String s(String str) { return DataTypeUtility.value(str); }
 
-    private static List<@Value Object> o(@Value Object... os)
+    private static List<Object> o(Object... os)
     {
         return Arrays.asList(os);
     }
 
-    @OnThread(Tag.Simulation)
-    private static void equal(List<@Value Object> a, List<@Value Object> b) throws InternalException, UserException
+    private static void equal(List<Object> a, List<Object> b) throws InternalException, UserException
     {
         assertEquals(0, Utility.compareLists(a, b));
         assertEquals(0, Utility.compareLists(b, a));
     }
 
-    @OnThread(Tag.Simulation)
-    private static void less(List<@Value Object> a, List<@Value Object> b) throws InternalException, UserException
+    private static void less(List<Object> a, List<Object> b) throws InternalException, UserException
     {
         assertEquals(-1, Utility.compareLists(a, b));
         assertEquals(1, Utility.compareLists(b, a));

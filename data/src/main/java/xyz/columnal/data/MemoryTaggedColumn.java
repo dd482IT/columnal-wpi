@@ -62,7 +62,6 @@ public class MemoryTaggedColumn extends EditableColumn
     }
 
     @Override
-    @OnThread(Tag.Any)
     public synchronized DataTypeValue getType() throws InternalException
     {
         return storage.getType();
@@ -90,20 +89,19 @@ public class MemoryTaggedColumn extends EditableColumn
 
     @SuppressWarnings("valuetype") // Not 100% sure why this is needed
     @Override
-    public @OnThread(Tag.Simulation) SimulationRunnable insertRows(int index, int count) throws InternalException, UserException
+    public SimulationRunnable insertRows(int index, int count) throws InternalException, UserException
     {
         return storage.insertRows(index, Utility.replicate(count, Either.<String, TaggedValue>right(defaultValue)));
     }
 
     @Override
-    public @OnThread(Tag.Simulation) SimulationRunnable removeRows(int index, int count) throws InternalException, UserException
+    public SimulationRunnable removeRows(int index, int count) throws InternalException, UserException
     {
         return storage.removeRows(index, count);
     }
 
     @Override
-    @OnThread(Tag.Any)
-    public @Value Object getDefaultValue()
+    public Object getDefaultValue()
     {
         return defaultValue;
     }

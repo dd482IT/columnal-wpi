@@ -41,7 +41,7 @@ import java.util.Locale;
 public class StringLowerCase extends FunctionDefinition
 {
 
-    public static final @FuncDocKey String NAME = "text:lower case";
+    public static final String NAME = "text:lower case";
 
     public StringLowerCase() throws InternalException
     {
@@ -49,12 +49,12 @@ public class StringLowerCase extends FunctionDefinition
     }
 
     @Override
-    public @OnThread(Tag.Simulation) ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
+    public ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
     {
         return new ValueFunction1<String>(String.class) {
 
             @Override
-            public @OnThread(Tag.Simulation) @Value Object call1(@Value String s) throws InternalException, UserException
+            public Object call1(String s) throws InternalException, UserException
             {
                 return DataTypeUtility.value(s.toLowerCase(Locale.ENGLISH));
             }

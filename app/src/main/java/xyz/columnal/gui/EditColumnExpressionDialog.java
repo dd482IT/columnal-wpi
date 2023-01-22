@@ -89,7 +89,6 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 // Edit column name and expression for that column
-@OnThread(Tag.FXPlatform)
 public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColumnExpressionDialog<T>.Result>
 {
 
@@ -109,17 +108,16 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
         }
     }
     
-    @OnThread(Tag.FXPlatform)
     public interface SidePane<T>
     {
-        public @Nullable Node getSidePane();
+        public Node getSidePane();
         
         public Validity checkValidity();
 
         public void showAllErrors();
 
         // null if not currently valid.
-        public @Nullable T calculateResult();
+        public T calculateResult();
 
         ImmutableList<? extends TimedFocusable> getTimedFocusables();
 
@@ -132,13 +130,13 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
     private final ExpressionEditor expressionEditor;
     private Expression curValue;
     private final ColumnNameTextField nameField;
-    private final @Nullable RecipeBar recipeBar;
+    private final RecipeBar recipeBar;
     private final SidePane<T> sidePane;
-    private @Nullable SubPicker subPicker = null;
-    private final @Nullable Node sidePaneNode;
+    private SubPicker subPicker = null;
+    private final Node sidePaneNode;
     private final TypeManager typeManager;
     
-    public EditColumnExpressionDialog(View parent, @Nullable Table srcTable, @Nullable ColumnId initialName, @Nullable Expression initialExpression, Function<@Nullable ColumnId, ColumnLookup> makeColumnLookup, FXPlatformSupplierInt<TypeState> makeTypeState, ImmutableList<ExpressionRecipe> recipes, @Nullable DataType expectedType, SidePane<T> sidePane)
+    public EditColumnExpressionDialog(View parent, Table srcTable, ColumnId initialName, Expression initialExpression, Function<ColumnId, ColumnLookup> makeColumnLookup, FXPlatformSupplierInt<TypeState> makeTypeState, ImmutableList<ExpressionRecipe> recipes, DataType expectedType, SidePane<T> sidePane)
     {
         super(parent, new DialogPaneWithSideButtons());
         this.typeManager = parent.getManager().getTypeManager();
@@ -176,15 +174,13 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
                 }, new CompletionListener<ColumnCompletion>()
                 {
                     @Override
-                    @OnThread(Tag.FXPlatform)
-                    public @Nullable String doubleClick(String currentText, ColumnCompletion selectedItem)
+                    public String doubleClick(String currentText, ColumnCompletion selectedItem)
                     {
                         return selectedItem.columnId.getRaw();
                     }
 
                     @Override
-                    @OnThread(Tag.FXPlatform)
-                    public @Nullable String keyboardSelect(String textBeforeCaret, String textAfterCaret, @Nullable ColumnCompletion selectedItem, boolean wasTab)
+                    public String keyboardSelect(String textBeforeCaret, String textAfterCaret, ColumnCompletion selectedItem, boolean wasTab)
                     {
                         FXUtility.keyboard(EditColumnExpressionDialog.this).expressionEditor.focus(Focus.LEFT);
                         return selectedItem != null ? selectedItem.columnId.getRaw() : textBeforeCaret + textAfterCaret;
@@ -198,15 +194,15 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
             }
         }
         
-        ReadOnlyObjectWrapper<@Nullable Table> srcTableWrapper = new ReadOnlyObjectWrapper<@Nullable Table>(srcTable);
+        ReadOnlyObjectWrapper<Table> srcTableWrapper = new ReadOnlyObjectWrapper<Table>(srcTable);
         // We let ExpressionEditor call these methods, and piggy-back on them:
         ColumnPicker columnPicker = new ColumnPicker()
         {
             @Override
-            public void enableColumnPickingMode(@Nullable Point2D screenPos, ObjectExpression<@PolyNull Scene> sceneProperty, Predicate<Pair<Table, ColumnId>> expEdIncludeColumn, FXPlatformConsumer<Pair<Table, ColumnId>> expEdOnPick)
+            public void enableColumnPickingMode(Point2D screenPos, ObjectExpression<Scene> sceneProperty, Predicate<Pair<Table, ColumnId>> expEdIncludeColumn, FXPlatformConsumer<Pair<Table, ColumnId>> expEdOnPick)
             {
                 parent.enableColumnPickingMode(screenPos, getDialogPane().sceneProperty(), tc -> {
-                    @Nullable TimedFocusable item = getRecentlyFocused();
+                    TimedFocusable item = getRecentlyFocused();
                     if (subPicker != null)
                     {
                         return subPicker.includeColumn.test(tc);
@@ -239,7 +235,7 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
                     if (expressionEditor != null && expressionEditor.isMouseClickImmune())
                         return;
                     
-                    @Nullable TimedFocusable item = getRecentlyFocused();
+                    TimedFocusable item = getRecentlyFocused();
                     
                     if (subPicker != null)
                     {
@@ -260,8 +256,6 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
                 });
             }
 
-            @OnThread(Tag.FXPlatform)
-            @Nullable
             private TimedFocusable getRecentlyFocused()
             {
                 return TimedFocusable.getRecentlyFocused(Stream.<TimedFocusable>concat(Stream.<TimedFocusable>of(FXUtility.mouse(EditColumnExpressionDialog.this).expressionEditor, nameField), sidePane.getTimedFocusables().stream()).toArray(TimedFocusable[]::new));
@@ -275,7 +269,7 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
         };
         expressionEditor = new ExpressionEditor(initialExpression, srcTableWrapper, curColumnLookup, expectedType, columnPicker, parent.getManager().getTypeManager(), makeTypeState, FunctionList.getFunctionLookup(parent.getManager().getUnitManager()), e -> {
             curValue = e;
-            @Nullable RecipeBar recipeBar = Utility.later(this).recipeBar;
+            RecipeBar recipeBar = Utility.later(this).recipeBar;
             if (recipeBar != null)
                 recipeBar.update(e);
             notifyModified();
@@ -283,7 +277,7 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
             @Override
             protected void parentFocusRightOfThis(Either<Focus, Integer> side, boolean becauseOfTab)
             {
-                @Nullable Node button = getDialogPane().lookupButton(ButtonType.OK);
+                Node button = getDialogPane().lookupButton(ButtonType.OK);
                 if (button != null && becauseOfTab)
                     button.requestFocus();
             }
@@ -299,10 +293,9 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
             }
 
             @Override
-            @OnThread(Tag.FXPlatform)
-            protected @Nullable Pair<@Nullable ColumnId, Expression> forceCloseDialog()
+            protected Pair<ColumnId, Expression> forceCloseDialog()
             {
-                Pair<@Nullable ColumnId, Expression> result = new Pair<>(nameField.valueProperty().get(), Utility.later(EditColumnExpressionDialog.this).expressionEditor.save(true));
+                Pair<ColumnId, Expression> result = new Pair<>(nameField.valueProperty().get(), Utility.later(EditColumnExpressionDialog.this).expressionEditor.save(true));
                 setResult(null);
                 close();
                 return result;
@@ -359,12 +352,12 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
         //FXUtility.onceNotNull(getDialogPane().sceneProperty(), org.scenicview.ScenicView::show);
     }
 
-    public static EditColumnExpressionDialog<UnitType> withoutSidePane(View parent, @Nullable Table srcTable, @Nullable ColumnId initialName, @Nullable Expression initialExpression, Function<@Nullable ColumnId, ColumnLookup> makeColumnLookup, FXPlatformSupplierInt<TypeState> makeTypeState, @Nullable DataType expectedType)
+    public static EditColumnExpressionDialog<UnitType> withoutSidePane(View parent, Table srcTable, ColumnId initialName, Expression initialExpression, Function<ColumnId, ColumnLookup> makeColumnLookup, FXPlatformSupplierInt<TypeState> makeTypeState, DataType expectedType)
     {
         return new EditColumnExpressionDialog<>(parent, srcTable, initialName, initialExpression, makeColumnLookup, makeTypeState, ImmutableList.of(), expectedType, new SidePane<UnitType>()
         {
             @Override
-            public @Nullable Node getSidePane()
+            public Node getSidePane()
             {
                 return null;
             }
@@ -381,7 +374,7 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
             }
 
             @Override
-            public @Nullable UnitType calculateResult()
+            public UnitType calculateResult()
             {
                 return UnitType.UNIT;
             }
@@ -410,7 +403,7 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
         return super.showAndWaitCentredOn(mouseScreenPos, 400, 200);
     }
     
-    public void addTopMessage(@LocalizableKey String topMessage)
+    public void addTopMessage(String topMessage)
     {
         TextFlow display = GUI.textFlowKey(topMessage, "edit-column-top-message");
         display.setMaxWidth(9999.0);
@@ -431,11 +424,10 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
     }
 
     @Override
-    @OnThread(Tag.FXPlatform)
-    protected @Nullable Result calculateResult()
+    protected Result calculateResult()
     {
-        @Nullable ColumnId name = nameField.valueProperty().getValue();
-        @Nullable T t = sidePane.calculateResult();
+        ColumnId name = nameField.valueProperty().getValue();
+        T t = sidePane.calculateResult();
         if (name == null || t == null)
             return null;
         else
@@ -465,7 +457,6 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
         }
     }
 
-    @OnThread(Tag.FXPlatform)
     private final class RecipeBar extends FlowPane
     {
         public RecipeBar(ImmutableList<ExpressionRecipe> recipes)
@@ -494,7 +485,7 @@ public class EditColumnExpressionDialog<T> extends DoubleOKLightDialog<EditColum
             return new ColumnPicker()
             {
                 @Override
-                public void enableColumnPickingMode(@Nullable Point2D screenPos, ObjectExpression<@PolyNull Scene> sceneProperty, Predicate<Pair<Table, ColumnId>> includeColumn, FXPlatformConsumer<Pair<Table, ColumnId>> onPick)
+                public void enableColumnPickingMode(Point2D screenPos, ObjectExpression<Scene> sceneProperty, Predicate<Pair<Table, ColumnId>> includeColumn, FXPlatformConsumer<Pair<Table, ColumnId>> onPick)
                 {
                     // Column picking already enabled, just need to register ourselves:
                     subPicker = new SubPicker(includeColumn, onPick);

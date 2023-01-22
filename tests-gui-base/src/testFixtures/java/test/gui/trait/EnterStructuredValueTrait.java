@@ -71,15 +71,13 @@ import static org.junit.Assert.*;
 public interface EnterStructuredValueTrait extends FxRobotInterface, FocusOwnerTrait
 {
     // Returns what the content should be after focus leaves
-    @OnThread(Tag.Any)
-    default public String enterStructuredValue(DataType dataType, @Value Object value, Random r, boolean deleteAllFirst, boolean allowFieldShuffle) throws InternalException, UserException
+    default public String enterStructuredValue(DataType dataType, Object value, Random r, boolean deleteAllFirst, boolean allowFieldShuffle) throws InternalException, UserException
     {
         return enterStructuredValue_Impl(dataType, value, r, deleteAllFirst, allowFieldShuffle, true);
     }
 
     // Returns true if the content should be unaltered after focus leaves
-    @OnThread(Tag.Any)
-    default public String enterStructuredValue_Impl(DataType dataType, @Value Object value, Random r, boolean deleteAllFirst, boolean allowFieldShuffle, boolean topLevel) throws InternalException, UserException
+    default public String enterStructuredValue_Impl(DataType dataType, Object value, Random r, boolean deleteAllFirst, boolean allowFieldShuffle, boolean topLevel) throws InternalException, UserException
     {
         final int DELAY = 1;
         
@@ -90,7 +88,7 @@ public interface EnterStructuredValueTrait extends FxRobotInterface, FocusOwnerT
             push(KeyCode.DELETE);
             push(KeyCode.HOME);
         }
-        return dataType.apply(new DataTypeVisitor<@Nullable String>()
+        return dataType.apply(new DataTypeVisitor<String>()
         {
             // Can't paste as first item, in case unfocused
             boolean haveWritten = false;
@@ -112,7 +110,7 @@ public interface EnterStructuredValueTrait extends FxRobotInterface, FocusOwnerT
             }
             
             @Override
-            public @Nullable String number(NumberInfo numberInfo) throws InternalException, UserException
+            public String number(NumberInfo numberInfo) throws InternalException, UserException
             {                
                 String num = Utility.toBigDecimal(Utility.cast(value, Number.class)).toPlainString();
                 writeOrPaste(num);
@@ -122,7 +120,7 @@ public interface EnterStructuredValueTrait extends FxRobotInterface, FocusOwnerT
             @Override
             public String text() throws InternalException, UserException
             {
-                @Value String stringValue = Utility.cast(value, String.class);
+                String stringValue = Utility.cast(value, String.class);
                 if (topLevel && !stringValue.isEmpty() && !stringValue.startsWith("\"") && !stringValue.endsWith("\"") && r.nextBoolean())
                 {
                     writeOrPaste(GrammarUtility.escapeChars(stringValue));
@@ -135,7 +133,6 @@ public interface EnterStructuredValueTrait extends FxRobotInterface, FocusOwnerT
             }
 
             @Override
-            @OnThread(value = Tag.Simulation, ignoreParent = true)
             public String date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
                 TemporalAccessor t = (TemporalAccessor) value;
@@ -198,7 +195,6 @@ public interface EnterStructuredValueTrait extends FxRobotInterface, FocusOwnerT
             }
             
             @Override
-            @OnThread(value = Tag.Simulation, ignoreParent = true)
             public String tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 String content = DataTypeUtility.valueToString(value);
@@ -207,18 +203,18 @@ public interface EnterStructuredValueTrait extends FxRobotInterface, FocusOwnerT
             }
 
             @Override
-            public String record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, UserException
+            public String record(ImmutableMap<String, DataType> fields) throws InternalException, UserException
             {
                 write("(");
                 haveWritten = true;
-                @Value Record record = Utility.cast(value, Record.class);
+                Record record = Utility.cast(value, Record.class);
                 boolean first = true;
-                ArrayList<Entry<@ExpressionIdentifier String, DataType>> entries = new ArrayList<>(fields.entrySet());
+                ArrayList<Entry<String, DataType>> entries = new ArrayList<>(fields.entrySet());
                 if (allowFieldShuffle)
                     Collections.shuffle(entries, r);
                 else
                     Collections.sort(entries, Comparator.comparing(e -> e.getKey()));
-                for (Entry<@ExpressionIdentifier String, DataType> entry : entries)
+                for (Entry<String, DataType> entry : entries)
                 {
                     if (!first)
                     {
@@ -236,8 +232,7 @@ public interface EnterStructuredValueTrait extends FxRobotInterface, FocusOwnerT
             }
 
             @Override
-            @OnThread(value = Tag.Simulation, ignoreParent = true)
-            public String array(@Nullable DataType inner) throws InternalException, UserException
+            public String array(DataType inner) throws InternalException, UserException
             {
                 if (inner != null)
                 {
@@ -262,8 +257,7 @@ public interface EnterStructuredValueTrait extends FxRobotInterface, FocusOwnerT
     }
     
     // Checks STF has same content after running defocus
-    @OnThread(Tag.Any)
-    default public void defocusSTFAndCheck(@Nullable String checkContentAfterDefocus, FXPlatformRunnable defocus)
+    default public void defocusSTFAndCheck(String checkContentAfterDefocus, FXPlatformRunnable defocus)
     {
         Window window = TFXUtil.fx(() -> getRealFocusedWindow());
         Node node = TFXUtil.fx(() -> window.getScene().getFocusOwner());

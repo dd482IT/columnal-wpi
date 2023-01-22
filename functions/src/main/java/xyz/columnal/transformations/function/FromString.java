@@ -60,7 +60,7 @@ import java.util.HashMap;
 public class FromString
 {
 
-    public static final @FuncDocKey String FROM_TEXT_TO = "conversion:from text to";
+    public static final String FROM_TEXT_TO = "conversion:from text to";
 
     public static ImmutableList<FunctionDefinition> getFunctions() throws InternalException
     {
@@ -68,7 +68,7 @@ public class FromString
             new FunctionDefinition("conversion:from text")
             {
                 @Override
-                public @OnThread(Tag.Simulation) ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
+                public ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
                 {
                     DataType type = paramTypes.apply("t").getRight("Variable t should be type but was unit");
                     if (type == null)
@@ -76,7 +76,7 @@ public class FromString
                     return new ValueFunction()
                     {
                         @Override
-                        public @OnThread(Tag.Simulation) @Value Object _call() throws InternalException, UserException
+                        public Object _call() throws InternalException, UserException
                         {
                             return convertEntireString(arg(0), type);
                         }
@@ -86,7 +86,7 @@ public class FromString
             new FunctionDefinition(FROM_TEXT_TO)
             {
                 @Override
-                public @OnThread(Tag.Simulation) ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
+                public ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
                 {
                     DataType type = paramTypes.apply("t").getRight("Variable t should be type but was unit");
                     if (type == null)
@@ -94,7 +94,7 @@ public class FromString
                     return new ValueFunction()
                     {
                         @Override
-                        public @OnThread(Tag.Simulation) @Value Object _call() throws InternalException, UserException
+                        public Object _call() throws InternalException, UserException
                         {
                             return convertEntireString(arg(1), type);
                         }
@@ -104,20 +104,17 @@ public class FromString
         );
     }
     
-    @OnThread(Tag.Simulation)
-    public static @Value Object _test_fromString(String s, DataType type) throws UserException, InternalException
+    public static Object _test_fromString(String s, DataType type) throws UserException, InternalException
     {
         return convertEntireString(DataTypeUtility.value(s), type);
     }
 
-    @OnThread(Tag.Simulation)
-    @Value
-    public static Object convertEntireString(@Value Object arg, DataType type) throws InternalException, UserException
+    public static Object convertEntireString(Object arg, DataType type) throws InternalException, UserException
     {
-        @Value String src = Utility.cast(arg, String.class);
+        String src = Utility.cast(arg, String.class);
         StringView stringView = new StringView(src);
         stringView.skipSpaces();
-        @Value Object value = convertFromString(type, stringView);
+        Object value = convertFromString(type, stringView);
         stringView.skipSpaces();
         if (stringView.getPosition() < src.length())
             throw new UserException("Entire string was not used during conversion to " + type + ", remainder: " + stringView.snippet() + " from original \"" + src + "\"");
@@ -125,14 +122,12 @@ public class FromString
     }
 
     // The StringView gets modified as we process it.
-        @OnThread(Tag.Simulation)
-        private static @Value Object convertFromString(DataType type, StringView src) throws InternalException, UserException
+        private static Object convertFromString(DataType type, StringView src) throws InternalException, UserException
         {
-            return type.apply(new DataTypeVisitorEx<@Value Object, UserException>()
+            return type.apply(new DataTypeVisitorEx<Object, UserException>()
             {
                 @Override
-                @OnThread(Tag.Simulation)
-                public @Value Object number(NumberInfo numberInfo) throws InternalException, UserException
+                public Object number(NumberInfo numberInfo) throws InternalException, UserException
                 {
                     // First, we need to consume the chars for the number:
                     StringBuilder s = new StringBuilder();
@@ -154,12 +149,11 @@ public class FromString
                 }
 
                 @Override
-                @OnThread(Tag.Simulation)
-                public @Value Object text() throws InternalException, UserException
+                public Object text() throws InternalException, UserException
                 {
                     if (!src.tryRead("\""))
                         throw new UserException("Expected start of string but found: " + src.snippet());
-                    @Nullable String content = src.readUntil('\"');
+                    String content = src.readUntil('\"');
                     if (content != null)
                         return DataTypeUtility.value(GrammarUtility.processEscapes("\"" + content + "\""));
                     else
@@ -167,15 +161,13 @@ public class FromString
                 }
 
                 @Override
-                @OnThread(Tag.Simulation)
-                public @Value Object date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
+                public Object date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
                 {
                     return DataTypeUtility.parseTemporalFlexible(dateTimeInfo, src);
                 }
 
                 @Override
-                @OnThread(Tag.Simulation)
-                public @Value Object bool() throws InternalException, UserException
+                public Object bool() throws InternalException, UserException
                 {
                     if (src.tryReadIgnoreCase("true"))
                         return DataTypeUtility.value(true);
@@ -186,8 +178,7 @@ public class FromString
                 }
 
                 @Override
-                @OnThread(Tag.Simulation)
-                public @Value Object tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+                public Object tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
                 {
                     ArrayList<Pair<Integer, TagType<DataType>>> indexedTags = new ArrayList<>();
                     for (int i = 0; i < tags.size(); i++)
@@ -204,12 +195,12 @@ public class FromString
                         if (src.tryRead(indexedTag.getSecond().getName()))
                         {
                             // Found it!
-                            final @Nullable DataType innerType = indexedTag.getSecond().getInner();
+                            final DataType innerType = indexedTag.getSecond().getInner();
                             if (innerType != null)
                             {
                                 if (!src.tryRead("("))
                                     throw new UserException("Tag name must be followed by round brackets around inner value");
-                                @Value TaggedValue r = new TaggedValue(indexedTag.getFirst(), convertFromString(innerType, src), DataTypeUtility.fromTags(tags));
+                                TaggedValue r = new TaggedValue(indexedTag.getFirst(), convertFromString(innerType, src), DataTypeUtility.fromTags(tags));
                                 if (!src.tryRead(")"))
                                     throw new UserException("Missing closing round bracket around tag's inner value");
                                 return r;
@@ -224,14 +215,13 @@ public class FromString
                 }
 
                 @Override
-                @OnThread(Tag.Simulation)
-                public @Value Object record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, UserException
+                public Object record(ImmutableMap<String, DataType> fields) throws InternalException, UserException
                 {
                     if (!src.tryRead("("))
                         throw new UserException("Expected record, but no opening round bracket, instead found: " + src.snippet());
 
 
-                    HashMap<@ExpressionIdentifier String, @Value Object> items = new HashMap<>();
+                    HashMap<String, Object> items = new HashMap<>();
                     for (int i = 0; i < fields.size(); i++)
                     {
                         if (i > 0)
@@ -243,7 +233,7 @@ public class FromString
                         String name = src.readUntil(':');
                         if (name == null)
                             throw new UserException("Expected field name followed by colon but found: " + src.snippet());
-                        @ExpressionIdentifier String nameId = IdentifierUtility.asExpressionIdentifier(name.trim());
+                        String nameId = IdentifierUtility.asExpressionIdentifier(name.trim());
                         if (nameId == null)
                             throw new UserException("Invalid field name: " + name);
                         DataType type = fields.get(nameId);
@@ -257,8 +247,7 @@ public class FromString
                 }
 
                 @Override
-                @OnThread(Tag.Simulation)
-                public @Value Object array(@Nullable DataType inner) throws InternalException, UserException
+                public Object array(DataType inner) throws InternalException, UserException
                 {
                     if (!src.tryRead("["))
                         throw new UserException("Expected list, but no opening square bracket, instead found: " + src.snippet());
@@ -268,7 +257,7 @@ public class FromString
                     if (inner == null)
                         throw new UserException("Expected empty list but found data items: " + src.snippet());
 
-                    ArrayList<@Value Object> items = new ArrayList<>();
+                    ArrayList<Object> items = new ArrayList<>();
                     while (!src.tryRead("]"))
                     {
                         if (!items.isEmpty())

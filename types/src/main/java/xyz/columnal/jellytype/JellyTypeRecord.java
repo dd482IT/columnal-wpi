@@ -48,17 +48,17 @@ public class JellyTypeRecord extends JellyType
 {
     public static class Field
     {
-        private final @Recorded JellyType type;
+        private final JellyType type;
         private final boolean required;
 
-        public Field(@Recorded JellyType type, boolean required)
+        public Field(JellyType type, boolean required)
         {
             this.type = type;
             this.required = required;
         }
 
         @Override
-        public boolean equals(@Nullable Object o)
+        public boolean equals(Object o)
         {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
@@ -82,16 +82,16 @@ public class JellyTypeRecord extends JellyType
                 return mgr.getMaybeType().instantiate(ImmutableList.of(Either.<Unit, DataType>right(core)), mgr);
         }
 
-        public @Recorded JellyType getJellyType()
+        public JellyType getJellyType()
         {
             return type;
         }
     }
     
-    private final ImmutableMap<@ExpressionIdentifier String, Field> fields;
+    private final ImmutableMap<String, Field> fields;
     private final boolean complete;
 
-    public JellyTypeRecord(ImmutableMap<@ExpressionIdentifier String, Field> fields, boolean complete)
+    public JellyTypeRecord(ImmutableMap<String, Field> fields, boolean complete)
     {
         this.fields = fields;
         this.complete = complete;
@@ -106,8 +106,8 @@ public class JellyTypeRecord extends JellyType
     @Override
     public DataType makeDataType(ImmutableMap<String, Either<Unit, DataType>> typeVariables, TypeManager mgr) throws InternalException, UnknownTypeException, TaggedInstantiationException
     {
-        ImmutableMap.Builder<@ExpressionIdentifier String, DataType> types = ImmutableMap.builderWithExpectedSize(fields.size());
-        for (Entry<@ExpressionIdentifier String, Field> entry : fields.entrySet())
+        ImmutableMap.Builder<String, DataType> types = ImmutableMap.builderWithExpectedSize(fields.size());
+        for (Entry<String, Field> entry : fields.entrySet())
         {
             types.put(entry.getKey(), entry.getValue().makeDataType(typeVariables, mgr));
         }
@@ -119,7 +119,7 @@ public class JellyTypeRecord extends JellyType
     {
         output.raw("(");
         boolean first = true;
-        for (Entry<@ExpressionIdentifier String, Field> entry : Utility.iterableStream(fields.entrySet().stream().sorted(Comparator.comparing(e -> e.getKey()))))
+        for (Entry<String, Field> entry : Utility.iterableStream(fields.entrySet().stream().sorted(Comparator.comparing(e -> e.getKey()))))
         {
             if (!first)
                 output.raw(",");
@@ -131,7 +131,7 @@ public class JellyTypeRecord extends JellyType
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;

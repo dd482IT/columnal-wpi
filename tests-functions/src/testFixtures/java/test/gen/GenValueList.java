@@ -38,11 +38,11 @@ public class GenValueList extends GenValueBase<ListAndType>
 {
     public static class ListAndType
     {
-        public final @Value ListEx list;
+        public final ListEx list;
         // Type of the whole array, not the item inside:
         public final DataType type;
 
-        public ListAndType(@Value ListEx list, DataType type)
+        public ListAndType(ListEx list, DataType type)
         {
             this.list = list;
             this.type = type;
@@ -68,7 +68,7 @@ public class GenValueList extends GenValueBase<ListAndType>
         this.gs = generationStatus;
         DataType t = r.choose(TFunctionUtil.managerWithTestTypes().getSecond());
         int length = r.nextInt(0, 100);
-        @Value Object[] values = new @Value Object[length];
+        Object[] values = new Object[length];
         for (int i = 0; i < length; i++)
         {
             try
@@ -89,7 +89,7 @@ public class GenValueList extends GenValueBase<ListAndType>
             }
 
             @Override
-            public @Value Object get(int index) throws InternalException, UserException
+            public Object get(int index) throws InternalException, UserException
             {
                 return values[index];
             }

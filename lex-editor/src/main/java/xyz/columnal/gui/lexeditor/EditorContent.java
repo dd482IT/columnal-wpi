@@ -48,8 +48,8 @@ import java.util.List;
 public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLETION_CONTEXT extends CodeCompletionContext> implements InsertListener
 {
     private LexerResult<EXPRESSION, CODE_COMPLETION_CONTEXT> curContent;
-    private @CanonicalLocation int curCaretPosition;
-    private @CanonicalLocation int curAnchorPosition;
+    private int curCaretPosition;
+    private int curAnchorPosition;
     private final Lexer<EXPRESSION, CODE_COMPLETION_CONTEXT> lexer;
     private final ArrayList<CaretPositionListener> caretPositionListeners = new ArrayList<>();
     private final ArrayList<FXPlatformRunnable> contentListeners = new ArrayList<>();
@@ -74,7 +74,7 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
             positionCaret(curContent.caretPositions.get(curContent.caretPositions.size() - 1).positionInternal, true);
     }
     
-    public void positionCaret(@CanonicalLocation int pos, boolean alsoSetAnchor)
+    public void positionCaret(int pos, boolean alsoSetAnchor)
     {
         curCaretPosition = pos;
         if (alsoSetAnchor)
@@ -90,12 +90,12 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
         }
     }
 
-    public @CanonicalLocation int getAnchorPosition()
+    public int getAnchorPosition()
     {
         return curAnchorPosition;
     }
 
-    public @CanonicalLocation int getCaretPosition()
+    public int getCaretPosition()
     {
         return curCaretPosition;
     }
@@ -116,17 +116,17 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
         replaceText(CanonicalLocation.ZERO, getText().length() * CanonicalLocation.ONE, content);
     }
 
-    public void replaceText(@CanonicalLocation int startIncl, @CanonicalLocation int endExcl, String content)
+    public void replaceText(int startIncl, int endExcl, String content)
     {
         replaceText(startIncl, endExcl, content, null);
     }
 
     @SuppressWarnings("units")
-    public void replaceText(@CanonicalLocation int startIncl, @CanonicalLocation int endExcl, String content, @Nullable @CanonicalLocation Integer setCaretPos)
+    public void replaceText(int startIncl, int endExcl, String content, Integer setCaretPos)
     {
         String newText = curContent.adjustedContent.substring(0, startIncl) + content + curContent.adjustedContent.substring(endExcl);
         
-        final @RawInputLocation int newCaretPos;
+        final int newCaretPos;
         if (curCaretPosition < startIncl)
             newCaretPos = curCaretPosition;
         else if (curCaretPosition <= endExcl)
@@ -151,7 +151,7 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
     {
         this.curContent = lexer.process(getText(), null, this);
         @SuppressWarnings("units")
-        @RawInputLocation int oldPos = getCaretPosition();
+        int oldPos = getCaretPosition();
         this.curCaretPosition = curContent.removedChars.map(oldPos);
         this.curAnchorPosition = curCaretPosition;
         for (FXPlatformRunnable contentListener : contentListeners)
@@ -220,7 +220,7 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
     }
 
     @SuppressWarnings("units") // Because of toArray
-    public @CanonicalLocation int[] getValidCaretPositions()
+    public int[] getValidCaretPositions()
     {
         return Ints.toArray(Utility.mapList(curContent.caretPositions, p -> p.positionInternal));
     }
@@ -237,13 +237,13 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
         return 0;
     }
     
-    public @CanonicalLocation int prevWordPosition(boolean canStaySame)
+    public int prevWordPosition(boolean canStaySame)
     {
         int index = Utility.findLastIndex(curContent.wordBoundaryCaretPositions, p -> canStaySame ? p <= curCaretPosition : p < curCaretPosition).orElse(0);
         return curContent.wordBoundaryCaretPositions.get(index);
     }
 
-    public @CanonicalLocation int nextWordPosition()
+    public int nextWordPosition()
     {
         int index = Utility.findFirstIndex(curContent.wordBoundaryCaretPositions, p -> p > curCaretPosition).orElse(curContent.wordBoundaryCaretPositions.size() - 1);
         return curContent.wordBoundaryCaretPositions.get(index);
@@ -259,22 +259,22 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
         return curContent.bracketsAreBalanced;
     }
 
-    public @DisplayLocation int getDisplayCaretPosition()
+    public int getDisplayCaretPosition()
     {
         return curContent.mapContentToDisplay(getCaretPosition());
     }
 
-    public @DisplayLocation int getDisplayAnchorPosition()
+    public int getDisplayAnchorPosition()
     {
         return curContent.mapContentToDisplay(getAnchorPosition());
     }
 
-    public @CanonicalLocation int mapDisplayToContent(@DisplayLocation int clickedCaretPos, boolean biasEarlier)
+    public int mapDisplayToContent(int clickedCaretPos, boolean biasEarlier)
     {
         return curContent.mapDisplayToContent(clickedCaretPos, biasEarlier);
     }
     
-    public @DisplayLocation int mapContentToDisplay(@CanonicalLocation int contentIndex)
+    public int mapContentToDisplay(int contentIndex)
     {
         return curContent.mapContentToDisplay(contentIndex);
     }
@@ -284,14 +284,14 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
         return curContent.display;
     }
 
-    public ImmutableMap<DisplayType, Pair<StyledString, ImmutableList<TextQuickFix>>> getDisplayFor(@CanonicalLocation int newCaretPos, Node toRightOf)
+    public ImmutableMap<DisplayType, Pair<StyledString, ImmutableList<TextQuickFix>>> getDisplayFor(int newCaretPos, Node toRightOf)
     {
         return getLexerResult().infoAndPromptForPosition.apply(newCaretPos, toRightOf);
     }
 
     public void undo()
     {
-        @Nullable Pair<String, @CanonicalLocation Integer> possible = undoManager.undo();
+        Pair<String, Integer> possible = undoManager.undo();
         if (possible != null)
         {
             replaceWholeText(possible.getFirst());
@@ -301,7 +301,7 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
 
     public void redo()
     {
-        @Nullable Pair<String, @CanonicalLocation Integer> possible = undoManager.redo();
+        Pair<String, Integer> possible = undoManager.redo();
         if (possible != null)
         {
             replaceWholeText(possible.getFirst());
@@ -310,9 +310,9 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
     }
 
     @Override
-    public void insert(@Nullable @CanonicalLocation Integer start, String text)
+    public void insert(Integer start, String text)
     {
-        @CanonicalLocation int caretPosition = getCaretPosition();
+        int caretPosition = getCaretPosition();
         if (start == null || start <= caretPosition)
             replaceText(start == null ? caretPosition : start, caretPosition, text);
     }
@@ -325,6 +325,6 @@ public final class EditorContent<EXPRESSION extends StyledShowable, CODE_COMPLET
     
     public static interface CaretPositionListener
     {
-        public void caretMoved(@CanonicalLocation int caretPos, CaretMoveReason caretMoveReason);
+        public void caretMoved(int caretPos, CaretMoveReason caretMoveReason);
     }
 }

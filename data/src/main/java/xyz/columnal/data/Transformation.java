@@ -58,23 +58,19 @@ public abstract class Transformation extends Table
         super(mgr, initialLoadDetails);
     }
 
-    @OnThread(Tag.Any)
     public final ImmutableSet<TableId> getSources()
     {
         return Stream.concat(getPrimarySources(), getSourcesFromExpressions()).collect(ImmutableSet.<TableId>toImmutableSet());
     }
 
     // Which tables are used in expressions?
-    @OnThread(Tag.Any)
     protected abstract Stream<TableId> getSourcesFromExpressions();
 
     // Which tables are declared as our primary source, if any (for filter, transform, concat, etc)
-    @OnThread(Tag.Any)
     protected abstract Stream<TableId> getPrimarySources();
 
     @Override
-    @OnThread(Tag.Simulation)
-    public final void save(@Nullable File destination, Saver then, TableAndColumnRenames renames)
+    public final void save(File destination, Saver then, TableAndColumnRenames renames)
     {
         OutputBuilder b = new OutputBuilder();
         b.t(MainLexer.TRANSFORMATION).begin().raw(saveTag.getTag()).nl();
@@ -82,7 +78,7 @@ public abstract class Transformation extends Table
         b.id(renames.tableId(getId())).nl();
         b.id(getTransformationName(), QuoteBehaviour.DEFAULT).nl();
         b.t(MainLexer.SOURCE);
-        for (@NonNull TableId src : getPrimarySources().collect(ImmutableList.<@NonNull TableId>toImmutableList()))
+        for (TableId src : getPrimarySources().collect(ImmutableList.<TableId>toImmutableList()))
             b.id(renames.tableId(src));
         b.nl();
         b.begin().nl();
@@ -98,11 +94,9 @@ public abstract class Transformation extends Table
     }
 
     // The name as used when saving:
-    @OnThread(Tag.Any)
     protected abstract String getTransformationName();
 
-    @OnThread(Tag.Simulation)
-    protected abstract List<String> saveDetail(@Nullable File destination, TableAndColumnRenames renames);
+    protected abstract List<String> saveDetail(File destination, TableAndColumnRenames renames);
 
     // hashCode and equals must be implemented properly (used for testing).
     // To make sure we don't forget, we introduce abstract methods which must
@@ -117,7 +111,7 @@ public abstract class Transformation extends Table
     protected abstract int transformationHashCode();
 
     @Override
-    public final boolean equals(@Nullable Object obj)
+    public final boolean equals(Object obj)
     {
         if (!super.equals(obj))
             return false;
@@ -127,32 +121,31 @@ public abstract class Transformation extends Table
     protected abstract boolean transformationEquals(Transformation obj);
 
     // Mainly for testing:
-    @OnThread(value = Tag.Simulation, ignoreParent = true)
     public String toString()
     {
         StringBuilder b = new StringBuilder();
         save(null, new Saver()
         {
             @Override
-            public @OnThread(Tag.Simulation) void saveTable(String tableSrc)
+            public void saveTable(String tableSrc)
             {
                 b.append(tableSrc);
             }
 
             @Override
-            public @OnThread(Tag.Simulation) void saveUnit(String unitSrc)
+            public void saveUnit(String unitSrc)
             {
                 b.append(unitSrc);
             }
 
             @Override
-            public @OnThread(Tag.Simulation) void saveType(String typeSrc)
+            public void saveType(String typeSrc)
             {
                 b.append(typeSrc);
             }
 
             @Override
-            public @OnThread(Tag.Simulation) void saveComment(String commentSrc)
+            public void saveComment(String commentSrc)
             {
                 b.append(commentSrc);
             }
@@ -162,7 +155,7 @@ public abstract class Transformation extends Table
 
     // Should be overridden by any transformation where any of these are possible.
     @Override
-    public @OnThread(Tag.Any) TableOperations getOperations()
+    public TableOperations getOperations()
     {
         return new TableOperations(getManager().getRenameTableOperation(this), c -> null, null, null, null);
     }
@@ -175,13 +168,12 @@ public abstract class Transformation extends Table
         }
     }
     
-    @OnThread(Tag.Any)
-    protected final DataTypeValue addManualEditSet(@UnknownInitialization(Transformation.class) Transformation this, ColumnId columnId, DataTypeValue original) throws InternalException
+    protected final DataTypeValue addManualEditSet(Transformation this, ColumnId columnId, DataTypeValue original) throws InternalException
     {
         return original.withSet(new OverrideSet()
         {
             @Override
-            public void set(int index, Either<String, @Value Object> value) throws UserException
+            public void set(int index, Either<String, Object> value) throws UserException
             {
                 // Need to ask the user if they want a manual edit
                 Platform.runLater(() -> {

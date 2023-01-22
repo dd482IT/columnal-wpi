@@ -36,9 +36,9 @@ import java.util.Objects;
 
 public class UnitLiteralTypeExpression extends TypeExpression
 {
-    private final @Recorded UnitExpression unitExpression;
+    private final UnitExpression unitExpression;
     
-    public UnitLiteralTypeExpression(@Recorded UnitExpression unitExpression)
+    public UnitLiteralTypeExpression(UnitExpression unitExpression)
     {
         this.unitExpression = unitExpression;
     }
@@ -50,13 +50,13 @@ public class UnitLiteralTypeExpression extends TypeExpression
     }
 
     @Override
-    public @Nullable DataType toDataType(TypeManager typeManager)
+    public DataType toDataType(TypeManager typeManager)
     {
         return null;
     }
 
     @Override
-    public @Recorded JellyType toJellyType(@Recorded UnitLiteralTypeExpression this, TypeManager typeManager, JellyRecorder jellyRecorder) throws InternalException, UnJellyableTypeExpression
+    public JellyType toJellyType(UnitLiteralTypeExpression this, TypeManager typeManager, JellyRecorder jellyRecorder) throws InternalException, UnJellyableTypeExpression
     {
         throw new UnJellyableTypeExpression("Unit not valid in this position", this);
     }
@@ -80,7 +80,7 @@ public class UnitLiteralTypeExpression extends TypeExpression
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -94,13 +94,13 @@ public class UnitLiteralTypeExpression extends TypeExpression
         return Objects.hash(unitExpression);
     }
 
-    public @Recorded UnitExpression getUnitExpression()
+    public UnitExpression getUnitExpression()
     {
         return unitExpression;
     }
 
     @Override
-    public @Nullable @ExpressionIdentifier String asIdent()
+    public String asIdent()
     {
         return null;
     }

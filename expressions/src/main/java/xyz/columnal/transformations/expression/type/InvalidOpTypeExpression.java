@@ -40,9 +40,9 @@ import java.util.stream.Collectors;
 
 public class InvalidOpTypeExpression extends TypeExpression
 {
-    private final ImmutableList<@Recorded TypeExpression> items;
+    private final ImmutableList<TypeExpression> items;
 
-    public InvalidOpTypeExpression(ImmutableList<@Recorded TypeExpression> items)
+    public InvalidOpTypeExpression(ImmutableList<TypeExpression> items)
     {
         this.items = items;
     }
@@ -59,13 +59,13 @@ public class InvalidOpTypeExpression extends TypeExpression
     }
 
     @Override
-    public @Nullable DataType toDataType(TypeManager typeManager)
+    public DataType toDataType(TypeManager typeManager)
     {
         return null;
     }
 
     @Override
-    public @Recorded JellyType toJellyType(@Recorded InvalidOpTypeExpression this, TypeManager typeManager, JellyRecorder jellyRecorder) throws InternalException, UnJellyableTypeExpression
+    public JellyType toJellyType(InvalidOpTypeExpression this, TypeManager typeManager, JellyRecorder jellyRecorder) throws InternalException, UnJellyableTypeExpression
     {
         throw new UnJellyableTypeExpression("Invalid type expression: " + this, this);
     }
@@ -82,13 +82,13 @@ public class InvalidOpTypeExpression extends TypeExpression
         return StyledString.s("Invalid"); // TODO
     }
 
-    public ImmutableList<@Recorded TypeExpression> _test_getItems()
+    public ImmutableList<TypeExpression> _test_getItems()
     {
         return items;
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -113,7 +113,7 @@ public class InvalidOpTypeExpression extends TypeExpression
     }
 
     @Override
-    public @Nullable @ExpressionIdentifier String asIdent()
+    public String asIdent()
     {
         return null;
     }

@@ -35,7 +35,6 @@ import xyz.columnal.utility.adt.Either;
  * - The entire table
  * - A rectangular grid of cells within the table of at least 1x1
  */
-@OnThread(Tag.FXPlatform)
 public interface CellSelection
 {
     // Copy the value of the selection to the clipboard, if that operation makes sense.
@@ -51,7 +50,7 @@ public interface CellSelection
     CellPosition getActivateTarget();
 
     // Extend the current selection to the given cell, return null if not possible
-    @Nullable CellSelection extendTo(CellPosition cellPosition);
+    CellSelection extendTo(CellPosition cellPosition);
 
     /**
      * Gets a new selection that is the result of pressing home on this one.
@@ -87,7 +86,7 @@ public interface CellSelection
      * Does the selection include the given grid area?  Can either be worked out by
      * looking at physical area, or by casting and checking against a known table.
      */
-    public boolean includes(@UnknownInitialization(GridArea.class) GridArea tableDisplay);
+    public boolean includes(GridArea tableDisplay);
     
     public void gotoRow(Window parent);
     

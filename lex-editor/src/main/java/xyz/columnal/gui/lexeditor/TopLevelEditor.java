@@ -97,7 +97,7 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
     private boolean hiding;
 
     // package-visible
-    TopLevelEditor(@Nullable String originalContent, LEXER lexer, TypeManager typeManager, FXPlatformConsumer<@NonNull @Recorded EXPRESSION> onChange, String... styleClasses)
+    TopLevelEditor(String originalContent, LEXER lexer, TypeManager typeManager, FXPlatformConsumer<EXPRESSION> onChange, String... styleClasses)
     {
         this.typeManager = typeManager;
         informationPopup = new InformationPopup();
@@ -107,7 +107,6 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
             display.markAsPreviouslyFocused();
         scrollPane = new ScrollPaneFill(new StackPane(display))  {
             @Override
-            @OnThread(Tag.FX)
             public void requestFocus()
             {
             }
@@ -136,7 +135,7 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
         content.addCaretPositionListener(new CaretPositionListener()
         {
             @Override
-            public void caretMoved(@CanonicalLocation int caretPos, CaretMoveReason caretMoveReason)
+            public void caretMoved(int caretPos, CaretMoveReason caretMoveReason)
             {
                 if (caretMoveReason != CaretMoveReason.FORCED_SAVE)
                 {
@@ -149,7 +148,7 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
     }
 
     // The width is preferred, the height is minimum
-    protected Dimension2D getEditorDimension(@UnknownInitialization(Object.class) TopLevelEditor<EXPRESSION, LEXER, CODE_COMPLETION_CONTEXT> this)
+    protected Dimension2D getEditorDimension(TopLevelEditor<EXPRESSION, LEXER, CODE_COMPLETION_CONTEXT> this)
     {
         return new Dimension2D(250.0, 25.0);
     }
@@ -183,7 +182,7 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
         return display.isFocused();
     }
 
-    public @Recorded @NonNull EXPRESSION save(@UnknownInitialization(TopLevelEditor.class) TopLevelEditor<EXPRESSION, LEXER, CODE_COMPLETION_CONTEXT> this, boolean forceSaveAsIfUnfocused)
+    public EXPRESSION save(TopLevelEditor<EXPRESSION, LEXER, CODE_COMPLETION_CONTEXT> this, boolean forceSaveAsIfUnfocused)
     {
         if (forceSaveAsIfUnfocused)
         {
@@ -217,29 +216,28 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
         return display.hasErrors();
     }
     
-    public void showAllErrors(@UnknownInitialization(TopLevelEditor.class) TopLevelEditor<EXPRESSION, LEXER, CODE_COMPLETION_CONTEXT> this)
+    public void showAllErrors(TopLevelEditor<EXPRESSION, LEXER, CODE_COMPLETION_CONTEXT> this)
     {
         display.showAllErrors();
     }
 
     @Override
-    @OnThread(Tag.FXPlatform)
     public long lastFocusedTime()
     {
         return display.lastFocusedTime();
     }
 
-    private Function<@NonNull TextQuickFix, @NonNull FixInfo> makeFixInfo()
+    private Function<TextQuickFix, FixInfo> makeFixInfo()
     {
         return f -> new FixInfo(f.getTitle(), f.getCssClasses(), () -> {
             try
             {
                 Either<QuickFixAction, Pair<CanonicalSpan, String>> actionOrReplacement = f.getReplacement();
                 actionOrReplacement.eitherInt_(a -> {
-                    @Nullable SimulationConsumer<Pair<@Nullable ColumnId, Expression>> toRun = a.doAction(typeManager, scrollPane.sceneProperty());
+                    SimulationConsumer<Pair<ColumnId, Expression>> toRun = a.doAction(typeManager, scrollPane.sceneProperty());
                     if (toRun != null)
                     {
-                        @Nullable Pair<@Nullable ColumnId, Expression> latest = forceCloseDialog();
+                        Pair<ColumnId, Expression> latest = forceCloseDialog();
                         if (latest != null)
                             Workers.onWorkerThread("Moving Calculate column", Priority.SAVE, () -> FXUtility.alertOnError_(TranslationUtility.getString("error.moving.calculate"), () -> toRun.consume(latest)));
                     }
@@ -261,8 +259,7 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
 
     // Its return type is quite hacky as it is specific to EditColumnExpressionDialog, but it gets the job done.
     // returns the current values of columnId and expression.
-    @OnThread(Tag.FXPlatform)
-    protected @Nullable Pair<@Nullable ColumnId, Expression> forceCloseDialog()
+    protected Pair<ColumnId, Expression> forceCloseDialog()
     {
         // Currently only implemented by EditColumnExpressionDialog
         return null;
@@ -320,7 +317,6 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
      * prompt should only show for keyboard).  So we keep it simple and just use
      * the caret.
      */
-    @OnThread(Tag.FXPlatform)
     private final class InformationPopup extends PopOver //implements ErrorMessageDisplayer
     {
         private final EnumMap<DisplayType, Pair<StyledString, ImmutableList<TextQuickFix>>> displays = new EnumMap<DisplayType, Pair<StyledString, ImmutableList<TextQuickFix>>>(DisplayType.class);
@@ -329,9 +325,9 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
         private final FixList fixList = new FixList(ImmutableList.of());
 
         // null when definitely stopped.
-        private @Nullable Animation hidingAnimation;
+        private Animation hidingAnimation;
         
-        private @MonotonicNonNull DisplayType curDisplayType = null;
+        private DisplayType curDisplayType = null;
         private Pair<StyledString, ImmutableList<TextQuickFix>> curContent = new Pair<>(StyledString.s(""), ImmutableList.of());
 
         public InformationPopup()
@@ -386,7 +382,6 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
         }
 
         // Can't have an ensuresnull check
-        @OnThread(value = Tag.FXPlatform, ignoreParent = true)
         public void hidePopup(boolean immediately)
         {
             // Whether we hide immediately or not, stop any current animation:
@@ -443,7 +438,7 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
             //Log.logStackTrace("updateShowHide focus " + focused + " mask " + maskingErrors.get());
             // EnumMap returns entries in order of enum keys,
             // so this will get errors ahead of warnings ahead of information ahead of prompt, as we want:
-            @Nullable Entry<DisplayType, Pair<StyledString, ImmutableList<TextQuickFix>>> curDisplay = displays.entrySet().stream().findFirst().orElse(null);
+            Entry<DisplayType, Pair<StyledString, ImmutableList<TextQuickFix>>> curDisplay = displays.entrySet().stream().findFirst().orElse(null);
 
             if (curDisplay != null && TopLevelEditor.this.isFocused())
             {
@@ -529,7 +524,7 @@ public class TopLevelEditor<EXPRESSION extends StyledShowable, LEXER extends Lex
         }
         */
         
-        public void caretMoved(@CanonicalLocation int newCaretPos, CaretMoveReason reason)
+        public void caretMoved(int newCaretPos, CaretMoveReason reason)
         {
             ImmutableList<ErrorDetails> allErrors = content.getErrors();
             ArrayList<StyledString> errors = new ArrayList<>();

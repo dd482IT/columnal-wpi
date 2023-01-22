@@ -69,7 +69,6 @@ public class GenColumn extends GenValueBase<ExBiFunction<Integer, RecordSet, Col
     }
 
     @Override
-    @OnThread(value = Tag.Simulation,ignoreParent = true)
     public ExBiFunction<Integer, RecordSet, Column> generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
     {
         this.r = sourceOfRandomness;
@@ -86,10 +85,9 @@ public class GenColumn extends GenValueBase<ExBiFunction<Integer, RecordSet, Col
     }
 
     // Only valid to call after generate has been called at least once
-    @OnThread(value = Tag.Simulation, ignoreParent = true)
     public ExBiFunction<Integer, RecordSet, Column> columnForType(DataType type, SourceOfRandomness sourceOfRandomness) throws InternalException
     {
-        return (len, rs) -> ColumnUtility.makeImmediateColumn(type, nextCol.get(), Utility.<Either<String, @Value Object>>makeListEx(len, i -> {
+        return (len, rs) -> ColumnUtility.makeImmediateColumn(type, nextCol.get(), Utility.<Either<String, Object>>makeListEx(len, i -> {
             if (canHaveErrors && sourceOfRandomness.nextInt(10) == 1)
                 return Either.left("#" + r.nextInt());
             else

@@ -64,7 +64,6 @@ import xyz.columnal.utility.gui.FXUtility;
 
 import java.util.Optional;
 
-@OnThread(Tag.FXPlatform)
 public final class GridCommentDisplay extends GridArea implements GridCommentDisplayBase
 {
     private final TableManager tableManager;
@@ -78,7 +77,7 @@ public final class GridCommentDisplay extends GridArea implements GridCommentDis
         setPosition(comment.getPosition());
         this.floatingItem = new FloatingItem<DocumentTextField>(ViewOrder.STANDARD_CELLS)
         {
-            private @Nullable CellPosition currentDragBottomRight;
+            private CellPosition currentDragBottomRight;
             
             @Override
             protected Optional<BoundingBox> calculatePosition(VisibleBounds visibleBounds)
@@ -100,7 +99,6 @@ public final class GridCommentDisplay extends GridArea implements GridCommentDis
                     boolean pressedOnResize;
                     
                     @Override
-                    @OnThread(Tag.FXPlatform)
                     protected void mouseEvent(MouseEvent e)
                     {
                         if (e.getEventType() == MouseEvent.MOUSE_PRESSED && e.getButton() == MouseButton.PRIMARY && getCursor() == Cursor.SE_RESIZE)
@@ -159,7 +157,7 @@ public final class GridCommentDisplay extends GridArea implements GridCommentDis
             }
 
             @Override
-            public @Nullable Pair<ItemState, @Nullable StyledString> getItemState(CellPosition cellPosition, Point2D screenPos)
+            public Pair<ItemState, StyledString> getItemState(CellPosition cellPosition, Point2D screenPos)
             {
                 if (new RectangleBounds(comment.getPosition(), comment.getBottomRight()).contains(cellPosition))
                 {
@@ -195,8 +193,7 @@ public final class GridCommentDisplay extends GridArea implements GridCommentDis
     }
 
     @Override
-    @OnThread(Tag.FXPlatform)
-    protected void updateKnownRows(@GridAreaRowIndex int checkUpToRowIncl, FXPlatformRunnable updateSizeAndPositions)
+    protected void updateKnownRows(int checkUpToRowIncl, FXPlatformRunnable updateSizeAndPositions)
     {
         // Nothing to do
     }
@@ -208,7 +205,7 @@ public final class GridCommentDisplay extends GridArea implements GridCommentDis
     }
 
     @Override
-    public @Nullable CellSelection getSelectionForSingleCell(CellPosition cellPosition)
+    public CellSelection getSelectionForSingleCell(CellPosition cellPosition)
     {
         if (new RectangleBounds(comment.getPosition(), comment.getBottomRight()).contains(cellPosition))
             return new CommentSelection(cellPosition.columnIndex, cellPosition.rowIndex);
@@ -236,10 +233,10 @@ public final class GridCommentDisplay extends GridArea implements GridCommentDis
     {
         // Although we select the whole comment, if they move out up/down, we stay
         // in the column they entered from:
-        private final @AbsColIndex int column;
-        private final @AbsRowIndex int row;
+        private final int column;
+        private final int row;
 
-        private CommentSelection(@AbsColIndex int column, @AbsRowIndex int row)
+        private CommentSelection(int column, int row)
         {
             this.column = column;
             this.row = row;
@@ -272,7 +269,7 @@ public final class GridCommentDisplay extends GridArea implements GridCommentDis
         }
 
         @Override
-        public @Nullable CellSelection extendTo(CellPosition cellPosition)
+        public CellSelection extendTo(CellPosition cellPosition)
         {
             // Can't extend comment selections:
             return null;
@@ -316,7 +313,7 @@ public final class GridCommentDisplay extends GridArea implements GridCommentDis
         }
 
         @Override
-        public boolean includes(@UnknownInitialization(GridArea.class) GridArea area)
+        public boolean includes(GridArea area)
         {
             return GridCommentDisplay.this == area;
         }

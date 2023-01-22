@@ -45,11 +45,10 @@ import java.util.Optional;
  * @param <R> The type returned by the scroller (used for book-keeping such as combining multipl
  *           calls to redo the layout into one)
  */
-@OnThread(Tag.FXPlatform)
-public class SmoothScroller<R extends @NonNull Object>
+public class SmoothScroller<R extends Object>
 {
     // AnimationTimer is run every frame, and so lets us do smooth scrolling:
-    private @MonotonicNonNull AnimationTimer scrollTimer;
+    private AnimationTimer scrollTimer;
     // Start time of current animation (scrolling again resets this) and target end time:
     private long scrollStartNanos;
     private long scrollEndNanos;
@@ -61,7 +60,6 @@ public class SmoothScroller<R extends @NonNull Object>
     private double scrollStartOffset;
 
     // Not static final, because some tests alter it:
-    @OnThread(Tag.Any)
     private long scrollTimeNanos = 200_000_000L;
 
     // The translateX/translateY of container, depending on which axis we are:
@@ -84,7 +82,7 @@ public class SmoothScroller<R extends @NonNull Object>
          * Scrolls layout by scrollBy, but also instructs the renderer to render margins before and/or after
          * the current node for smooth scrolling purposes.  Both may be zero.
          */
-        Optional<@NonNull R> scrollLayoutBy(double extraPixelsToShowBefore, double scrollBy, double extraPixelsToShowAfter);
+        Optional<R> scrollLayoutBy(double extraPixelsToShowBefore, double scrollBy, double extraPixelsToShowAfter);
     }
     
     SmoothScroller(DoubleProperty translateProperty, ScrollClamp scrollClamp, Scroller<R> scroller)
@@ -94,7 +92,7 @@ public class SmoothScroller<R extends @NonNull Object>
         this.scroller = scroller;
     }
 
-    public Optional<@NonNull R> smoothScroll(double delta)
+    public Optional<R> smoothScroll(double delta)
     {
         if (delta == 0.0)
             return Optional.empty();
@@ -170,20 +168,18 @@ public class SmoothScroller<R extends @NonNull Object>
             scrollTimer.start();
         }
         //Log.debug("Scrolling by " + clamped);
-        Optional<@NonNull R> result = Optional.empty();
+        Optional<R> result = Optional.empty();
         if (clamped != 0.0 || this.scrollOffset != 0.0)
             result = scroller.scrollLayoutBy(Math.min(-this.scrollOffset, 0), clamped, Math.max(-this.scrollOffset, 0));
         translateProperty.set(this.scrollOffset);
         return result;
     }
     
-    @OnThread(Tag.Any)
     public synchronized long _test_getScrollTimeNanos()
     {
         return scrollTimeNanos;
     }
 
-    @OnThread(Tag.Any)
     public synchronized void _test_setScrollTimeNanos(long scrollTimeNanos)
     {
         this.scrollTimeNanos = scrollTimeNanos;

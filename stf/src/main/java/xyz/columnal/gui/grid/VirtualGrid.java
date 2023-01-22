@@ -144,7 +144,6 @@ import java.util.stream.DoubleStream;
  * 
  */
 
-@OnThread(Tag.FXPlatform)
 public final class VirtualGrid extends GridWithColumnWidths implements ScrollBindable
 {
     private static final double MAX_EXTRA_X_PIXELS = 800;
@@ -157,9 +156,9 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
     private final int rowsToBottom;
     private final List<VirtualGridSupplier<? extends Node>> nodeSuppliers = new ArrayList<>();
     private final List<GridArea> gridAreas = new ArrayList<>();
-    private final @Nullable CreateTableButtonSupplier createTableButtonSupplier;
+    private final CreateTableButtonSupplier createTableButtonSupplier;
     // A set of pluggable callbacks:
-    private final @Nullable VirtualGridManager manager;
+    private final VirtualGridManager manager;
     
     private final Container container;
     private static final int MAX_EXTRA_ROW_COLS = 12;
@@ -201,8 +200,8 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
     // +-------------------------------------+ v
         
     // The indexes of the top/left of the render extents:
-    private @AbsColIndex int firstRenderColumnIndex = CellPosition.col(0);
-    private @AbsRowIndex int firstRenderRowIndex = CellPosition.row(0);
+    private int firstRenderColumnIndex = CellPosition.col(0);
+    private int firstRenderRowIndex = CellPosition.row(0);
     // Offset of first cell being rendered.  Always zero or negative:
     private double firstRenderColumnOffset = 0.0;
     private double firstRenderRowOffset = 0.0;
@@ -219,20 +218,20 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
     // Where is our theoretical scroll position?   We don't use this for any rendering,
     // only for knowing where to scroll to on next scroll (because we may need to render
     // extra portions outside the logical scroll position).
-    private @AbsColIndex int logicalScrollColumnIndex = CellPosition.col(0);
-    private @AbsRowIndex int logicalScrollRowIndex = CellPosition.row(0);
+    private int logicalScrollColumnIndex = CellPosition.col(0);
+    private int logicalScrollRowIndex = CellPosition.row(0);
     // What is the offset of first item?  Always between negative width of current item and zero.  Never positive.
     private double logicalScrollColumnOffset = 0.0;
     private double logicalScrollRowOffset = 0.0;
     
-    private final ObjectProperty<@AbsRowIndex Integer> currentKnownLastRowIncl = new SimpleObjectProperty<>();
-    private final ObjectProperty<@AbsColIndex Integer> currentColumns = new SimpleObjectProperty<>();
+    private final ObjectProperty<Integer> currentKnownLastRowIncl = new SimpleObjectProperty<>();
+    private final ObjectProperty<Integer> currentColumns = new SimpleObjectProperty<>();
 
     private static final double rowHeight = 24;
-    private double @Nullable[] cachedColumnLeftX;
+    private double[] cachedColumnLeftX;
 
     // null means the grid doesn't have focus:
-    private final ObjectProperty<@Nullable CellSelection> selection = new SimpleObjectProperty<>(null);
+    private final ObjectProperty<CellSelection> selection = new SimpleObjectProperty<>(null);
 
     private final BooleanProperty atLeftProperty = new SimpleBooleanProperty(false);
     private final BooleanProperty atRightProperty = new SimpleBooleanProperty(false);
@@ -250,18 +249,14 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
 
     public static interface VirtualGridManager
     {
-        @OnThread(Tag.FXPlatform)
         public void createTable(CellPosition cellPosition, Point2D suitablePoint, VirtualGrid virtualGrid);
 
-        @OnThread(Tag.FXPlatform)
         public void pasteIntoEmpty(CellPosition target);
 
-        @OnThread(Tag.FXPlatform)
         public void notifyColumnSizeChanged();
     }
     
-    @OnThread(Tag.FXPlatform)
-    public VirtualGrid(@Nullable VirtualGridManager virtualGridManager, int columnsToRight, int rowsToBottom, String... styleClasses)
+    public VirtualGrid(VirtualGridManager virtualGridManager, int columnsToRight, int rowsToBottom, String... styleClasses)
     {
         this.manager = virtualGridManager;
         this.columnsToRight = columnsToRight;
@@ -289,7 +284,6 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
         hBar.valueProperty().addListener(new ChangeListener<Number>()
         {
             @Override
-            @OnThread(value = Tag.FXPlatform, ignoreParent = true)
             public void changed(ObservableValue<? extends Number> prop, Number oldScrollBarVal, Number newScrollBarVal)
             {
                 if (!settingScrollBarVal)
@@ -308,7 +302,6 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
         {
             @Override
             @SuppressWarnings("nullness")
-            @OnThread(value = Tag.FXPlatform, ignoreParent = true)
             public void changed(ObservableValue<? extends Number> prop, Number oldScrollBarVal, Number newScrollBarVal)
             {
                 if (!settingScrollBarVal)
@@ -402,7 +395,7 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
         });
 
 
-        @Initialized @NonNull ObjectProperty<@Nullable CellSelection> selectionFinal = this.selection;
+        ObjectProperty<CellSelection> selectionFinal = this.selection;
         RectangleOverlayItem selectionRectangleOverlayItem = new RectangleOverlayItem(ViewOrder.OVERLAY_ACTIVE)
         {
             private final BooleanExpression hasSelection = selectionFinal.isNotNull();
@@ -426,11 +419,10 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
         };
         supplierFloating.addItem(selectionRectangleOverlayItem);
         
-        selection.addListener(new ChangeListener<@Nullable CellSelection>()
+        selection.addListener(new ChangeListener<CellSelection>()
         {
             @Override
-            @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-            public void changed(ObservableValue<? extends @Nullable CellSelection> prop, @Nullable CellSelection oldVal, @Nullable CellSelection s)
+            public void changed(ObservableValue<? extends CellSelection> prop, CellSelection oldVal, CellSelection s)
             {
                 //System.out.println("Selection now: " + s);
                 if (suppressSelectionUpdate)
@@ -443,7 +435,7 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
                 for (Iterator<SelectionListener> iterator = FXUtility.mouse(VirtualGrid.this).selectionListeners.iterator(); iterator.hasNext(); )
                 {
                     SelectionListener selectionListener = iterator.next();
-                    Pair<ListenerOutcome, @Nullable FXPlatformConsumer<VisibleBounds>> outcome = selectionListener.selectionChanged(oldVal, s);
+                    Pair<ListenerOutcome, FXPlatformConsumer<VisibleBounds>> outcome = selectionListener.selectionChanged(oldVal, s);
                     if (outcome.getFirst() == ListenerOutcome.REMOVE)
                         iterator.remove();
                     if (outcome.getSecond() != null)
@@ -494,7 +486,7 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
             // The right edge is at least scrolling to right of current item:
             double distToRightEdge = getColumnWidth(logicalScrollColumnIndex) + logicalScrollColumnOffset;
 
-            @AbsColIndex int curColumns = currentColumns.get();
+            int curColumns = currentColumns.get();
             double paneWidth = container.getWidth();
             for (int index = logicalScrollColumnIndex + 1; index < curColumns; index++)
             {
@@ -543,9 +535,9 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
     }
 
     // Returns the cell position, and the relative X Y position within the cell
-    public @Nullable Pair<CellPosition, Point2D> getCellPositionAt(double x, double y)
+    public Pair<CellPosition, Point2D> getCellPositionAt(double x, double y)
     {
-        @AbsColIndex int colIndex;
+        int colIndex;
         x -= logicalScrollColumnOffset;
         for (colIndex = logicalScrollColumnIndex; colIndex < currentColumns.get(); colIndex++)
         {
@@ -559,7 +551,7 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
             return null;
         y -= logicalScrollRowOffset;
         @SuppressWarnings("units")
-        @AbsRowIndex int rowIndex = (int) Math.floor(y / rowHeight) + logicalScrollRowIndex;
+        int rowIndex = (int) Math.floor(y / rowHeight) + logicalScrollRowIndex;
         if (rowIndex >= getLastSelectableRowGlobal())
             return null;
         return new Pair<>(new CellPosition(rowIndex, colIndex), new Point2D(x + getColumnWidth(colIndex), y % rowHeight));
@@ -574,7 +566,7 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
         // items we need to render in the pane overall.
         int curCol = logicalScrollColumnIndex;
         double curOffset = logicalScrollColumnOffset;
-        @AbsColIndex int totalColumns = currentColumns.get();
+        int totalColumns = currentColumns.get();
         
         for (int miniScroll = 0; miniScroll < 2; miniScroll++)
         {
@@ -708,11 +700,11 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
         // First scroll to the right logical position:
         class ScrollResult
         {
-            private @AbsRowIndex int row;
+            private int row;
             private double offset;
             
             // Slight abuse of a constructor, but it's only local.  Calculate new scroll result:
-            ScrollResult(@AbsRowIndex int existingIndex, double existingOffset, double scrollBy)
+            ScrollResult(int existingIndex, double existingOffset, double scrollBy)
             {
                 if (0 >= existingOffset + scrollBy && existingOffset + scrollBy >= -rowHeight)
                 {
@@ -809,13 +801,13 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) void redoLayoutAfterScroll()
+    public void redoLayoutAfterScroll()
     {
         container.redoLayout();
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) void updateClip()
+    public void updateClip()
     {
         if (container.clip != null)
         {
@@ -831,7 +823,7 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
      * Adds the column widths for any column index C where startColIndexIncl <= C < endColIndexExcl
      * If startColIndexIncl >= endColIndexExcl, zero will be returned.
      */
-    private double sumColumnWidths(@AbsColIndex int startColIndexIncl, @AbsColIndex int endColIndexExcl)
+    private double sumColumnWidths(int startColIndexIncl, int endColIndexExcl)
     {
         if (cachedColumnLeftX == null || endColIndexExcl >= cachedColumnLeftX.length)
         {
@@ -850,13 +842,12 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
     
     
 
-    @Pure
-    public final ImmutableMap<@AbsColIndex Integer, Double> getCustomisedColumnWidths()
+    public final ImmutableMap<Integer, Double> getCustomisedColumnWidths()
     {
         return ImmutableMap.copyOf(customisedColumnWidths);
     }
 
-    private @AbsRowIndex int getLastSelectableRowGlobal()
+    private int getLastSelectableRowGlobal()
     {
         return CellPosition.row(currentKnownLastRowIncl.get());
     }
@@ -899,13 +890,13 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
     }
 
     // If param is non-null, overrides our own data
-    private double getCurrentScrollY(@Nullable Pair<@AbsRowIndex Integer, Double> pos)
+    private double getCurrentScrollY(Pair<Integer, Double> pos)
     {
         return (pos == null ? logicalScrollRowIndex : pos.getFirst()) * rowHeight - (pos == null ? logicalScrollRowOffset : pos.getSecond());
     }
 
     // If param is non-null, overrides our own data
-    private double getCurrentScrollX(@Nullable Pair<@AbsColIndex Integer, Double> pos)
+    private double getCurrentScrollX(Pair<Integer, Double> pos)
     {
         return sumColumnWidths(CellPosition.col(0), pos == null ? logicalScrollColumnIndex : pos.getFirst()) - (pos == null ? logicalScrollColumnOffset : pos.getSecond());
     }
@@ -921,7 +912,7 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
     }
 
     // Only private method allows null selection:
-    private void selectInternal(@Nullable CellSelection cellSelection, boolean animateFlash)
+    private void selectInternal(CellSelection cellSelection, boolean animateFlash)
     {
         /*
         visibleCells.forEach((visPos, visCell) -> {
@@ -931,7 +922,7 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
         });
         */
 
-        @Nullable CellSelection old = selection.get();
+        CellSelection old = selection.get();
         if (old != null)
             old.notifySelected(false, false);
         selection.set(cellSelection);
@@ -942,9 +933,9 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
         }
     }
 
-    public boolean selectionIncludes(@UnknownInitialization(GridArea.class) GridArea gridArea)
+    public boolean selectionIncludes(GridArea gridArea)
     {
-        @Nullable CellSelection curSel = selection.get();
+        CellSelection curSel = selection.get();
         return curSel != null ? curSel.includes(gridArea) : false;
     }
 
@@ -1009,7 +1000,7 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
         return scrollGroup;
     }
 
-    public void onNextSelectionChange(FXPlatformConsumer<@Nullable CellSelection> onChange)
+    public void onNextSelectionChange(FXPlatformConsumer<CellSelection> onChange)
     {
         selectionListeners.add((old, s) -> {
             onChange.consume(s);
@@ -1043,7 +1034,7 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
         );
     }
 
-    public final @Pure VirtualGridSupplierFloating getFloatingSupplier()
+    public final VirtualGridSupplierFloating getFloatingSupplier()
     {
         return supplierFloating;
     }
@@ -1100,7 +1091,7 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
         setColumnWidth(CellPosition.col(columnIndex), width, false);
     }
 
-    public void setColumnWidth(@AbsColIndex int columnIndex, double width, boolean sizedByUser)
+    public void setColumnWidth(int columnIndex, double width, boolean sizedByUser)
     {
         // This is an exact comparison, but that happens if you double-click empty column:
         if (width == DEFAULT_COLUMN_WIDTH)
@@ -1146,7 +1137,6 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
         container.handlePossibleNudgeEvent(e);
     }
 
-    @OnThread(Tag.FXPlatform)
     private class Container extends Region implements ContainerChildren
     {
         private final Rectangle clip;
@@ -1165,7 +1155,7 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
         private boolean nudgeEnabled = false;
         private final Animation nudgeScrollAnimation;
         private HoverTip hoverTip;
-        private @Nullable FXPlatformRunnable hoverCancel;
+        private FXPlatformRunnable hoverCancel;
 
         public Container()
         {
@@ -1197,25 +1187,25 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
              * location.  For the third one we find the relevant grid area.
              */
             
-            EventHandler<? super @UnknownIfRecorded @UnknownKeyFor @UnknownIfValue @UnknownIfUserIndex @UnknownIfHelp @UnknownUnits @UnknownIfFuncDoc @UnknownIfIdentifier MouseEvent> clickHandler = mouseEvent -> {
+            EventHandler<? super MouseEvent> clickHandler = mouseEvent -> {
 
                 //Log.debug("Processing: " + mouseEvent + " shift: " + mouseEvent.isShiftDown() + " still: " + mouseEvent.isStillSincePress() +  " click count: " + mouseEvent.getClickCount());
                 
-                @Nullable Pair<CellPosition, Point2D> cellPosition = getCellPositionAt(mouseEvent.getX(), mouseEvent.getY());
+                Pair<CellPosition, Point2D> cellPosition = getCellPositionAt(mouseEvent.getX(), mouseEvent.getY());
                 Point2D screenPos = new Point2D(mouseEvent.getScreenX(), mouseEvent.getScreenY());
                 
                 if (cellPosition != null && mouseEvent.getButton() == MouseButton.PRIMARY && mouseEvent.isStillSincePress())
                 {
-                    @NonNull CellPosition cellPositionFinal = cellPosition.getFirst();
+                    CellPosition cellPositionFinal = cellPosition.getFirst();
                     boolean clickable = nodeSuppliers.stream().anyMatch(g -> {
-                        @Nullable Pair<ItemState, @Nullable StyledString> itemState = g.getItemState(cellPositionFinal, screenPos);
+                        Pair<ItemState, StyledString> itemState = g.getItemState(cellPositionFinal, screenPos);
                         return itemState != null && itemState.getFirst() != ItemState.NOT_CLICKABLE;
                     });
                     if (clickable)
                         return; // Don't capture the events
                     
                     // Not editing, is the cell currently part of a single cell selection:
-                    @Nullable CellSelection curSel = VirtualGrid.this.selection.get();
+                    CellSelection curSel = VirtualGrid.this.selection.get();
                     boolean selectedByItself = curSel != null && curSel.isExactly(cellPositionFinal);
                     
                     if (selectedByItself || mouseEvent.getClickCount() == 2)
@@ -1231,8 +1221,8 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
                         // Become a single cell selection:
                         for (GridArea gridArea : gridAreas)
                         {
-                            @Nullable CellSelection curSelection = selection.get();
-                            @Nullable CellSelection newSelection;
+                            CellSelection curSelection = selection.get();
+                            CellSelection newSelection;
                             if (curSelection != null && mouseEvent.isShiftDown())
                                 newSelection = curSelection.extendTo(cellPositionFinal);
                             else
@@ -1259,17 +1249,17 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
             };
             addEventFilter(MouseEvent.MOUSE_CLICKED, clickHandler);
 
-            EventHandler<? super @UnknownIfRecorded @UnknownKeyFor @UnknownIfValue @UnknownIfUserIndex @UnknownIfHelp @UnknownUnits @UnknownIfFuncDoc @UnknownIfIdentifier MouseEvent> capture = mouseEvent -> {
-                @Nullable Pair<CellPosition, Point2D> cellPosition = getCellPositionAt(mouseEvent.getX(), mouseEvent.getY());
+            EventHandler<? super MouseEvent> capture = mouseEvent -> {
+                Pair<CellPosition, Point2D> cellPosition = getCellPositionAt(mouseEvent.getX(), mouseEvent.getY());
 
                 if (cellPosition != null)
                 {
                     // We want to capture the events to prevent clicks reaching the underlying cell,
                     // if the cell is not currently editing
-                    @NonNull CellPosition cellPositionFinal = cellPosition.getFirst();
+                    CellPosition cellPositionFinal = cellPosition.getFirst();
                     Point2D screenPos = new Point2D(mouseEvent.getScreenX(), mouseEvent.getScreenY());
                     boolean clickable = nodeSuppliers.stream().anyMatch(g -> {
-                        @Nullable Pair<ItemState, @Nullable StyledString> itemState = g.getItemState(cellPositionFinal, screenPos);
+                        Pair<ItemState, StyledString> itemState = g.getItemState(cellPositionFinal, screenPos);
                         return itemState != null && itemState.getFirst() != ItemState.NOT_CLICKABLE;
                     });
                     // If it's the end of a drag, don't steal the event because we
@@ -1324,19 +1314,19 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
                     bindS(KeyCode.PAGE_UP, (shift, c) -> c.move(shift, -(calcPageHeight()), 0)),
                     bindS(KeyCode.PAGE_DOWN, (shift, c) -> c.move(shift, calcPageHeight(), 0)),
                     InputMap.<Event, KeyEvent>consume(EventPattern.<Event, KeyEvent>anyOf(EventPattern.keyPressed(KeyCode.F11), EventPattern.keyPressed(KeyCode.C, KeyCombination.SHORTCUT_DOWN)), e -> {
-                        @Nullable CellSelection focusedCellPosition = selection.get();
+                        CellSelection focusedCellPosition = selection.get();
                         if (focusedCellPosition != null)
                             focusedCellPosition.doCopy();
                         e.consume();
                     }),
                     InputMap.<Event, KeyEvent>consume(EventPattern.<Event, KeyEvent>anyOf(EventPattern.keyPressed(KeyCode.V, KeyCombination.SHORTCUT_DOWN)), e -> {
-                        @Nullable CellSelection focusedCellPosition = selection.get();
+                        CellSelection focusedCellPosition = selection.get();
                         if (focusedCellPosition != null)
                             focusedCellPosition.doPaste();
                         e.consume();
                     }),
                     InputMap.<Event, KeyEvent>consume(EventPattern.<Event, KeyEvent>anyOf(EventPattern.keyPressed(KeyCode.ENTER), EventPattern.keyPressed(KeyCode.SPACE)), e -> {
-                        @Nullable CellSelection sel = selection.get();
+                        CellSelection sel = selection.get();
                         if (sel != null)
                         {
                             activateCell(sel.getActivateTarget());
@@ -1344,7 +1334,7 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
                         e.consume();
                     }),
                     InputMap.<Event, KeyEvent>consume(EventPattern.<Event, KeyEvent>anyOf(EventPattern.keyPressed(KeyCode.DELETE), EventPattern.keyPressed(KeyCode.BACK_SPACE)), e -> {
-                        @Nullable CellSelection sel = selection.get();
+                        CellSelection sel = selection.get();
                         if (sel != null)
                         {
                             sel.doDelete();
@@ -1354,7 +1344,7 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
                     InputMap.<Event, KeyEvent>consume(EventPattern.keyTyped(), e -> {
                         if (FXUtility.checkKeyTyped(e))
                         {
-                            @Nullable CellSelection sel = selection.get();
+                            CellSelection sel = selection.get();
                             if (sel != null)
                             {
                                 CellPosition pos = sel.getActivateTarget();
@@ -1368,9 +1358,9 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
             ));
         }
 
-        private void movedTo(@Nullable MouseEvent mouseEvent)
+        private void movedTo(MouseEvent mouseEvent)
         {
-            @Nullable Pair<CellPosition, Point2D> cellPosition = mouseEvent == null ? null : getCellPositionAt(mouseEvent.getX(), mouseEvent.getY());
+            Pair<CellPosition, Point2D> cellPosition = mouseEvent == null ? null : getCellPositionAt(mouseEvent.getX(), mouseEvent.getY());
             if (cellPosition == null || mouseEvent == null)
             {
                 if (hoverCancel != null)
@@ -1380,9 +1370,9 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
             }
             else
             {
-                @NonNull Pair<CellPosition, Point2D> cellPositionFinal = cellPosition;
+                Pair<CellPosition, Point2D> cellPositionFinal = cellPosition;
                 Point2D screenPos = new Point2D(mouseEvent.getScreenX(), mouseEvent.getScreenY());
-                Pair<ItemState, @Nullable StyledString> item = Utility.filterOutNulls(nodeSuppliers.stream().<@Nullable Pair<ItemState, @Nullable StyledString>>map(g -> g.getItemState(cellPositionFinal.getFirst(), screenPos))).sorted(Pair.comparatorFirst()).findFirst().orElse(null);
+                Pair<ItemState, StyledString> item = Utility.filterOutNulls(nodeSuppliers.stream().<Pair<ItemState, StyledString>>map(g -> g.getItemState(cellPositionFinal.getFirst(), screenPos))).sorted(Pair.comparatorFirst()).findFirst().orElse(null);
                 if (item != null && item.getSecond() != null)
                 {
                     if (!hoverTip.hasText(item.getSecond()))
@@ -1431,7 +1421,7 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
             CellPosition topLeft = CellPosition.ORIGIN.offsetByRowCols(1, 1);
             for (GridArea gridArea : gridAreas)
             {
-                @Nullable CellSelection possibleSel = gridArea.getSelectionForSingleCell(topLeft);
+                CellSelection possibleSel = gridArea.getSelectionForSingleCell(topLeft);
                 if (possibleSel != null)
                 {
                     select(possibleSel);
@@ -1452,7 +1442,6 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
         }
 
         @Override
-        @OnThread(Tag.FX)
         protected void layoutChildren()
         {
             // Note: it is important to not call super.layoutChildren() here, because Parent will
@@ -1469,7 +1458,7 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
          * @param action
          * @return
          */
-        private InputMap<KeyEvent> bindS(@UnknownInitialization(Region.class) Container this, KeyCode keyCode, FXPlatformBiConsumer<Boolean, Container> action)
+        private InputMap<KeyEvent> bindS(Container this, KeyCode keyCode, FXPlatformBiConsumer<Boolean, Container> action)
         {
             return InputMap.<Event, KeyEvent>consume(EventPattern.keyPressed(keyCode, KeyCombination.SHIFT_ANY), e -> {
                 action.consume(e.isShiftDown(), FXUtility.keyboard(this));
@@ -1479,7 +1468,7 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
 
         private void move(boolean extendSelection, int rows, int columns)
         {
-            @Nullable CellSelection focusedCellPos = selection.get();
+            CellSelection focusedCellPos = selection.get();
             if (focusedCellPos != null)
             {
                 findAndSelect(focusedCellPos.move(extendSelection, rows, columns));
@@ -1488,7 +1477,7 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
 
         private void home(boolean extendSelection)
         {
-            @Nullable CellSelection focusedCellPos = selection.get();
+            CellSelection focusedCellPos = selection.get();
             if (focusedCellPos != null)
             {
                 select(focusedCellPos.atHome(extendSelection));
@@ -1497,7 +1486,7 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
 
         private void end(boolean extendSelection)
         {
-            @Nullable CellSelection focusedCellPos = selection.get();
+            CellSelection focusedCellPos = selection.get();
             if (focusedCellPos != null)
             {
                 select(focusedCellPos.atEnd(extendSelection));
@@ -1522,7 +1511,7 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
             return bounds;
         }
 
-        private VisibleBounds getVisibleBoundDetails(@UnknownInitialization(Region.class) Container this)
+        private VisibleBounds getVisibleBoundDetails(Container this)
         {
             // We are starting at firstRenderRowIndex, so already taken into account extraRenderYPixelsBefore to find starting pos:
             int newNumVisibleRows = Math.min(currentKnownLastRowIncl.get() - firstRenderRowIndex + 1, (int)Math.ceil((extraRenderYPixelsBefore + getHeight() + extraRenderYPixelsAfter) / rowHeight));
@@ -1543,20 +1532,19 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
             return new VisibleBounds(firstRenderRowIndex, firstRenderRowIndex + CellPosition.row(renderRowCount - 1), firstRenderColumnIndex, firstRenderColumnIndex + CellPosition.col(renderColumnCount - 1))
             {
                 @Override
-                public double getXCoord(@AbsColIndex int itemIndex)
+                public double getXCoord(int itemIndex)
                 {
                     return -extraRenderXPixelsBefore + firstRenderColumnOffset + (firstColumnIncl <= itemIndex ? sumColumnWidths(firstColumnIncl, itemIndex) : -sumColumnWidths(itemIndex, firstColumnIncl));
                 }
 
                 @Override
-                public double getYCoord(@AbsRowIndex int itemIndex)
+                public double getYCoord(int itemIndex)
                 {
                     return -extraRenderYPixelsBefore + firstRenderRowOffset + rowHeight * (itemIndex - firstRowIncl);
                 }
 
                 // I'm not sure this can ever return empty any more, after the clamping logic got added on 30/3/2018
                 @Override
-                @OnThread(Tag.FXPlatform)
                 public Optional<CellPosition> getNearestTopLeftToScreenPos(Point2D screenPos, HPos horizBias, VPos verticalBias)
                 {
                     Point2D localCoord = container.screenToLocal(screenPos).add(extraRenderXPixelsBefore, extraRenderYPixelsBefore);
@@ -1578,20 +1566,20 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
                             break;
                     }
                     rowFloat = Utility.clampIncl(0, rowFloat, this.lastRowIncl - this.firstRowIncl + 1);
-                    @AbsRowIndex int row = CellPosition.row((int)rowFloat) + this.firstRowIncl;
+                    int row = CellPosition.row((int)rowFloat) + this.firstRowIncl;
                     
                     if (firstRowIncl <= row && row <= lastRowIncl)
                     {
                         if (localCoord.getX() < x)
                             return Optional.of(new CellPosition(row, firstRenderColumnIndex));
                         
-                        for (@AbsColIndex int i = firstRenderColumnIndex; i <= lastColumnIncl; i++)
+                        for (int i = firstRenderColumnIndex; i <= lastColumnIncl; i++)
                         {
                             double nextX = x + getColumnWidth(i);
                             if (localCoord.getX() < nextX)
                             {
                                 double colFloat = Math.abs(localCoord.getX() - x) / Math.abs(nextX - x);
-                                @AbsColIndex int column = i;
+                                int column = i;
                                 switch (horizBias)
                                 {
                                     case LEFT:
@@ -1722,9 +1710,9 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
         // It's okay to ask row sizes beforehand because reshuffling only moves sideways.
         // If in future we also reshuffle down, this code needs rewriting:
         @SuppressWarnings("units")
-        @AbsRowIndex int maxExtra = MAX_EXTRA_ROW_COLS;
-        @AbsRowIndex int currentLastVisibleRow = CellPosition.row((int)(container.getHeight() / rowHeight)) + logicalScrollRowIndex;
-        List<@AbsRowIndex Integer> lastRows = Utility.<GridArea, @AbsRowIndex Integer>mapList(gridAreas, gridArea -> gridArea.getAndUpdateBottomRow(currentLastVisibleRow + maxExtra, this::updateSizeAndPositions));
+        int maxExtra = MAX_EXTRA_ROW_COLS;
+        int currentLastVisibleRow = CellPosition.row((int)(container.getHeight() / rowHeight)) + logicalScrollRowIndex;
+        List<Integer> lastRows = Utility.<GridArea, Integer>mapList(gridAreas, gridArea -> gridArea.getAndUpdateBottomRow(currentLastVisibleRow + maxExtra, this::updateSizeAndPositions));
                 
         // The plan to fix overlaps: we go from the left-most column across to
         // the right-most, keeping track of which tables exist in this column.
@@ -1797,7 +1785,7 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
                     + columnsToRight));
         if (!currentKnownLastRowIncl.isBound())
         {
-            currentKnownLastRowIncl.set(lastRows.stream().max(Comparator.comparingInt(x -> x)).<@AbsRowIndex Integer>orElse(CellPosition.row(0)) + CellPosition.row(rowsToBottom));
+            currentKnownLastRowIncl.set(lastRows.stream().max(Comparator.comparingInt(x -> x)).<Integer>orElse(CellPosition.row(0)) + CellPosition.row(rowsToBottom));
         }
         VisibleBounds bounds = container.redoLayout();
         updatingSizeAndPositions = false;
@@ -1924,7 +1912,7 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
         return container.getVisibleBoundDetails();
     }
 
-    public void setEffectOnNonOverlays(@Nullable Effect effect)
+    public void setEffectOnNonOverlays(Effect effect)
     {
         container.setEffect(effect);
     }
@@ -1944,7 +1932,7 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
      * For the given gridArea, find the graphical bounds (in relative coords to that grid area)
      * of all the other grid areas which touch it.
      */
-    public ImmutableList<BoundingBox> getTouchingRectangles(@UnknownInitialization(GridArea.class) GridArea gridArea)
+    public ImmutableList<BoundingBox> getTouchingRectangles(GridArea gridArea)
     {
         // Make a rectangle one bigger in each dimension, and see if that touches:
         RectangleBounds overSize = new RectangleBounds(
@@ -1972,11 +1960,11 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
     // A really simple class that manages a single button which is shown when an empty location is focused
     private class CreateTableButtonSupplier extends VirtualGridSupplier<Button>
     {
-        private @MonotonicNonNull Button button;
-        private @Nullable CellPosition buttonPosition;
+        private Button button;
+        private CellPosition buttonPosition;
         // Button position, last mouse position on screen:
         private final VirtualGridManager virtualGridManager;
-        private @Nullable FXPlatformConsumer<Boolean> pendingButtonVisibleListener;
+        private FXPlatformConsumer<Boolean> pendingButtonVisibleListener;
 
         private CreateTableButtonSupplier(VirtualGridManager virtualGridManager)
         {
@@ -1990,7 +1978,7 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
             {
                 Point2D[] lastMousePos = new Point2D[1];
                 button = GUI.button("create.table", () -> {
-                    @Nullable CellSelection curSel = selection.get();
+                    CellSelection curSel = selection.get();
                     if (curSel instanceof EmptyCellSelection)
                     {
                         // Offer to create a table at that location, but we need to ask data or transform, if it's not the first table:
@@ -2006,7 +1994,7 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
                     addButtonVisibleListener(pendingButtonVisibleListener);
             }
 
-            @Nullable CellSelection curSel = selection.get();
+            CellSelection curSel = selection.get();
             if (curSel != null && curSel instanceof EmptyCellSelection)
             {
                 button.setVisible(true);
@@ -2029,20 +2017,19 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
         }
 
         @Override
-        protected @Nullable Pair<ItemState, @Nullable StyledString> getItemState(CellPosition cellPosition, Point2D screenPos)
+        protected Pair<ItemState, StyledString> getItemState(CellPosition cellPosition, Point2D screenPos)
         {
             return cellPosition.equals(buttonPosition) ? new Pair<>(ItemState.DIRECTLY_CLICKABLE, null) : null;
         }
 
         @Override
-        public OptionalDouble getPrefColumnWidth(@AbsColIndex int colIndex)
+        public OptionalDouble getPrefColumnWidth(int colIndex)
         {
             // The button is transient, so don't use it
             // to determine long-term column width:
             return OptionalDouble.empty();
         }
 
-        @OnThread(Tag.FXPlatform)
         public void addButtonVisibleListener(FXPlatformConsumer<Boolean> newButtonVisibleListener)
         {
             if (button != null)
@@ -2098,7 +2085,7 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
         }
 
         @Override
-        public @Nullable CellSelection extendTo(CellPosition cellPosition)
+        public CellSelection extendTo(CellPosition cellPosition)
         {
             // Can't do multi-select on empty cells:
             return null;
@@ -2121,8 +2108,8 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
         @Override
         public Either<CellPosition, CellSelection> move(boolean extendSelection, int _byRows, int _byColumns)
         {
-            @AbsRowIndex int byRows = CellPosition.row(_byRows);
-            @AbsColIndex int byColumns = CellPosition.col(_byColumns);
+            int byRows = CellPosition.row(_byRows);
+            int byColumns = CellPosition.col(_byColumns);
             CellPosition newPos = new CellPosition(
                 Utility.minRow(currentKnownLastRowIncl.get(), Utility.maxRow(position.rowIndex + byRows, CellPosition.row(1))), 
                 Utility.minCol(currentColumns.get() - CellPosition.col(1), Utility.maxCol(position.columnIndex + byColumns, CellPosition.col(1)))
@@ -2159,7 +2146,7 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
         }
 
         @Override
-        public boolean includes(@UnknownInitialization(GridArea.class) GridArea tableDisplay)
+        public boolean includes(GridArea tableDisplay)
         {
             // Empty cell overlaps no grid area:
             return false;
@@ -2189,7 +2176,6 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
     
     public static enum ListenerOutcome { KEEP, REMOVE }
     
-    @OnThread(Tag.FXPlatform)
     public static interface SelectionListener
     {
         /**
@@ -2199,8 +2185,7 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
          * @param newSelection
          * @return
          */
-        @OnThread(Tag.FXPlatform)
-        public Pair<ListenerOutcome, @Nullable FXPlatformConsumer<VisibleBounds>> selectionChanged(@Nullable CellSelection oldSelection, @Nullable CellSelection newSelection);
+        public Pair<ListenerOutcome, FXPlatformConsumer<VisibleBounds>> selectionChanged(CellSelection oldSelection, CellSelection newSelection);
     }
     
 
@@ -2241,7 +2226,6 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
         Optional.ofNullable(selection.get()).ifPresent(s -> s.gotoRow(window));
     }
 
-    @OnThread(Tag.FXPlatform)
     public void _test_keyboardMoveTo(CellPosition target)
     {
         suppressSelectionUpdate = true;
@@ -2262,7 +2246,7 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
         container.move(false, -1, 0);
     }
 
-    private double calcPrefColumnWidth(@AbsColIndex int colIndex)
+    private double calcPrefColumnWidth(int colIndex)
     {
         OptionalDouble widest = nodeSuppliers.stream().flatMapToDouble(nodeSupplier -> {
             OptionalDouble optionalDouble = nodeSupplier.getPrefColumnWidth(colIndex);
@@ -2283,7 +2267,6 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
         }
     }
 
-    @OnThread(Tag.FXPlatform)
     private final class ResizableColumnBar extends Region implements ScrollBindable 
     {
         private static final double HEIGHT = 10;
@@ -2291,27 +2274,26 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
         private class ColumnResize
         {
             // We will change the width of this column, so effectively moving its right edge:
-            private final @AbsColIndex int colIndex;
+            private final int colIndex;
             private final double startPosX;
             private final double originalWidth;
 
-            @OnThread(Tag.FXPlatform)
-            public ColumnResize(@AbsColIndex int colIndex, double startPosX)
+            public ColumnResize(int colIndex, double startPosX)
             {
                 this.colIndex = colIndex;
                 this.startPosX = startPosX;
                 this.originalWidth = getColumnWidth(colIndex);
             }
         }
-        private @Nullable ColumnResize resizingColumn;
+        private ColumnResize resizingColumn;
         
         // getChildren() are updated automatically based on this map:
-        private final ObservableMap<@AbsColIndex Integer, Pair<Line, Path>> columnRightHandLines = FXCollections.observableHashMap();
+        private final ObservableMap<Integer, Pair<Line, Path>> columnRightHandLines = FXCollections.observableHashMap();
         
         public ResizableColumnBar(ScrollGroup scrollGroupToAddTo)
         {
             scrollGroupToAddTo.add(this, ScrollLock.HORIZONTAL);
-            columnRightHandLines.addListener((MapChangeListener<@AbsColIndex Integer, Pair<Line, Path>>)(MapChangeListener.Change<? extends @AbsColIndex Integer, ? extends Pair<Line, Path>> c) -> {
+            columnRightHandLines.addListener((MapChangeListener<Integer, Pair<Line, Path>>)(MapChangeListener.Change<? extends Integer, ? extends Pair<Line, Path>> c) -> {
                 if (c.wasRemoved())
                 {
                     getChildren().remove(c.getValueRemoved().getFirst());
@@ -2333,7 +2315,7 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
             setOnMousePressed(e -> {
                 if (e.getButton() == MouseButton.PRIMARY && !e.isShiftDown())
                 {
-                    @Nullable @AbsColIndex Integer colIndex = updateCursor(e);
+                    Integer colIndex = updateCursor(e);
                     if (colIndex != null && colIndex > 0)
                     {
                         resizingColumn = new ColumnResize(colIndex, e.getX());
@@ -2345,7 +2327,7 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
                 // Don't update cursor if resizing
                 if (resizingColumn != null)
                 {
-                    @NonNull ColumnResize c = this.resizingColumn;
+                    ColumnResize c = this.resizingColumn;
                     setColumnWidth(c.colIndex, Math.max(MIN_COL_WIDTH, e.getX() - c.startPosX + c.originalWidth), true);
                 }
                 else
@@ -2358,7 +2340,7 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
             setOnMouseClicked(e -> {
                 if (e.getButton() == MouseButton.PRIMARY && e.getClickCount() >= 2)
                 {
-                    @Nullable @AbsColIndex Integer colIndex = updateCursor(e);
+                    Integer colIndex = updateCursor(e);
                     if (colIndex != null && colIndex > 0)
                     {
                         setColumnWidth(colIndex, calcPrefColumnWidth(colIndex), true);
@@ -2382,12 +2364,12 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
         }
 
         @Override
-        public @OnThread(Tag.FXPlatform) void redoLayoutAfterScroll()
+        public void redoLayoutAfterScroll()
         {
-            @AbsColIndex int lastColExcl = currentColumns.get();
+            int lastColExcl = currentColumns.get();
             double x = logicalScrollColumnOffset;
             columnRightHandLines.entrySet().removeIf(e -> e.getKey() < logicalScrollColumnIndex);
-            @AbsColIndex int col;
+            int col;
             for (col = logicalScrollColumnIndex; col < lastColExcl && x < getWidth(); col++)
             {
                 Pair<Line, Path> rhs = columnRightHandLines.computeIfAbsent(col, k -> makeLine(k > 0));
@@ -2395,7 +2377,7 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
                 rhs.getFirst().setTranslateX(x);
                 rhs.getSecond().setTranslateX(x);
             }
-            @AbsColIndex int lastRendered = col - CellPosition.col(1);
+            int lastRendered = col - CellPosition.col(1);
             columnRightHandLines.entrySet().removeIf(e -> e.getKey() > lastRendered);
         }
 
@@ -2415,15 +2397,15 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
         }
         
         // Returns column index if you could click and drag here to resize the right-hand side of that column
-        private @Nullable @AbsColIndex Integer updateCursor(MouseEvent mouseEvent)
+        private Integer updateCursor(MouseEvent mouseEvent)
         {
             // First is X dist, second is column index
-            Pair<Double, @AbsColIndex Integer> nearest = columnRightHandLines.entrySet().stream()
+            Pair<Double, Integer> nearest = columnRightHandLines.entrySet().stream()
                 .filter(e -> e.getKey() > 0)
-                .<Pair<Double, @AbsColIndex Integer>>map((Entry<@AbsColIndex Integer, Pair<Line, Path>> entry) ->
-                new Pair<Double, @AbsColIndex Integer>(Math.abs(mouseEvent.getX() - entry.getValue().getFirst().getTranslateX()), entry.getKey()))
+                .<Pair<Double, Integer>>map((Entry<Integer, Pair<Line, Path>> entry) ->
+                new Pair<Double, Integer>(Math.abs(mouseEvent.getX() - entry.getValue().getFirst().getTranslateX()), entry.getKey()))
                 .filter(p -> p.getFirst() <= 6.0)
-                .min(Comparator.comparing(p -> p.getFirst())).<@Nullable Pair<Double, @AbsColIndex Integer>>orElse(null);
+                .min(Comparator.comparing(p -> p.getFirst())).<Pair<Double, Integer>>orElse(null);
             if (nearest != null)
             {
                 setCursor(Cursor.H_RESIZE);
@@ -2437,7 +2419,7 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
         }
 
         @Override
-        public @OnThread(Tag.FXPlatform) void updateClip()
+        public void updateClip()
         {
 
         }
@@ -2445,9 +2427,9 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
     
     private class HoverTip extends FloatingItem<TextFlow>
     {
-        private @Nullable CellPosition source;
-        private @Nullable StyledString content;
-        private @MonotonicNonNull TextFlow textFlow;
+        private CellPosition source;
+        private StyledString content;
+        private TextFlow textFlow;
 
         public HoverTip()
         {
@@ -2486,7 +2468,7 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
         }
 
         @Override
-        public @Nullable Pair<ItemState, @Nullable StyledString> getItemState(CellPosition cellPosition, Point2D screenPos)
+        public Pair<ItemState, StyledString> getItemState(CellPosition cellPosition, Point2D screenPos)
         {
             return null;
         }
@@ -2501,8 +2483,7 @@ public final class VirtualGrid extends GridWithColumnWidths implements ScrollBin
             return Objects.equals(this.content, content);
         }
 
-        @OnThread(Tag.FXPlatform)
-        public void setContent(@Nullable StyledString content, @Nullable CellPosition position)
+        public void setContent(StyledString content, CellPosition position)
         {
             boolean needLayout = !Objects.equals(content, this.content) || ((content != null || this.content != null) && !Objects.equals(position, this.source));
             this.source = position;

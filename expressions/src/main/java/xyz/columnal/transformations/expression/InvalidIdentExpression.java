@@ -58,7 +58,7 @@ public class InvalidIdentExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState state, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public CheckedExp check(ColumnLookup dataLookup, TypeState state, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         // Lexer will have given error so no need for further error:
         return null;
@@ -92,13 +92,13 @@ public class InvalidIdentExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
+    public Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
     {
         return null;
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         return o instanceof InvalidIdentExpression && text.equals(((InvalidIdentExpression)o).text);
     }
@@ -118,7 +118,7 @@ public class InvalidIdentExpression extends NonOperatorExpression
     // IdentExpression if possible, otherwise InvalidIdentExpression
     public static Expression identOrUnfinished(String src)
     {
-        @ExpressionIdentifier String valid = IdentifierUtility.asExpressionIdentifier(src);
+        String valid = IdentifierUtility.asExpressionIdentifier(src);
         if (valid != null)
             return IdentExpression.load(valid);
         else

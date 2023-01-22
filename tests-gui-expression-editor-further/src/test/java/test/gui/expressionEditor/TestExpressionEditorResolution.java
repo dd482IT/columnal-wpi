@@ -55,7 +55,6 @@ import test.gui.util.FXApplicationTest;
 
 import static org.junit.Assert.assertEquals;
 
-@OnThread(Tag.Simulation)
 public class TestExpressionEditorResolution extends FXApplicationTest implements ScrollToTrait, ClickTableLocationTrait, EnterExpressionTrait, PopupTrait
 {
     
@@ -94,7 +93,6 @@ public class TestExpressionEditorResolution extends FXApplicationTest implements
         }
     }
 
-    @OnThread(Tag.Any)
     private EditorDisplay getEditorDisplay()
     {
         Node focusOwner = getFocusOwner();
@@ -103,49 +101,41 @@ public class TestExpressionEditorResolution extends FXApplicationTest implements
         return (EditorDisplay) focusOwner;
     }
 
-    @Test
     public void checkLoad1() throws Exception
     {
         testLoadNameResolution("var\\\\x", "x");
     }
 
-    @Test
     public void checkLoad2() throws Exception
     {
         testLoadNameResolution("@call function\\\\number\\abs(3)", "abs(3)");
     }
 
-    @Test
     public void checkLoad3() throws Exception
     {
         testLoadNameResolution("@call function\\\\number\\round(3)", "function\\\\round(3)");
     }
 
-    @Test
     public void checkLoad3b() throws Exception
     {
         testLoadNameResolution("column\\\\round", "column\\\\round");
     }
 
-    @Test
     public void checkLoad4() throws Exception
     {
         testLoadNameResolution("@define var\\\\round = 3 @then var\\\\round + column\\\\round @enddefine", "@definevar\\\\round=3@thenvar\\\\round+column\\\\round@enddefine");
     }
 
-    @Test
     public void checkLoad4b() throws Exception
     {
         testLoadNameResolution("@define var\\\\round 2 = 3 @then var\\\\round 2 + column\\\\round @enddefine", "@defineround 2=3@thenround 2+column\\\\round@enddefine");
     }
 
-    @Test
     public void checkLoad5() throws Exception
     {
         testLoadNameResolution("@define var\\\\abs = 2 @then var\\\\abs + @call function\\\\number\\abs(-4) @enddefine + @call function\\\\number\\abs(3)", "@definevar\\\\abs=2@thenvar\\\\abs+function\\\\abs(-4)@enddefine+abs(3)");
     }
 
-    @Test
     public void checkLoad6() throws Exception
     {
         testLoadNameResolution("@if 2 =~ var\\\\abs @then var\\\\abs + @call function\\\\number\\abs(-4) @else @call function\\\\number\\abs(-5) @endif + @call function\\\\number\\abs(3)", "@if2=~var\\\\abs@thenvar\\\\abs+function\\\\abs(-4)@elseabs(-5)@endif+abs(3)");

@@ -49,15 +49,15 @@ import java.util.stream.Stream;
  */
 public class UnitLiteralExpression extends NonOperatorExpression
 {
-    private final @Recorded UnitExpression unitExpression;
+    private final UnitExpression unitExpression;
 
-    public UnitLiteralExpression(@Recorded UnitExpression unitExpression)
+    public UnitLiteralExpression(UnitExpression unitExpression)
     {
         this.unitExpression = unitExpression;
     }
 
     @Override
-    public @Nullable CheckedExp check(@Recorded UnitLiteralExpression this, ColumnLookup dataLookup, TypeState typeState, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public CheckedExp check(UnitLiteralExpression this, ColumnLookup dataLookup, TypeState typeState, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         // Numeric literals, should not call check on us.
         // Everyone else sees a Unit GADT
@@ -94,13 +94,13 @@ public class UnitLiteralExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
+    public Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
     {
         return null;
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -120,7 +120,7 @@ public class UnitLiteralExpression extends NonOperatorExpression
         return expressionStyler.styleExpression(StyledString.concat(StyledString.s("unit{"), unitExpression.toStyledString(), StyledString.s("}")), this);
     }
 
-    public @Recorded UnitExpression getUnit()
+    public UnitExpression getUnit()
     {
         return unitExpression;
     }

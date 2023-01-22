@@ -32,17 +32,17 @@ public class ColumnDetails
     private final ColumnHandler columnHandler;
     private final ColumnId columnId;
     // What to actually put on screen; usually same as columnId.getRaw()
-    private final @Localized String displayHeaderLabel;
+    private final String displayHeaderLabel;
     private final ImmutableList<String> displayHeaderClasses;
     private final DataType columnType;
-    private final @Nullable FXPlatformConsumer<ColumnId> renameColumn;
+    private final FXPlatformConsumer<ColumnId> renameColumn;
 
-    public ColumnDetails(ColumnId columnId, DataType columnType, @Nullable FXPlatformConsumer<ColumnId> renameColumn, ColumnHandler columnHandler, ImmutableList<String> headerStyleClasses)
+    public ColumnDetails(ColumnId columnId, DataType columnType, FXPlatformConsumer<ColumnId> renameColumn, ColumnHandler columnHandler, ImmutableList<String> headerStyleClasses)
     {
         this(columnId, columnId.getRaw(), columnType, renameColumn, columnHandler, headerStyleClasses);
     }
 
-    private ColumnDetails(ColumnId columnId, @Localized String displayHeaderLabel, DataType columnType, @Nullable FXPlatformConsumer<ColumnId> renameColumn, ColumnHandler columnHandler, ImmutableList<String> displayHeaderClasses)
+    private ColumnDetails(ColumnId columnId, String displayHeaderLabel, DataType columnType, FXPlatformConsumer<ColumnId> renameColumn, ColumnHandler columnHandler, ImmutableList<String> displayHeaderClasses)
     {
         this.columnId = columnId;
         this.displayHeaderLabel = displayHeaderLabel;
@@ -52,7 +52,7 @@ public class ColumnDetails
         this.columnHandler = columnHandler;
     }
     
-    public ColumnDetails withDisplayHeaderLabel(@Localized String displayHeaderLabel)
+    public ColumnDetails withDisplayHeaderLabel(String displayHeaderLabel)
     {
         return new ColumnDetails(columnId, displayHeaderLabel, columnType, renameColumn, columnHandler, displayHeaderClasses);
     }
@@ -72,12 +72,12 @@ public class ColumnDetails
         return columnHandler;
     }
 
-    public @Nullable FXPlatformConsumer<ColumnId> getRenameColumn()
+    public FXPlatformConsumer<ColumnId> getRenameColumn()
     {
         return renameColumn;
     }
 
-    public @Localized String getDisplayHeaderLabel()
+    public String getDisplayHeaderLabel()
     {
         return displayHeaderLabel;
     }

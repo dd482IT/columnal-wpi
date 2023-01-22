@@ -30,7 +30,6 @@ import xyz.columnal.utility.Utility.ListEx;
 /**
  * A ListEx wrapped around a column
  */
-@OnThread(Tag.Simulation)
 public class ListExDTV extends ListEx
 {
     private final int length;
@@ -57,7 +56,7 @@ public class ListExDTV extends ListEx
     }
 
     @Override
-    public @Value Object get(int index) throws InternalException, UserException
+    public Object get(int index) throws InternalException, UserException
     {
         return columnType.getCollapsed(index);
     }

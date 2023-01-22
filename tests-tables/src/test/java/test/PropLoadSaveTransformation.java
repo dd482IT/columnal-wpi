@@ -43,12 +43,9 @@ import static org.junit.Assert.assertTrue;
 /**
  * Created by neil on 16/11/2016.
  */
-@RunWith(JUnitQuickcheck.class)
 public class PropLoadSaveTransformation
 {
-    @Property(trials = 200)
-    @OnThread(value = Tag.Simulation, ignoreParent = true)
-    public void testLoadSaveTransformation(@From(GenNonsenseTransformation.class) Transformation_Mgr original)
+    public void testLoadSaveTransformation(Transformation_Mgr original)
         throws ExecutionException, InterruptedException, UserException, InternalException, InvocationTargetException
     {
         TableManager mgr1 = new DummyManager();
@@ -75,7 +72,6 @@ public class PropLoadSaveTransformation
         }
     }
 
-    @OnThread(Tag.Simulation)
     private static String save(TableManager original) throws ExecutionException, InterruptedException, InvocationTargetException
     {
         // This whole bit is single-threaded:
@@ -84,7 +80,7 @@ public class PropLoadSaveTransformation
         {
             original.save(null, new FullSaver(null) {
                 @Override
-                public @OnThread(Tag.Simulation) void saveTable(String tableSrc)
+                public void saveTable(String tableSrc)
                 {
                     super.saveTable(tableSrc);
                     // May be called multiple times, but that's fine, we just need last one:

@@ -51,9 +51,9 @@ public class RoundDP extends FunctionDefinition
         return new ValueFunction()
         {
             @Override
-            public @Value Object _call() throws UserException, InternalException
+            public Object _call() throws UserException, InternalException
             {
-                return Utility.<@Value Number>withNumber(arg(0, Number.class), (@Value Long x) -> x, d -> DataTypeUtility.value(d.setScale(intArg(1), RoundingMode.HALF_UP)));
+                return Utility.<Number>withNumber(arg(0, Number.class), (Long x) -> x, d -> DataTypeUtility.value(d.setScale(intArg(1), RoundingMode.HALF_UP)));
             }
         };
         

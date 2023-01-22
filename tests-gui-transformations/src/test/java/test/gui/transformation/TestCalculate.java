@@ -79,7 +79,6 @@ import java.util.stream.Stream;
 
 import static org.junit.Assert.*;
 
-@RunWith(JUnitQuickcheck.class)
 public class TestCalculate extends FXApplicationTest implements ScrollToTrait, AutoCompleteTrait, PopupTrait, ClickTableLocationTrait
 {
     private static enum Col
@@ -87,7 +86,7 @@ public class TestCalculate extends FXApplicationTest implements ScrollToTrait, A
         BOO, YM, BOOT_SIZE, YM_LOWER;
     }
     
-    private @ExpressionIdentifier String getName(Col col)
+    private String getName(Col col)
     {
         switch (col)
         {
@@ -99,7 +98,6 @@ public class TestCalculate extends FXApplicationTest implements ScrollToTrait, A
         throw new AssertionError("Unknown case: " + col);
     }
     
-    @OnThread(Tag.Simulation)
     private EditableColumn makeColumn(Col column, RecordSet rs) throws InternalException, UserException
     {
         ColumnId columnId = new ColumnId(getName(column));
@@ -116,9 +114,7 @@ public class TestCalculate extends FXApplicationTest implements ScrollToTrait, A
         throw new AssertionError("Unknown case: " + column);
     }
     
-    @Property(trials = 3)
-    @OnThread(Tag.Simulation)
-    public void testCalculate(@From(GenRandom.class) Random r) throws Exception
+    public void testCalculate(Random r) throws Exception
     {
         RecordSet orig = new EditableRecordSet(Utility.<Col, SimulationFunction<RecordSet, EditableColumn>>mapListI(ImmutableList.copyOf(Col.values()), (Col c) -> (RecordSet rs) -> makeColumn(c, rs)), () -> 0);
         MainWindowActions mainWindowActions = TAppUtil.openDataAsTable(windowToUse, null, orig);
@@ -169,7 +165,7 @@ public class TestCalculate extends FXApplicationTest implements ScrollToTrait, A
         
         // Now we rename column to either overlap another column, or be totally new, then we swap it back:
         clickOnItemInBounds(findColumnTitle(getName(colList.get(1))), grid, new RectangleBounds(calcPos, calcPos.offsetByRowCols(1, 4)));
-        @ExpressionIdentifier String newColName = r.nextBoolean() ? getName(colList.get(3)) : "Arbitrary New Name";
+        String newColName = r.nextBoolean() ? getName(colList.get(3)) : "Arbitrary New Name";
         write(newColName);
         moveAndDismissPopupsAtPos(point(".ok-button"));
         clickOn(".ok-button");
@@ -186,7 +182,7 @@ public class TestCalculate extends FXApplicationTest implements ScrollToTrait, A
         assertEquals(expectedColumns, ImmutableSet.copyOf(getCalculate(mainWindowActions).getData().getColumnIds()));
     }
     
-    private void enterInfo(MainWindowActions mainWindowActions, Random r, @ExpressionIdentifier String columnNameToReplace)
+    private void enterInfo(MainWindowActions mainWindowActions, Random r, String columnNameToReplace)
     {
         sleep(300);
         assertShowing("Expression editor", ".expression-editor");
@@ -239,7 +235,7 @@ public class TestCalculate extends FXApplicationTest implements ScrollToTrait, A
         return TBasicUtil.checkNonNull(Utility.filterClass(mainWindowActions._test_getTableManager().getAllTables().stream(), Calculate.class).findFirst().orElse(null));
     }
 
-    private NodeQuery findColumnTitle(@ExpressionIdentifier String columnNameToReplace)
+    private NodeQuery findColumnTitle(String columnNameToReplace)
     {
         return TFXUtil.fx(() -> lookup(".column-title").match((Label l) -> l.getText().equals(columnNameToReplace)));
     }

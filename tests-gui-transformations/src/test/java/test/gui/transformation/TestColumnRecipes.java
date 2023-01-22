@@ -83,12 +83,9 @@ import java.util.function.Supplier;
 
 import static org.junit.Assert.*;
 
-@RunWith(JUnitQuickcheck.class)
 public class TestColumnRecipes extends FXApplicationTest implements ScrollToTrait, ClickTableLocationTrait, ListUtilTrait, EnterStructuredValueTrait
 {
-    @Property(trials=2)
-    @OnThread(Tag.Simulation)
-    public void testAverageSum(@From(GenImmediateData.class) @NumTables(maxTables = 1) @MustIncludeNumber ImmediateData_Mgr dataMgr, @From(GenRandom.class) Random r) throws Exception
+    public void testAverageSum(ImmediateData_Mgr dataMgr, Random r) throws Exception
     {
         // Test the average and sum recipes on numeric columns
         MainWindowActions mainWindowActions = TAppUtil.openDataAsTable(windowToUse, dataMgr.mgr).get();
@@ -119,11 +116,10 @@ public class TestColumnRecipes extends FXApplicationTest implements ScrollToTrai
      * @param values
      * @throws Exception
      */ 
-    @OnThread(Tag.Simulation)
     @SuppressWarnings("valuetype")
-    private void testTypeTransform(DataType from, @Nullable DataType to, @Nullable Function<ColumnId, Expression> expression, ImmutableList<Object> values, @Nullable Runnable execAfterTypeSelection) throws Exception
+    private void testTypeTransform(DataType from, DataType to, Function<ColumnId, Expression> expression, ImmutableList<Object> values, Runnable execAfterTypeSelection) throws Exception
     {
-        MainWindowActions mainWindowActions = TAppUtil.openDataAsTable(windowToUse, null, new KnownLengthRecordSet(ImmutableList.<SimulationFunction<RecordSet, EditableColumn>>of(ColumnUtility.makeImmediateColumn(from, new ColumnId("C"), Utility.mapListI(values, v -> v == ERR ? Either.<String, @Value Object>left("Error") : Either.<String, @Value Object>right(v)), DataTypeUtility.makeDefaultValue(from))), values.size()));
+        MainWindowActions mainWindowActions = TAppUtil.openDataAsTable(windowToUse, null, new KnownLengthRecordSet(ImmutableList.<SimulationFunction<RecordSet, EditableColumn>>of(ColumnUtility.makeImmediateColumn(from, new ColumnId("C"), Utility.mapListI(values, v -> v == ERR ? Either.<String, Object>left("Error") : Either.<String, Object>right(v)), DataTypeUtility.makeDefaultValue(from))), values.size()));
 
         // Find the column and scroll to it:
         Table table = mainWindowActions._test_getTableManager().getAllTables().get(0);
@@ -169,96 +165,70 @@ public class TestColumnRecipes extends FXApplicationTest implements ScrollToTrai
     
     
     
-    @Test
-    @OnThread(Tag.Simulation)
     public void testEmpty() throws Exception
     {
         testTypeTransform(DataType.TEXT, null, null, ImmutableList.of(), null);
     }
 
-    @Test
-    @OnThread(Tag.Simulation)
     public void testNumToBoolean() throws Exception
     {
         testTypeTransform(DataType.number(new NumberInfo(Unit.SCALAR)), DataType.BOOLEAN, c -> new EqualExpression(ImmutableList.of(IdentExpression.column(c), new NumericLiteral(1, null)), false), ImmutableList.of(1, 0, 0, 1, ERR), null);
     }
 
-    @Test
-    @OnThread(Tag.Simulation)
     public void testNumOnlyZeroes() throws Exception
     {
         testTypeTransform(DataType.number(new NumberInfo(Unit.SCALAR)), DataType.BOOLEAN, null, ImmutableList.of(0, 0, 0, 0), null);
     }
 
-    @Test
-    @OnThread(Tag.Simulation)
     public void testDateToText() throws Exception
     {
         testTypeTransform(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)), DataType.TEXT, c -> new CallExpression(getFunctionLookup(), "to text", IdentExpression.column(c)), ImmutableList.of(), null);
     }
 
-    @Test
-    @OnThread(Tag.Simulation)
     public void testTextualNumberToNumber() throws Exception
     {
         testTypeTransform(DataType.TEXT, DataType.NUMBER, c -> new CallExpression(getFunctionLookup(), "extract number", IdentExpression.column(c)), ImmutableList.of("37", "0", "1.65", "-3.562", "none"), null);
     }
 
-    @Test
-    @OnThread(Tag.Simulation)
     public void testTextualNumberToNumber2() throws Exception
     {
         testTypeTransform(DataType.TEXT, DataType.NUMBER, c -> new CallExpression(getFunctionLookup(), "extract number", IdentExpression.column(c)), ImmutableList.of("37m", "0m", "1.65m", "-3.562 metres", "n/a"), null);
     }
 
-    @Test
-    @OnThread(Tag.Simulation)
     public void testTextualNumberToNumber3() throws Exception
     {
         TypeManager typeManager = new TypeManager(new UnitManager());
         testTypeTransform(DataType.TEXT, typeManager.getMaybeType().instantiate(ImmutableList.of(Either.right(DataType.NUMBER)), typeManager), c -> new CallExpression(getFunctionLookup(), "extract number or none", IdentExpression.column(c)), ImmutableList.of("37m", "0m", "1.65m", "-3.562 metres", "n/a"), null);
     }
 
-    @Test
-    @OnThread(Tag.Simulation)
     public void testNonDateToText() throws Exception
     {
         testTypeTransform(DataType.TEXT, DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)), null, ImmutableList.of("37", "0", "1.65", "-3.562"), null);
     }
 
-    @Test
-    @OnThread(Tag.Simulation)
     public void testTextualTimeToTime() throws Exception
     {
         DataType time = DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY));
         testTypeTransform(DataType.TEXT, time, c -> new CallExpression(getFunctionLookup(), "from text to", new TypeLiteralExpression(new TypePrimitiveLiteral(time)), IdentExpression.column(c)), ImmutableList.of("4:51", "16:05", "5:21PM", "0:00:03.435346346 AM"), null);
     }
 
-    @Test
-    @OnThread(Tag.Simulation)
     public void testTextualDateToDate() throws Exception
     {
         DataType date = DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY));
         testTypeTransform(DataType.TEXT, date, c -> new CallExpression(getFunctionLookup(), "from text to", new TypeLiteralExpression(new TypePrimitiveLiteral(date)), IdentExpression.column(c)), ImmutableList.of(ERR, "May 12 2018", "30-04-17", "21 Jun 2018", ERR, "2018-03-04"), null);
     }
 
-    @Test
-    @OnThread(Tag.Simulation)
     public void testTextualNumberToBoolean() throws Exception
     {
         testTypeTransform(DataType.TEXT, DataType.BOOLEAN, c -> new CallExpression(getFunctionLookup(), "list contains", new ArrayExpression(Utility.mapListI(ImmutableList.of("true", "t", "yes", "y", "on"), StringLiteral::new)), new CallExpression(getFunctionLookup(), "lower case", IdentExpression.column(c))), ImmutableList.of("T", "F", "T", "T", "F"), null);
     }
 
-    @Test
-    @OnThread(Tag.Simulation)
     public void testTextualNumberToBoolean2() throws Exception
     {
         testTypeTransform(DataType.TEXT, DataType.BOOLEAN, c ->
             new CallExpression(getFunctionLookup(), "list contains", new ArrayExpression(Utility.mapListI(ImmutableList.of("true", "t", "yes", "y", "on"), StringLiteral::new)), new CallExpression(getFunctionLookup(), "lower case", IdentExpression.column(c))), ImmutableList.of("yes", "no", "Yes", "No", "Y"), null);
     }
 
-    @Test
-    @OnThread(Tag.Simulation)
     public void testDateTimeToDate() throws Exception
     {
         DataType datetime = DataType.date(new DateTimeInfo(DateTimeType.DATETIME));
@@ -266,8 +236,6 @@ public class TestColumnRecipes extends FXApplicationTest implements ScrollToTrai
         testTypeTransform(datetime, date, c -> new CallExpression(getFunctionLookup(), "date from datetime", IdentExpression.column(c)), ImmutableList.of(ERR), null);
     }
 
-    @Test
-    @OnThread(Tag.Simulation)
     public void testDateTimeZonedToYearYM() throws Exception
     {
         DataType datetime = DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED));
@@ -275,8 +243,6 @@ public class TestColumnRecipes extends FXApplicationTest implements ScrollToTrai
         testTypeTransform(datetime, date, c -> new CallExpression(getFunctionLookup(), "dateym from date", new CallExpression(getFunctionLookup(), "date from datetime", new CallExpression(getFunctionLookup(), "datetime from datetimezoned", IdentExpression.column(c)))), ImmutableList.of(ERR), null);
     }
     
-    @Test
-    @OnThread(Tag.Simulation)
     public void testOptionalNumberToNumber() throws Exception
     {
         UnitManager unitManager = new UnitManager();

@@ -28,6 +28,5 @@ import threadchecker.Tag;
  */
 public interface FXPlatformBiFunction<S, T, R>
 {
-    @OnThread(Tag.FXPlatform)
     public R apply(S s, T t);
 }

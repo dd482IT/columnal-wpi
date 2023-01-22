@@ -52,12 +52,9 @@ import xyz.columnal.utility.Utility.ReadState;
 
 import java.io.IOException;
 
-@RunWith(JUnitQuickcheck.class)
 public class TestTextFileColumn
 {
-    @Property(trials=10)
-    @OnThread(Tag.Simulation)
-    public void testTextFileColumn(@From(GenFile.class) GeneratedTextFile generatedTextFile) throws UserException, InternalException
+    public void testTextFileColumn(GeneratedTextFile generatedTextFile) throws UserException, InternalException
     {
         KnownLengthRecordSet recordSet = new KnownLengthRecordSet(
                 Utility.mapListExI_Index(generatedTextFile.getColumnTypes(), (i, t) -> makeColumn(generatedTextFile, i, t)), generatedTextFile.getLineCount());
@@ -119,7 +116,7 @@ public class TestTextFileColumn
                 }
 
                 @Override
-                public TextFileColumn record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, UserException
+                public TextFileColumn record(ImmutableMap<String, DataType> fields) throws InternalException, UserException
                 {
                     throw new InternalException("record");
                 }

@@ -45,9 +45,8 @@ import java.util.stream.Collectors;
  */
 public class TableNameTextField extends ErrorableTextField<TableId>
 {    
-    @OnThread(Tag.FXPlatform)
     @SuppressWarnings("identifier")
-    public TableNameTextField(@Nullable TableManager tableManager, final @Nullable TableId editingId, boolean blankAllowed, FXPlatformRunnable defocus)
+    public TableNameTextField(TableManager tableManager, final TableId editingId, boolean blankAllowed, FXPlatformRunnable defocus)
     {
         // We automatically remove leading/trailing whitespace, rather than complaining about it.
         // We also convert any whitespace (including multiple chars) into a single space
@@ -58,7 +57,7 @@ public class TableNameTextField extends ErrorableTextField<TableId>
                 if (blankAllowed)
                     return ConversionResult.success(new TableId(s));
                 else
-                    return ConversionResult.<@NonNull TableId>error(TranslationUtility.getStyledString("table.name.error.missing"));
+                    return ConversionResult.<TableId>error(TranslationUtility.getStyledString("table.name.error.missing"));
             }
             TableId tableId = new TableId(s);
             //System.err.println("Comparing \"" + s + "\" with " + Utility.listToString(Utility.mapList(tableManager.getAllTables(), t -> "\"" + t.getId().getRaw() + "\"")));

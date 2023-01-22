@@ -39,7 +39,7 @@ import xyz.columnal.utility.TaggedValue;
 public class GetOptionalOrDefault extends FunctionDefinition
 {
 
-    public static final @FuncDocKey String NAME = "optional:get optional or";
+    public static final String NAME = "optional:get optional or";
 
     public GetOptionalOrDefault() throws InternalException
     {
@@ -47,11 +47,11 @@ public class GetOptionalOrDefault extends FunctionDefinition
     }
     
     @Override
-    public @OnThread(Tag.Simulation) ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
+    public ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
     {
         return new ValueFunction2<TaggedValue, Object>(TaggedValue.class, Object.class) {
             @Override
-            public @OnThread(Tag.Simulation) @Value Object call2(@Value TaggedValue taggedValue, @Value Object defaultValue) throws InternalException, UserException
+            public Object call2(TaggedValue taggedValue, Object defaultValue) throws InternalException, UserException
             {
                 if (taggedValue.getTagIndex() == 1 && taggedValue.getInner() != null)
                     return taggedValue.getInner();

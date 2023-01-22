@@ -60,7 +60,6 @@ public class TAppUtil
      * @throws ExecutionException
      * @throws InvocationTargetException
      */
-    @OnThread(Tag.Simulation)
     public static Supplier<MainWindow.MainWindowActions> openDataAsTable(Stage windowToUse, TableManager mgr) throws Exception
     {
         File temp = File.createTempFile("srcdata", "tables");
@@ -88,14 +87,12 @@ public class TAppUtil
         };
     }
 
-    @OnThread(Tag.Simulation)
-    public static MainWindow.MainWindowActions openDataAsTable(Stage windowToUse, @Nullable TypeManager typeManager, RecordSet data) throws Exception
+    public static MainWindow.MainWindowActions openDataAsTable(Stage windowToUse, TypeManager typeManager, RecordSet data) throws Exception
     {
         return openDataAsTable(windowToUse, typeManager, data, new TableId("Table1"));
     }
 
-    @OnThread(Tag.Simulation)
-    public static MainWindow.MainWindowActions openDataAsTable(Stage windowToUse, @Nullable TypeManager typeManager, RecordSet data, TableId tableId) throws Exception
+    public static MainWindow.MainWindowActions openDataAsTable(Stage windowToUse, TypeManager typeManager, RecordSet data, TableId tableId) throws Exception
     {
         TableManager manager = new DummyManager();
         Table t = new ImmediateDataSource(manager, new Table.InitialLoadDetails(tableId, null, CellPosition.ORIGIN.offsetByRowCols(1, 1), null), new EditableRecordSet(data));

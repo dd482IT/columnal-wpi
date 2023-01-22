@@ -64,7 +64,6 @@ import java.util.function.Predicate;
  *     if we let data load in a random order.  It is definitely always true
  *     that if indexProgress(j) > 0 then indexValid(j)
  */
-@OnThread(Tag.Simulation)
 public abstract class Column
 {
     protected final RecordSet recordSet;
@@ -76,14 +75,11 @@ public abstract class Column
         this.name = name;
     }
 
-    @Pure
-    @OnThread(Tag.Any)
     public final ColumnId getName()
     {
         return name;
     }
 
-    @OnThread(Tag.Any)
     public abstract DataTypeValue getType() throws InternalException, UserException;
 
     /*
@@ -103,22 +99,20 @@ public abstract class Column
         return recordSet.getLength();
     }
     
-    @OnThread(Tag.Any)
     public static class EditableStatus
     {
         // If false, definitely not editable.  If true, run checkEditable
         public final boolean editable;
         // Return true to continue the edit, false to abandon:
-        public final @Nullable SimulationFunctionInt<@TableDataRowIndex Integer, Boolean> checkEditable;
+        public final SimulationFunctionInt<Integer, Boolean> checkEditable;
 
-        public EditableStatus(boolean editable, @Nullable SimulationFunctionInt<@TableDataRowIndex Integer, Boolean> checkEditable)
+        public EditableStatus(boolean editable, SimulationFunctionInt<Integer, Boolean> checkEditable)
         {
             this.editable = editable;
             this.checkEditable = checkEditable;
         }
     }
 
-    @OnThread(Tag.Any)
     public EditableStatus getEditableStatus()
     {
         return new EditableStatus(true, null);
@@ -135,8 +129,7 @@ public abstract class Column
      * (Used for immediate columns which have a default for when
      * you add a new row.)  Null if N/A.
      */
-    @OnThread(Tag.Any)
-    public @Nullable @Value Object getDefaultValue()
+    public Object getDefaultValue()
     {
         return null;
     }
@@ -144,7 +137,6 @@ public abstract class Column
     /**
      * The predicate is only checked if display is CUSTOM
      */
-    @OnThread(Tag.Any)
     public final boolean shouldShow(Pair<Display, Predicate<ColumnId>> columnSelection)
     {
         switch (columnSelection.getFirst())
@@ -174,7 +166,6 @@ public abstract class Column
      * Used to decide whether we show column if display setting is set to ALTERED,
      * and to decide whether to warn in expression editor about column being changed.
      */
-    @OnThread(Tag.Any)
     public abstract AlteredState getAlteredState();
 
     public final RecordSet getRecordSet()

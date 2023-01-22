@@ -71,63 +71,63 @@ import java.time.temporal.TemporalAccessor;
 
 public interface ExpressionVisitor<T>
 {
-    T notEqual(NotEqualExpression self, @Recorded Expression lhs, @Recorded Expression rhs);
-    T divide(DivideExpression self, @Recorded Expression lhs, @Recorded Expression rhs);
+    T notEqual(NotEqualExpression self, Expression lhs, Expression rhs);
+    T divide(DivideExpression self, Expression lhs, Expression rhs);
 
-    T addSubtract(AddSubtractExpression self, ImmutableList<@Recorded Expression> expressions, ImmutableList<AddSubtractOp> ops);
+    T addSubtract(AddSubtractExpression self, ImmutableList<Expression> expressions, ImmutableList<AddSubtractOp> ops);
 
-    T and(AndExpression self, ImmutableList<@Recorded Expression> expressions);
-    T or(OrExpression self, ImmutableList<@Recorded Expression> expressions);
+    T and(AndExpression self, ImmutableList<Expression> expressions);
+    T or(OrExpression self, ImmutableList<Expression> expressions);
 
-    T list(ArrayExpression self, ImmutableList<@Recorded Expression> items);
+    T list(ArrayExpression self, ImmutableList<Expression> items);
 
-    T litBoolean(BooleanLiteral self, @Value Boolean value);
+    T litBoolean(BooleanLiteral self, Boolean value);
 
-    T call(CallExpression self, @Recorded Expression callTarget, ImmutableList<@Recorded Expression> arguments);
+    T call(CallExpression self, Expression callTarget, ImmutableList<Expression> arguments);
 
-    T comparison(ComparisonExpression self, ImmutableList<@Recorded Expression> expressions, ImmutableList<ComparisonOperator> operators);
+    T comparison(ComparisonExpression self, ImmutableList<Expression> expressions, ImmutableList<ComparisonOperator> operators);
     // Singular name to avoid clash with Object.equals
-    T equal(EqualExpression self, ImmutableList<@Recorded Expression> expressions, boolean lastIsPattern);
+    T equal(EqualExpression self, ImmutableList<Expression> expressions, boolean lastIsPattern);
 
-    T ident(@Recorded IdentExpression self, @Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents, boolean isVariable);
+    T ident(IdentExpression self, String namespace, ImmutableList<String> idents, boolean isVariable);
 
-    T ifThenElse(IfThenElseExpression self, @Recorded Expression condition, @Recorded Expression thenExpression, @Recorded Expression elseExpression);
+    T ifThenElse(IfThenElseExpression self, Expression condition, Expression thenExpression, Expression elseExpression);
 
     T invalidIdent(InvalidIdentExpression self, String text);
 
     T implicitLambdaArg(ImplicitLambdaArg self);
 
-    T invalidOps(InvalidOperatorExpression self, ImmutableList<@Recorded Expression> items);
+    T invalidOps(InvalidOperatorExpression self, ImmutableList<Expression> items);
 
     T matchAnything(MatchAnythingExpression self);
 
-    T litNumber(NumericLiteral self, @Value Number value, @Nullable UnitExpression unit);
+    T litNumber(NumericLiteral self, Number value, UnitExpression unit);
 
-    T plusMinus(PlusMinusPatternExpression self, @Recorded Expression lhs, @Recorded Expression rhs);
+    T plusMinus(PlusMinusPatternExpression self, Expression lhs, Expression rhs);
 
-    T raise(RaiseExpression self, @Recorded Expression lhs, @Recorded Expression rhs);
+    T raise(RaiseExpression self, Expression lhs, Expression rhs);
 
-    T concatText(StringConcatExpression self, ImmutableList<@Recorded Expression> expressions);
+    T concatText(StringConcatExpression self, ImmutableList<Expression> expressions);
 
     T litText(StringLiteral self, String rawValue);
 
     T litTemporal(TemporalLiteral self, DateTimeType literalType, String content, Either<StyledString, TemporalAccessor> value);
 
-    T multiply(TimesExpression self, ImmutableList<@Recorded Expression> expressions);
+    T multiply(TimesExpression self, ImmutableList<Expression> expressions);
 
-    T litType(TypeLiteralExpression self, @Recorded TypeExpression type);
+    T litType(TypeLiteralExpression self, TypeExpression type);
 
-    T litUnit(UnitLiteralExpression self, @Recorded UnitExpression unitExpression);
+    T litUnit(UnitLiteralExpression self, UnitExpression unitExpression);
 
-    T match(MatchExpression self, @Recorded Expression expression, ImmutableList<MatchClause> clauses);
+    T match(MatchExpression self, Expression expression, ImmutableList<MatchClause> clauses);
     
-    T define(DefineExpression self, ImmutableList<DefineExpression.DefineItem> defines, @Recorded Expression body);
+    T define(DefineExpression self, ImmutableList<DefineExpression.DefineItem> defines, Expression body);
 
-    T hasType(@Recorded HasTypeExpression self, @ExpressionIdentifier String lhsVar, @Recorded Expression rhsType);
+    T hasType(HasTypeExpression self, String lhsVar, Expression rhsType);
 
-    T lambda(LambdaExpression self, ImmutableList<@Recorded Expression> parameters, @Recorded Expression body);
+    T lambda(LambdaExpression self, ImmutableList<Expression> parameters, Expression body);
 
-    T record(RecordExpression self, ImmutableList<Pair<@ExpressionIdentifier String, @Recorded Expression>> members);
+    T record(RecordExpression self, ImmutableList<Pair<String, Expression>> members);
 
-    T field(FieldAccessExpression self, @Recorded Expression lhsRecord, String fieldName);
+    T field(FieldAccessExpression self, Expression lhsRecord, String fieldName);
 }

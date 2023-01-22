@@ -48,18 +48,18 @@ public class GetOptionalsFromList extends FunctionDefinition
     }
     
     @Override
-    public @OnThread(Tag.Simulation) ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
+    public ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
     {
         return new ValueFunction1<ListEx>(ListEx.class) {
             @Override
-            public @OnThread(Tag.Simulation) @Value Object call1(@Value ListEx srcList) throws InternalException, UserException
+            public Object call1(ListEx srcList) throws InternalException, UserException
             {
                 int size = srcList.size();
-                ArrayList<@Value Object> present = new ArrayList<>(size / 8);
+                ArrayList<Object> present = new ArrayList<>(size / 8);
                 
                 for (int i = 0; i < size; i++)
                 {
-                    @Value TaggedValue taggedValue = Utility.cast(srcList.get(i), TaggedValue.class);
+                    TaggedValue taggedValue = Utility.cast(srcList.get(i), TaggedValue.class);
                     if (taggedValue.getTagIndex() == 1 && taggedValue.getInner() != null)
                         present.add(taggedValue.getInner());
                 }

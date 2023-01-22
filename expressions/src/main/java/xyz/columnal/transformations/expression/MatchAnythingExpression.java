@@ -46,7 +46,7 @@ import java.util.stream.Stream;
 public class MatchAnythingExpression extends NonOperatorExpression
 {
     @Override
-    public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState state, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public CheckedExp check(ColumnLookup dataLookup, TypeState state, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         if (kind != ExpressionKind.PATTERN)
         {
@@ -64,7 +64,7 @@ public class MatchAnythingExpression extends NonOperatorExpression
     }
 
     @Override
-    public @OnThread(Tag.Simulation) ValueResult matchAsPattern(@Value Object value, EvaluateState state)
+    public ValueResult matchAsPattern(Object value, EvaluateState state)
     {
         // Like the name says, we match anything:
         return explanation(DataTypeUtility.value(true), ExecutionType.MATCH, state, ImmutableList.of(), ImmutableList.of(), false);
@@ -95,13 +95,13 @@ public class MatchAnythingExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
+    public Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
     {
         return null;
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         return o instanceof MatchAnythingExpression;
     }

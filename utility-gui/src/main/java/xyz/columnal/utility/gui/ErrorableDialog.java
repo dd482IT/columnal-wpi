@@ -42,14 +42,14 @@ import xyz.columnal.utility.adt.Either;
 public abstract class ErrorableDialog<R> extends Dialog<R>
 {
     private final ErrorLabel errorLabel = new ErrorLabel();
-    private @Nullable R result;
+    private R result;
 
     /**
      * Note: this constructor sets the buttons to Ok/cancel.  It's important that
      * you do not set the buttons again afterwards as it destroys the
      * listeners set here.
      */
-    public ErrorableDialog(@Nullable DialogPane customDialogPane)
+    public ErrorableDialog(DialogPane customDialogPane)
     {
         if (customDialogPane != null)
             setDialogPane(customDialogPane);
@@ -68,7 +68,7 @@ public abstract class ErrorableDialog<R> extends Dialog<R>
             FXUtility.getStylesheet("dialogs.css")
         );
         //We bind so that if subclass mistakenly tries to set, it will get an error:
-        resultConverterProperty().bind(new ReadOnlyObjectWrapper<javafx.util.Callback<ButtonType, @Nullable R>>(bt -> {
+        resultConverterProperty().bind(new ReadOnlyObjectWrapper<javafx.util.Callback<ButtonType, R>>(bt -> {
             if (bt == ButtonType.OK)
             {
                 if (result != null)
@@ -91,8 +91,7 @@ public abstract class ErrorableDialog<R> extends Dialog<R>
 
     // Given back as Node because it's only meant for adding to GUI.  Subclasses don't set
     // the text, we do.
-    @OnThread(Tag.FXPlatform)
-    public final Node getErrorLabel(@UnknownInitialization(ErrorableDialog.class) ErrorableDialog<R> this)
+    public final Node getErrorLabel(ErrorableDialog<R> this)
     {
         return errorLabel;
     }
@@ -101,6 +100,5 @@ public abstract class ErrorableDialog<R> extends Dialog<R>
      * Gets either an error or the result.  If there is an error, it may be called again.  If a
      * result is returned, it will not be called again.
      */
-    @OnThread(Tag.FXPlatform)
-    protected abstract Either<@Localized String, R> calculateResult();
+    protected abstract Either<String, R> calculateResult();
 }

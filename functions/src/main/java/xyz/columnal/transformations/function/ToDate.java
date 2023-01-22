@@ -50,7 +50,7 @@ public class ToDate extends ToTemporalFunction
 {
 
 
-    public static final @FuncDocKey String DATE_FROM_DATETIME = "datetime:date from datetime";
+    public static final String DATE_FROM_DATETIME = "datetime:date from datetime";
 
     @Override
     public ImmutableList<FunctionDefinition> getTemporalFunctions(UnitManager mgr) throws InternalException
@@ -66,7 +66,7 @@ public class ToDate extends ToTemporalFunction
         */
         r.add(new FunctionDefinition("datetime:date from ymd") {
             @Override
-            public @OnThread(Tag.Simulation) ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
+            public ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
             {
                 return new FromNumbers();
             }
@@ -81,7 +81,7 @@ public class ToDate extends ToTemporalFunction
     }
 
     @Override
-    @Value Temporal fromTemporal(TemporalAccessor temporalAccessor)
+    Temporal fromTemporal(TemporalAccessor temporalAccessor)
     {
         return LocalDate.from(temporalAccessor);
     }
@@ -89,7 +89,7 @@ public class ToDate extends ToTemporalFunction
     private class FromYearMonth_Day extends ValueFunction
     {
         @Override
-        public @Value Object _call() throws UserException, InternalException
+        public Object _call() throws UserException, InternalException
         {
             YearMonth ym = arg(0, YearMonth.class);
             int day = intArg(1);
@@ -107,7 +107,7 @@ public class ToDate extends ToTemporalFunction
     private class FromNumbers extends ValueFunction
     {
         @Override
-        public @Value Object _call() throws UserException, InternalException
+        public Object _call() throws UserException, InternalException
         {
             int year = intArg(0);
             int month = intArg(1);

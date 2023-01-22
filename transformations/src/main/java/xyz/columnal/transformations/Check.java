@@ -80,7 +80,6 @@ import java.util.OptionalInt;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-@OnThread(Tag.Simulation)
 public class Check extends VisitableTransformation implements SingleSourceTransformation
 {
     public static final String NAME = "check";
@@ -110,14 +109,12 @@ public class Check extends VisitableTransformation implements SingleSourceTransf
     }
 
     private final TableId srcTableId;
-    private final @Nullable RecordSet recordSet;
+    private final RecordSet recordSet;
     private final String error;
-    @OnThread(Tag.Any)
     private final CheckType checkType;
-    @OnThread(Tag.Any)
     private final Expression checkExpression;
-    private @MonotonicNonNull DataType type;
-    private @MonotonicNonNull Explanation explanation;
+    private DataType type;
+    private Explanation explanation;
     
     public Check(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, CheckType checkType, Expression checkExpression) throws InternalException
     {
@@ -143,16 +140,15 @@ public class Check extends VisitableTransformation implements SingleSourceTransf
         this.error = theError;
     }
 
-    @OnThread(Tag.Simulation)
-    public @Value Boolean getResult() throws InternalException, UserException
+    public Boolean getResult() throws InternalException, UserException
     {
         if (type == null)
         {
             ErrorAndTypeRecorderStorer errors = new ErrorAndTypeRecorderStorer();
             ColumnLookup lookup = getColumnLookup();
             @SuppressWarnings("recorded")
-            @Nullable TypeExp checked = checkExpression.checkExpression(lookup, makeTypeState(getManager().getTypeManager(), checkType), errors);
-            @Nullable DataType typeFinal = null;
+            TypeExp checked = checkExpression.checkExpression(lookup, makeTypeState(getManager().getTypeManager(), checkType), errors);
+            DataType typeFinal = null;
             if (checked != null)
                 typeFinal = errors.recordLeftError(getManager().getTypeManager(), FunctionList.getFunctionLookup(getManager().getUnitManager()), checkExpression, checked.toConcreteType(getManager().getTypeManager()));
 
@@ -160,7 +156,6 @@ public class Check extends VisitableTransformation implements SingleSourceTransf
                 throw new ExpressionErrorException(errors.getAllErrors().findFirst().orElse(StyledString.s("Unknown type error")), new EditableExpression(checkExpression, null, lookup, () -> makeTypeState(getManager().getTypeManager(), checkType), DataType.BOOLEAN)
                 {
                     @Override
-                    @OnThread(Tag.Simulation)
                     public Table replaceExpression(Expression changed) throws InternalException
                     {
                         return new Check(getManager(), getDetailsForCopy(getId()), Check.this.srcTableId, checkType, changed);
@@ -222,19 +217,17 @@ public class Check extends VisitableTransformation implements SingleSourceTransf
         }
     }
 
-    @OnThread(Tag.Any)
     public ColumnLookup getColumnLookup()
     {
         return getColumnLookup(getManager(), srcTableId, getId(), checkType);
     }
 
-    @OnThread(Tag.Any)
-    public static ColumnLookup getColumnLookup(TableManager tableManager, TableId srcTableId, @Nullable TableId us, CheckType checkType)
+    public static ColumnLookup getColumnLookup(TableManager tableManager, TableId srcTableId, TableId us, CheckType checkType)
     {
         return new ColumnLookup()
         {
             @Override
-            public @Nullable FoundColumn getColumn(Expression expression, @Nullable TableId tableId, ColumnId columnId)
+            public FoundColumn getColumn(Expression expression, TableId tableId, ColumnId columnId)
             {
                 try
                 {
@@ -278,16 +271,16 @@ public class Check extends VisitableTransformation implements SingleSourceTransf
             }
 
             @Override
-            public Stream<Pair<@Nullable TableId, ColumnId>> getAvailableColumnReferences()
+            public Stream<Pair<TableId, ColumnId>> getAvailableColumnReferences()
             {
-                return tableManager.getAllTables().stream().<Pair<@Nullable TableId, ColumnId>>flatMap(new Function<Table, Stream<Pair<@Nullable TableId, ColumnId>>>()
+                return tableManager.getAllTables().stream().<Pair<TableId, ColumnId>>flatMap(new Function<Table, Stream<Pair<TableId, ColumnId>>>()
                 {
                     @Override
-                    public Stream<Pair<@Nullable TableId, ColumnId>> apply(Table t)
+                    public Stream<Pair<TableId, ColumnId>> apply(Table t)
                     {
                         try
                         {
-                            Stream.Builder<Pair<@Nullable TableId, ColumnId>> columns = Stream.builder();
+                            Stream.Builder<Pair<TableId, ColumnId>> columns = Stream.builder();
                             if (t.getId().equals(srcTableId))
                             {
                                 for (Column column : t.getData().getColumns())
@@ -301,7 +294,7 @@ public class Check extends VisitableTransformation implements SingleSourceTransf
                         catch (InternalException | UserException e)
                         {
                             Log.log(e);
-                            return Stream.<Pair<@Nullable TableId, ColumnId>>of();
+                            return Stream.<Pair<TableId, ColumnId>>of();
                         }
                     }
                 });
@@ -327,7 +320,7 @@ public class Check extends VisitableTransformation implements SingleSourceTransf
             }
 
             @Override
-            public @Nullable FoundTable getTable(@Nullable TableId tableName) throws UserException, InternalException
+            public FoundTable getTable(TableId tableName) throws UserException, InternalException
             {
                 Table t;
                 if (tableName == null)
@@ -345,7 +338,7 @@ public class Check extends VisitableTransformation implements SingleSourceTransf
     }
 
     @Override
-    public @OnThread(Tag.Any) RecordSet getData() throws UserException
+    public RecordSet getData() throws UserException
     {
         if (recordSet == null)
             throw new UserException(error);
@@ -353,46 +346,41 @@ public class Check extends VisitableTransformation implements SingleSourceTransf
     }
 
     @Override
-    protected @OnThread(Tag.Any) Stream<TableId> getPrimarySources()
+    protected Stream<TableId> getPrimarySources()
     {
         return Stream.of(srcTableId);
     }
 
     @Override
-    @OnThread(Tag.Any)
     public Stream<TableId> getSourcesFromExpressions()
     {
         return ExpressionUtil.tablesFromExpression(checkExpression);
     }
 
-    @OnThread(Tag.Any)
     public TableId getSrcTableId()
     {
         return srcTableId;
     }
 
     @Override
-    public @OnThread(Tag.Simulation) Transformation withNewSource(TableId newSrcTableId) throws InternalException
+    public Transformation withNewSource(TableId newSrcTableId) throws InternalException
     {
         return new Check(getManager(), getDetailsForCopy(getId()), newSrcTableId, checkType, checkExpression);
     }
 
-    @OnThread(Tag.Any)
     public Expression getCheckExpression()
     {
         return checkExpression;
     }
 
     @Override
-    @OnThread(Tag.Any)
     protected String getTransformationName()
     {
         return "check";
     }
 
     @Override
-    @OnThread(Tag.Any)
-    protected List<String> saveDetail(@Nullable File destination, TableAndColumnRenames renames)
+    protected List<String> saveDetail(File destination, TableAndColumnRenames renames)
     {
         final String checkTypeStr;
         switch (checkType)
@@ -414,14 +402,13 @@ public class Check extends VisitableTransformation implements SingleSourceTransf
         return Collections.singletonList(PREFIX + " " + checkTypeStr + " @EXPRESSION " + checkExpression.save(SaveDestination.TO_FILE, BracketedStatus.DONT_NEED_BRACKETS, renames.withDefaultTableId(srcTableId)));
     }
     
-    @OnThread(Tag.Any)
     public CheckType getCheckType()
     {
         return checkType;
     }
 
     // Only valid after fetching the result.
-    public @Nullable Explanation getExplanation()
+    public Explanation getExplanation()
     {
         return explanation;
     }
@@ -440,8 +427,7 @@ public class Check extends VisitableTransformation implements SingleSourceTransf
         return false;
     }
 
-    @OnThread(Tag.Any)
-    public static TypeState makeTypeState(TypeManager typeManager, @Nullable CheckType selectedItem) throws InternalException
+    public static TypeState makeTypeState(TypeManager typeManager, CheckType selectedItem) throws InternalException
     {
         return selectedItem == CheckType.STANDALONE ? new TypeState(typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager())) : TypeState.withRowNumber(typeManager, FunctionList.getFunctionLookup(typeManager.getUnitManager()));
     }
@@ -454,7 +440,7 @@ public class Check extends VisitableTransformation implements SingleSourceTransf
         }
         
         @Override
-        protected @OnThread(Tag.Simulation) Transformation loadSingle(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, String detail, ExpressionVersion expressionVersion) throws InternalException, UserException
+        protected Transformation loadSingle(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, String detail, ExpressionVersion expressionVersion) throws InternalException, UserException
         {
             CheckContext loaded = Utility.parseAsOne(detail, TransformationLexer::new, TransformationParser::new, TransformationParser::check);
 
@@ -473,14 +459,13 @@ public class Check extends VisitableTransformation implements SingleSourceTransf
         }
 
         @Override
-        public @OnThread(Tag.Simulation) Transformation makeWithSource(TableManager mgr, CellPosition destination, Table srcTable) throws InternalException
+        public Transformation makeWithSource(TableManager mgr, CellPosition destination, Table srcTable) throws InternalException
         {
             return new Check(mgr, new InitialLoadDetails(null, null, destination, null), srcTable.getId(), CheckType.STANDALONE, new BooleanLiteral(true));
         }
     }
 
     @Override
-    @OnThread(Tag.Any)
     public <T> T visit(TransformationVisitor<T> visitor)
     {
         return visitor.check(this);

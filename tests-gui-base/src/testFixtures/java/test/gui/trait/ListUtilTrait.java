@@ -41,7 +41,6 @@ import static org.junit.Assert.fail;
  */
 public interface ListUtilTrait extends FxRobotInterface
 {
-    @OnThread(Tag.Any)
     default <T> void selectGivenListViewItem(final ListView<T> list, final Predicate<T> findItem) {
         OptionalInt firstIndex = TFXUtil.fx(() -> Utility.findFirstIndex(list.getItems(), findItem));
         assertTrue("Not found item satisfying predicate", firstIndex.isPresent());

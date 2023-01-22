@@ -81,25 +81,21 @@ public abstract class Table
     private final TableManager mgr;
     private final TableId id;
     protected final SaveTag saveTag;
-    @OnThread(value = Tag.Any, requireSynchronized = true)
-    private @MonotonicNonNull TableDisplayBase display;
-    @OnThread(value = Tag.Any, requireSynchronized = true)
+    private TableDisplayBase display;
     @SuppressWarnings("units")
     private CellPosition prevPosition = new CellPosition(1, 1);
 
     // The list is the blacklist, only applicable if first is CUSTOM:
-    @OnThread(value = Tag.Any, requireSynchronized = true)
     private Pair<Display, ImmutableList<ColumnId>> showColumns = new Pair<>(Display.ALL, ImmutableList.of());
 
     public static class InitialLoadDetails
     {
-        private final @Nullable TableId tableId;
-        private final @Nullable SaveTag saveTag;
-        private final @Nullable CellPosition initialPosition;
-        private final @Nullable Pair<Display, ImmutableList<ColumnId>> initialShowColumns;
+        private final TableId tableId;
+        private final SaveTag saveTag;
+        private final CellPosition initialPosition;
+        private final Pair<Display, ImmutableList<ColumnId>> initialShowColumns;
 
-        @OnThread(Tag.Any)
-        public InitialLoadDetails(@Nullable TableId tableId, @Nullable SaveTag saveTag, @Nullable CellPosition initialPosition, @Nullable Pair<Display, ImmutableList<ColumnId>> initialShowColumns)
+        public InitialLoadDetails(TableId tableId, SaveTag saveTag, CellPosition initialPosition, Pair<Display, ImmutableList<ColumnId>> initialShowColumns)
         {
             this.tableId = tableId;
             this.saveTag = saveTag;
@@ -107,7 +103,6 @@ public abstract class Table
             this.initialShowColumns = initialShowColumns;
         }
 
-        @OnThread(Tag.Any)
         public InitialLoadDetails(CellPosition initialPosition)
         {
             this(null, null, initialPosition, null);
@@ -147,99 +142,84 @@ public abstract class Table
             showColumns = initialLoadDetails.initialShowColumns;
     }
 
-    @OnThread(Tag.Any)
-    @Pure
-    public final TableId getId(@UnknownInitialization(Table.class) Table this)
+    public final TableId getId(Table this)
     {
         return id;
     }
 
-    @OnThread(Tag.Any)
     public abstract RecordSet getData() throws UserException, InternalException;
 
     public static interface Saver
     {
-        @OnThread(Tag.Simulation)
         public void saveTable(String tableSrc);
 
-        @OnThread(Tag.Simulation)
         public void saveUnit(String unitSrc);
 
-        @OnThread(Tag.Simulation)
         public void saveType(String typeSrc);
 
-        @OnThread(Tag.Simulation)
         public void saveComment(String commentSrc);
     }
 
-    @OnThread(Tag.Simulation)
     public static class BlankSaver implements Saver
     {
         @Override
-        public @OnThread(Tag.Simulation) void saveTable(String tableSrc)
+        public void saveTable(String tableSrc)
         {
         }
 
         @Override
-        @OnThread(Tag.Simulation)
         public void saveUnit(String unitSrc)
         {
         }
 
         @Override
-        @OnThread(Tag.Simulation)
         public void saveType(String typeSrc)
         {
         }
 
         @Override
-        @OnThread(Tag.Simulation)
         public void saveComment(String commentSrc)
         {
         }
     }
 
-    @OnThread(Tag.Simulation)
     public static class FullSaver implements Saver
     {
         private final List<String> units = new ArrayList<>();
         private final List<String> types = new ArrayList<>();
         private final List<String> tables = new ArrayList<>();
         private final List<String> comments = new ArrayList<>();
-        private final @Nullable ImmutableList<String> displayDetailLines;
+        private final ImmutableList<String> displayDetailLines;
 
-        public FullSaver(@Nullable ImmutableList<String> displayDetailLines)
+        public FullSaver(ImmutableList<String> displayDetailLines)
         {
             this.displayDetailLines = displayDetailLines;
         }
 
         @Override
-        public @OnThread(Tag.Simulation) void saveTable(String tableSrc)
+        public void saveTable(String tableSrc)
         {
             tables.add(tableSrc);
         }
 
         @Override
-        @OnThread(Tag.Simulation)
         public void saveUnit(String unitSrc)
         {
             units.add(unitSrc.endsWith("\n") ? unitSrc : unitSrc + "\n");
         }
 
         @Override
-        @OnThread(Tag.Simulation)
         public void saveType(String typeSrc)
         {
             types.add(typeSrc.endsWith("\n") ? typeSrc : typeSrc + "\n");
         }
 
         @Override
-        public @OnThread(Tag.Simulation) void saveComment(String commentSrc)
+        public void saveComment(String commentSrc)
         {
             comments.add(commentSrc);
         }
 
-        @OnThread(Tag.Simulation)
         public String getCompleteFile()
         {
             return "COLUMNAL\nVERSION " + OverallVersion.latest().asNumber() + "\n\nUNITS @BEGIN UU\n"
@@ -254,10 +234,8 @@ public abstract class Table
         }
     }
 
-    @OnThread(Tag.Simulation)
-    public abstract void save(@Nullable File destination, Saver then, TableAndColumnRenames renames);
+    public abstract void save(File destination, Saver then, TableAndColumnRenames renames);
 
-    @OnThread(Tag.FXPlatform)
     public synchronized void setDisplay(TableDisplayBase display)
     {
         if (this.display != null)
@@ -275,7 +253,7 @@ public abstract class Table
         display.loadPosition(prevPosition, showColumns);
     }
 
-    public static InitialLoadDetails loadDetails(TableId tableId, DetailPrefixedContext tagFromContext, @Nullable DisplayContext detailContext) throws UserException, InternalException
+    public static InitialLoadDetails loadDetails(TableId tableId, DetailPrefixedContext tagFromContext, DisplayContext detailContext) throws UserException, InternalException
     {
         if (detailContext == null)
             return new InitialLoadDetails(tableId, new SaveTag(tagFromContext.BEGIN().getText().substring("@BEGIN".length()).trim()), null, null);
@@ -289,9 +267,9 @@ public abstract class Table
         try
         {
             @SuppressWarnings("units")
-            @AbsColIndex int x = Integer.parseInt(displayContext.displayTablePosition().item(0).getText());
+            int x = Integer.parseInt(displayContext.displayTablePosition().item(0).getText());
             @SuppressWarnings("units")
-            @AbsRowIndex int y = Integer.parseInt(displayContext.displayTablePosition().item(1).getText());
+            int y = Integer.parseInt(displayContext.displayTablePosition().item(1).getText());
             CellPosition initialPosition = new CellPosition(y, x);
 
             Pair<Display, ImmutableList<ColumnId>> initialShowColumns;
@@ -305,7 +283,7 @@ public abstract class Table
             else
             {
                 ImmutableList<ColumnId> blackList = displayContext.displayShowColumns().item().stream().map(itemContext -> {
-                    @ExpressionIdentifier String text = IdentifierUtility.fixExpressionIdentifier(itemContext.getText(), "Could Not Load");
+                    String text = IdentifierUtility.fixExpressionIdentifier(itemContext.getText(), "Could Not Load");
                     return new ColumnId(text);
                 }).collect(ImmutableList.<ColumnId>toImmutableList());
                 initialShowColumns = new Pair<>(Display.CUSTOM, blackList);
@@ -319,7 +297,6 @@ public abstract class Table
         }
     }
 
-    @OnThread(Tag.Any)
     protected synchronized final void savePosition(OutputBuilder out)
     {
         if (display != null)
@@ -343,13 +320,11 @@ public abstract class Table
         out.end().t(MainLexer.DISPLAY, MainLexer.VOCABULARY).nl();
     }
 
-    @OnThread(Tag.Any)
     public synchronized void setShowColumns(Display newState, ImmutableList<ColumnId> blackList)
     {
         showColumns = new Pair<>(newState, blackList);
     }
 
-    @OnThread(Tag.Any)
     public synchronized Pair<Display, Predicate<ColumnId>> getShowColumns()
     {
         return showColumns.mapSecond(blackList -> s -> !blackList.contains(s));
@@ -357,7 +332,6 @@ public abstract class Table
 
     protected class WholeTableException extends UserException
     {
-        @OnThread(Tag.Any)
         public WholeTableException(String message)
         {
             super(message);
@@ -365,8 +339,7 @@ public abstract class Table
     }
 
     @Override
-    @EnsuresNonNullIf(expression = "#1", result = true)
-    public synchronized boolean equals(@Nullable Object o)
+    public synchronized boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -386,18 +359,14 @@ public abstract class Table
         return result;
     }
 
-    @OnThread(Tag.FXPlatform)
-    @Pure
-    public synchronized @Nullable TableDisplayBase getDisplay()
+    public synchronized TableDisplayBase getDisplay()
     {
         return display;
     }
 
-    @OnThread(Tag.Any)
     public abstract TableOperations getOperations();
 
-    @OnThread(Tag.Any)
-    public TableManager getManager(@UnknownInitialization(Table.class) Table this)
+    public TableManager getManager(Table this)
     {
         return mgr;
     }
@@ -407,7 +376,7 @@ public abstract class Table
         return prevPosition;
     }
 
-    public synchronized InitialLoadDetails getDetailsForCopy(@UnknownInitialization(Table.class) Table this, TableId overrideId)
+    public synchronized InitialLoadDetails getDetailsForCopy(Table this, TableId overrideId)
     {
         return new InitialLoadDetails(overrideId, saveTag, prevPosition, showColumns);
     }
@@ -418,13 +387,10 @@ public abstract class Table
      */
     public static interface TableDisplayBase
     {
-        @OnThread(Tag.FXPlatform)
         public void loadPosition(CellPosition position, Pair<Display, ImmutableList<ColumnId>> display);
 
-        @OnThread(Tag.Any)
         public CellPosition getMostRecentPosition();
 
-        @OnThread(Tag.FXPlatform)
         public CellPosition getBottomRightIncl();
 
         /**
@@ -435,20 +401,17 @@ public abstract class Table
          * @param column The edited column name and type
          * @param value The resulting value.
          */
-        @OnThread(Tag.FXPlatform)
-        void promptForTransformationEdit(int index, Pair<ColumnId, DataType> column, Either<String, @Value Object> value);
+        void promptForTransformationEdit(int index, Pair<ColumnId, DataType> column, Either<String, Object> value);
 
-        @OnThread(Tag.Any)
         Table getTable();
     }
 
-    @OnThread(Tag.Any)
-    public @Nullable ColumnId proposeNewColumnName()
+    public ColumnId proposeNewColumnName()
     {
         try
         {
-            @MonotonicNonNull ColumnId name = null;
-            @ExpressionIdentifier String stem = "C";
+            ColumnId name = null;
+            String stem = "C";
             List<ColumnId> columnIds = getData().getColumnIds();
             for (int i = 1; i < 100000; i++)
             {
@@ -469,8 +432,7 @@ public abstract class Table
     }
 
     // Returns the runnable that re-evaluates the table, if applicable
-    @OnThread(Tag.Any)
-    public @Nullable SimulationRunnable getReevaluateOperation()
+    public SimulationRunnable getReevaluateOperation()
     {
         return null;
     }

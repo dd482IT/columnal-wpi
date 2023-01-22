@@ -49,17 +49,17 @@ import java.util.Optional;
  */
 public class NumericLiteral extends Literal
 {
-    private final @Value Number value;
-    private final @Nullable @Recorded UnitExpression unit;
+    private final Number value;
+    private final UnitExpression unit;
 
-    public NumericLiteral(@Value Number value, @Nullable @Recorded UnitExpression unit)
+    public NumericLiteral(Number value, UnitExpression unit)
     {
         this.value = value;
         this.unit = unit;
     }
 
     @Override
-    public @Nullable TypeExp checkType(TypeState state, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws InternalException
+    public TypeExp checkType(TypeState state, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws InternalException
     {
         if (unit == null)
         {
@@ -132,7 +132,7 @@ public class NumericLiteral extends Literal
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -157,8 +157,7 @@ public class NumericLiteral extends Literal
         return numberAsString();
     }
 
-    @Pure
-    public @Nullable @Recorded UnitExpression getUnitExpression()
+    public UnitExpression getUnitExpression()
     {
         return unit;
     }
@@ -168,7 +167,7 @@ public class NumericLiteral extends Literal
         return new NumericLiteral(value, UnitExpression.load(unit));
     }
 
-    public @Value Number getNumber()
+    public Number getNumber()
     {
         return value;
     }

@@ -146,17 +146,17 @@ import static xyz.columnal.data.datatype.DataType.DateTimeInfo.F.YEAR4;
 public abstract class DataType implements StyledShowable
 {
 
-    public final DataTypeValue fromCollapsed(GetValue<@Value Object> get) throws InternalException
+    public final DataTypeValue fromCollapsed(GetValue<Object> get) throws InternalException
     {
         return apply(new DataTypeVisitorEx<DataTypeValue, InternalException>()
         {
             @SuppressWarnings("valuetype")
-            private <T extends @NonNull Object> GetValue<@Value T> castTo(Class<T> cls)
+            private <T extends Object> GetValue<T> castTo(Class<T> cls)
             {
                 return new GetValue<T>()
                 {
                     @Override
-                    public @NonNull @Value T getWithProgress(int i,  @Nullable ProgressListener prog) throws UserException, InternalException
+                    public T getWithProgress(int i,  ProgressListener prog) throws UserException, InternalException
                     {
                         Object value = get.getWithProgress(i, prog);
                         if (!cls.isAssignableFrom(value.getClass()))
@@ -166,43 +166,38 @@ public abstract class DataType implements StyledShowable
 
                     @SuppressWarnings("nullness") // Not sure why this is needed
                     @Override
-                    public void set(int index, Either<String, @Value T> value) throws InternalException, UserException
+                    public void set(int index, Either<String, T> value) throws InternalException, UserException
                     {
-                        get.set(index, value.<@NonNull @Value Object>map(v -> v));
+                        get.set(index, value.<@NonNull Object>map(v -> v));
                     }
                 };
             }
 
             @Override
-            @OnThread(Tag.Simulation)
             public DataTypeValue number(NumberInfo displayInfo) throws InternalException
             {
                 return DataTypeValue.number(displayInfo, castTo(Number.class));
             }
 
             @Override
-            @OnThread(Tag.Simulation)
             public DataTypeValue text() throws InternalException
             {
                 return DataTypeValue.text(castTo(String.class));
             }
 
             @Override
-            @OnThread(Tag.Simulation)
             public DataTypeValue date(DateTimeInfo dateTimeInfo) throws InternalException
             {
                 return DataTypeValue.date(dateTimeInfo, castTo(TemporalAccessor.class));
             }
 
             @Override
-            @OnThread(Tag.Simulation)
             public DataTypeValue bool() throws InternalException
             {
                 return DataTypeValue.bool(castTo(Boolean.class));
             }
 
             @Override
-            @OnThread(Tag.Simulation)
             public DataTypeValue tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException
             {
                 GetValue<TaggedValue> getTaggedValue = castTo(TaggedValue.class);
@@ -210,17 +205,15 @@ public abstract class DataType implements StyledShowable
             }
 
             @Override
-            @OnThread(Tag.Simulation)
-            public DataTypeValue record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, InternalException
+            public DataTypeValue record(ImmutableMap<String, DataType> fields) throws InternalException, InternalException
             {
                 return DataTypeValue.record(fields, castTo(Record.class));
             }
 
             @Override
-            @OnThread(Tag.Simulation)
             public DataTypeValue array(DataType inner) throws InternalException
             {
-                GetValue<@Value ListEx> getList = castTo(ListEx.class);
+                GetValue<ListEx> getList = castTo(ListEx.class);
                 return DataTypeValue.array(inner, getList);
             }
         });
@@ -262,7 +255,7 @@ public abstract class DataType implements StyledShowable
         return new ListDataType(inner);
     }
 
-    public static DataType record(Map<@ExpressionIdentifier String, DataType> fields)
+    public static DataType record(Map<String, DataType> fields)
     {
         return new RecordDataType(fields);
     }
@@ -280,7 +273,7 @@ public abstract class DataType implements StyledShowable
         R bool() throws InternalException, E;
 
         R tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, E;
-        R record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, E;
+        R record(ImmutableMap<String, DataType> fields) throws InternalException, E;
         R array(DataType inner) throws InternalException, E;
         
         default R function(ImmutableList<DataType> argTypes, DataType resultType) throws InternalException, E
@@ -326,7 +319,7 @@ public abstract class DataType implements StyledShowable
         }
 
         @Override
-        public R record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, InternalException
+        public R record(ImmutableMap<String, DataType> fields) throws InternalException, InternalException
         {
             throw new InternalException("Unexpected record type");
         }
@@ -378,7 +371,7 @@ public abstract class DataType implements StyledShowable
         }
 
         @Override
-        public T record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, InternalException
+        public T record(ImmutableMap<String, DataType> fields) throws InternalException, InternalException
         {
             return def;
         }
@@ -396,33 +389,31 @@ public abstract class DataType implements StyledShowable
         }
     }
     
-    @OnThread(Tag.Any)
     public abstract <R, E extends Throwable> R apply(DataTypeVisitorEx<R, E> visitor) throws InternalException, E;
 
     public static class TagType<T>
     {
-        private final @ExpressionIdentifier String name;
-        private final @Nullable T inner;
+        private final String name;
+        private final T inner;
 
-        public TagType(@ExpressionIdentifier String name, @Nullable T inner)
+        public TagType(String name, T inner)
         {
             this.name = name;
             this.inner = inner;
         }
 
-        public @ExpressionIdentifier String getName()
+        public String getName()
         {
             return name;
         }
 
-        @Pure
-        public @Nullable T getInner()
+        public T getInner()
         {
             return inner;
         }
 
         @Override
-        public boolean equals(@Nullable Object o)
+        public boolean equals(Object o)
         {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
@@ -466,7 +457,6 @@ public abstract class DataType implements StyledShowable
         }
     }
 
-    @OnThread(Tag.Any)
     @SuppressWarnings("i18n")
     public final @Localized String toDisplay(boolean drillIntoTagged) throws UserException, InternalException
     {
@@ -512,11 +502,11 @@ public abstract class DataType implements StyledShowable
             }
 
             @Override
-            public String record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, UserException
+            public String record(ImmutableMap<String, DataType> fields) throws InternalException, UserException
             {
                 StringBuilder s = new StringBuilder("(");
                 boolean first = true;
-                for (Entry<@ExpressionIdentifier String, DataType> field : Utility.iterableStream(fields.entrySet().stream().sorted(Comparator.comparing(e -> e.getKey()))))
+                for (Entry<String, DataType> field : Utility.iterableStream(fields.entrySet().stream().sorted(Comparator.comparing(e -> e.getKey()))))
                 {
                     if (!first)
                         s.append(", ");
@@ -529,7 +519,7 @@ public abstract class DataType implements StyledShowable
             }
 
             @Override
-            public String array(@Nullable DataType inner) throws InternalException, UserException
+            public String array(DataType inner) throws InternalException, UserException
             {
                 if (inner == null)
                     return "[]";
@@ -613,7 +603,7 @@ public abstract class DataType implements StyledShowable
     }
 
     @Override
-    public abstract boolean equals(@Nullable Object o);
+    public abstract boolean equals(Object o);
 
     @Override
     public abstract int hashCode();
@@ -621,7 +611,7 @@ public abstract class DataType implements StyledShowable
     // Tries a parse and if it fails, returns null.  Should only be used for single-token parses,
     // or those where you stop trying after failure, because I'm not sure what happens if you're partway
     // through a partial parse and it cancels.
-    private static <T> @Nullable T tryParse(Supplier<@Nullable T> parseAction)
+    private static <T> T tryParse(Supplier<T> parseAction)
     {
         try
         {
@@ -633,7 +623,7 @@ public abstract class DataType implements StyledShowable
         }
     }
     
-    private static <DATA_OR_INVALID, T> @Nullable Either<String, T> tryParse(DataParser p, Function<DataParser, DATA_OR_INVALID> parseOrInvalid, Function<DATA_OR_INVALID, InvalidItemContext> getInvalid, Function<DATA_OR_INVALID, T> getValid)
+    private static <DATA_OR_INVALID, T> Either<String, T> tryParse(DataParser p, Function<DataParser, DATA_OR_INVALID> parseOrInvalid, Function<DATA_OR_INVALID, InvalidItemContext> getInvalid, Function<DATA_OR_INVALID, T> getValid)
     {
         try
         {
@@ -656,7 +646,7 @@ public abstract class DataType implements StyledShowable
         }
     }
 
-    private static <DATA_OR_INVALID, T> @Nullable Either<String, T> tryParse(DataParser2 p, Function<DataParser2, DATA_OR_INVALID> parseOrInvalid, Function<DATA_OR_INVALID, DataParser2.InvalidItemContext> getInvalid, Function<DATA_OR_INVALID, T> getValid)
+    private static <DATA_OR_INVALID, T> Either<String, T> tryParse(DataParser2 p, Function<DataParser2, DATA_OR_INVALID> parseOrInvalid, Function<DATA_OR_INVALID, DataParser2.InvalidItemContext> getInvalid, Function<DATA_OR_INVALID, T> getValid)
     {
         try
         {
@@ -679,13 +669,13 @@ public abstract class DataType implements StyledShowable
         }
     }
 
-    public static Either<String, @Value ListEx> loadArray(DataType innerFinal, DataParser p) throws UserException, InternalException
+    public static Either<String, ListEx> loadArray(DataType innerFinal, DataParser p) throws UserException, InternalException
     {
         Either<String, OpenSquareContext> openSquare = tryParse(p, DataParser::openSquareOrInvalid, OpenSquareOrInvalidContext::invalidItem, OpenSquareOrInvalidContext::openSquare);
         if (openSquare == null)
             throw new UserException("Expected array but found: \"" + p.getCurrentToken() + "\"");
-        return openSquare.<@Value ListEx>mapEx(_s -> {
-            List<@Value Object> array = new ArrayList<>();
+        return openSquare.<ListEx>mapEx(_s -> {
+            List<Object> array = new ArrayList<>();
             boolean seenComma = true;
             while (tryParse(() -> p.closeSquare()) == null)
             {
@@ -700,13 +690,13 @@ public abstract class DataType implements StyledShowable
         });
     }
 
-    public static Either<String, @Value ListEx> loadArray(DataType innerFinal, DataParser2 p) throws UserException, InternalException
+    public static Either<String, ListEx> loadArray(DataType innerFinal, DataParser2 p) throws UserException, InternalException
     {
         Either<String, DataParser2.OpenSquareContext> openSquare = tryParse(p, DataParser2::openSquareOrInvalid, DataParser2.OpenSquareOrInvalidContext::invalidItem, DataParser2.OpenSquareOrInvalidContext::openSquare);
         if (openSquare == null)
             throw new UserException("Expected array but found: \"" + p.getCurrentToken() + "\"");
-        return openSquare.<@Value ListEx>mapEx(_s -> {
-            List<@Value Object> array = new ArrayList<>();
+        return openSquare.<ListEx>mapEx(_s -> {
+            List<Object> array = new ArrayList<>();
             boolean seenComma = true;
             while (tryParse(() -> p.closeSquare()) == null)
             {
@@ -721,21 +711,21 @@ public abstract class DataType implements StyledShowable
         });
     }
 
-    public static Either<String, @Value Record> loadRecord(ImmutableMap<@ExpressionIdentifier String, DataType> fields, DataParser p, boolean consumedRoundBrackets) throws UserException, InternalException
+    public static Either<String, Record> loadRecord(ImmutableMap<String, DataType> fields, DataParser p, boolean consumedRoundBrackets) throws UserException, InternalException
     {
-        @Nullable Either<String, Object> openRound;
+        Either<String, Object> openRound;
         if (consumedRoundBrackets)
             openRound = Either.right("");
         else
             openRound = tryParse(p, DataParser::openRoundOrInvalid, OpenRoundOrInvalidContext::invalidItem, OpenRoundOrInvalidContext::openRound);
         if (openRound == null)
             throw new UserException("Expected record but found: \"" + p.getCurrentToken() + "\"");
-        return openRound.<@Value Record>mapEx(_o -> {
-            Map<@ExpressionIdentifier String, @Value Object> fieldValues = new HashMap<>();
+        return openRound.<Record>mapEx(_o -> {
+            Map<String, Object> fieldValues = new HashMap<>();
             for (int i = 0; i < fields.size(); i++)
             {
                 LabelContext labelContext = p.label();
-                @ExpressionIdentifier String fieldName = IdentifierUtility.fromParsed(labelContext);
+                String fieldName = IdentifierUtility.fromParsed(labelContext);
                 if (fieldName == null)
                     throw new ParseException("Invalid field name: \"" + labelContext.getText() + "\"", p);
                 DataType fieldType = fields.get(fieldName);
@@ -762,21 +752,21 @@ public abstract class DataType implements StyledShowable
         });
     }
 
-    public static Either<String, @Value Record> loadRecord(ImmutableMap<@ExpressionIdentifier String, DataType> fields, DataParser2 p, boolean consumedRoundBrackets) throws UserException, InternalException
+    public static Either<String, Record> loadRecord(ImmutableMap<String, DataType> fields, DataParser2 p, boolean consumedRoundBrackets) throws UserException, InternalException
     {
-        @Nullable Either<String, Object> openRound;
+        Either<String, Object> openRound;
         if (consumedRoundBrackets)
             openRound = Either.right("");
         else
             openRound = tryParse(p, DataParser2::openRoundOrInvalid, DataParser2.OpenRoundOrInvalidContext::invalidItem, DataParser2.OpenRoundOrInvalidContext::openRound);
         if (openRound == null)
             throw new UserException("Expected record but found: \"" + p.getCurrentToken() + "\"");
-        return openRound.<@Value Record>mapEx(_o -> {
-            Map<@ExpressionIdentifier String, @Value Object> fieldValues = new HashMap<>();
+        return openRound.<Record>mapEx(_o -> {
+            Map<String, Object> fieldValues = new HashMap<>();
             for (int i = 0; i < fields.size(); i++)
             {
                 DataParser2.LabelContext labelContext = p.label();
-                @ExpressionIdentifier String fieldName = IdentifierUtility.fromParsed(labelContext);
+                String fieldName = IdentifierUtility.fromParsed(labelContext);
                 if (fieldName == null)
                     throw new ParseException("Invalid field name: \"" + labelContext.getText() + "\"", p);
                 DataType fieldType = fields.get(fieldName);
@@ -803,52 +793,52 @@ public abstract class DataType implements StyledShowable
         });
     }
 
-    public static Either<String, @Value Boolean> loadBool(DataParser p) throws UserException
+    public static Either<String, Boolean> loadBool(DataParser p) throws UserException
     {
         Either<String, BoolContext> boolContext = tryParse(p, DataParser::boolOrInvalid, BoolOrInvalidContext::invalidItem, BoolOrInvalidContext::bool);
         if (boolContext == null)
             throw new UserException("Expected boolean value but found: \"" + p.getCurrentToken() + "\"");
-        return boolContext.<@Value Boolean>map(b -> DataTypeUtility.value(b.getText().trim().toLowerCase().equals("true")));
+        return boolContext.<Boolean>map(b -> DataTypeUtility.value(b.getText().trim().toLowerCase().equals("true")));
     }
 
-    public static Either<String, @Value Boolean> loadBool(DataParser2 p) throws UserException
+    public static Either<String, Boolean> loadBool(DataParser2 p) throws UserException
     {
         Either<String, DataParser2.BoolContext> boolContext = tryParse(p, DataParser2::boolOrInvalid, DataParser2.BoolOrInvalidContext::invalidItem, DataParser2.BoolOrInvalidContext::bool);
         if (boolContext == null)
             throw new UserException("Expected boolean value but found: \"" + p.getCurrentToken() + "\"");
-        return boolContext.<@Value Boolean>map(b -> DataTypeUtility.value(b.getText().trim().toLowerCase().equals("true")));
+        return boolContext.<Boolean>map(b -> DataTypeUtility.value(b.getText().trim().toLowerCase().equals("true")));
     }
 
-    public static Either<String, @Value String> loadString(DataParser p) throws UserException
+    public static Either<String, String> loadString(DataParser p) throws UserException
     {
         Either<String, StringContext> stringContext = tryParse(p, DataParser::stringOrInvalid, StringOrInvalidContext::invalidItem, StringOrInvalidContext::string);
         if (stringContext == null)
             throw new ParseException("string", p);
-        return stringContext.<@Value String>map(string -> DataTypeUtility.value(string.STRING().getText()));
+        return stringContext.<String>map(string -> DataTypeUtility.value(string.STRING().getText()));
     }
 
-    public static Either<String, @Value String> loadString(DataParser2 p) throws UserException
+    public static Either<String, String> loadString(DataParser2 p) throws UserException
     {
         Either<String, DataParser2.StringContext> stringContext = tryParse(p, DataParser2::stringOrInvalid, DataParser2.StringOrInvalidContext::invalidItem, DataParser2.StringOrInvalidContext::string);
         if (stringContext == null)
             throw new ParseException("string", p);
-        return stringContext.<@Value String>map(string -> DataTypeUtility.value(string.STRING().getText()));
+        return stringContext.<String>map(string -> DataTypeUtility.value(string.STRING().getText()));
     }
 
-    public static Either<String, @Value Number> loadNumber(DataParser p) throws UserException, InternalException
+    public static Either<String, Number> loadNumber(DataParser p) throws UserException, InternalException
     {
         Either<String, NumberContext> numberContext = tryParse(p, DataParser::numberOrInvalid, NumberOrInvalidContext::invalidItem, NumberOrInvalidContext::number);
         if (numberContext == null)
             throw new UserException("Expected number value but found: \"" + p.getCurrentToken() + "\"");
-        return numberContext.<@Value Number>mapEx(number -> Utility.parseNumber(number.getText().trim()));
+        return numberContext.<Number>mapEx(number -> Utility.parseNumber(number.getText().trim()));
     }
 
-    public static Either<String, @Value Number> loadNumber(DataParser2 p) throws UserException, InternalException
+    public static Either<String, Number> loadNumber(DataParser2 p) throws UserException, InternalException
     {
         Either<String, DataParser2.NumberContext> numberContext = tryParse(p, DataParser2::numberOrInvalid, DataParser2.NumberOrInvalidContext::invalidItem, DataParser2.NumberOrInvalidContext::number);
         if (numberContext == null)
             throw new UserException("Expected number value but found: \"" + p.getCurrentToken() + "\"");
-        return numberContext.<@Value Number>mapEx(number -> Utility.parseNumber(number.getText().trim()));
+        return numberContext.<Number>mapEx(number -> Utility.parseNumber(number.getText().trim()));
     }
 
     public static Either<String, TaggedValue> loadTaggedValue(ImmutableList<TagType<DataType>> tags, DataParser p) throws UserException, InternalException
@@ -864,12 +854,12 @@ public abstract class DataType implements StyledShowable
                 TagType<DataType> tag = tags.get(i);
                 if (tag.getName().equals(constructor))
                 {
-                    @Nullable DataType innerType = tag.getInner();
+                    DataType innerType = tag.getInner();
                     if (innerType != null)
                     {
                         if (tryParse(() -> p.openRound()) == null)
                             throw new ParseException("Bracketed inner value for " + constructor, p);
-                        @Value Object innerValue = loadSingleItem(innerType, p, true).getRight("Invalid nested invalid");
+                        Object innerValue = loadSingleItem(innerType, p, true).getRight("Invalid nested invalid");
                         if (tryParse(() -> p.closeRound()) == null)
                             throw new ParseException("Closing tagged value bracket for " + constructor, p);
                         return new TaggedValue(i, innerValue, DataTypeUtility.fromTags(tags));
@@ -895,12 +885,12 @@ public abstract class DataType implements StyledShowable
                 TagType<DataType> tag = tags.get(i);
                 if (tag.getName().equals(constructor))
                 {
-                    @Nullable DataType innerType = tag.getInner();
+                    DataType innerType = tag.getInner();
                     if (innerType != null)
                     {
                         if (tryParse(() -> p.openRound()) == null)
                             throw new ParseException("Bracketed inner value for " + constructor, p);
-                        @Value Object innerValue = loadSingleItem(innerType, p, true).getRight("Invalid nested invalid");
+                        Object innerValue = loadSingleItem(innerType, p, true).getRight("Invalid nested invalid");
                         if (tryParse(() -> p.closeRound()) == null)
                             throw new ParseException("Closing tagged value bracket for " + constructor, p);
                         return Either.right(new TaggedValue(i, innerValue, DataTypeUtility.fromTags(tags)));
@@ -913,12 +903,12 @@ public abstract class DataType implements StyledShowable
         });
     }
     
-    public final Either<String, @Value Object> loadSingleItem(String content) throws InternalException
+    public final Either<String, Object> loadSingleItem(String content) throws InternalException
     {
         try
         {
-            return Utility.<Either<String, @Value Object>, DataParser2>parseAsOne(content, DataLexer2::new, DataParser2::new, p -> {
-                Either<String, @Value Object> item = loadSingleItem(this, p, false);
+            return Utility.<Either<String, Object>, DataParser2>parseAsOne(content, DataLexer2::new, DataParser2::new, p -> {
+                Either<String, Object> item = loadSingleItem(this, p, false);
                 p.eof();
                 return item;
             });
@@ -929,106 +919,104 @@ public abstract class DataType implements StyledShowable
         }
     }
 
-    @OnThread(Tag.Any)
-    public static Either<String, @Value Object> loadSingleItem(DataType type, final DataParser p, boolean consumedRoundBrackets) throws InternalException, UserException
+    public static Either<String, Object> loadSingleItem(DataType type, final DataParser p, boolean consumedRoundBrackets) throws InternalException, UserException
     {
-        return type.apply(new DataTypeVisitor<Either<String, @Value Object>>()
+        return type.apply(new DataTypeVisitor<Either<String, Object>>()
         {
             @Override
-            public Either<String, @Value Object> number(NumberInfo displayInfo) throws InternalException, UserException
+            public Either<String, Object> number(NumberInfo displayInfo) throws InternalException, UserException
             {
-                return loadNumber(p).<@Value Object>map(n -> n);
+                return loadNumber(p).<Object>map(n -> n);
             }
 
             @Override
-            public Either<String, @Value Object> text() throws InternalException, UserException
+            public Either<String, Object> text() throws InternalException, UserException
             {
-                return loadString(p).<@Value Object>map(s -> s);
+                return loadString(p).<Object>map(s -> s);
             }
 
             @Override
-            public Either<String, @Value Object> date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
+            public Either<String, Object> date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
-                return dateTimeInfo.parse(p).<@Value Object>map((@Value TemporalAccessor t) -> t);
+                return dateTimeInfo.parse(p).<Object>map((TemporalAccessor t) -> t);
             }
 
             @Override
-            public Either<String, @Value Object> bool() throws InternalException, UserException
+            public Either<String, Object> bool() throws InternalException, UserException
             {
-                return loadBool(p).<@Value Object>map(b -> b);
+                return loadBool(p).<Object>map(b -> b);
             }
 
             @Override
-            public Either<String, @Value Object> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+            public Either<String, Object> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
-                return loadTaggedValue(tags, p).<@Value Object>map(t -> t);
+                return loadTaggedValue(tags, p).<Object>map(t -> t);
             }
 
             @Override
-            public Either<String, @Value Object> record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, UserException
+            public Either<String, Object> record(ImmutableMap<String, DataType> fields) throws InternalException, UserException
             {
-                return loadRecord(fields, p, consumedRoundBrackets).<@Value Object>map(t -> t);
+                return loadRecord(fields, p, consumedRoundBrackets).<Object>map(t -> t);
             }
 
             @Override
-            public Either<String, @Value Object> array(final @Nullable DataType inner) throws InternalException, UserException
+            public Either<String, Object> array(final DataType inner) throws InternalException, UserException
             {
                 if (inner == null)
                     throw new UserException("Cannot load column with value of type empty array");
 
-                return loadArray(inner, p).<@Value Object>map(l -> l);
+                return loadArray(inner, p).<Object>map(l -> l);
             }
         });
     }
 
-    @OnThread(Tag.Any)
-    public static Either<String, @Value Object> loadSingleItem(DataType type, final DataParser2 p, boolean consumedRoundBrackets) throws InternalException, UserException
+    public static Either<String, Object> loadSingleItem(DataType type, final DataParser2 p, boolean consumedRoundBrackets) throws InternalException, UserException
     {
-        return type.apply(new DataTypeVisitor<Either<String, @Value Object>>()
+        return type.apply(new DataTypeVisitor<Either<String, Object>>()
         {
             @Override
-            public Either<String, @Value Object> number(NumberInfo displayInfo) throws InternalException, UserException
+            public Either<String, Object> number(NumberInfo displayInfo) throws InternalException, UserException
             {
-                return loadNumber(p).<@Value Object>map(n -> n);
+                return loadNumber(p).<Object>map(n -> n);
             }
 
             @Override
-            public Either<String, @Value Object> text() throws InternalException, UserException
+            public Either<String, Object> text() throws InternalException, UserException
             {
-                return loadString(p).<@Value Object>map(s -> s);
+                return loadString(p).<Object>map(s -> s);
             }
 
             @Override
-            public Either<String, @Value Object> date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
+            public Either<String, Object> date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
-                return dateTimeInfo.parse(p).<@Value Object>map((@Value TemporalAccessor t) -> t);
+                return dateTimeInfo.parse(p).<Object>map((TemporalAccessor t) -> t);
             }
 
             @Override
-            public Either<String, @Value Object> bool() throws InternalException, UserException
+            public Either<String, Object> bool() throws InternalException, UserException
             {
-                return loadBool(p).<@Value Object>map(b -> b);
+                return loadBool(p).<Object>map(b -> b);
             }
 
             @Override
-            public Either<String, @Value Object> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+            public Either<String, Object> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
-                return loadTaggedValue(tags, p).<@Value Object>map(t -> t);
+                return loadTaggedValue(tags, p).<Object>map(t -> t);
             }
 
             @Override
-            public Either<String, @Value Object> record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, UserException
+            public Either<String, Object> record(ImmutableMap<String, DataType> fields) throws InternalException, UserException
             {
-                return loadRecord(fields, p, consumedRoundBrackets).<@Value Object>map(t -> t);
+                return loadRecord(fields, p, consumedRoundBrackets).<Object>map(t -> t);
             }
 
             @Override
-            public Either<String, @Value Object> array(final @Nullable DataType inner) throws InternalException, UserException
+            public Either<String, Object> array(final DataType inner) throws InternalException, UserException
             {
                 if (inner == null)
                     throw new UserException("Cannot load column with value of type empty array");
 
-                return loadArray(inner, p).<@Value Object>map(l -> l);
+                return loadArray(inner, p).<Object>map(l -> l);
             }
         });
     }
@@ -1091,7 +1079,6 @@ public abstract class DataType implements StyledShowable
             }
 
             @Override
-            @OnThread(value = Tag.Simulation, ignoreParent = true)
             public UnitType tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, InternalException
             {
                 if (typeVars.isEmpty())
@@ -1116,11 +1103,11 @@ public abstract class DataType implements StyledShowable
             }
 
             @Override
-            public UnitType record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, InternalException
+            public UnitType record(ImmutableMap<String, DataType> fields) throws InternalException, InternalException
             {
                 b.t(FormatLexer.OPEN_BRACKET, FormatLexer.VOCABULARY);
                 boolean first = true;
-                for (Entry<@ExpressionIdentifier String, DataType> field : Utility.iterableStream(fields.entrySet().stream().sorted(Comparator.comparing(e -> e.getKey()))))
+                for (Entry<String, DataType> field : Utility.iterableStream(fields.entrySet().stream().sorted(Comparator.comparing(e -> e.getKey()))))
                 {
                     if (!first)
                         b.raw(",");
@@ -1134,8 +1121,7 @@ public abstract class DataType implements StyledShowable
             }
 
             @Override
-            @OnThread(value = Tag.Simulation, ignoreParent = true)
-            public UnitType array(@Nullable DataType inner) throws InternalException, InternalException
+            public UnitType array(DataType inner) throws InternalException, InternalException
             {
                 b.t(FormatLexer.OPEN_SQUARE, FormatLexer.VOCABULARY);
                 if (inner != null)
@@ -1384,7 +1370,7 @@ public abstract class DataType implements StyledShowable
          * Hence this slightly odd double layer.
          * @return
          */
-        public Either<String, @Value TemporalAccessor> parse(DataParser p) throws UserException, InternalException
+        public Either<String, TemporalAccessor> parse(DataParser p) throws UserException, InternalException
         {
             Either<String, ParserRuleContext> parsed;
             switch (type)
@@ -1411,7 +1397,7 @@ public abstract class DataType implements StyledShowable
             }
             if (parsed == null)
                 throw new ParseException("Date value ", p);
-            return parsed.<@Value TemporalAccessor>mapEx(c -> {
+            return parsed.<TemporalAccessor>mapEx(c -> {
                 DateTimeFormatter formatter = getStrictFormatter();
                 try
                 {
@@ -1433,7 +1419,7 @@ public abstract class DataType implements StyledShowable
          * Hence this slightly odd double layer.
          * @return
          */
-        public Either<String, @Value TemporalAccessor> parse(DataParser2 p) throws UserException, InternalException
+        public Either<String, TemporalAccessor> parse(DataParser2 p) throws UserException, InternalException
         {
             Either<String, ParserRuleContext> parsed;
             switch (type)
@@ -1460,7 +1446,7 @@ public abstract class DataType implements StyledShowable
             }
             if (parsed == null)
                 throw new ParseException("Date value ", p);
-            return parsed.<@Value TemporalAccessor>mapEx(c -> {
+            return parsed.<TemporalAccessor>mapEx(c -> {
                 DateTimeFormatter formatter = getStrictFormatter();
                 try
                 {
@@ -1570,7 +1556,7 @@ public abstract class DataType implements StyledShowable
 
         public static final TemporalAccessor DEFAULT_VALUE = ZonedDateTime.of(1900, 1, 1, 0, 0, 0, 0, ZoneId.of("UTC"));
 
-        public @ImmediateValue TemporalAccessor getDefaultValue() throws InternalException
+        public TemporalAccessor getDefaultValue() throws InternalException
         {
             switch (type)
             {
@@ -1590,9 +1576,9 @@ public abstract class DataType implements StyledShowable
             throw new InternalException("Unknown type: " + type);
         }
 
-        public @Value TemporalAccessor fromParsed(TemporalAccessor t) throws InternalException
+        public TemporalAccessor fromParsed(TemporalAccessor t) throws InternalException
         {
-            @Value TemporalAccessor r = DataTypeUtility.value(this, t);
+            TemporalAccessor r = DataTypeUtility.value(this, t);
             if (r != null)
                 return r;
             else
@@ -1605,7 +1591,7 @@ public abstract class DataType implements StyledShowable
             return type;
         }
 
-        public boolean sameType(@Nullable DateTimeInfo dateTimeInfo)
+        public boolean sameType(DateTimeInfo dateTimeInfo)
         {
             return dateTimeInfo != null && type == dateTimeInfo.type;
         }
@@ -1616,7 +1602,7 @@ public abstract class DataType implements StyledShowable
         }
 
         @Override
-        public boolean equals(@Nullable Object o)
+        public boolean equals(Object o)
         {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
@@ -1641,7 +1627,7 @@ public abstract class DataType implements StyledShowable
          *                differently.
          * @return
          */
-        public Comparator<@UnknownIfValue TemporalAccessor> getComparator(boolean pool) throws InternalException
+        public Comparator<TemporalAccessor> getComparator(boolean pool) throws InternalException
         {
             switch (type)
             {
@@ -1720,7 +1706,7 @@ public abstract class DataType implements StyledShowable
         }
 
         @Override
-        public boolean equals(@Nullable Object o)
+        public boolean equals(Object o)
         {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
@@ -1735,7 +1721,7 @@ public abstract class DataType implements StyledShowable
         }
 
         @Override
-        public <R, E extends Throwable> @OnThread(Tag.Any) R apply(DataTypeVisitorEx<R, E> visitor) throws InternalException, E
+        public <R, E extends Throwable> R apply(DataTypeVisitorEx<R, E> visitor) throws InternalException, E
         {
             return visitor.number(numberInfo);
         }
@@ -1743,7 +1729,7 @@ public abstract class DataType implements StyledShowable
     private static final class TextDataType extends DataType
     {
         @Override
-        public boolean equals(@Nullable Object o)
+        public boolean equals(Object o)
         {
             return o instanceof TextDataType;
         }
@@ -1755,7 +1741,7 @@ public abstract class DataType implements StyledShowable
         }
 
         @Override
-        public <R, E extends Throwable> @OnThread(Tag.Any) R apply(DataTypeVisitorEx<R, E> visitor) throws InternalException, E
+        public <R, E extends Throwable> R apply(DataTypeVisitorEx<R, E> visitor) throws InternalException, E
         {
             return visitor.text();
         }
@@ -1763,7 +1749,7 @@ public abstract class DataType implements StyledShowable
     private static final class BooleanDataType extends DataType
     {
         @Override
-        public boolean equals(@Nullable Object o)
+        public boolean equals(Object o)
         {
             return o instanceof BooleanDataType;
         }
@@ -1775,7 +1761,7 @@ public abstract class DataType implements StyledShowable
         }
 
         @Override
-        public <R, E extends Throwable> @OnThread(Tag.Any) R apply(DataTypeVisitorEx<R, E> visitor) throws InternalException, E
+        public <R, E extends Throwable> R apply(DataTypeVisitorEx<R, E> visitor) throws InternalException, E
         {
             return visitor.bool();
         }
@@ -1790,7 +1776,7 @@ public abstract class DataType implements StyledShowable
         }
 
         @Override
-        public boolean equals(@Nullable Object o)
+        public boolean equals(Object o)
         {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
@@ -1805,7 +1791,7 @@ public abstract class DataType implements StyledShowable
         }
 
         @Override
-        public <R, E extends Throwable> @OnThread(Tag.Any) R apply(DataTypeVisitorEx<R, E> visitor) throws InternalException, E
+        public <R, E extends Throwable> R apply(DataTypeVisitorEx<R, E> visitor) throws InternalException, E
         {
             return visitor.date(dateTimeInfo);
         }
@@ -1824,7 +1810,7 @@ public abstract class DataType implements StyledShowable
         }
 
         @Override
-        public boolean equals(@Nullable Object o)
+        public boolean equals(Object o)
         {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
@@ -1841,22 +1827,22 @@ public abstract class DataType implements StyledShowable
         }
 
         @Override
-        public <R, E extends Throwable> @OnThread(Tag.Any) R apply(DataTypeVisitorEx<R, E> visitor) throws InternalException, E
+        public <R, E extends Throwable> R apply(DataTypeVisitorEx<R, E> visitor) throws InternalException, E
         {
             return visitor.tagged(name, typeVariableSubstitutions, tagTypes);
         }
     }
     private static final class RecordDataType extends DataType
     {
-        private final ImmutableMap<@ExpressionIdentifier String, DataType> fields;
+        private final ImmutableMap<String, DataType> fields;
 
-        public RecordDataType(Map<@ExpressionIdentifier String, DataType> fields)
+        public RecordDataType(Map<String, DataType> fields)
         {
             this.fields = ImmutableMap.copyOf(fields);
         }
 
         @Override
-        public boolean equals(@Nullable Object o)
+        public boolean equals(Object o)
         {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
@@ -1871,7 +1857,7 @@ public abstract class DataType implements StyledShowable
         }
 
         @Override
-        public <R, E extends Throwable> @OnThread(Tag.Any) R apply(DataTypeVisitorEx<R, E> visitor) throws InternalException, E
+        public <R, E extends Throwable> R apply(DataTypeVisitorEx<R, E> visitor) throws InternalException, E
         {
             return visitor.record(fields);
         }
@@ -1886,7 +1872,7 @@ public abstract class DataType implements StyledShowable
         }
 
         @Override
-        public boolean equals(@Nullable Object o)
+        public boolean equals(Object o)
         {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
@@ -1901,7 +1887,7 @@ public abstract class DataType implements StyledShowable
         }
 
         @Override
-        public <R, E extends Throwable> @OnThread(Tag.Any) R apply(DataTypeVisitorEx<R, E> visitor) throws InternalException, E
+        public <R, E extends Throwable> R apply(DataTypeVisitorEx<R, E> visitor) throws InternalException, E
         {
             return visitor.array(inner);
         }
@@ -1918,7 +1904,7 @@ public abstract class DataType implements StyledShowable
         }
 
         @Override
-        public boolean equals(@Nullable Object o)
+        public boolean equals(Object o)
         {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
@@ -1934,7 +1920,7 @@ public abstract class DataType implements StyledShowable
         }
 
         @Override
-        public <R, E extends Throwable> @OnThread(Tag.Any) R apply(DataTypeVisitorEx<R, E> visitor) throws InternalException, E
+        public <R, E extends Throwable> R apply(DataTypeVisitorEx<R, E> visitor) throws InternalException, E
         {
             return visitor.function(argType, resultType);
         }

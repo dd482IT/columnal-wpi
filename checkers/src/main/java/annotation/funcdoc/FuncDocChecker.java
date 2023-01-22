@@ -55,7 +55,6 @@ import java.util.Set;
  * @FuncDocKey, which checks that a given item is a namespace/function-name key,
  *   and that the key only occurs once in the xml files.
  */
-@SupportedOptions({"funcdocfiles"})
 public class FuncDocChecker extends BaseTypeChecker
 {
     @Override

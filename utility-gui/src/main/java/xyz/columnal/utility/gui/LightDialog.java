@@ -53,10 +53,9 @@ import java.util.Optional;
  * A utility subclass of Dialog that has a minimal look: no window decorations, but 
  * a drop shadow to make it stand out from item beneath.
  */
-@OnThread(Tag.FXPlatform)
 public abstract class LightDialog<R> extends Dialog<R>
 {
-    protected LightDialog(DimmableParent parent, @Nullable DialogPane customDialogPane)
+    protected LightDialog(DimmableParent parent, DialogPane customDialogPane)
     {
         initOwner(parent.dimWhileShowing(this));
         initStyle(StageStyle.TRANSPARENT);
@@ -65,7 +64,7 @@ public abstract class LightDialog<R> extends Dialog<R>
         if (customDialogPane != null)
             setDialogPane(customDialogPane);
 
-        final @NonNull DialogPane dialogPane = getDialogPane();
+        final DialogPane dialogPane = getDialogPane();
         dialogPane.getStylesheets().addAll(
             FXUtility.getStylesheet("general.css"),
             FXUtility.getStylesheet("dialogs.css")
@@ -82,7 +81,7 @@ public abstract class LightDialog<R> extends Dialog<R>
         dialogPane.addEventHandler(MouseEvent.MOUSE_CLICKED, e -> {
             if (e.isStillSincePress())
             {
-                @Nullable Node button = ImmutableList.of(ButtonType.OK, ButtonType.CANCEL, ButtonType.CLOSE).stream().flatMap(b -> Utility.streamNullable(dialogPane.lookupButton(b))).findFirst().orElse(null);
+                Node button = ImmutableList.of(ButtonType.OK, ButtonType.CANCEL, ButtonType.CLOSE).stream().flatMap(b -> Utility.streamNullable(dialogPane.lookupButton(b))).findFirst().orElse(null);
                 if (button != null)
                     button.requestFocus();
             }
@@ -255,7 +254,7 @@ public abstract class LightDialog<R> extends Dialog<R>
         // 40 pixels for display padding for drop shadow, and rough guess of 40 more for button bar  
         double idealLeftX = mouseScreenPos.getX() - (contentWidth + 40) * 0.5;
         double idealTopY = mouseScreenPos.getY() - (contentHeight + 40 + 40) * 0.5;
-        @Nullable Screen screen = Screen.getScreens().stream().filter(s -> s.getBounds().contains(mouseScreenPos)).findFirst().orElse(null);
+        Screen screen = Screen.getScreens().stream().filter(s -> s.getBounds().contains(mouseScreenPos)).findFirst().orElse(null);
         if (screen == null)
         {
             // Weird, but I guess just put the dialog where we think it should go:
@@ -271,7 +270,7 @@ public abstract class LightDialog<R> extends Dialog<R>
         return showAndWait();
     }
 
-    protected void centreDialogButtons(@UnknownInitialization(Dialog.class) LightDialog<R> this)
+    protected void centreDialogButtons(LightDialog<R> this)
     {
         // Hack!
         // Taken from https://stackoverflow.com/questions/36009764/how-to-align-ok-button-of-a-dialog-pane-in-javafx

@@ -46,10 +46,9 @@ import java.util.stream.Stream;
  * scroll group.  Every morass that is somehow scroll-locked together belongs to one scroll group.  Once the
  * scroll group decides where to scroll to, it makes calls back down to all the member items
  */
-@OnThread(Tag.FXPlatform)
 public class ScrollGroup
 {
-    private @Nullable Pair<ScrollGroup, ScrollLock> parent;
+    private Pair<ScrollGroup, ScrollLock> parent;
     private final SmoothScroller<ImmutableList<ScrollBindable>> smoothScrollX;
     private final SmoothScroller<ImmutableList<ScrollBindable>> smoothScrollY;
     final DoubleProperty translateXProperty = new SimpleDoubleProperty(0.0);
@@ -75,7 +74,7 @@ public class ScrollGroup
         // If we're not the root group, forward up the chain:
         if (parent != null)
         {
-            @NonNull Pair<ScrollGroup, ScrollLock> parentFinal = parent;
+            Pair<ScrollGroup, ScrollLock> parentFinal = parent;
             // Forward what's applicable up to parent:
             parentFinal.getFirst().requestScrollBy(parentFinal.getSecond().includesHorizontal() ? deltaX : 0.0, parentFinal.getSecond().includesVertical() ? deltaY : 0.0);
             
@@ -179,13 +178,11 @@ public class ScrollGroup
         }
     }
     
-    @OnThread(Tag.Any)
     public long _test_getScrollTimeNanos()
     {
         return smoothScrollX._test_getScrollTimeNanos();
     }
     
-    @OnThread(Tag.Any)
     public void _test_setScrollTimeNanos(long nanos)
     {
         smoothScrollX._test_setScrollTimeNanos(nanos);

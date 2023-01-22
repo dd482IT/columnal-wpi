@@ -62,14 +62,13 @@ import java.util.stream.Stream;
 
 // The length of the list of columns returned will be identical to the length of the list of SelectInfo
 // passed to the constructor
-@OnThread(Tag.FXPlatform)
 public class SelectColumnDialog extends ErrorableLightDialog<ImmutableList<ColumnId>>
 {
     private final ImmutableList<TextField> columnFields;
     private final ImmutableList<SelectInfo> selectors;
-    private @Nullable TextField mostRecentlyFocusedField;
+    private TextField mostRecentlyFocusedField;
 
-    public SelectColumnDialog(Window parent, @Nullable Table srcTable, ColumnPicker columnPicker, ImmutableList<SelectInfo> selectors)
+    public SelectColumnDialog(Window parent, Table srcTable, ColumnPicker columnPicker, ImmutableList<SelectInfo> selectors)
     {
         super(new Undimmed(parent), true);
         initOwner(parent);
@@ -130,14 +129,13 @@ public class SelectColumnDialog extends ErrorableLightDialog<ImmutableList<Colum
         }
     }
 
-    @OnThread(Tag.FXPlatform)
     @Override
-    protected Either<@Localized String, ImmutableList<ColumnId>> calculateResult()
+    protected Either<String, ImmutableList<ColumnId>> calculateResult()
     {
         ImmutableList.Builder<ColumnId> results = ImmutableList.builderWithExpectedSize(columnFields.size());
         for (TextField columnField : columnFields)
         {
-            @Nullable @ExpressionIdentifier String ident = IdentifierUtility.asExpressionIdentifier(columnField.getText().trim());
+            String ident = IdentifierUtility.asExpressionIdentifier(columnField.getText().trim());
             if (ident != null)
                 results.add(new ColumnId(ident));
             else
@@ -146,12 +144,11 @@ public class SelectColumnDialog extends ErrorableLightDialog<ImmutableList<Colum
         return Either.right(results.build());
     }
 
-    private CompletionListener<ColumnCompletion> getListener(@UnknownInitialization SelectColumnDialog this, int index)
+    private CompletionListener<ColumnCompletion> getListener(SelectColumnDialog this, int index)
     {
         return new CompletionListener<ColumnCompletion>()
         {
             @Override
-            @OnThread(Tag.FXPlatform)
             public String doubleClick(String currentText, ColumnCompletion selectedItem)
             {
                 String name = selectedItem.c.getName().getOutput();
@@ -160,8 +157,7 @@ public class SelectColumnDialog extends ErrorableLightDialog<ImmutableList<Colum
             }
 
             @Override
-            @OnThread(Tag.FXPlatform)
-            public @Nullable String keyboardSelect(String textBefore, String textAfter, @Nullable ColumnCompletion selectedItem, boolean tabPressed)
+            public String keyboardSelect(String textBefore, String textAfter, ColumnCompletion selectedItem, boolean tabPressed)
             {
                 if (selectedItem != null)
                     return doubleClick("", selectedItem);
@@ -199,13 +195,13 @@ public class SelectColumnDialog extends ErrorableLightDialog<ImmutableList<Colum
     
     public static class SelectInfo
     {
-        private final @LocalizableKey String labelKey;
-        private final @Nullable @HelpKey String helpKey;
+        private final String labelKey;
+        private final String helpKey;
         private final Predicate<Column> filterColumn;
         // Once the previous item is set, should it be copied to this if this is blank at the time?
         private final boolean copyFromPrevious;
 
-        public SelectInfo(@LocalizableKey String labelKey, @Nullable @HelpKey String helpKey, Predicate<Column> filterColumn, boolean copyFromPrevious)
+        public SelectInfo(String labelKey, String helpKey, Predicate<Column> filterColumn, boolean copyFromPrevious)
         {
             this.labelKey = labelKey;
             this.helpKey = helpKey;
@@ -213,7 +209,7 @@ public class SelectColumnDialog extends ErrorableLightDialog<ImmutableList<Colum
             this.copyFromPrevious = copyFromPrevious;
         }
 
-        public SelectInfo(@LocalizableKey String labelKey, Predicate<Column> filterColumn)
+        public SelectInfo(String labelKey, Predicate<Column> filterColumn)
         {
             this(labelKey, null, filterColumn, false);
         }

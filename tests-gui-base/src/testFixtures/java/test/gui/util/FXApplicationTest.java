@@ -72,11 +72,9 @@ import static org.junit.Assert.assertNull;
 
 public class FXApplicationTest extends org.testjavafx.junit4.ApplicationTest implements FocusOwnerTrait, ScreenshotTrait, QueryTrait
 {
-    @Rule
     public TestWatcher screenshotOnFail = new TestWatcher()
     {
-        @OnThread(value = Tag.Any, requireSynchronized = true)
-        private @Nullable InternalException seenInternalException;
+        private InternalException seenInternalException;
         
         @Override
         protected void failed(Throwable e, Description description)
@@ -116,12 +114,10 @@ public class FXApplicationTest extends org.testjavafx.junit4.ApplicationTest imp
         return w.toString() + TFXUtil.fx(() -> (w instanceof Stage ? ((Stage)w).getTitle() : ""));
     }
 
-    @OnThread(Tag.Any)
     @SuppressWarnings("nullness")
     protected Stage windowToUse;
 
     @Override
-    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     public void start(Stage _stage) throws Exception
     {
         // Don't use the stage TestFX gives us as it re-uses it across tests.  Although
@@ -168,7 +164,6 @@ public class FXApplicationTest extends org.testjavafx.junit4.ApplicationTest imp
         //timeline.play();
     }
 
-    @OnThread(Tag.FXPlatform)
     public final void dumpScreenshot()
     {
         // Seems to throw an exception under JFX 13 and Monocle 12:
@@ -198,7 +193,6 @@ public class FXApplicationTest extends org.testjavafx.junit4.ApplicationTest imp
         }
     }
     
-    @OnThread(Tag.FXPlatform)
     public final void dumpScreenshot(Window target)
     {
         if (target.getScene() == null)
@@ -254,7 +248,7 @@ public class FXApplicationTest extends org.testjavafx.junit4.ApplicationTest imp
      * this work-around for headless mode.
      */
     @SuppressWarnings({"all"})
-    public FxRobotInterface showContextMenu(Node node, @Nullable Point2D pointOnScreen)
+    public FxRobotInterface showContextMenu(Node node, Point2D pointOnScreen)
     {
         if (GraphicsEnvironment.isHeadless())
         {
@@ -290,7 +284,6 @@ public class FXApplicationTest extends org.testjavafx.junit4.ApplicationTest imp
         }
     }
 
-    @OnThread(Tag.Any)
     protected final void waitForSuccess(Runnable r)
     {
         for (int i = 0; i < 80; i++)

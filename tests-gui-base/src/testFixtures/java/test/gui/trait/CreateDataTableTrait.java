@@ -57,9 +57,9 @@ public interface CreateDataTableTrait extends FxRobotInterface, ScrollToTrait, C
     {
         public final ColumnId name;
         public final DataType dataType;
-        public final ImmutableList<Either<String, @Value Object>> data;
+        public final ImmutableList<Either<String, Object>> data;
 
-        public ColumnDetails(ColumnId name, DataType dataType, ImmutableList<Either<String, @Value Object>> data)
+        public ColumnDetails(ColumnId name, DataType dataType, ImmutableList<Either<String, Object>> data)
         {
             this.name = name;
             this.dataType = dataType;
@@ -67,8 +67,7 @@ public interface CreateDataTableTrait extends FxRobotInterface, ScrollToTrait, C
         }
     }
     
-    @OnThread(Tag.Simulation)
-    public default void createDataTable(MainWindowActions mainWindowActions, CellPosition targetPos, @ExpressionIdentifier String tableName, List<ColumnDetails> columns) throws Exception
+    public default void createDataTable(MainWindowActions mainWindowActions, CellPosition targetPos, String tableName, List<ColumnDetails> columns) throws Exception
     {
         VirtualGrid virtualGrid = mainWindowActions._test_getVirtualGrid();
         keyboardMoveTo(virtualGrid, targetPos);
@@ -112,7 +111,7 @@ public interface CreateDataTableTrait extends FxRobotInterface, ScrollToTrait, C
         Platform.runLater(() -> {
             try
             {
-                ClipboardUtils.copyValuesToClipboard(mainWindowActions._test_getTableManager().getUnitManager(), mainWindowActions._test_getTableManager().getTypeManager(), Utility.mapListExI(columns, c -> new Pair<>(c.name, c.dataType.fromCollapsed((i, prog) -> c.data.get(i).<@Value Object>eitherEx(invalid -> {throw new InvalidImmediateValueException(StyledString.s("cdtt_err"), invalid);
+                ClipboardUtils.copyValuesToClipboard(mainWindowActions._test_getTableManager().getUnitManager(), mainWindowActions._test_getTableManager().getTypeManager(), Utility.mapListExI(columns, c -> new Pair<>(c.name, c.dataType.fromCollapsed((i, prog) -> c.data.get(i).<Object>eitherEx(invalid -> {throw new InvalidImmediateValueException(StyledString.s("cdtt_err"), invalid);
                 }, valid -> valid)))), () -> rowRange, copyDone);
             }
             catch (Exception e)

@@ -54,16 +54,16 @@ public class DefineExpression extends Expression
 {
     public static class Definition
     {
-        public final @Recorded Expression lhsPattern;
-        public final @Recorded Expression rhsValue;
+        public final Expression lhsPattern;
+        public final Expression rhsValue;
 
-        public Definition(@Recorded Expression lhsPattern, @Recorded Expression rhsValue)
+        public Definition(Expression lhsPattern, Expression rhsValue)
         {
             this.lhsPattern = lhsPattern;
             this.rhsValue = rhsValue;
         }
 
-        public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws InternalException, UserException
+        public CheckedExp check(ColumnLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws InternalException, UserException
         {
             CheckedExp rhs = rhsValue.check(dataLookup, typeState, ExpressionKind.EXPRESSION, LocationInfo.UNIT_DEFAULT, onError);
             if (rhs == null)
@@ -76,8 +76,7 @@ public class DefineExpression extends Expression
             return onError.recordTypeAndError(lhsPattern, TypeExp.unifyTypes(lhs.typeExp, rhs.typeExp), lhs.typeState);
         }
 
-        @OnThread(Tag.Simulation)
-        public @Nullable EvaluateState evaluate(EvaluateState state) throws InternalException, EvaluationException
+        public EvaluateState evaluate(EvaluateState state) throws InternalException, EvaluationException
         {
             ValueResult valueResult = rhsValue.calculateValue(state);
             valueResult = lhsPattern.matchAsPattern(valueResult.value, valueResult.evaluateState);
@@ -108,7 +107,7 @@ public class DefineExpression extends Expression
         }
 
         @Override
-        public boolean equals(@Nullable Object o)
+        public boolean equals(Object o)
         {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
@@ -126,17 +125,17 @@ public class DefineExpression extends Expression
     
     public static class DefineItem
     {
-        public final Either<@Recorded HasTypeExpression, Definition> typeOrDefinition;
+        public final Either<HasTypeExpression, Definition> typeOrDefinition;
         public final CanonicalSpan trailingCommaOrThenLocation;
 
-        public DefineItem(Either<@Recorded HasTypeExpression, Definition> typeOrDefinition, CanonicalSpan trailingCommaOrThenLocation)
+        public DefineItem(Either<HasTypeExpression, Definition> typeOrDefinition, CanonicalSpan trailingCommaOrThenLocation)
         {
             this.typeOrDefinition = typeOrDefinition;
             this.trailingCommaOrThenLocation = trailingCommaOrThenLocation;
         }
 
         @Override
-        public boolean equals(@Nullable Object o)
+        public boolean equals(Object o)
         {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
@@ -154,11 +153,11 @@ public class DefineExpression extends Expression
     private final CanonicalSpan defineLocation;
     // List will not be empty for a valid define:
     private final ImmutableList<DefineItem> defines;
-    private final @Recorded Expression body;
+    private final Expression body;
     private final CanonicalSpan endLocation;
     
     public DefineExpression(CanonicalSpan defineLocation, ImmutableList<DefineItem> defines, 
-                            @Recorded Expression body,
+                            Expression body,
                             CanonicalSpan endLocation)
     {
         this.defineLocation = defineLocation;
@@ -167,14 +166,14 @@ public class DefineExpression extends Expression
         this.endLocation = endLocation;
     }
 
-    public static DefineExpression unrecorded(ImmutableList<Either<@Recorded HasTypeExpression, Definition>> defines, @Recorded Expression body)
+    public static DefineExpression unrecorded(ImmutableList<Either<HasTypeExpression, Definition>> defines, Expression body)
     {
         CanonicalSpan dummy = new CanonicalSpan(CanonicalLocation.ZERO, CanonicalLocation.ZERO);
         return new DefineExpression(dummy, Utility.mapListI(defines, d -> new DefineItem(d, dummy)), body, dummy);
     }
 
     @Override
-    public @Nullable CheckedExp check(ColumnLookup dataLookup, final TypeState original, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public CheckedExp check(ColumnLookup dataLookup, final TypeState original, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         TypeState typeState = original;
         
@@ -183,12 +182,12 @@ public class DefineExpression extends Expression
         for (DefineItem defineItem : defines)
         {
             TypeState typeStateThisTime = typeState;
-            Either<@Recorded HasTypeExpression, Definition> define = defineItem.typeOrDefinition;
-            @Nullable CheckedExp checkEq = define.<@Nullable CheckedExp>eitherEx(hasType -> {
+            Either<HasTypeExpression, Definition> define = defineItem.typeOrDefinition;
+            CheckedExp checkEq = define.<CheckedExp>eitherEx(hasType -> {
                 CheckedExp checkedExp = hasType.check(dataLookup, typeStateThisTime, ExpressionKind.EXPRESSION, LocationInfo.UNIT_DEFAULT, onError);
                 if (checkedExp == null)
                     return null;
-                @ExpressionIdentifier String varName = hasType.getVarName();
+                String varName = hasType.getVarName();
                 if (!shouldBeDeclaredInNextDefine.add(varName))
                 {
                     onError.recordError(hasType, StyledString.s("Duplicate type for variable " + varName));
@@ -235,11 +234,11 @@ public class DefineExpression extends Expression
     }
 
     @Override
-    public @OnThread(Tag.Simulation) ValueResult calculateValue(EvaluateState state) throws EvaluationException, InternalException
+    public ValueResult calculateValue(EvaluateState state) throws EvaluationException, InternalException
     {
-        for (Definition define : Either.<@Recorded HasTypeExpression, Definition>getRights(Utility.<DefineItem, Either<@Recorded HasTypeExpression, Definition>>mapListI(defines, d -> d.typeOrDefinition)))
+        for (Definition define : Either.<HasTypeExpression, Definition>getRights(Utility.<DefineItem, Either<HasTypeExpression, Definition>>mapListI(defines, d -> d.typeOrDefinition)))
         {
-            @Nullable EvaluateState outcome;
+            EvaluateState outcome;
             try
             {
                 outcome = define.evaluate(state);
@@ -280,7 +279,7 @@ public class DefineExpression extends Expression
                 b.append(x.save(latest, renames));
                 Set<String> patternVars = x.lhsPattern.allVariableReferences().collect(ImmutableSet.<String>toImmutableSet());
                 Set<String> definedVars = latest.definedNames("var").stream().<String>map(v -> v.get(0)).collect(ImmutableSet.<String>toImmutableSet());
-                return latest.withNames(Utility.filterOutNulls(Sets.<String>difference(patternVars, definedVars).stream().<@Nullable @ExpressionIdentifier String>map(IdentifierUtility::asExpressionIdentifier)).<Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>>>map(v -> new Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>>("var", ImmutableList.of(v))).collect(ImmutableList.<Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>>>toImmutableList()));
+                return latest.withNames(Utility.filterOutNulls(Sets.<String>difference(patternVars, definedVars).stream().<String>map(IdentifierUtility::asExpressionIdentifier)).<Pair<String, ImmutableList<String>>>map(v -> new Pair<String, ImmutableList<String>>("var", ImmutableList.of(v))).collect(ImmutableList.<Pair<String, ImmutableList<String>>>toImmutableList()));
             });
         }
         b.append(" @then ");
@@ -296,13 +295,13 @@ public class DefineExpression extends Expression
     }
 
     @Override
-    public @Nullable Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
+    public Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
     {
         return null;
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;

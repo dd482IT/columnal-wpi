@@ -39,7 +39,6 @@ public interface Importer
      * Get the list of supported file types.  Each pair is the localized label for the file type,
      * and a list of file extensions (like "*.txt").
      */
-    @OnThread(Tag.Any)
     public ImmutableList<String> getSupportedFileTypes();
 
     /**
@@ -53,11 +52,10 @@ public interface Importer
      *               have multiple tables to import, calling this multiple times
      *               is safe.
      */
-    @OnThread(Tag.FXPlatform)
     public void importFile(Window parent, TableManager tableManager, CellPosition destPosition, File src, URL origin, SimulationConsumerNoError<DataSource> recordLoadedTable);
 
     /**
      * The name of the importer to display to the user when picking an importer
      */
-    @Localized String getName();
+    String getName();
 }

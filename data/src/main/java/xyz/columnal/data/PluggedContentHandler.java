@@ -32,6 +32,5 @@ import java.util.function.Consumer;
 
 public interface PluggedContentHandler
 {
-    @OnThread(Tag.Simulation)
     public abstract ImmutableMap<String, SimulationConsumer<Pair<SaveTag, String>>> getHandledContent(Consumer<StyledString> onError);
 }

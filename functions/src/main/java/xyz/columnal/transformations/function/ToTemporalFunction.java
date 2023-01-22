@@ -57,12 +57,12 @@ import java.util.stream.Collectors;
 public abstract class ToTemporalFunction
 {
     // Public for testing purposes only
-    public final FunctionDefinition _test_fromString(@FuncDocKey String name) throws InternalException
+    public final FunctionDefinition _test_fromString(String name) throws InternalException
     {
         return fromString(name);
     }
     
-    protected final FunctionDefinition fromString(@FuncDocKey String name) throws InternalException
+    protected final FunctionDefinition fromString(String name) throws InternalException
     {
         return new FunctionDefinition(name) {
             @Override
@@ -87,14 +87,14 @@ public abstract class ToTemporalFunction
         }
 
         @Override
-        public @Value Object _call() throws UserException, InternalException
+        public Object _call() throws UserException, InternalException
         {
             String src = Utility.preprocessDate(arg(0, String.class));
 
             for (int i = 0; i < usedFormats.size(); i++)
             {
                 Pair<List<DateTimeFormatter>, Integer> formats = usedFormats.get(i);
-                List<Pair<DateTimeFormatter, @Value Temporal>> possibilities = getPossibles(src, formats.getFirst());
+                List<Pair<DateTimeFormatter, Temporal>> possibilities = getPossibles(src, formats.getFirst());
                 if (possibilities.size() == 1)
                 {
                     // Didn't throw, so record as used once more:
@@ -106,7 +106,7 @@ public abstract class ToTemporalFunction
                 }
                 else if (possibilities.size() > 1)
                 {
-                    throw new UserException("Ambiguous date, can be parsed as " + possibilities.stream().map((Pair<DateTimeFormatter, @Value Temporal> p) -> p.getSecond().toString()).collect(Collectors.joining(" or ")) + ".  Supply your own format string to disambiguate.");
+                    throw new UserException("Ambiguous date, can be parsed as " + possibilities.stream().map((Pair<DateTimeFormatter, Temporal> p) -> p.getSecond().toString()).collect(Collectors.joining(" or ")) + ".  Supply your own format string to disambiguate.");
                 }
             }
 
@@ -114,7 +114,7 @@ public abstract class ToTemporalFunction
             for (Iterator<List<DateTimeFormatter>> iterator = unusedFormats.iterator(); iterator.hasNext(); )
             {
                 List<DateTimeFormatter> formats = iterator.next();
-                List<Pair<DateTimeFormatter, @Value Temporal>> possibilities = getPossibles(src, formats);
+                List<Pair<DateTimeFormatter, Temporal>> possibilities = getPossibles(src, formats);
                 if (possibilities.size() == 1)
                 {
                     // Didn't throw, so record as used:
@@ -125,16 +125,16 @@ public abstract class ToTemporalFunction
                 }
                 else if (possibilities.size() > 1)
                 {
-                    throw new UserException("Ambiguous date, can be parsed as " + possibilities.stream().map((Pair<DateTimeFormatter, @Value Temporal> p) -> p.getSecond().toString()).collect(Collectors.joining(" or ")) + ".  Supply your own format string to disambiguate.");
+                    throw new UserException("Ambiguous date, can be parsed as " + possibilities.stream().map((Pair<DateTimeFormatter, Temporal> p) -> p.getSecond().toString()).collect(Collectors.joining(" or ")) + ".  Supply your own format string to disambiguate.");
                 }
             }
 
             throw new UserException("Function " + name + " could not parse date/time: \"" + src + "\"");
         }
 
-        private List<Pair<DateTimeFormatter, @Value Temporal>> getPossibles(String src, List<DateTimeFormatter> format)
+        private List<Pair<DateTimeFormatter, Temporal>> getPossibles(String src, List<DateTimeFormatter> format)
         {
-            List<Pair<DateTimeFormatter, @Value Temporal>> possibilities = new ArrayList<>();
+            List<Pair<DateTimeFormatter, Temporal>> possibilities = new ArrayList<>();
             for (DateTimeFormatter dateTimeFormatter : format)
             {
                 try
@@ -151,25 +151,25 @@ public abstract class ToTemporalFunction
     }
 
     // If two formats may be mistaken for each other, put them in the same inner list:
-    protected final ImmutableList<ImmutableList<@NonNull DateTimeFormatter>> getFormats()
+    protected final ImmutableList<ImmutableList<DateTimeFormatter>> getFormats()
     {
         return getResultType().getFlexibleFormatters();
     }
 
     class FromTemporal extends FunctionDefinition
     {
-        public FromTemporal(@FuncDocKey String funcDocKey) throws InternalException
+        public FromTemporal(String funcDocKey) throws InternalException
         {
             super(funcDocKey);
         }
 
         @Override
-        public @OnThread(Tag.Simulation) ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
+        public ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
         {
             return new ValueFunction()
             {
                 @Override
-                public @Value Object _call() throws UserException, InternalException
+                public Object _call() throws UserException, InternalException
                 {
                     try
                     {
@@ -184,7 +184,7 @@ public abstract class ToTemporalFunction
         }
     }
 
-    abstract @Value Temporal fromTemporal(TemporalAccessor temporalAccessor);
+    abstract Temporal fromTemporal(TemporalAccessor temporalAccessor);
 
     abstract ImmutableList<FunctionDefinition> getTemporalFunctions(UnitManager mgr) throws InternalException;
 }

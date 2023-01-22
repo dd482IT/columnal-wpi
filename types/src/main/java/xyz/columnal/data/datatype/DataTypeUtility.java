@@ -146,9 +146,9 @@ public class DataTypeUtility
     */
 
 
-    public static @Value int requireInteger(@Value Object o) throws UserException, InternalException
+    public static int requireInteger(Object o) throws UserException, InternalException
     {
-        return Utility.<@Value Integer>withNumber(o, l -> {
+        return Utility.<Integer>withNumber(o, l -> {
             if (l.longValue() != l.intValue())
                 throw new UserException("Number too large: " + l);
             return value(l.intValue());
@@ -165,80 +165,80 @@ public class DataTypeUtility
     }
 
     @SuppressWarnings("userindex")
-    public static @UserIndex @Value int userIndex(@Value Object value) throws InternalException, UserException
+    public static int userIndex(Object value) throws InternalException, UserException
     {
-        @Value int integer = requireInteger(value);
+        int integer = requireInteger(value);
         return integer;
     }
 
     //@SuppressWarnings("valuetype")
-    public static <T> @UnknownIfValue T unvalue(@Value T v)
+    public static <T> T unvalue(T v)
     {
         return v;
     }
 
     @SuppressWarnings("valuetype")
-    public static @ImmediateValue Byte value(@UnknownIfValue Byte number)
+    public static Byte value(Byte number)
     {
         return number;
     }
 
     @SuppressWarnings("valuetype")
-    public static @ImmediateValue Short value(@UnknownIfValue Short number)
+    public static Short value(Short number)
     {
         return number;
     }
 
     @SuppressWarnings("valuetype")
-    public static @ImmediateValue Integer value(@UnknownIfValue Integer number)
+    public static Integer value(Integer number)
     {
         return number;
     }
 
     @SuppressWarnings("valuetype")
-    public static @ImmediateValue BigDecimal value(@UnknownIfValue BigDecimal number)
+    public static BigDecimal value(BigDecimal number)
     {
         return number;
     }
 
     @SuppressWarnings("valuetype")
-    public static @ImmediateValue Long value(@UnknownIfValue Long number)
+    public static Long value(Long number)
     {
         return number;
     }
 
     @SuppressWarnings("valuetype")
-    public static @ImmediateValue Boolean value(@UnknownIfValue Boolean bool)
+    public static Boolean value(Boolean bool)
     {
         return bool;
     }
 
     @SuppressWarnings("valuetype")
-    public static @ImmediateValue String value(@UnknownIfValue String string)
+    public static String value(String string)
     {
         return string;
     }
 
     @SuppressWarnings("valuetype")
-    public static @Value LocalDate valueDate(LocalDate t)
+    public static LocalDate valueDate(LocalDate t)
     {
         return t;
     }
 
     @SuppressWarnings("valuetype")
-    public static @Value LocalTime valueTime(LocalTime t)
+    public static LocalTime valueTime(LocalTime t)
     {
         return t;
     }
 
     @SuppressWarnings("valuetype")
-    public static @Value ZonedDateTime valueZonedDateTime(ZonedDateTime t)
+    public static ZonedDateTime valueZonedDateTime(ZonedDateTime t)
     {
         return t;
     }
     
     @SuppressWarnings("valuetype")
-    public static @Nullable @ImmediateValue TemporalAccessor value(DateTimeInfo dest, @UnknownIfValue TemporalAccessor t)
+    public static TemporalAccessor value(DateTimeInfo dest, TemporalAccessor t)
     {
         try
         {
@@ -300,34 +300,34 @@ public class DataTypeUtility
     }
 
     @SuppressWarnings("valuetype")
-    public static @Value Record value(Record record)
+    public static Record value(Record record)
     {
         return record;
     }
 
     @SuppressWarnings("valuetype")
-    public static Utility.@Value ListEx value(Utility.@UnknownIfValue ListEx list)
+    public static Utility.ListEx value(Utility.ListEx list)
     {
         return list;
     }
 
     @SuppressWarnings("valuetype")
-    public static Utility.@Value ListEx value(@UnknownIfValue List<@Value Object> list)
+    public static Utility.ListEx value(List<Object> list)
     {
         return new ListExList(list);
     }
 
     @SuppressWarnings("valuetype")
-    public static Utility.@ImmediateValue ListEx valueImmediate(@UnknownIfValue List<@ImmediateValue Object> list)
+    public static Utility.ListEx valueImmediate(List<Object> list)
     {
         return new ListExList(list);
     }
 
-    public static String _test_valueToString(@Value Object item)
+    public static String _test_valueToString(Object item)
     {
         if (item instanceof Object[])
         {
-            @Value Object[] tuple = (@Value Object[])item;
+            Object[] tuple = (Object[])item;
             return "(" + Arrays.stream(tuple).map(DataTypeUtility::_test_valueToString).collect(Collectors.joining(", ")) + ")";
         }
         else if (item instanceof String)
@@ -342,27 +342,24 @@ public class DataTypeUtility
         return item.toString();
     }
 
-    @OnThread(Tag.Simulation)
-    public static String valueToString(@Value Object item) throws UserException, InternalException
+    public static String valueToString(Object item) throws UserException, InternalException
     {
         return valueToString(item, null, false, null);
     }
 
-    @OnThread(Tag.Any)
-    public static String valueToStringFX(@ImmediateValue Object item) throws UserException, InternalException
+    public static String valueToStringFX(Object item) throws UserException, InternalException
     {
         return Utility.launderSimulationEx(() -> valueToString(item));
     }
     
     public static interface Truncater
     {
-        public String truncateNumber(@ImmediateValue Number number) throws InternalException, UserException;
+        public String truncateNumber(Number number) throws InternalException, UserException;
         // TODO also allow list truncation
     }
 
     // If asExpressionOfType != null, convert to Expression, else convert just to value
-    @OnThread(Tag.Simulation)
-    public static String valueToString(@Value Object item, @Nullable DataType asExpressionOfType, boolean surroundedByBrackets, @Nullable Truncater truncater) throws UserException, InternalException
+    public static String valueToString(Object item, DataType asExpressionOfType, boolean surroundedByBrackets, Truncater truncater) throws UserException, InternalException
     {
         if (item instanceof Number)
         {
@@ -378,12 +375,12 @@ public class DataTypeUtility
         }
         else if (item instanceof TemporalAccessor)
         {
-            @Value TemporalAccessor t = Utility.cast(item, TemporalAccessor.class);
+            TemporalAccessor t = Utility.cast(item, TemporalAccessor.class);
             return temporalToString(t, asExpressionOfType);
         }
         else if (item instanceof TaggedValue)
         {
-            @Value TaggedValue tv = Utility.cast(item, TaggedValue.class);
+            TaggedValue tv = Utility.cast(item, TaggedValue.class);
             Pair<TypeId, ImmutableList<TagType<DataType>>> asExpressionOfTaggedType = asExpressionOfType == null ? null : asExpressionOfType.apply(new SpecificDataTypeVisitor<Pair<TypeId, ImmutableList<TagType<DataType>>>>() {
                 @Override
                 public Pair<TypeId, ImmutableList<TagType<DataType>>> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException
@@ -392,10 +389,10 @@ public class DataTypeUtility
                 }
             });
             String tagName = (asExpressionOfTaggedType != null ? ("tag\\\\" + asExpressionOfTaggedType.getFirst().getRaw() + "\\") : "") + tv.getTagName();
-            @Nullable @Value Object tvInner = tv.getInner();
+            Object tvInner = tv.getInner();
             if (tvInner != null)
             {
-                @Nullable DataType typeInner = asExpressionOfTaggedType == null ? null : Utility.getI(asExpressionOfTaggedType.getSecond(), tv.getTagIndex()).getInner();
+                DataType typeInner = asExpressionOfTaggedType == null ? null : Utility.getI(asExpressionOfTaggedType.getSecond(), tv.getTagIndex()).getInner();
                 if (asExpressionOfTaggedType != null)
                     return "@call " + tagName + "(" + valueToString(tvInner, typeInner, true, truncater) + ")";
                 else
@@ -408,21 +405,21 @@ public class DataTypeUtility
         }
         else if (item instanceof Record)
         {
-            @Value Record record = Utility.cast(item, Record.class);
+            Record record = Utility.cast(item, Record.class);
             StringBuilder s = new StringBuilder();
             if (!surroundedByBrackets)
                 s.append("(");
             boolean first = true;
 
-            ImmutableMap<@ExpressionIdentifier String, DataType> fieldTypes = asExpressionOfType == null ? null : asExpressionOfType.apply(new SpecificDataTypeVisitor<ImmutableMap<@ExpressionIdentifier String, DataType>>() {
+            ImmutableMap<String, DataType> fieldTypes = asExpressionOfType == null ? null : asExpressionOfType.apply(new SpecificDataTypeVisitor<ImmutableMap<String, DataType>>() {
                 @Override
-                public ImmutableMap<@ExpressionIdentifier String, DataType> record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, InternalException
+                public ImmutableMap<String, DataType> record(ImmutableMap<String, DataType> fields) throws InternalException, InternalException
                 {
                     return fields;
                 }
             });
             
-            for (Entry<@ExpressionIdentifier String, @Value Object> entry : Utility.iterableStream(record.getFullContent().entrySet().stream().sorted(Comparator.<Entry<@ExpressionIdentifier String, @Value Object>, @ExpressionIdentifier String>comparing(e -> e.getKey()))))
+            for (Entry<String, Object> entry : Utility.iterableStream(record.getFullContent().entrySet().stream().sorted(Comparator.<Entry<String, Object>, String>comparing(e -> e.getKey()))))
             {
                 if (!first)
                     s.append(", ");
@@ -463,13 +460,13 @@ public class DataTypeUtility
         }
     }
 
-    public static String numberToString(@Value Object item, @Nullable DataType asExpressionOfType, @Nullable Truncater truncater) throws InternalException, UserException
+    public static String numberToString(Object item, DataType asExpressionOfType, Truncater truncater) throws InternalException, UserException
     {
         String number;
         if (truncater != null)
         {
             @SuppressWarnings("valuetype") // Number is always ImmediateValue
-            @ImmediateValue Number cast = Utility.cast(item, Number.class);
+            Number cast = Utility.cast(item, Number.class);
             number = truncater.truncateNumber(cast);
         }
         else if (item instanceof BigDecimal)
@@ -493,7 +490,7 @@ public class DataTypeUtility
         return number + (asExpressionOfUnit != null && !asExpressionOfUnit.equals(Unit.SCALAR) ? "{" + asExpressionOfUnit.toString() + "}" : "");
     }
 
-    public static String temporalToString(@Value TemporalAccessor t, @Nullable DataType asExpressionOfType) throws InternalException
+    public static String temporalToString(TemporalAccessor t, DataType asExpressionOfType) throws InternalException
     {
         DateTimeType type;
         if (t instanceof LocalDate)
@@ -528,7 +525,7 @@ public class DataTypeUtility
             return s;
     }
 
-    public static <DT extends DataType> @ImmediateValue TaggedValue makeDefaultTaggedValue(ImmutableList<TagType<DT>> tagTypes) throws InternalException
+    public static <DT extends DataType> TaggedValue makeDefaultTaggedValue(ImmutableList<TagType<DT>> tagTypes) throws InternalException
     {
         OptionalInt noInnerIndex = Utility.findFirstIndex(tagTypes, tt -> tt.getInner() == null);
         if (noInnerIndex.isPresent())
@@ -537,52 +534,52 @@ public class DataTypeUtility
         }
         else
         {
-            @Nullable DataType inner = tagTypes.get(0).getInner();
+            DataType inner = tagTypes.get(0).getInner();
             if (inner == null)
                 throw new InternalException("Impossible: no tags without inner value, yet no inner value!");
             return TaggedValue.immediate(0, makeDefaultValue(inner), DataTypeUtility.fromTags(tagTypes));
         }
     }
 
-    public static @ImmediateValue Object makeDefaultValue(DataType dataType) throws InternalException
+    public static Object makeDefaultValue(DataType dataType) throws InternalException
     {
-        return dataType.apply(new DataTypeVisitorEx<@ImmediateValue Object, InternalException>()
+        return dataType.apply(new DataTypeVisitorEx<Object, InternalException>()
         {
             @Override
-            public @ImmediateValue Object number(NumberInfo numberInfo) throws InternalException, InternalException
+            public Object number(NumberInfo numberInfo) throws InternalException, InternalException
             {
                 return DataTypeUtility.value(0);
             }
 
             @Override
-            public @ImmediateValue Object text() throws InternalException, InternalException
+            public Object text() throws InternalException, InternalException
             {
                 return DataTypeUtility.value("");
             }
 
             @Override
-            public @ImmediateValue Object date(DateTimeInfo dateTimeInfo) throws InternalException, InternalException
+            public Object date(DateTimeInfo dateTimeInfo) throws InternalException, InternalException
             {
                 return dateTimeInfo.getDefaultValue();
             }
 
             @Override
-            public @ImmediateValue Object bool() throws InternalException, InternalException
+            public Object bool() throws InternalException, InternalException
             {
                 return DataTypeUtility.value(false);
             }
 
             @Override
-            public @ImmediateValue Object tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, InternalException
+            public Object tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, InternalException
             {
                 return makeDefaultTaggedValue(tags);
             }
 
             @Override
-            public @ImmediateValue Object record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, InternalException
+            public Object record(ImmutableMap<String, DataType> fields) throws InternalException, InternalException
             {
-                ImmutableMap.Builder<@ExpressionIdentifier String, @ImmediateValue Object> values = ImmutableMap.builderWithExpectedSize(fields.size());
-                for (Entry<@ExpressionIdentifier String, DataType> entry : fields.entrySet())
+                ImmutableMap.Builder<String, Object> values = ImmutableMap.builderWithExpectedSize(fields.size());
+                for (Entry<String, DataType> entry : fields.entrySet())
                 {
                     values.put(entry.getKey(), makeDefaultValue(entry.getValue()));
                 }
@@ -591,22 +588,21 @@ public class DataTypeUtility
             }
 
             @Override
-            public @ImmediateValue Object array(@Nullable DataType inner) throws InternalException, InternalException
+            public Object array(DataType inner) throws InternalException, InternalException
             {
-                return DataTypeUtility.<@Value Object>valueImmediate(Collections.<@ImmediateValue Object>emptyList());
+                return DataTypeUtility.<Object>valueImmediate(Collections.<Object>emptyList());
             }
         });
     }
 
     // Fetches a ListEx from the simulation thread and returns it as a flat list on the FX thread.
-    @OnThread(Tag.FXPlatform)
-    public static List<@Value Object> fetchList(ListEx simList) throws InternalException
+    public static List<Object> fetchList(ListEx simList) throws InternalException
     {
-        CompletableFuture<Either<Exception, List<@Value Object>>> f = new CompletableFuture<>();
+        CompletableFuture<Either<Exception, List<Object>>> f = new CompletableFuture<>();
         Workers.onWorkerThread("Fetch list", Priority.FETCH, () -> {
             try
             {
-                ArrayList<@Value Object> r = new ArrayList<>(simList.size());
+                ArrayList<Object> r = new ArrayList<>(simList.size());
                 for (int i = 0; i < simList.size(); i++)
                 {
                     r.add(simList.get(i));
@@ -618,7 +614,7 @@ public class DataTypeUtility
                 f.complete(Either.left(e));
             }
         });
-        Either<Exception, List<@Value Object>> either;
+        Either<Exception, List<Object>> either;
         try
         {
             either = f.get();
@@ -649,13 +645,12 @@ public class DataTypeUtility
         }
     }
 
-    @OnThread(Tag.Any)
-    public static @ImmediateValue TemporalAccessor parseTemporalFlexible(DateTimeInfo dateTimeInfo, StringView src) throws PositionedUserException
+    public static TemporalAccessor parseTemporalFlexible(DateTimeInfo dateTimeInfo, StringView src) throws PositionedUserException
     {
         src.skipSpaces();
         ImmutableList<DateTimeFormatter> formatters = dateTimeInfo.getFlexibleFormatters().stream().flatMap(ImmutableList::stream).collect(ImmutableList.<DateTimeFormatter>toImmutableList());
         // Updated char position and return value:
-        ArrayList<Pair<Integer, @Value TemporalAccessor>> possibles = new ArrayList<>();
+        ArrayList<Pair<Integer, TemporalAccessor>> possibles = new ArrayList<>();
         WrappedCharSequence wrapped = Utility.wrapPreprocessDate(src.parseProgress.src, src.parseProgress.curCharIndex);
         ArrayList<DateTimeFormatter> possibleFormatters = new ArrayList<>();
         for (DateTimeFormatter formatter : formatters)
@@ -664,7 +659,7 @@ public class DataTypeUtility
             {
                 ParsePosition position = new ParsePosition(src.parseProgress.curCharIndex);
                 TemporalAccessor temporalAccessor = formatter.parse(wrapped, position);
-                @Value TemporalAccessor value = value(dateTimeInfo, temporalAccessor);
+                TemporalAccessor value = value(dateTimeInfo, temporalAccessor);
                 if (value != null)
                 {
                     possibles.add(new Pair<>(wrapped.translateWrappedToOriginalPos(position.getIndex()), value));
@@ -679,7 +674,7 @@ public class DataTypeUtility
         if (possibles.size() == 1)
         {
             src.setPosition(possibles.get(0).getFirst());
-            @Nullable @ImmediateValue TemporalAccessor value = value(dateTimeInfo, possibles.get(0).getSecond());
+            TemporalAccessor value = value(dateTimeInfo, possibles.get(0).getSecond());
             if (value != null)
                 return value;
         }
@@ -693,7 +688,7 @@ public class DataTypeUtility
             {
                 Pair<Integer, TemporalAccessor> chosen = possiblesByLength.get(possiblesByLength.size() - 1);
                 src.setPosition(chosen.getFirst());
-                @ImmediateValue TemporalAccessor value = value(dateTimeInfo, chosen.getSecond());
+                TemporalAccessor value = value(dateTimeInfo, chosen.getSecond());
                 if (value != null)
                     return value;
             }
@@ -710,7 +705,7 @@ public class DataTypeUtility
             {
                 Pair<Integer, TemporalAccessor> chosen = distinctValues.get(0);
                 src.setPosition(chosen.getFirst());
-                @ImmediateValue TemporalAccessor value = value(dateTimeInfo, chosen.getSecond());
+                TemporalAccessor value = value(dateTimeInfo, chosen.getSecond());
                 if (value != null)
                     return value;
             }
@@ -718,7 +713,7 @@ public class DataTypeUtility
             // Otherwise, throw because it's too ambiguous:
             throw new PositionedUserException(Integer.toString(distinctValues.size()) + " ways to interpret " + dateTimeInfo + " value "
                 + src.snippet() + ": "
-                + Utility.listToString(Utility.<Pair<Integer, @Value TemporalAccessor>, @Value TemporalAccessor>mapList(possibles, p -> p.getSecond()))
+                + Utility.listToString(Utility.<Pair<Integer, TemporalAccessor>, TemporalAccessor>mapList(possibles, p -> p.getSecond()))
                 + " using formatters "
                 + Utility.listToString(possibleFormatters), src.getPosition());
         }
@@ -727,10 +722,9 @@ public class DataTypeUtility
         throw new PositionedUserException("Expected " + DataType.date(dateTimeInfo).toString() + " value but found: " + src.snippet(), src.getPosition());
     }
 
-    @OnThread(Tag.Simulation)
-    public static Comparator<@Value Object> getValueComparator()
+    public static Comparator<Object> getValueComparator()
     {
-        return (Comparator<@Value Object>)(@Value Object a, @Value Object b) -> {
+        return (Comparator<Object>)(Object a, Object b) -> {
             try
             {
                 return Utility.compareValues(a, b);
@@ -847,9 +841,9 @@ public class DataTypeUtility
 
         // Reads up until that character, and also consumes that character
         // Returns null if end of string is found first
-        public @Nullable String readUntil(char c)
+        public String readUntil(char c)
         {
-            @Nullable Pair<String, ParseProgress> p = parseProgress.consumeUpToAndIncluding("" + c);
+            Pair<String, ParseProgress> p = parseProgress.consumeUpToAndIncluding("" + c);
             if (p != null)
             {
                 parseProgress = p.getSecond();
@@ -886,10 +880,10 @@ public class DataTypeUtility
      * Returns a predicate that checks whether the unit is featured anywhere
      * in the given types (incl transitively)
      */
-    public static Predicate<@UnitIdentifier String> featuresUnit(List<DataType> dataTypes)
+    public static Predicate<String> featuresUnit(List<DataType> dataTypes)
     {
         // Pre-calculate set of all units contained by the given types:
-        HashSet<@UnitIdentifier String> allUnits = new HashSet<>();
+        HashSet<String> allUnits = new HashSet<>();
 
         try
         {
@@ -899,7 +893,7 @@ public class DataTypeUtility
                 {
                     private void addUnit(Unit unit)
                     {
-                        allUnits.addAll(unit.getDetails().keySet().stream().<@UnitIdentifier String>map(u -> u.getName()).collect(Collectors.<@UnitIdentifier String>toList()));
+                        allUnits.addAll(unit.getDetails().keySet().stream().<String>map(u -> u.getName()).collect(Collectors.<String>toList()));
                     }
 
                     @Override
@@ -943,7 +937,7 @@ public class DataTypeUtility
                     }
 
                     @Override
-                    public UnitType record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, InternalException
+                    public UnitType record(ImmutableMap<String, DataType> fields) throws InternalException, InternalException
                     {
                         for (Entry<String, DataType> entry : fields.entrySet())
                         {
@@ -1023,7 +1017,7 @@ public class DataTypeUtility
                     }
 
                     @Override
-                    public UnitType record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, InternalException
+                    public UnitType record(ImmutableMap<String, DataType> fields) throws InternalException, InternalException
                     {
                         for (Entry<String, DataType> entry : fields.entrySet())
                         {
@@ -1062,12 +1056,11 @@ public class DataTypeUtility
      * equals and compareTo sensibly, so you can use @Value Object as a key
      * in a TreeMap.
      */
-    @OnThread(Tag.Simulation)
     public static class ComparableValue implements Comparable<ComparableValue>
     {
-        private final @Value Object value;
+        private final Object value;
 
-        public ComparableValue(@Value Object value)
+        public ComparableValue(Object value)
         {
             this.value = value;
         }
@@ -1080,7 +1073,7 @@ public class DataTypeUtility
         }
 
         @Override
-        public boolean equals(@Nullable Object obj)
+        public boolean equals(Object obj)
         {
             return obj instanceof ComparableValue && compareTo((ComparableValue) obj) == 0;
         }
@@ -1100,7 +1093,7 @@ public class DataTypeUtility
             }
         }
 
-        public @Value Object getValue()
+        public Object getValue()
         {
             return value;
         }

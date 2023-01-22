@@ -67,25 +67,19 @@ import java.util.stream.Collectors;
 /**
  * Created by neil on 09/11/2016.
  */
-@OnThread(Tag.FXPlatform)
 public class OutputBuilder
 {
     // Each outer item is a line; each inner item is a list of tokens to be glued together with whitespace
-    @OnThread(value = Tag.Any, requireSynchronized = true)
     private final ArrayList<List<String>> lines = new ArrayList<>();
-    @OnThread(value = Tag.Any, requireSynchronized = true)
-    private @Nullable ArrayList<String> curLine = null;
-    @OnThread(value = Tag.Any, requireSynchronized = true)
+    private ArrayList<String> curLine = null;
     private final ArrayList<String> curLinePrefixStack = new ArrayList<>();
 
-    @OnThread(Tag.Any)
     public OutputBuilder()
     {
 
     }
 
     // Gets the current line, making a new one if needed
-    @OnThread(Tag.Any)
     private synchronized ArrayList<String> cur()
     {
         if (curLine == null)
@@ -94,14 +88,12 @@ public class OutputBuilder
     }
 
     // Outputs a token from MainLexer
-    @OnThread(Tag.Any)
     public synchronized OutputBuilder t(int token)
     {
         return t(token, MainLexer.VOCABULARY);
     }
 
     // Outputs a token from given vocab
-    @OnThread(Tag.Any)
     public synchronized OutputBuilder t(int token, Vocabulary vocabulary)
     {
         String literalName = vocabulary.getLiteralName(token);
@@ -112,7 +104,6 @@ public class OutputBuilder
         return this;
     }
     
-    @OnThread(Tag.Any)
     public static String token(Vocabulary vocabulary, int token)
     {
         String literalName = vocabulary.getLiteralName(token);
@@ -122,7 +113,6 @@ public class OutputBuilder
         return stripQuotes(literalName);
     }
 
-    @OnThread(Tag.Any)
     public static String stripQuotes(String quoted)
     {
         if (quoted.startsWith("'") && quoted.endsWith("'"))
@@ -132,27 +122,23 @@ public class OutputBuilder
     }
 
     // Outputs a table identifier, quoted if necessary
-    @OnThread(Tag.Any)
     public synchronized OutputBuilder id(TableId id)
     {
         return id(id.getOutput(), QuoteBehaviour.QUOTE_SPACES);
     }
 
     // Outputs a column identifier, quoted if necessary
-    @OnThread(Tag.Any)
     public synchronized OutputBuilder id(ColumnId id)
     {
         return id(id.getOutput(), QuoteBehaviour.QUOTE_SPACES);
     }
 
     // Outputs an expression identifier, with no quotes
-    @OnThread(Tag.Any)
-    public synchronized OutputBuilder expId(@ExpressionIdentifier String id)
+    public synchronized OutputBuilder expId(String id)
     {
         return raw(id);
     }
 
-    @OnThread(Tag.Any)
     public synchronized OutputBuilder quote(TypeId id)
     {
         cur().add(quoted(id.getOutput()));
@@ -160,21 +146,18 @@ public class OutputBuilder
     }
 
     // Outputs a column identifier, quoted if necessary
-    @OnThread(Tag.Any)
     public synchronized OutputBuilder quote(ColumnId id)
     {
         cur().add(quoted(id.getOutput()));
         return this;
     }
 
-    @OnThread(Tag.Any)
     public synchronized OutputBuilder unquoted(TypeId taggedTypeName)
     {
         cur().add(taggedTypeName.getRaw());
         return this;
     }
 
-    @OnThread(Tag.Any)
     public synchronized OutputBuilder unquoted(ColumnId columnName)
     {
         cur().add(columnName.getRaw());
@@ -183,7 +166,6 @@ public class OutputBuilder
 
     // Blank the current line.  Used in exception catch blocks
     // to not leave a partially-completed line.
-    @OnThread(Tag.Any)
     public synchronized void undoCurLine()
     {
         curLine = null;
@@ -211,7 +193,6 @@ public class OutputBuilder
     }
 
     // Outputs an identifier, quoted if necessary
-    @OnThread(Tag.Any)
     public synchronized OutputBuilder id(String id, QuoteBehaviour quoteBehaviour)
     {
         cur().add(quoteBehaviour.process(id));
@@ -219,7 +200,6 @@ public class OutputBuilder
     }
 
     // Outputs a quoted absolute path
-    @OnThread(Tag.Any)
     public synchronized OutputBuilder path(Path path)
     {
         cur().add(quoted(path.toFile().getAbsolutePath()));
@@ -227,7 +207,6 @@ public class OutputBuilder
     }
 
     // Add a newline
-    @OnThread(Tag.Any)
     public synchronized OutputBuilder nl()
     {
         lines.add(cur());
@@ -236,14 +215,12 @@ public class OutputBuilder
     }
 
 
-    @OnThread(Tag.Any)
     public static String quoted(String s)
     {
         // Order matters; escape ^ by itself first:
         return "\"" + GrammarUtility.escapeChars(s) + "\"";
     }
 
-    @OnThread(Tag.Any)
     private static String quotedIfNecessary(String s)
     {
         if (GrammarUtility.validUnquoted(s))
@@ -253,7 +230,6 @@ public class OutputBuilder
 
     }
 
-    @OnThread(Tag.Any)
     public synchronized List<String> toLines()
     {
         ArrayList<String> finished = new ArrayList<>(Utility.<List<String>, String>mapList(lines, line -> line.stream().collect(Collectors.joining(" "))));
@@ -263,7 +239,6 @@ public class OutputBuilder
     }
 
     @Override
-    @OnThread(Tag.Any)
     public synchronized String toString()
     {
         String finished = lines.stream().map(line -> line.stream().collect(Collectors.joining(" ")) + "\n").collect(Collectors.joining());
@@ -273,21 +248,18 @@ public class OutputBuilder
     }
 
     // Outputs a single value
-    @OnThread(Tag.Any)
-    public synchronized OutputBuilder dataValue(DataType type, @Value Object value) throws UserException, InternalException
+    public synchronized OutputBuilder dataValue(DataType type, Object value) throws UserException, InternalException
     {
         // Defeat thread checker:
         return ((ExBiFunction<DataTypeValue, Integer, OutputBuilder>)this::data).apply(type.fromCollapsed((i, prog) -> value), 0);
     }
 
     // Outputs an element of an entire data set
-    @OnThread(Tag.Simulation)
     public synchronized OutputBuilder data(DataTypeValue type, int index) throws UserException, InternalException
     {
         return data(type, index, false, false);
     }
     
-    @OnThread(Tag.Simulation)
     private synchronized OutputBuilder data(DataTypeValue type, int index, boolean nested, boolean alreadyRoundBracketed) throws UserException, InternalException
     {
         int curLength = cur().size();
@@ -296,10 +268,9 @@ public class OutputBuilder
             type.applyGet(new DataTypeVisitorGet<UnitType>()
             {
                 @Override
-                @OnThread(Tag.Simulation)
-                public UnitType number(GetValue<@Value Number> g, NumberInfo displayInfo) throws InternalException, UserException
+                public UnitType number(GetValue<Number> g, NumberInfo displayInfo) throws InternalException, UserException
                 {
-                    @Value @NonNull Number number = g.get(index);
+                    Number number = g.get(index);
                     if (number instanceof BigDecimal)
                         raw(((BigDecimal) number).toPlainString());
                     else
@@ -308,26 +279,24 @@ public class OutputBuilder
                 }
 
                 @Override
-                @OnThread(Tag.Simulation)
-                public UnitType text(GetValue<@Value String> g) throws InternalException, UserException
+                public UnitType text(GetValue<String> g) throws InternalException, UserException
                 {
                     raw(quoted(g.get(index)));
                     return UnitType.UNIT;
                 }
 
                 @Override
-                @OnThread(Tag.Simulation)
-                public UnitType tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tagTypes, GetValue<@Value TaggedValue> g) throws InternalException, UserException
+                public UnitType tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tagTypes, GetValue<TaggedValue> g) throws InternalException, UserException
                 {
-                    @Value TaggedValue v = g.get(index);
+                    TaggedValue v = g.get(index);
                     TagType<DataType> t = tagTypes.get(v.getTagIndex());
-                    @Nullable DataType innerType = t.getInner();
+                    DataType innerType = t.getInner();
                     raw(t.getName());
                     if (innerType != null)
                     {
                         raw("(");
                         data(innerType.fromCollapsed((i, prog) -> {
-                            @Value Object innerValue = v.getInner();
+                            Object innerValue = v.getInner();
                             if (innerValue == null)
                                 throw new InternalException("Missing inner value required by type: " + typeName + " tag " + v.getTagIndex());
                             return innerValue;
@@ -338,30 +307,27 @@ public class OutputBuilder
                 }
 
                 @Override
-                @OnThread(Tag.Simulation)
-                public UnitType bool(GetValue<@Value Boolean> g) throws InternalException, UserException
+                public UnitType bool(GetValue<Boolean> g) throws InternalException, UserException
                 {
                     raw(g.get(index).toString());
                     return UnitType.UNIT;
                 }
 
                 @Override
-                @OnThread(Tag.Simulation)
-                public UnitType date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> g) throws InternalException, UserException
+                public UnitType date(DateTimeInfo dateTimeInfo, GetValue<TemporalAccessor> g) throws InternalException, UserException
                 {
                     raw(dateTimeInfo.getStrictFormatter().format(g.get(index)));
                     return UnitType.UNIT;
                 }
 
                 @Override
-                @OnThread(Tag.Simulation)
-                public UnitType record(ImmutableMap<@ExpressionIdentifier String, DataType> types, GetValue<@Value Record> g) throws InternalException, UserException
+                public UnitType record(ImmutableMap<String, DataType> types, GetValue<Record> g) throws InternalException, UserException
                 {
                    if (!alreadyRoundBracketed)
                         raw("(");
                     boolean first = true;
                     Record record = g.get(index);
-                    for (Entry<@ExpressionIdentifier String, DataType> entry : Utility.iterableStream(types.entrySet().stream().sorted(Comparator.comparing(e -> e.getKey()))))
+                    for (Entry<String, DataType> entry : Utility.iterableStream(types.entrySet().stream().sorted(Comparator.comparing(e -> e.getKey()))))
                     {
                         if (!first)
                             raw(",");
@@ -375,11 +341,10 @@ public class OutputBuilder
                 }
 
                 @Override
-                @OnThread(Tag.Simulation)
-                public UnitType array(DataType inner, GetValue<@Value ListEx> g) throws InternalException, UserException
+                public UnitType array(DataType inner, GetValue<ListEx> g) throws InternalException, UserException
                 {
                     raw("[");
-                    @NonNull ListEx details = g.get(index);
+                    ListEx details = g.get(index);
                     for (int i = 0; i < details.size(); i++)
                     {
                         if (i > 0)
@@ -403,7 +368,6 @@ public class OutputBuilder
     }
 
     // Don't forget, this will get an extra space added to it as spacing
-    @OnThread(Tag.Any)
     public synchronized OutputBuilder ws(String whiteSpace)
     {
         cur().add(whiteSpace);
@@ -411,7 +375,6 @@ public class OutputBuilder
     }
 
     // Outputs the set of lines between @BEGIN/@END tags
-    @OnThread(Tag.Simulation)
     public synchronized OutputBuilder inner(Supplier<List<String>> genDetail, SaveTag saveTag)
     {
         begin().ws(" ").raw(saveTag.getTag()).nl();
@@ -427,32 +390,27 @@ public class OutputBuilder
         return this;
     }
 
-    @OnThread(Tag.Any)
     public synchronized void pop()
     {
         curLinePrefixStack.remove(curLinePrefixStack.size() - 1);
     }
 
-    @OnThread(Tag.Any)
     public synchronized void pushIndent()
     {
         curLinePrefixStack.add("");
     }
 
-    @OnThread(Tag.Any)
     public synchronized void pushPrefix(SaveTag saveTag)
     {
         curLinePrefixStack.add(saveTag.getTag());
     }
 
-    @OnThread(Tag.Any)
     public OutputBuilder begin()
     {
         return raw("@BEGIN");
     }
 
     // Outputs the given raw string
-    @OnThread(Tag.Any)
     public OutputBuilder raw(String item)
     {
         cur().add(item);
@@ -460,21 +418,18 @@ public class OutputBuilder
     }
 
     // Adds spacing at the current position
-    @OnThread(Tag.Any)
     public OutputBuilder indent()
     {
         // Second space will be added after:
         return ws(" ");
     }
 
-    @OnThread(Tag.Any)
     public OutputBuilder end()
     {
         return raw("@END");
     }
 
     // Outputs a number (without E-notation)
-    @OnThread(Tag.Any)
     public synchronized OutputBuilder d(double number)
     {
         cur().add(String.format("%f", number));
@@ -482,26 +437,22 @@ public class OutputBuilder
     }
 
     // Outputs an arbitrary keyword
-    @OnThread(Tag.Any)
     public synchronized OutputBuilder kw(String keyword)
     {
         return raw(keyword);
     }
 
-    @OnThread(Tag.Any)
     public synchronized void s(String string)
     {
         cur().add(quoted(string));
     }
 
-    @OnThread(Tag.Any)
     public synchronized OutputBuilder unit(String s)
     {
         cur().add("{" + s + "}");
         return this;
     }
 
-    @OnThread(Tag.Any)
     public synchronized OutputBuilder n(long n)
     {
         cur().add(Long.toString(n));

@@ -36,9 +36,9 @@ public class MutUnitVar implements Comparable<MutUnitVar>, StyledShowable
     private final long id = nextId++;
     
     // package-visible:
-    @Nullable UnitExp pointer;
+    UnitExp pointer;
 
-    public @Nullable Unit toConcreteUnit()
+    public Unit toConcreteUnit()
     {
         if (pointer == null)
             return null;
@@ -47,13 +47,13 @@ public class MutUnitVar implements Comparable<MutUnitVar>, StyledShowable
     
     
     @Override
-    public int compareTo(@NonNull MutUnitVar o)
+    public int compareTo(MutUnitVar o)
     {
         return Long.compare(id, o.id);
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;

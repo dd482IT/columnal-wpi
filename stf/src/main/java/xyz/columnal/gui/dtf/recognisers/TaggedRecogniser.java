@@ -39,34 +39,34 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class TaggedRecogniser extends Recogniser<@ImmediateValue TaggedValue>
+public class TaggedRecogniser extends Recogniser<TaggedValue>
 {
-    private final ImmutableList<TagType<Recogniser<? extends @ImmediateValue @NonNull Object>>> tags;
+    private final ImmutableList<TagType<Recogniser<? extends Object>>> tags;
 
-    public TaggedRecogniser(ImmutableList<TagType<Recogniser<? extends @ImmediateValue @NonNull Object>>> tags)
+    public TaggedRecogniser(ImmutableList<TagType<Recogniser<? extends Object>>> tags)
     {
         this.tags = tags;
     }
 
     @Override
-    public Either<ErrorDetails, SuccessDetails<@ImmediateValue TaggedValue>> process(ParseProgress parseProgress, boolean immediatelySurroundedByRoundBrackets)
+    public Either<ErrorDetails, SuccessDetails<TaggedValue>> process(ParseProgress parseProgress, boolean immediatelySurroundedByRoundBrackets)
     {
         ParseProgress pp = parseProgress.skipSpaces();
         
-        List<Pair<Integer, TagType<Recogniser<? extends @ImmediateValue @NonNull Object>>>> tagsLargestFirst = new ArrayList<>(Utility.streamIndexed(tags).collect(Collectors.<Pair<Integer, TagType<Recogniser<? extends @ImmediateValue @NonNull Object>>>>toList()));
+        List<Pair<Integer, TagType<Recogniser<? extends Object>>>> tagsLargestFirst = new ArrayList<>(Utility.streamIndexed(tags).collect(Collectors.<Pair<Integer, TagType<Recogniser<? extends Object>>>>toList()));
         // Longest names first:
-        Collections.<Pair<Integer, TagType<Recogniser<? extends @ImmediateValue @NonNull Object>>>>sort(tagsLargestFirst, Comparator.<Pair<Integer, TagType<Recogniser<? extends @ImmediateValue @NonNull Object>>>, Integer>comparing(p -> -p.getSecond().getName().length()));
+        Collections.<Pair<Integer, TagType<Recogniser<? extends Object>>>>sort(tagsLargestFirst, Comparator.<Pair<Integer, TagType<Recogniser<? extends Object>>>, Integer>comparing(p -> -p.getSecond().getName().length()));
 
         StringBuilder replText = new StringBuilder();
         
-        for (Pair<Integer, TagType<Recogniser<? extends @ImmediateValue @NonNull Object>>> tagInfo : tagsLargestFirst)
+        for (Pair<Integer, TagType<Recogniser<? extends Object>>> tagInfo : tagsLargestFirst)
         {
-            TagType<Recogniser<? extends @ImmediateValue @NonNull Object>> tag = tagInfo.getSecond();
+            TagType<Recogniser<? extends Object>> tag = tagInfo.getSecond();
             ParseProgress afterTag = pp.consumeNext(tag.getName());
             if (afterTag != null)
             {
                 replText.append(tag.getName());
-                @Nullable Recogniser<? extends @ImmediateValue @NonNull Object> inner = tag.getInner();
+                Recogniser<? extends Object> inner = tag.getInner();
                 if (inner == null)
                     return success(TaggedValue.immediate(tagInfo.getFirst(), null, DataTypeUtility.fromTags(tags)), replText.toString(), afterTag);
                 
@@ -74,7 +74,7 @@ public class TaggedRecogniser extends Recogniser<@ImmediateValue TaggedValue>
                 replText.append("(");
                 if (pp == null)
                     return error("Expected '(' around an inner value", afterTag.curCharIndex);
-                return inner.process(pp, true).<SuccessDetails<@ImmediateValue TaggedValue>>flatMap((SuccessDetails<? extends @ImmediateValue @NonNull Object>  succ) -> {
+                return inner.process(pp, true).<SuccessDetails<TaggedValue>>flatMap((SuccessDetails<? extends Object>  succ) -> {
                     replText.append(succ.immediateReplacementText);
                     ParseProgress afterBracket = succ.parseProgress.consumeNext(")");
                     if (afterBracket == null)

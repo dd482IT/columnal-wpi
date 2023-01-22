@@ -34,7 +34,6 @@ import xyz.columnal.utility.gui.LightDialog;
 /**
  * A dialog for editing a HideColumns transformation.
  */
-@OnThread(Tag.FXPlatform)
 public class HideColumnsDialog extends LightDialog<ImmutableList<ColumnId>>
 {
     public HideColumnsDialog(DimmableParent parent, TableManager tableManager, HideColumns hideColumns)

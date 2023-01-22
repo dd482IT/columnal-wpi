@@ -55,7 +55,6 @@ import java.util.ArrayList;
 
 // Most of the transformations are currently identity transform or similar,
 // but that's fine for the manual edit test.
-@OnThread(Tag.Simulation)
 public class GenDataAndTransforms extends Generator<TableManager>
 {
     public GenDataAndTransforms()

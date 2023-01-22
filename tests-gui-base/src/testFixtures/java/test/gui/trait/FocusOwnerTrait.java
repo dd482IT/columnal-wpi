@@ -38,14 +38,12 @@ import static org.junit.Assert.assertTrue;
 
 public interface FocusOwnerTrait extends FxRobotInterface
 {
-    @OnThread(Tag.Any)
-    default @Nullable Node getFocusOwner()
+    default Node getFocusOwner()
     {
         Window curWindowFinal = TFXUtil.fx(() -> getRealFocusedWindow());
         return TFXUtil.fx(() -> curWindowFinal.getScene().getFocusOwner());
     }
 
-    @OnThread(Tag.Any)
     default Window fxGetRealFocusedWindow()
     {
         return TFXUtil.fx(this::getRealFocusedWindow);
@@ -53,7 +51,6 @@ public interface FocusOwnerTrait extends FxRobotInterface
     
 
     // Ignores PopupWindow
-    @OnThread(Tag.FXPlatform)
     default Window getRealFocusedWindow()
     {
         // The only children of Window are PopupWindow, Stage and EmbeddedWindow.
@@ -81,7 +78,6 @@ public interface FocusOwnerTrait extends FxRobotInterface
         return curWindow.size() == 1 ? curWindow.get(0) : targetWindow();
     }
 
-    @OnThread(Tag.Any)
     default <C extends Node> C getFocusOwner(Class<C> expectedClass)
     {
         Node node = getFocusOwner();
@@ -90,7 +86,6 @@ public interface FocusOwnerTrait extends FxRobotInterface
         return expectedClass.cast(node);
     }
 
-    @OnThread(Tag.Any) 
     default FxRobotInterface correctTargetWindow()
     {
         return this; // TFXUtil.fx(() -> targetWindow(getRealFocusedWindow()));

@@ -82,7 +82,7 @@ import static xyz.columnal.data.datatype.DataType.TEXT;
  */
 public class TypeManager
 {
-    public static final @ExpressionIdentifier String MAYBE_NAME = "Optional";
+    public static final String MAYBE_NAME = "Optional";
     private final UnitManager unitManager;
     private final HashMap<TypeId, TaggedTypeDefinition> userTypes = new HashMap<>();
     private final HashMap<TypeId, TaggedTypeDefinition> builtInTypes = new HashMap<>();
@@ -100,7 +100,7 @@ public class TypeManager
         this.unitManager = unitManager;
         // This needs to be built-in because we use it ourselves
         // e.g. when importing data which may be missing.s
-        maybeType = new TaggedTypeDefinition(new TypeId(MAYBE_NAME), ImmutableList.of(new Pair<TypeVariableKind, @ExpressionIdentifier  String>(TypeVariableKind.TYPE, "a")), ImmutableList.of(
+        maybeType = new TaggedTypeDefinition(new TypeId(MAYBE_NAME), ImmutableList.of(new Pair<TypeVariableKind, String>(TypeVariableKind.TYPE, "a")), ImmutableList.of(
             new TagType<>("None", null),
             new TagType<>("Is", JellyType.typeVariable("a"))
         ));
@@ -109,20 +109,20 @@ public class TypeManager
         voidType = new TaggedTypeDefinition(new TypeId("Void"), ImmutableList.of(), ImmutableList.of());
         builtInTypes.put(voidType.getTaggedTypeName(), voidType);
         // TODO make this into a GADT:
-        typeGADT = new TaggedTypeDefinition(new TypeId("Type"), ImmutableList.of(new Pair<TypeVariableKind, @ExpressionIdentifier String>(TypeVariableKind.TYPE, "t")), ImmutableList.of(new TagType<>("Type", null)));
+        typeGADT = new TaggedTypeDefinition(new TypeId("Type"), ImmutableList.of(new Pair<TypeVariableKind, String>(TypeVariableKind.TYPE, "t")), ImmutableList.of(new TagType<>("Type", null)));
         builtInTypes.put(new TypeId("Type"), typeGADT);
         // TODO make this into a GADT:
-        unitGADT = new TaggedTypeDefinition(new TypeId("Unit"), ImmutableList.of(new Pair<TypeVariableKind, @ExpressionIdentifier String>(TypeVariableKind.UNIT, "u")), ImmutableList.of(new TagType<>("Unit", null)));
+        unitGADT = new TaggedTypeDefinition(new TypeId("Unit"), ImmutableList.of(new Pair<TypeVariableKind, String>(TypeVariableKind.UNIT, "u")), ImmutableList.of(new TagType<>("Unit", null)));
         builtInTypes.put(new TypeId("Unit"), unitGADT);
         allKnownTypes.putAll(builtInTypes);
     }
 
-    public @Value TaggedValue maybeMissing()
+    public TaggedValue maybeMissing()
     {
         return maybeMissing;
     }
     
-    public @Value TaggedValue maybePresent(@Value Object content)
+    public TaggedValue maybePresent(Object content)
     {
         return new TaggedValue(1, content, maybeType);
     }
@@ -138,7 +138,7 @@ public class TypeManager
     
     // Either makes a new one, or fetches the existing one if it is the same type
     // or renames it to a spare name and returns that.
-    public @Nullable TaggedTypeDefinition registerTaggedType(@ExpressionIdentifier String typeName, ImmutableList<Pair<TypeVariableKind, @ExpressionIdentifier String>> typeVariables, ImmutableList<TagType<JellyType>> tagTypes) throws InternalException
+    public TaggedTypeDefinition registerTaggedType(String typeName, ImmutableList<Pair<TypeVariableKind, String>> typeVariables, ImmutableList<TagType<JellyType>> tagTypes) throws InternalException
     {
         if (tagTypes.isEmpty())
             throw new InternalException("Tagged type cannot have zero tags");
@@ -182,13 +182,13 @@ public class TypeManager
     private void loadTypeDecl(TypeDeclContext typeDeclContext) throws UserException, InternalException
     {
         TypeId typeName = new TypeId(IdentifierUtility.fromParsed(typeDeclContext.typeName().ident()));
-        ImmutableList<Pair<TypeVariableKind, @ExpressionIdentifier String>> typeParams = Utility.<TagDeclParamContext, Pair<TypeVariableKind, @ExpressionIdentifier String>>mapListExI(typeDeclContext.taggedDecl().tagDeclParam(), var -> {
-            return new Pair<TypeVariableKind, @ExpressionIdentifier String>(var.TYPEVAR() != null ? TypeVariableKind.TYPE : TypeVariableKind. UNIT, IdentifierUtility.fromParsed(var.ident()));
+        ImmutableList<Pair<TypeVariableKind, String>> typeParams = Utility.<TagDeclParamContext, Pair<TypeVariableKind, String>>mapListExI(typeDeclContext.taggedDecl().tagDeclParam(), var -> {
+            return new Pair<TypeVariableKind, String>(var.TYPEVAR() != null ? TypeVariableKind.TYPE : TypeVariableKind. UNIT, IdentifierUtility.fromParsed(var.ident()));
         });
         List<TagType<JellyType>> tags = new ArrayList<>();
         for (TagItemContext item : typeDeclContext.taggedDecl().tagItem())
         {
-            @ExpressionIdentifier String tagName = IdentifierUtility.fromParsed(item.ident());
+            String tagName = IdentifierUtility.fromParsed(item.ident());
 
             if (tags.stream().anyMatch(t -> t.getName().equals(tagName)))
                 throw new UserException("Duplicate tag names in format: \"" + tagName + "\"");
@@ -226,10 +226,10 @@ public class TypeManager
         if (type.record() != null)
         {
             RecordContext rec = type.record();
-            HashMap<@ExpressionIdentifier String, DataType> fields = new HashMap<>();
+            HashMap<String, DataType> fields = new HashMap<>();
             for (int i = 0; i < rec.columnName().size(); i++)
             {
-                @ExpressionIdentifier String name = IdentifierUtility.fromParsed(rec.columnName(i));
+                String name = IdentifierUtility.fromParsed(rec.columnName(i));
                 DataType dataType = loadTypeUse(rec.type(i));
                 if (fields.put(name, dataType) != null)
                     throw new UserException("Duplicated field: \"" + name + "\"");
@@ -272,7 +272,7 @@ public class TypeManager
         {
             NumberContext n = type.number();
             Unit unit = n.UNIT() == null ? Unit.SCALAR : unitManager.loadUse(n.UNIT().getText());
-            @Nullable NumberDisplayInfo ndi = null;
+            NumberDisplayInfo ndi = null;
             return DataType.number(new NumberInfo(unit));
         }
         else if (type.applyRef() != null)
@@ -312,7 +312,7 @@ public class TypeManager
             throw new InternalException("Unrecognised case: \"" + type.getText() + "\"");
     }
 
-    public @Nullable DataType lookupType(TypeId typeId, ImmutableList<Either<Unit, DataType>> typeVariableSubs) throws InternalException, TaggedInstantiationException, UnknownTypeException
+    public DataType lookupType(TypeId typeId, ImmutableList<Either<Unit, DataType>> typeVariableSubs) throws InternalException, TaggedInstantiationException, UnknownTypeException
     {
         TaggedTypeDefinition taggedTypeDefinition = allKnownTypes.get(typeId);
         if (taggedTypeDefinition == null)
@@ -321,7 +321,7 @@ public class TypeManager
             return taggedTypeDefinition.instantiate(typeVariableSubs, this);
     }
     
-    public @Nullable TaggedTypeDefinition lookupDefinition(TypeId typeId)
+    public TaggedTypeDefinition lookupDefinition(TypeId typeId)
     {
         return getKnownTaggedTypes().get(typeId);
     }
@@ -342,19 +342,17 @@ public class TypeManager
         return Collections.unmodifiableMap(userTypes);
     }
 
-    @OnThread(Tag.Simulation)
     public List<String> save()
     {
         return save(t -> true);
     }
     
-    @OnThread(Tag.Simulation)
     public List<String> save(Predicate<TypeId> saveType)
     {
         List<TaggedTypeDefinition> ignoreTypes = Arrays.asList(voidType, maybeType, unitGADT, typeGADT);
         List<TaggedTypeDefinition> typesToSave = userTypes.values().stream().filter(t -> !Utility.containsRef(ignoreTypes, t) && saveType.test(t.getTaggedTypeName())).collect(Collectors.<TaggedTypeDefinition>toList());
         
-        Map<@NonNull TaggedTypeDefinition, Collection<TaggedTypeDefinition>> incomingRefs = new HashMap<>();
+        Map<TaggedTypeDefinition, Collection<TaggedTypeDefinition>> incomingRefs = new HashMap<>();
         for (TaggedTypeDefinition taggedTypeDefinition : typesToSave)
         {
             for (TagType<JellyType> tagType : taggedTypeDefinition.getTags())
@@ -363,7 +361,7 @@ public class TypeManager
                     continue;
 
                 tagType.getInner().forNestedTagged(typeName -> {
-                    @Nullable TaggedTypeDefinition referencedType = userTypes.get(typeName);
+                    TaggedTypeDefinition referencedType = userTypes.get(typeName);
                     if (referencedType != null && !Utility.containsRef(ignoreTypes, referencedType))
                         incomingRefs.computeIfAbsent(referencedType, t -> new ArrayList<>()).add(taggedTypeDefinition);
                 });
@@ -415,7 +413,7 @@ public class TypeManager
             }
         }
 
-        for (Entry<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> unit : typeManager.getUnitManager().getAllUserDeclared().entrySet())
+        for (Entry<String, Either<String, UnitDeclaration>> unit : typeManager.getUnitManager().getAllUserDeclared().entrySet())
         {
             if (!unitManager.getAllUserDeclared().containsKey(unit.getKey()))
             {
@@ -425,9 +423,9 @@ public class TypeManager
     }
 
     // Either error message or tag
-    public Either<String, TagInfo> lookupTag(@Nullable @ExpressionIdentifier String typeName, @ExpressionIdentifier String constructorName)
+    public Either<String, TagInfo> lookupTag(String typeName, String constructorName)
     {
-        @Nullable TaggedTypeDefinition type;
+        TaggedTypeDefinition type;
         if (typeName != null)
         {
             type = allKnownTypes.get(new TypeId(typeName));
@@ -446,7 +444,7 @@ public class TypeManager
 
         try
         {
-            @NonNull TaggedTypeDefinition typeFinal = type;
+            TaggedTypeDefinition typeFinal = type;
             Optional<Pair<Integer, TagType<JellyType>>> matchingTag = Utility.streamIndexed(type.getTags()).filter(tt -> tt.getSecond().getName().equals(constructorName)).findFirst();
             if (matchingTag.isPresent())
                 return Either.<String, TagInfo>right(new TagInfo(typeFinal, matchingTag.get().getFirst()));
@@ -512,7 +510,7 @@ public class TypeManager
         }
 
         @Override
-        public boolean equals(@Nullable Object o)
+        public boolean equals(Object o)
         {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
@@ -536,13 +534,12 @@ public class TypeManager
             return wholeType.getTaggedTypeName();
         }
         
-        @Pure
         public TagType<JellyType> getTagInfo()
         {
             return wholeType.getTags().get(tagIndex);
         }
 
-        public @Value TaggedValue makeTag(@Nullable @Value Object inner)
+        public TaggedValue makeTag(Object inner)
         {
             return new TaggedValue(tagIndex, inner, wholeType);
         }

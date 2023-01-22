@@ -43,23 +43,19 @@ import java.util.stream.Collectors;
 
 public interface ClickTableLocationTrait extends FxRobotInterface
 {
-    @OnThread(Tag.Any)
     public default Node clickOnItemInBounds(String nodeQuery, VirtualGrid virtualGrid, RectangleBounds rectangleBounds, MouseButton... buttons)
     {
         return withItemInBounds(nodeQuery, virtualGrid, rectangleBounds, (n, p) -> clickOn(p, buttons));
     }
-    @OnThread(Tag.Any)
     public default Node clickOnItemInBounds(NodeQuery nodeQuery, VirtualGrid virtualGrid, RectangleBounds rectangleBounds, MouseButton... buttons)
     {
         return withItemInBounds(nodeQuery, virtualGrid, rectangleBounds, (n, p) -> clickOn(p, buttons));
     }
-    @OnThread(Tag.Any)
     public default Node withItemInBounds(String nodeQuery, VirtualGrid virtualGrid, RectangleBounds rectangleBounds, FXPlatformBiConsumer<Node, Point2D> action)
     {
         return withItemInBounds(TFXUtil.fx(() -> lookup(nodeQuery)), virtualGrid, rectangleBounds, action);
     }
     
-    @OnThread(Tag.Any)
     public default Node withItemInBounds(NodeQuery nodeQuery, VirtualGrid virtualGrid, RectangleBounds rectangleBounds, FXPlatformBiConsumer<Node, Point2D> action)
     {
         Bounds theoretical = TFXUtil.fx(() -> virtualGrid.getRectangleBoundsScreen(rectangleBounds));

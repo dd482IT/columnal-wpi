@@ -34,7 +34,6 @@ import java.lang.annotation.Target;
  * if there is an overlay that extends outside (e.g. row labels which are outside to the left).
  */
 @Documented
-@SubtypeOf(RowOrColIndex.class)
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE_USE, ElementType.TYPE_PARAMETER})
 public @interface GridAreaColIndex

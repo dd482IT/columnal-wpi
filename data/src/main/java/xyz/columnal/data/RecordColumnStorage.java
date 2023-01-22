@@ -47,35 +47,33 @@ import java.util.stream.Stream;
 /**
  * Created by neil on 03/01/2017.
  */
-public class RecordColumnStorage extends SparseErrorColumnStorage<@Value Record> implements ColumnStorage<@Value Record>
+public class RecordColumnStorage extends SparseErrorColumnStorage<Record> implements ColumnStorage<Record>
 {
     // A record like {a: Text, b: Number} is stored in two column storages, one for all the a values, one for all the b
-    private final ImmutableMap<@ExpressionIdentifier String, ColumnStorage<?>> storage;
-    @OnThread(Tag.Any)
+    private final ImmutableMap<String, ColumnStorage<?>> storage;
     private final DataTypeValue type;
 
-    public RecordColumnStorage(ImmutableMap<@ExpressionIdentifier String, DataType> fields, boolean isImmediateData) throws InternalException
+    public RecordColumnStorage(ImmutableMap<String, DataType> fields, boolean isImmediateData) throws InternalException
     {
         this(fields, null, isImmediateData);
     }
 
-    public RecordColumnStorage(ImmutableMap<@ExpressionIdentifier String, DataType> fields, @Nullable BeforeGet<?> beforeGet, boolean isImmediateData) throws InternalException
+    public RecordColumnStorage(ImmutableMap<String, DataType> fields, BeforeGet<?> beforeGet, boolean isImmediateData) throws InternalException
     {
         super(isImmediateData);
-        ImmutableMap.Builder<@ExpressionIdentifier String, ColumnStorage<?>> builder = ImmutableMap.builder();
-        for (Entry<@ExpressionIdentifier String, DataType> field : fields.entrySet())
+        ImmutableMap.Builder<String, ColumnStorage<?>> builder = ImmutableMap.builder();
+        for (Entry<String, DataType> field : fields.entrySet())
         {
             builder.put(field.getKey(), ColumnUtility.makeColumnStorage(field.getValue(), beforeGet, isImmediateData));
         }
         storage = builder.build();
-        type = DataTypeValue.record(Utility.<@ExpressionIdentifier String, ColumnStorage<?>, DataType>mapValues(storage, s -> s.getType().getType()), new GetValue<@Value Record>()
+        type = DataTypeValue.record(Utility.<String, ColumnStorage<?>, DataType>mapValues(storage, s -> s.getType().getType()), new GetValue<Record>()
         {
             @Override
-            @OnThread(Tag.Simulation)
-            public @Value Record getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
+            public Record getWithProgress(int index, ProgressListener progressListener) throws UserException, InternalException
             {
-                ImmutableMap.Builder<@ExpressionIdentifier String, @Value Object> record = ImmutableMap.builderWithExpectedSize(fields.size());
-                for (Entry<@ExpressionIdentifier String, ColumnStorage<?>> entry : storage.entrySet())
+                ImmutableMap.Builder<String, Object> record = ImmutableMap.builderWithExpectedSize(fields.size());
+                for (Entry<String, ColumnStorage<?>> entry : storage.entrySet())
                 {
                     record.put(entry.getKey(), entry.getValue().getType().getCollapsed(index));
                 }
@@ -83,7 +81,7 @@ public class RecordColumnStorage extends SparseErrorColumnStorage<@Value Record>
             }
 
             @Override
-            public @OnThread(Tag.Simulation) void set(int index, Either<String, @Value Record> value) throws InternalException, UserException
+            public void set(int index, Either<String, Record> value) throws InternalException, UserException
             {
                 value.eitherEx_(err -> {
                     setError(index, err);
@@ -93,7 +91,7 @@ public class RecordColumnStorage extends SparseErrorColumnStorage<@Value Record>
                     }
                 }, record -> {
                     unsetError(index);
-                    for (Entry<@ExpressionIdentifier String, ColumnStorage<?>> entry : storage.entrySet())
+                    for (Entry<String, ColumnStorage<?>> entry : storage.entrySet())
                     {
                         entry.getValue().getType().setCollapsed(index, Either.right(record.getField(entry.getKey())));
                     }
@@ -121,7 +119,7 @@ public class RecordColumnStorage extends SparseErrorColumnStorage<@Value Record>
 
     @SuppressWarnings({"unchecked", "all"})
     @Override
-    public void addAll(Stream<Either<String, @Value Record>> items) throws InternalException
+    public void addAll(Stream<Either<String, Record>> items) throws InternalException
     {
         // Each Object[] is one tuple record, add each element to each storage
         for (Either<String, Record> item : Utility.iterableStream(items))
@@ -142,26 +140,25 @@ public class RecordColumnStorage extends SparseErrorColumnStorage<@Value Record>
     }
 
     @Override
-    @OnThread(Tag.Any)
     public DataTypeValue getType()
     {
         return type;
     }
 
     @Override
-    public SimulationRunnable _insertRows(int index, List<@Nullable @Value Record> items) throws InternalException
+    public SimulationRunnable _insertRows(int index, List<Record> items) throws InternalException
     {
         List<SimulationRunnable> reverts = new ArrayList<>();
         try
         {
-            for (Entry<@ExpressionIdentifier String, ColumnStorage<?>> entry : storage.entrySet())
+            for (Entry<String, ColumnStorage<?>> entry : storage.entrySet())
             {
                 @SuppressWarnings("unchecked")
                 ColumnStorage<Object> storage = (ColumnStorage)entry.getValue();
                 
                 // Note: can't use mapList here as it contains nulls
                 ArrayList<Either<String, Object>> r = new ArrayList<>();
-                for (@Nullable Record item : items)
+                for (Record item : items)
                 {
                     if (item == null)
                         r.add(Either.<String, Object>left(""));

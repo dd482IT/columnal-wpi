@@ -30,18 +30,17 @@ import threadchecker.Tag;
 /**
  * Created by neil on 14/11/2016.
  */
-@OnThread(Tag.Any)
 public class TableId implements Comparable<TableId>, StyledShowable
 {
-    private final @ExpressionIdentifier String tableId;
+    private final String tableId;
 
-    public TableId(@ExpressionIdentifier String tableId)
+    public TableId(String tableId)
     {
         this.tableId = tableId;
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -69,13 +68,13 @@ public class TableId implements Comparable<TableId>, StyledShowable
         return tableId;
     }
 
-    public @ExpressionIdentifier String getRaw()
+    public String getRaw()
     {
         return tableId;
     }
 
     @Override
-    public int compareTo(@NonNull TableId o)
+    public int compareTo(TableId o)
     {
         return tableId.compareTo(o.tableId);
     }

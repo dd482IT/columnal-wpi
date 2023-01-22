@@ -37,14 +37,12 @@ import static org.junit.Assert.fail;
  */
 public interface ComboUtilTrait extends FxRobotInterface
 {
-    @OnThread(Tag.Any)
     default <T> void selectNextComboBoxItem(final ComboBox<T> combo) {
         clickOn(combo).push(KeyCode.DOWN).push(KeyCode.ENTER);
     }
 
-    @OnThread(Tag.Any)
-    default <@NonNull T> void selectGivenComboBoxItem(final ComboBox<@NonNull T> combo, final @NonNull T item) {
-        ObservableList<@NonNull T> comboItems = TFXUtil.<ObservableList<@NonNull T>>fx(() -> combo.getItems());
+    default <T> void selectGivenComboBoxItem(final ComboBox<T> combo, final T item) {
+        ObservableList<T> comboItems = TFXUtil.<ObservableList<T>>fx(() -> combo.getItems());
         final int index = comboItems.indexOf(item);
         final int indexSel = TFXUtil.fx(() -> combo.getSelectionModel().getSelectedIndex());
 

@@ -53,13 +53,13 @@ public class BackwardsBooleans extends BackwardsProvider
     }
 
     @Override
-    public List<ExpressionMaker> terminals(DataType targetType, @Value Object targetValue) throws InternalException, UserException
+    public List<ExpressionMaker> terminals(DataType targetType, Object targetValue) throws InternalException, UserException
     {
         return ImmutableList.of();
     }
 
     @Override
-    public List<ExpressionMaker> deep(int maxLevels, DataType targetType, @Value Object targetValue) throws InternalException, UserException
+    public List<ExpressionMaker> deep(int maxLevels, DataType targetType, Object targetValue) throws InternalException, UserException
     {
         if (targetType.equals(DataType.BOOLEAN))
         {
@@ -82,8 +82,8 @@ public class BackwardsBooleans extends BackwardsProvider
             // First form a valid set of values and sort them into order
             boolean ascending = r.nextBoolean();
             DataType dataType = parent.makeType();
-            List<Pair<@Value Object, Expression>> operands = new ArrayList<>(TBasicUtil.<Pair<@Value Object, Expression>>makeList(r, 2, 5, () -> {
-                @Value Object value = parent.makeValue(dataType);
+            List<Pair<Object, Expression>> operands = new ArrayList<>(TBasicUtil.<Pair<Object, Expression>>makeList(r, 2, 5, () -> {
+                Object value = parent.makeValue(dataType);
                 return new Pair<>(value, parent.make(dataType, value, maxLevels - 1));
             }));
             Collections.sort(operands, (a, b) -> { try
@@ -106,14 +106,14 @@ public class BackwardsBooleans extends BackwardsProvider
             if (r.nextBoolean())
             {
                 // Copy from right to left:
-                @Value Object newTarget = operands.get(swap + 1).getFirst();
+                Object newTarget = operands.get(swap + 1).getFirst();
                 operands.set(swap, new Pair<>(newTarget, parent.make(dataType, newTarget, maxLevels - 1)));
                 ops.set(swap, ascending ? ComparisonOperator.LESS_THAN_OR_EQUAL_TO : ComparisonOperator.GREATER_THAN_OR_EQUAL_TO);
             }
             else
             {
                 // Copy from left to right:
-                @Value Object newTarget = operands.get(swap).getFirst();
+                Object newTarget = operands.get(swap).getFirst();
                 operands.set(swap + 1, new Pair<>(newTarget, parent.make(dataType, newTarget, maxLevels - 1)));
                 ops.set(swap, ascending ? ComparisonOperator.LESS_THAN_OR_EQUAL_TO : ComparisonOperator.GREATER_THAN_OR_EQUAL_TO);
             }
@@ -122,7 +122,7 @@ public class BackwardsBooleans extends BackwardsProvider
             {
                 // Need to make it false by swapping two adjacent values (and getting rid of <=/>=)
                 int falsifyOp = r.nextInt(0, operands.size() - 2); // Picking operator really, not operand
-                Pair<@Value Object, Expression> temp = operands.get(falsifyOp);
+                Pair<Object, Expression> temp = operands.get(falsifyOp);
                 operands.set(falsifyOp, operands.get(falsifyOp + 1));
                 operands.set(falsifyOp + 1, temp);
                 ops.set(falsifyOp, ascending ? ComparisonOperator.LESS_THAN : ComparisonOperator.GREATER_THAN);
@@ -133,8 +133,8 @@ public class BackwardsBooleans extends BackwardsProvider
     private Expression neq(int maxLevels, boolean target) throws InternalException, UserException
     {
         DataType t = parent.makeType();
-        @Value Object valA = parent.makeValue(t);
-        @Value Object valB;
+        Object valA = parent.makeValue(t);
+        Object valB;
         int attempts = 0;
         do
         {
@@ -153,7 +153,7 @@ public class BackwardsBooleans extends BackwardsProvider
         DataType t = parent.makeType();
         if (target == true)
         {
-            @Value Object valA = parent.makeValue(t);
+            Object valA = parent.makeValue(t);
             for (int i = 0; i < size; i++)
             {
                 expressions.add(parent.make(t, valA, maxLevels - 1));
@@ -166,7 +166,7 @@ public class BackwardsBooleans extends BackwardsProvider
             // somewhere between 0 and size - 2 (incl) duplicates,
             // then the remaining 1 to size - 1 (incl) are different than original
             // (may be same as each other by coincidence, but that's okay)
-            @Value Object valA = parent.makeValue(t);
+            Object valA = parent.makeValue(t);
             int sameAsA = r.nextInt(1, size - 1);
             for (int i = 0; i < sameAsA; i++)
             {
@@ -174,7 +174,7 @@ public class BackwardsBooleans extends BackwardsProvider
             }
             while (expressions.size() < size)
             {
-                @Value Object diffValFromA;
+                Object diffValFromA;
                 int attempts = 0;
                 do
                 {

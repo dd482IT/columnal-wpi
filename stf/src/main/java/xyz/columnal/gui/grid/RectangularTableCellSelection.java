@@ -36,7 +36,6 @@ import xyz.columnal.utility.Utility;
  * (TODO and its adjacent transforms?)
  * Immutable.
  */
-@OnThread(Tag.FXPlatform)
 public class RectangularTableCellSelection implements CellSelection
 {
     private final CellPosition startAnchor;
@@ -46,7 +45,7 @@ public class RectangularTableCellSelection implements CellSelection
 
 
     // Selects a single cell:
-    public RectangularTableCellSelection(@AbsRowIndex int rowIndex, @AbsColIndex int columnIndex, TableSelectionLimits tableSelectionLimits)
+    public RectangularTableCellSelection(int rowIndex, int columnIndex, TableSelectionLimits tableSelectionLimits)
     {
         startAnchor = new CellPosition(rowIndex, columnIndex);
         curFocus = startAnchor;
@@ -102,12 +101,12 @@ public class RectangularTableCellSelection implements CellSelection
     @Override
     public Either<CellPosition, CellSelection> move(boolean extendSelection, int _byRows, int _byColumns)
     {
-        @AbsRowIndex int byRows = CellPosition.row(_byRows);
-        @AbsColIndex int byColumns = CellPosition.col(_byColumns);
-        @AbsRowIndex int targetRow = curFocus.rowIndex + byRows;
-        @AbsRowIndex int clampedRow = Utility.maxRow(tableSelectionLimits.getTopLeftIncl().rowIndex, Utility.minRow(tableSelectionLimits.getBottomRightIncl().rowIndex, targetRow));
-        @AbsColIndex int targetColumn = curFocus.columnIndex + byColumns;
-        @AbsColIndex int clampedColumn = Utility.maxCol(tableSelectionLimits.getTopLeftIncl().columnIndex, Utility.minCol(tableSelectionLimits.getBottomRightIncl().columnIndex, targetColumn));
+        int byRows = CellPosition.row(_byRows);
+        int byColumns = CellPosition.col(_byColumns);
+        int targetRow = curFocus.rowIndex + byRows;
+        int clampedRow = Utility.maxRow(tableSelectionLimits.getTopLeftIncl().rowIndex, Utility.minRow(tableSelectionLimits.getBottomRightIncl().rowIndex, targetRow));
+        int targetColumn = curFocus.columnIndex + byColumns;
+        int clampedColumn = Utility.maxCol(tableSelectionLimits.getTopLeftIncl().columnIndex, Utility.minCol(tableSelectionLimits.getBottomRightIncl().columnIndex, targetColumn));
         
         // If we're trying to move outside without holding shift, do so:
         if ((clampedRow != targetRow || clampedColumn != targetColumn) && !extendSelection)
@@ -124,7 +123,7 @@ public class RectangularTableCellSelection implements CellSelection
     }
 
     @Override
-    public @Nullable CellSelection extendTo(CellPosition pos)
+    public CellSelection extendTo(CellPosition pos)
     {
         CellPosition topLeft = tableSelectionLimits.getTopLeftIncl();
         CellPosition bottomRight = tableSelectionLimits.getBottomRightIncl();
@@ -175,7 +174,7 @@ public class RectangularTableCellSelection implements CellSelection
     }
 
     @Override
-    public boolean includes(@UnknownInitialization(GridArea.class) GridArea tableDisplay)
+    public boolean includes(GridArea tableDisplay)
     {
         // Rely on non-overlap of grid areas, and the way that our selection won't span multiple tables:
         return tableDisplay.contains(startAnchor); 
@@ -199,7 +198,6 @@ public class RectangularTableCellSelection implements CellSelection
         return "RectTableCellSel[" + startAnchor + "->" + curFocus + "]";
     }
 
-    @OnThread(Tag.FXPlatform)
     public static interface TableSelectionLimits
     {
         public CellPosition getTopLeftIncl();
@@ -209,6 +207,6 @@ public class RectangularTableCellSelection implements CellSelection
         
         public void doDelete(CellPosition topLeftIncl, CellPosition bottomRightIncl);
 
-        public void gotoRow(Window parent, @AbsColIndex int column);
+        public void gotoRow(Window parent, int column);
     }
 }

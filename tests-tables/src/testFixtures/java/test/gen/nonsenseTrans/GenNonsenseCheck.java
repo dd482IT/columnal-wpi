@@ -48,7 +48,6 @@ public class GenNonsenseCheck extends Generator<Transformation_Mgr>
     }
 
     @Override
-    @OnThread(value = Tag.Simulation, ignoreParent = true)
     public Transformation_Mgr generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
     {
         Pair<TableId, TableId> ids = TBasicUtil.generateTableIdPair(sourceOfRandomness);

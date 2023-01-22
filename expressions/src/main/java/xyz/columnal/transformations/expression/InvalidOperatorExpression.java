@@ -48,15 +48,15 @@ import java.util.stream.Stream;
  */
 public class InvalidOperatorExpression extends NonOperatorExpression
 {
-    private final ImmutableList<@Recorded Expression> items;
+    private final ImmutableList<Expression> items;
 
-    public InvalidOperatorExpression(ImmutableList<@Recorded Expression> operands)
+    public InvalidOperatorExpression(ImmutableList<Expression> operands)
     {
         this.items = operands;
     }
 
     @Override
-    public @Nullable CheckedExp check(ColumnLookup dataLookup, TypeState typeState, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public CheckedExp check(ColumnLookup dataLookup, TypeState typeState, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         // Error should have been recorded elsewhere
         //onError.recordError(this, StyledString.s("Mixed or invalid operators in expression"));
@@ -64,7 +64,7 @@ public class InvalidOperatorExpression extends NonOperatorExpression
     }
 
     @Override
-    public @OnThread(Tag.Simulation) ValueResult calculateValue(EvaluateState state) throws InternalException
+    public ValueResult calculateValue(EvaluateState state) throws InternalException
     {
         throw new InternalException("Cannot get value for invalid expression");
     }
@@ -85,13 +85,13 @@ public class InvalidOperatorExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
+    public Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
     {
         return null;
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -125,7 +125,7 @@ public class InvalidOperatorExpression extends NonOperatorExpression
             }
 
             @Override
-            protected @OnThread(Tag.FXPlatform) void style(Text t)
+            protected void style(Text t)
             {
                 t.getStyleClass().add("expression-error");
             }
@@ -156,7 +156,7 @@ public class InvalidOperatorExpression extends NonOperatorExpression
             return new InvalidOperatorExpression(Utility.mapListI(items, e -> e.replaceSubExpression(toReplace, replaceWith)));
     }
 
-    public ImmutableList<@Recorded Expression> _test_getItems()
+    public ImmutableList<Expression> _test_getItems()
     {
         return items;
     }

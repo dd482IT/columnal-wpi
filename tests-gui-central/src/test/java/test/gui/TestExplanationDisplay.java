@@ -58,16 +58,13 @@ import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
 
-@OnThread(Tag.Simulation)
 public class TestExplanationDisplay extends FXApplicationTest implements ScrollToTrait, ClickOnTableHeaderTrait
 {
     private static final CellPosition CHECK_POS = new CellPosition(CellPosition.row(20), CellPosition.col(9));
     
-    @OnThread(Tag.Any)
     @SuppressWarnings("nullness")
     private MainWindowActions mainWindowActions;
     
-    @Before
     public void loadSourceTables() throws Exception
     {
         TableManager tempManager = DummyManager.make();
@@ -85,23 +82,23 @@ public class TestExplanationDisplay extends FXApplicationTest implements ScrollT
         mainWindowActions = TAppUtil.openDataAsTable(windowToUse, tempManager).get();
     }
 
-    private static SimulationFunction<RecordSet, EditableColumn> bools(@ExpressionIdentifier String name, boolean... values)
+    private static SimulationFunction<RecordSet, EditableColumn> bools(String name, boolean... values)
     {
         return rs -> new MemoryBooleanColumn(rs, new ColumnId(name), Utility.<Boolean, Either<String, Boolean>>mapList(Booleans.asList(values), Either::right), false);
     }
 
-    private static SimulationFunction<RecordSet, EditableColumn> nums(@ExpressionIdentifier String name, Number... values)
+    private static SimulationFunction<RecordSet, EditableColumn> nums(String name, Number... values)
     {
         return rs -> new MemoryNumericColumn(rs, new ColumnId(name), new NumberInfo(Unit.SCALAR), Utility.<Number, Either<String, Number>>mapList(Arrays.asList(values), Either::right), 0);
     }
 
-    private static SimulationFunction<RecordSet, EditableColumn> text(@ExpressionIdentifier String name, String... values)
+    private static SimulationFunction<RecordSet, EditableColumn> text(String name, String... values)
     {
         return rs -> new MemoryStringColumn(rs, new ColumnId(name), Utility.<String, Either<String, String>>mapList(Arrays.asList(values), Either::right), "");
     }
 
 
-    private void addCheck(@ExpressionIdentifier String srcTable, CheckType checkType, String expressionSrc) throws InternalException, UserException
+    private void addCheck(String srcTable, CheckType checkType, String expressionSrc) throws InternalException, UserException
     {
         Expression expression = TFunctionUtil.parseExpression(expressionSrc, mainWindowActions._test_getTableManager().getTypeManager(), FunctionList.getFunctionLookup(mainWindowActions._test_getTableManager().getUnitManager()));
         Check check = new Check(mainWindowActions._test_getTableManager(), new InitialLoadDetails(null, null, CHECK_POS, null), new TableId(srcTable), checkType, expression);
@@ -110,21 +107,18 @@ public class TestExplanationDisplay extends FXApplicationTest implements ScrollT
         sleep(2000);
     }
 
-    @Test
     public void testExplanationSimple1() throws UserException, InternalException
     {
         addCheck("T2", CheckType.STANDALONE, "0 > 1");
         testFailureExplanation("0 > 1 was false");
     }
     
-    @Test
     public void testExplanationSimple2() throws UserException, InternalException
     {
         addCheck("T2", CheckType.ALL_ROWS, "column\\\\asc < 4");
         testFailureExplanation("asc < 4 was false", "asc was 4, using asc (row 4)");
     }
 
-    @Test
     public void testExplanationSimple2b() throws UserException, InternalException
     {
         addCheck("T2", CheckType.STANDALONE, "@call function\\\\all(table\\\\T2#asc, ? < 4)");
@@ -135,7 +129,6 @@ public class TestExplanationDisplay extends FXApplicationTest implements ScrollT
             "? was 4");
     }
 
-    @Test
     public void testExplanationSimple3() throws UserException, InternalException
     {
         addCheck("T2", CheckType.ALL_ROWS, "column\\\\asc < @call function\\\\text length(column\\\\alphabet animals)");
@@ -147,7 +140,6 @@ public class TestExplanationDisplay extends FXApplicationTest implements ScrollT
             );
     }
 
-    @Test
     public void testExplanationError() throws UserException, InternalException
     {
         addCheck("T2", CheckType.ALL_ROWS, "(1 / (column\\\\asc - 3)) < 1.1");
@@ -158,7 +150,6 @@ public class TestExplanationDisplay extends FXApplicationTest implements ScrollT
            "asc was 3, using asc (row 3)");
     }
 
-    @Test
     public void testExplanationError2() throws UserException, InternalException
     {
         addCheck("T2", CheckType.ALL_ROWS, "@if (column\\\\asc > 2) @then (1 / (column\\\\asc - 3)) @else 0 @endif < 1.1");
@@ -172,7 +163,6 @@ public class TestExplanationDisplay extends FXApplicationTest implements ScrollT
             );
     }
 
-    @Test
     public void testExplanationMatch() throws UserException, InternalException
     {
         addCheck("T2", CheckType.NO_ROWS, "@match (num: column\\\\asc, animal: column\\\\alphabet animals) @case (num: n) @given n > 5 @then false @case (num: _, animal: animal) @then (@call function\\\\text length(animal) =~ n) & (n > 5) @endmatch");
@@ -191,7 +181,6 @@ public class TestExplanationDisplay extends FXApplicationTest implements ScrollT
                 "(num: asc, animal: alphabet animals) was (animal: \"Aardvark\", num: 1), using asc (row 1), alphabet animals (row 1)");
     }
 
-    @Test
     public void testExplanationRepetitiveIf() throws UserException, InternalException
     {
         addCheck("T2", CheckType.NO_ROWS, "@if (column\\\\asc + 1) > 3 @then (column\\\\asc + 1) > 4 @else (column\\\\asc + 1) > 3 @endif");

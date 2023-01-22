@@ -121,7 +121,6 @@ import java.util.stream.Stream;
  * The popup-looking display for a transformation that gives
  * details about the table.
  */
-@OnThread(Tag.FXPlatform)
 class TableHat extends FloatingItem<TableHatDisplay>
 {
     private FXPlatformRunnable updateGUI = () -> {};
@@ -130,13 +129,12 @@ class TableHat extends FloatingItem<TableHatDisplay>
     private StyledString collapsedContent = StyledString.s("Transformation");
     private boolean collapsed = false;
 
-    public TableHat(@UnknownInitialization(HeadedDisplay.class) HeadedDisplay tableDisplay, View parent, VisitableTransformation table)
+    public TableHat(HeadedDisplay tableDisplay, View parent, VisitableTransformation table)
     {
         super(ViewOrder.TABLE_HAT);
         this.content = table.visit(new TransformationVisitor<StyledString>()
         {
             @Override
-            @OnThread(Tag.FXPlatform)
             public StyledString filter(Filter filter)
             {
                 return StyledString.concat(
@@ -151,7 +149,6 @@ class TableHat extends FloatingItem<TableHatDisplay>
             }
 
             @Override
-            @OnThread(Tag.FXPlatform)
             public StyledString runR(RTransformation rTransformation)
             {
                 String rExpression = rTransformation.getRExpression();
@@ -170,7 +167,6 @@ class TableHat extends FloatingItem<TableHatDisplay>
             }
 
             @Override
-            @OnThread(Tag.FXPlatform)
             public StyledString sort(Sort sort)
             {
                 StyledString sourceText = sort.getSortBy().isEmpty() ?
@@ -179,7 +175,6 @@ class TableHat extends FloatingItem<TableHatDisplay>
                 sourceText = sourceText.withStyle(new Clickable()
                 {
                     @Override
-                    @OnThread(Tag.FXPlatform)
                     protected void onClick(MouseButton mouseButton, Point2D screenPoint)
                     {
                         if (mouseButton == MouseButton.PRIMARY)
@@ -198,7 +193,6 @@ class TableHat extends FloatingItem<TableHatDisplay>
             }
             
             @Override
-            @OnThread(Tag.FXPlatform)
             public StyledString aggregate(Aggregate aggregate)
             {
                 StyledString.Builder builder = new StyledString.Builder();
@@ -211,7 +205,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
                 Clickable editSplitBy = new Clickable()
                 {
                     @Override
-                    protected @OnThread(Tag.FXPlatform) void onClick(MouseButton mouseButton, Point2D screenPoint)
+                    protected void onClick(MouseButton mouseButton, Point2D screenPoint)
                     {
                         TransformationEdits.editAggregateSplitBy(parent, aggregate);
                     }
@@ -230,7 +224,6 @@ class TableHat extends FloatingItem<TableHatDisplay>
             }
 
             @Override
-            @OnThread(Tag.FXPlatform)
             public StyledString concatenate(Concatenate concatenate)
             {
                 Stream<TableId> sources = concatenate.getPrimarySources();
@@ -245,7 +238,6 @@ class TableHat extends FloatingItem<TableHatDisplay>
                         sourceText.withStyle(
                                 new Clickable("click.to.change") {
                                     @Override
-                                    @OnThread(Tag.FXPlatform)
                                     protected void onClick(MouseButton mouseButton, Point2D screenPoint)
                                     {
                                         if (mouseButton == MouseButton.PRIMARY)
@@ -259,7 +251,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
                                     {
                                         if (hovering)
                                         {
-                                            ImmutableList<TableDisplay> tableDisplays = Utility.filterOutNulls(Utility.filterOutNulls(concatenate.getPrimarySources().<@Nullable Table>map(id -> parent.getManager().getSingleTableOrNull(id))).<@Nullable TableDisplay>map(t -> (TableDisplay)t.getDisplay())).collect(ImmutableList.<TableDisplay>toImmutableList());
+                                            ImmutableList<TableDisplay> tableDisplays = Utility.filterOutNulls(Utility.filterOutNulls(concatenate.getPrimarySources().<Table>map(id -> parent.getManager().getSingleTableOrNull(id))).<TableDisplay>map(t -> (TableDisplay)t.getDisplay())).collect(ImmutableList.<TableDisplay>toImmutableList());
                                             ImmutableList<RectangleBounds> srcTableBounds = Utility.mapListI(tableDisplays, t -> new RectangleBounds(t.getMostRecentPosition(), t.getBottomRightIncl()));
                                             parent.getHighlights().highlightAtScreenPos(new Point2D(0, 0), p -> {
                                                 return new PickResult<String>(srcTableBounds, HighlightType.SOURCE, "", ImmutableList.<FXPlatformFunction<Point2D, Point2D>>copyOf(Utility.<FXPlatformFunction<Point2D, Point2D>>replicate(srcTableBounds.size(), s -> screenPos)));
@@ -278,7 +270,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
                                         : "without source column"
                         ).withStyle(new Clickable("click.to.toggle") {
                             @Override
-                            protected @OnThread(Tag.FXPlatform) void onClick(MouseButton mouseButton, Point2D screenPoint)
+                            protected void onClick(MouseButton mouseButton, Point2D screenPoint)
                             {
                                 if (mouseButton == MouseButton.PRIMARY)
                                 {
@@ -292,7 +284,6 @@ class TableHat extends FloatingItem<TableHatDisplay>
             }
 
             @Override
-            @OnThread(Tag.FXPlatform)
             public StyledString check(Check check)
             {
                 String type = "";
@@ -319,7 +310,6 @@ class TableHat extends FloatingItem<TableHatDisplay>
             }
             
             @Override
-            @OnThread(Tag.FXPlatform)
             public StyledString calculate(Calculate calc)
             {
                 collapsedContent = StyledString.s("Calculate");
@@ -337,7 +327,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
                     Stream<StyledString> threeEditLinks = calc.getCalculatedColumns().keySet().stream().limit(3).map(c -> c.toStyledString().withStyle(new Clickable()
                     {
                         @Override
-                        protected @OnThread(Tag.FXPlatform) void onClick(MouseButton mouseButton, Point2D screenPoint)
+                        protected void onClick(MouseButton mouseButton, Point2D screenPoint)
                         {
                             FXUtility.alertOnErrorFX_(TranslationUtility.getString("error.editing.column"), () -> TransformationEdits.editColumn_Calc(parent, calc, c));
                         }
@@ -363,12 +353,10 @@ class TableHat extends FloatingItem<TableHatDisplay>
             }
             
             @Override
-            @OnThread(Tag.FXPlatform)
             public StyledString hideColumns(HideColumns hide)
             {
                 Clickable edit = new Clickable(null, "edit-hide-columns")
                 {
-                    @OnThread(Tag.FXPlatform)
                     @Override
                     protected void onClick(MouseButton mouseButton, Point2D screenPoint)
                     {
@@ -388,7 +376,6 @@ class TableHat extends FloatingItem<TableHatDisplay>
             }
 
             @Override
-            @OnThread(Tag.FXPlatform)
             public StyledString manualEdit(ManualEdit manualEdit)
             {
                 collapsedContent = StyledString.s("Edit");
@@ -396,7 +383,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
                 Clickable editBy = new Clickable()
                 {
                     @Override
-                    protected @OnThread(Tag.FXPlatform) void onClick(MouseButton mouseButton, Point2D screenPoint)
+                    protected void onClick(MouseButton mouseButton, Point2D screenPoint)
                     {
 
                         ImmutableList<ColumnId> columnIds = ImmutableList.of();
@@ -421,7 +408,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
                 Clickable editList = new Clickable() {
 
                     @Override
-                    protected @OnThread(Tag.FXPlatform) void onClick(MouseButton mouseButton, Point2D screenPoint)
+                    protected void onClick(MouseButton mouseButton, Point2D screenPoint)
                     {
                         Workers.onWorkerThread("Fetching manual edit entries", Priority.FETCH, () -> {
                             ImmutableList<Entry> entries = ManualEditEntriesDialog.getEntries(manualEdit);
@@ -454,7 +441,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
                                                                     return; // Give up
                                                                 RecordSet srcData = srcTable.getData();
                                                                 int length = srcData.getLength();
-                                                                @Nullable ColumnId keyColumnId = manualEdit.getReplacementIdentifier().orElse(null);
+                                                                ColumnId keyColumnId = manualEdit.getReplacementIdentifier().orElse(null);
                                                                 if (keyColumnId == null)
                                                                 {
                                                                     rowIndex = ((Number) jumpTo.getFirst().getValue()).intValue();
@@ -529,14 +516,13 @@ class TableHat extends FloatingItem<TableHatDisplay>
             }
 
             @Override
-            @OnThread(Tag.FXPlatform)
             public StyledString join(Join join)
             {
                 collapsedContent = StyledString.s("Join");
                 Clickable clickToEdit = new Clickable() {
 
                     @Override
-                    protected @OnThread(Tag.FXPlatform) void onClick(MouseButton mouseButton, Point2D screenPoint)
+                    protected void onClick(MouseButton mouseButton, Point2D screenPoint)
                     {
                         editJoin(parent, join, RenameOnEdit::ifOldAuto);
                     }
@@ -576,7 +562,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
         })));
     }
 
-    protected static void editSort(@Nullable Point2D screenPoint, View parent, Sort sort, Function<TableId, RenameOnEdit> renameOnEdit)
+    protected static void editSort(Point2D screenPoint, View parent, Sort sort, Function<TableId, RenameOnEdit> renameOnEdit)
     {
         new EditSortDialog(parent, screenPoint,
             parent.getManager().getSingleTableOrNull(sort.getSrcTableId()),
@@ -617,7 +603,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
             
     }
 
-    private static Function<String, @Nullable ColumnId> hasColumn(@Nullable Table srcTable)
+    private static Function<String, ColumnId> hasColumn(Table srcTable)
     {
         if (srcTable != null)
         {
@@ -766,7 +752,7 @@ class TableHat extends FloatingItem<TableHatDisplay>
     }
 
     @Override
-    public @Nullable Pair<ItemState, @Nullable StyledString> getItemState(CellPosition cellPosition, Point2D screenPos)
+    public Pair<ItemState, StyledString> getItemState(CellPosition cellPosition, Point2D screenPos)
     {
         Node node = getNode();
         if (node != null)
@@ -792,12 +778,11 @@ class TableHat extends FloatingItem<TableHatDisplay>
     private static StyledString editSourceLink(View parent, Table destTable, TableId srcTableId, SimulationConsumer<TableId> changeSrcTableId)
     {
         // If this becomes broken/unbroken, we should get re-run:
-        @Nullable Table srcTable = parent.getManager().getSingleTableOrNull(srcTableId);
+        Table srcTable = parent.getManager().getSingleTableOrNull(srcTableId);
         String[] styleClasses = srcTable == null ?
                 new String[] { "broken-link" } : new String[0];
         return srcTableId.toStyledString().withStyle(new Clickable("source.link.tooltip", styleClasses) {
             @Override
-            @OnThread(Tag.FXPlatform)
             protected void onClick(MouseButton mouseButton, Point2D screenPoint)
             {
                 if (mouseButton == MouseButton.PRIMARY)
@@ -835,11 +820,10 @@ class TableHat extends FloatingItem<TableHatDisplay>
         });
     }
 
-    private static StyledString editExpressionLink(View parent, Expression curExpression, @Nullable Table srcTable, ColumnLookup columnLookup, FXPlatformSupplierInt<TypeState> makeTypeState, @Nullable DataType expectedType, @Nullable @LocalizableKey String headerKey, SimulationConsumer<Expression> changeExpression)
+    private static StyledString editExpressionLink(View parent, Expression curExpression, Table srcTable, ColumnLookup columnLookup, FXPlatformSupplierInt<TypeState> makeTypeState, DataType expectedType, String headerKey, SimulationConsumer<Expression> changeExpression)
     {
         return curExpression.toSimpleStyledString().limit(60).withStyle(new Clickable() {
             @Override
-            @OnThread(Tag.FXPlatform)
             protected void onClick(MouseButton mouseButton, Point2D screenPoint)
             {
                 if (mouseButton == MouseButton.PRIMARY)
@@ -852,11 +836,10 @@ class TableHat extends FloatingItem<TableHatDisplay>
         }).withStyle(new StyledCSS("edit-expression-link"));
     }
 
-    private static StyledString editCheckLink(View parent, Check check, @Nullable Table srcTable, Function<TableId, RenameOnEdit> renameOnEdit)
+    private static StyledString editCheckLink(View parent, Check check, Table srcTable, Function<TableId, RenameOnEdit> renameOnEdit)
     {
         return check.getCheckExpression().toSimpleStyledString().limit(60).withStyle(new Clickable() {
             @Override
-            @OnThread(Tag.FXPlatform)
             protected void onClick(MouseButton mouseButton, Point2D screenPoint)
             {
                 if (mouseButton == MouseButton.PRIMARY)
@@ -871,7 +854,6 @@ class TableHat extends FloatingItem<TableHatDisplay>
         }).withStyle(new StyledCSS("edit-expression-link"));
     }
 
-    @OnThread(Tag.FXPlatform)
     final class TableHatDisplay extends Region
     {
         private static final double INSET = 4.0;
@@ -907,7 +889,6 @@ class TableHat extends FloatingItem<TableHatDisplay>
         }
 
         @Override
-        @OnThread(value = Tag.FXPlatform, ignoreParent = true)
         protected void layoutChildren()
         {
             FXUtility.resizeRelocate(textFlow, INSET, INSET, getWidth() - INSET * 2, getHeight() - INSET * 2);
@@ -915,21 +896,18 @@ class TableHat extends FloatingItem<TableHatDisplay>
         }
 
         @Override
-        @OnThread(value = Tag.FXPlatform, ignoreParent = true)
         protected double computePrefWidth(double height)
         {
             return textFlow.prefWidth(height == -1 ? -1 : (height - INSET * 2)) + INSET * 2;
         }
 
         @Override
-        @OnThread(value = Tag.FXPlatform, ignoreParent = true)
         protected double computePrefHeight(double width)
         {
             return textFlow.prefHeight(width == -1 ? -1 : (width - INSET * 2)) + INSET * 2;
         }
 
         @Override
-        @OnThread(value = Tag.FXPlatform, ignoreParent = true)
         public Orientation getContentBias()
         {
             return textFlow.getContentBias();

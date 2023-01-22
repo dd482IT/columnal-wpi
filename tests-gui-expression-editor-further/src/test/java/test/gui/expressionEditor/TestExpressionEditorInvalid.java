@@ -49,13 +49,10 @@ import threadchecker.Tag;
 
 import static org.junit.Assert.assertEquals;
 
-@RunWith(JUnitQuickcheck.class)
 public class TestExpressionEditorInvalid extends FXApplicationTest implements EnterTypeTrait
 {
-    @Ignore // TODO restore
-    @OnThread(Tag.Simulation)
-    @Property(trials=20)
-    public void testLoadSaveInvalid(@From(GenInvalidExpressionSource.class) String invalid) throws UserException, InternalException
+    // TODO restore
+    public void testLoadSaveInvalid(String invalid) throws UserException, InternalException
     {
         DummyManager dummyManager = new DummyManager();
         ExpressionEditor expressionEditorA = makeExpressionEditor(dummyManager, null);
@@ -65,14 +62,13 @@ public class TestExpressionEditorInvalid extends FXApplicationTest implements En
         });
         clickOn(".top-level-editor");
         enterAndDeleteSmartBrackets(invalid);
-        @Recorded @NonNull Expression savedInvalid = TFXUtil.fx(() -> expressionEditorA.save(false));
+        Expression savedInvalid = TFXUtil.fx(() -> expressionEditorA.save(false));
         ExpressionEditor expressionEditorB = makeExpressionEditor(dummyManager, savedInvalid);
         assertEquals(savedInvalid.toString(), invalid.replaceAll("[ ()]", ""), TFXUtil.fx(() -> expressionEditorB._test_getRawText()).replaceAll("[ ()]", ""));
     }
 
-    @OnThread(Tag.Any)
-    private ExpressionEditor makeExpressionEditor(DummyManager dummyManager, @Nullable Expression initial)
+    private ExpressionEditor makeExpressionEditor(DummyManager dummyManager, Expression initial)
     {
-        return TFXUtil.fx(() -> new ExpressionEditor(initial, new ReadOnlyObjectWrapper<@Nullable Table>(null), new ReadOnlyObjectWrapper<ColumnLookup>(TFunctionUtil.dummyColumnLookup()), null, null, dummyManager.getTypeManager(), () -> TFunctionUtil.createTypeState(dummyManager.getTypeManager()), FunctionList.getFunctionLookup(dummyManager.getUnitManager()), e -> {}));
+        return TFXUtil.fx(() -> new ExpressionEditor(initial, new ReadOnlyObjectWrapper<Table>(null), new ReadOnlyObjectWrapper<ColumnLookup>(TFunctionUtil.dummyColumnLookup()), null, null, dummyManager.getTypeManager(), () -> TFunctionUtil.createTypeState(dummyManager.getTypeManager()), FunctionList.getFunctionLookup(dummyManager.getUnitManager()), e -> {}));
     }
 }

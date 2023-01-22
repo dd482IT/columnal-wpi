@@ -31,7 +31,6 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import xyz.columnal.utility.adt.Pair;
 
-@OnThread(Tag.FXPlatform)
 public class HelpfulTextFlow extends TextFlow
 {
 
@@ -42,8 +41,7 @@ public class HelpfulTextFlow extends TextFlow
      * @param vPos The vertical position within the caret: top of it, middle of it, bottom of it?
      * @return The click position in local coordinates, plus a boolean indicating whether or not it is in bounds.
      */
-    @OnThread(Tag.FXPlatform)
-    public Pair<Point2D, Boolean> getClickPosFor(@DisplayLocation int targetPos, VPos vPos, Dimension2D translateBy)
+    public Pair<Point2D, Boolean> getClickPosFor(int targetPos, VPos vPos, Dimension2D translateBy)
     {
         Bounds bounds = FXUtility.offsetBoundsBy(new Path(caretShape(targetPos, true)).getBoundsInLocal(), 1.0f + (float)translateBy.getWidth(), (float)translateBy.getHeight());
         Point2D p;

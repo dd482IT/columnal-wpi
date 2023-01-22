@@ -32,15 +32,15 @@ import java.util.stream.Collectors;
 
 public class InvalidOperatorUnitExpression extends UnitExpression
 {
-    private final ImmutableList<@Recorded UnitExpression> items;
+    private final ImmutableList<UnitExpression> items;
 
-    public InvalidOperatorUnitExpression(ImmutableList<@Recorded UnitExpression> items)
+    public InvalidOperatorUnitExpression(ImmutableList<UnitExpression> items)
     {
         this.items = items;
     }
 
     @Override
-    public JellyUnit asUnit(@Recorded InvalidOperatorUnitExpression this, UnitManager unitManager) throws UnitLookupException
+    public JellyUnit asUnit(InvalidOperatorUnitExpression this, UnitManager unitManager) throws UnitLookupException
     {
         throw new UnitLookupException(null, this, ImmutableList.of());
     }
@@ -57,7 +57,7 @@ public class InvalidOperatorUnitExpression extends UnitExpression
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;

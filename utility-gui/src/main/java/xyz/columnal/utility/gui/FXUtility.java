@@ -159,7 +159,6 @@ import static java.lang.Thread.sleep;
 /**
  * Created by neil on 17/02/2017.
  */
-@OnThread(Tag.FXPlatform)
 public class FXUtility
 {
     private static boolean testingMode = false;
@@ -188,7 +187,7 @@ public class FXUtility
         enableDragFrom(listView, type, transferMode, x -> x, null);
     }
 
-    public static <T, U> void enableDragFrom(ListView<T> listView, String type, TransferMode transferMode, FXPlatformFunction<List<T>, U> mapToSerializable, @Nullable FXPlatformBiConsumer<@Nullable TransferMode, U> onDragComplete)
+    public static <T, U> void enableDragFrom(ListView<T> listView, String type, TransferMode transferMode, FXPlatformFunction<List<T>, U> mapToSerializable, FXPlatformBiConsumer<TransferMode, U> onDragComplete)
     {
         DataFormat textDataFormat = getTextDataFormat(type);
         listView.setOnDragDetected(e -> {
@@ -216,7 +215,7 @@ public class FXUtility
         });
     }
 
-    public static @NonNull DataFormat getTextDataFormat(String subType)
+    public static DataFormat getTextDataFormat(String subType)
     {
         String whole = "text/" + subType;
         return getDataFormat(whole);
@@ -237,8 +236,7 @@ public class FXUtility
             return new DataFormat(whole);
     }
 
-    @OnThread(Tag.FX)
-    public static void sizeToFit(TextField tf, @Nullable Double minSizeFocused, @Nullable Double minSizeUnfocused, @Nullable DoubleExpression maxSize)
+    public static void sizeToFit(TextField tf, Double minSizeFocused, Double minSizeUnfocused, DoubleExpression maxSize)
     {
         // Partly taken from http://stackoverflow.com/a/25643696/412908:
         // Set Max and Min Width to PREF_SIZE so that the TextField is always PREF
@@ -255,7 +253,6 @@ public class FXUtility
                     super.bind(maxSize);
             }
             @Override
-            @OnThread(Tag.FX)
             protected double computeValue()
             {
                 Text text = new Text(tf.getText());
@@ -271,7 +268,6 @@ public class FXUtility
         });
     }
 
-    @OnThread(Tag.FX)
     public static ValidationResult validate(Control target, ExRunnable action)
     {
         try
@@ -299,7 +295,7 @@ public class FXUtility
      */
     public static List<String> getSceneStylesheets(String... stylesheetNames)
     {
-        return Stream.<@NonNull String>concat(
+        return Stream.<String>concat(
                    Stream.<String>of("general.css", "stableview.css"),
                    Arrays.stream(stylesheetNames).<String>map(s -> s.endsWith(".css") ? s : (s + ".css"))
                  )
@@ -314,11 +310,9 @@ public class FXUtility
     }
     
     // Default theme fetches it from the standard directory:
-    @OnThread(value = Tag.Any, requireSynchronized = true)
     private static Theme theme = new Theme()
     {
         @Override
-        @OnThread(Tag.Any)
         public String getStylesheetURL(String stylesheetName) throws Throwable
         {
             URL resource = ResourceUtility.getResource(stylesheetName);
@@ -330,7 +324,6 @@ public class FXUtility
             return resource.toString();
         }
 
-        @OnThread(Tag.Any)
         @Override
         public String getName()
         {
@@ -338,14 +331,12 @@ public class FXUtility
         }
     };
 
-    @OnThread(Tag.FXPlatform)
     public static synchronized void setTheme(Theme theme)
     {
         Log.normal("Setting theme to: " + theme.getName());
         FXUtility.theme = theme;
     }
 
-    @OnThread(Tag.Any)
     public static synchronized String getStylesheet(String stylesheetName)
     {
         try
@@ -390,7 +381,6 @@ public class FXUtility
         }
     }
 
-    @OnThread(Tag.FXPlatform)
     @SuppressWarnings("nullness")
     public static <T> FXPlatformRunnable addChangeListenerPlatform(ObservableValue<T> property, FXPlatformConsumer<? super @Nullable T> listener)
     {
@@ -398,7 +388,6 @@ public class FXUtility
         ChangeListener<T> changeListener = new ChangeListener<>()
         {
             @Override
-            @OnThread(value = Tag.FXPlatform, ignoreParent = true)
             public void changed(ObservableValue<? extends T> a, T b, T newVal)
             {
                 listener.consume(newVal);
@@ -408,15 +397,13 @@ public class FXUtility
         return () -> property.removeListener(changeListener);
     }
 
-    @OnThread(Tag.FXPlatform)
-    public static <T> void addChangeListenerPlatformAndCallNow(ObservableValue<T> property, FXPlatformConsumer<? super @Nullable T> listener)
+    public static <T> void addChangeListenerPlatformAndCallNow(ObservableValue<T> property, FXPlatformConsumer<? super T> listener)
     {
         addChangeListenerPlatform(property, listener);
         listener.consume(property.getValue());
     }
 
-    @OnThread(Tag.FXPlatform)
-    public static <T> void addChangeListenerPlatformNNAndCallNow(ObservableValue<@NonNull T> property, FXPlatformConsumer<@NonNull T> listener)
+    public static <T> void addChangeListenerPlatformNNAndCallNow(ObservableValue<T> property, FXPlatformConsumer<T> listener)
     {
         addChangeListenerPlatformNN(property, listener);
         listener.consume(property.getValue());
@@ -428,7 +415,6 @@ public class FXUtility
      * @return A runnable that will remove the listener
      * @param <T> The type of the observable
      */
-    @OnThread(Tag.FXPlatform)
     @SuppressWarnings("nullness")
     // NN = Not Null
     public static <T> FXPlatformRunnable addChangeListenerPlatformNN(ObservableValue<@NonNull T> property, FXPlatformConsumer<@NonNull ? super T> listener)
@@ -437,7 +423,6 @@ public class FXUtility
         ChangeListener<T> changeListener = new ChangeListener<>()
         {
             @Override
-            @OnThread(value = Tag.FXPlatform, ignoreParent = true)
             public void changed(ObservableValue<? extends T> a, T b, T newVal)
             {
                 listener.consume(newVal);
@@ -447,7 +432,6 @@ public class FXUtility
         return () -> property.removeListener(changeListener);
     }
 
-    @OnThread(Tag.FXPlatform)
     public static void runAfter(FXPlatformRunnable r)
     {
         // Defeat thread-checker:
@@ -466,7 +450,6 @@ public class FXUtility
     }
     
     // Like Platform.runLater from Simulation thread, but also stores caller for logging.
-    @OnThread(Tag.Simulation)
     public static void runFX(FXPlatformRunnable runnable)
     {
         ImmutableList<Throwable> callerStack = Log.getTotalStack();
@@ -480,20 +463,18 @@ public class FXUtility
 
     // Mainly, this method is to avoid having to cast to ListChangeListener to disambiguate
     // from the invalidionlistener overload in ObservableList
-    @OnThread(Tag.FXPlatform)
     public static <T> void listen(ObservableList<T> list, FXPlatformConsumer<ListChangeListener.Change<? extends T>> listener)
     {
         list.addListener((ListChangeListener<T>)(ListChangeListener.Change<? extends T> c) -> listener.consume(c));
     }
 
-    @OnThread(Tag.FXPlatform)
     public static <T> void listenAndCallNow(ObservableList<T> list, FXPlatformConsumer<List<T>> listener)
     {
         list.addListener((ListChangeListener<T>)(ListChangeListener.Change<? extends T> c) -> listener.consume(list));
         listener.consume(list);
     }
 
-    public static void forcePrefSize(@UnknownInitialization(Region.class) Region region)
+    public static void forcePrefSize(Region region)
     {
         region.setMinWidth(Region.USE_PREF_SIZE);
         region.setMaxWidth(Region.USE_PREF_SIZE);
@@ -501,12 +482,11 @@ public class FXUtility
         region.setMaxHeight(Region.USE_PREF_SIZE);
     }
 
-    public static void onFocusLostOnce(@NonNull Node node, FXPlatformRunnable onLost)
+    public static void onFocusLostOnce(Node node, FXPlatformRunnable onLost)
     {
         node.focusedProperty().addListener(new ChangeListener<Boolean>()
         {
             @Override
-            @OnThread(value = Tag.FXPlatform,ignoreParent = true)
             public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue)
             {
                 if (!newValue)
@@ -532,25 +512,21 @@ public class FXUtility
      * so it's safe to assume the item is initialized.
      */
     @SuppressWarnings("return")
-    @OnThread(Tag.FX)
-    @Pure
-    public static <T> T mouse(@UnknownInitialization T item)
+    public static <T> T mouse(T item)
     {
         return item;
     }
 
     // As mouse method above, but for when we are doing a key listener
     @SuppressWarnings("return")
-    @Pure
-    public static <T> T keyboard(@UnknownInitialization T item)
+    public static <T> T keyboard(T item)
     {
         return item;
     }
 
     // As mouse method above, but for when we are doing a focus listener
     @SuppressWarnings("return")
-    @Pure
-    public static <T> T focused(@UnknownInitialization T item)
+    public static <T> T focused(T item)
     {
         return item;
     }
@@ -583,14 +559,12 @@ public class FXUtility
     }
 
 
-    @OnThread(Tag.Simulation)
-    public static void alertOnError_(@Localized String title, RunOrError r)
+    public static void alertOnError_(String title, RunOrError r)
     {
         alertOnError_(title, err -> err, r);
     }
 
-    @OnThread(Tag.Simulation)
-    public static void alertOnError_(@Localized String title, Function<@Localized String, @Localized String> errWrap, RunOrError r)
+    public static void alertOnError_(String title, Function<String, String> errWrap, RunOrError r)
     {
         try
         {
@@ -605,8 +579,7 @@ public class FXUtility
         }
     }
 
-    @OnThread(Tag.FXPlatform)
-    public static void alertOnErrorFX_(@Localized String title, RunOrErrorFX r)
+    public static void alertOnErrorFX_(String title, RunOrErrorFX r)
     {
         try
         {
@@ -618,8 +591,7 @@ public class FXUtility
         }
     }
 
-    @OnThread(Tag.FXPlatform)
-    public static <T> @Nullable T alertOnErrorFX(@Localized String title, GenOrErrorFX<T> r)
+    public static <T> T alertOnErrorFX(String title, GenOrErrorFX<T> r)
     {
         try
         {
@@ -632,14 +604,12 @@ public class FXUtility
         }
     }
 
-    @OnThread(Tag.FXPlatform)
-    public static void showError(@Localized String title, Exception e)
+    public static void showError(String title, Exception e)
     {
         showError(title, x -> x, e);
     }
 
-    @OnThread(Tag.FXPlatform)
-    public static void showError(@Localized String title, Function<@Localized String, @Localized String> errWrap, Exception e)
+    public static void showError(String title, Function<String, String> errWrap, Exception e)
     {
         if (showingError)
         {
@@ -677,12 +647,11 @@ public class FXUtility
         }
     }
 
-    @OnThread(Tag.Simulation)
-    public static <T> Optional<T> alertOnError(@Localized String title, GenOrError<@Nullable T> r)
+    public static <T> Optional<T> alertOnError(String title, GenOrError<T> r)
     {
         try
         {
-            @Nullable T t = r.run();
+            T t = r.run();
             if (t == null)
                 return Optional.empty();
             else
@@ -769,7 +738,7 @@ public class FXUtility
     }
 
     // Ensures selected item is in view.
-    public static void ensureSelectionInView(ListView<?> listView, @Nullable VerticalDirection moveDirection)
+    public static void ensureSelectionInView(ListView<?> listView, VerticalDirection moveDirection)
     {
         FXUtility.runAfter(() -> {
             int selIndex = listView.getSelectionModel().getSelectedIndex();
@@ -779,8 +748,8 @@ public class FXUtility
             // Determine if the selection is in view:
             // Can't use pseudo-classes due to https://bugs.java.com/bugdatabase/view_bug.do?bug_id=JDK-8185831
             // so use stream-filter afterwards:
-            @Nullable Node topCell = listView.lookup(".list-cell");
-            @Nullable Node selectedCell = listView.lookupAll(".list-cell").stream().filter(c -> ((ListCell<?>) c).isSelected()).findFirst().orElse(null);
+            Node topCell = listView.lookup(".list-cell");
+            Node selectedCell = listView.lookupAll(".list-cell").stream().filter(c -> ((ListCell<?>) c).isSelected()).findFirst().orElse(null);
             Bounds listViewSceneBounds = listView.localToScene(listView.getBoundsInLocal());
             if (selectedCell == null || !listViewSceneBounds.contains(selectedCell.localToScene(new Point2D(0, 10))))
             {
@@ -810,7 +779,6 @@ public class FXUtility
         return node.getPseudoClassStates().stream().anyMatch(p -> p.getPseudoClassName().equals(className));
     }
 
-    @OnThread(Tag.Any)
     public static Rectangle2D boundsToRect(Bounds bounds)
     {
         return new Rectangle2D(bounds.getMinX(), bounds.getMinY(), bounds.getWidth(), bounds.getHeight());
@@ -827,14 +795,12 @@ public class FXUtility
         );
     }
 
-    @OnThread(Tag.Any)
     public static Point2D getCentre(Rectangle2D rectangle2D)
     {
         return new Point2D(rectangle2D.getMinX() + rectangle2D.getWidth()*0.5, rectangle2D.getMinY() + rectangle2D.getHeight()*0.5);
     }
 
     // Just uses the bounds limits like a rectangle.
-    @OnThread(Tag.Any)
     public static Point2D getCentre(Bounds bounds)
     {
         return new Point2D(bounds.getMinX() + bounds.getWidth()*0.5, bounds.getMinY() + bounds.getHeight()*0.5);
@@ -845,7 +811,7 @@ public class FXUtility
         return new BoundingBox(w.getX(), w.getY(), w.getWidth(), w.getHeight());
     }
 
-    public static @Nullable Dimension2D sizeOfBiggestScreen(Window parentWindow)
+    public static Dimension2D sizeOfBiggestScreen(Window parentWindow)
     {
         return Screen.getScreensForRectangle(parentWindow.getX(), parentWindow.getY(), parentWindow.getWidth(), parentWindow.getHeight())
             .stream()
@@ -855,7 +821,7 @@ public class FXUtility
         
     }
 
-    public static void enableWindowMove(@UnknownInitialization Window window, Node root)
+    public static void enableWindowMove(Window window, Node root)
     {
         root.addEventHandler(MouseEvent.ANY, new EventHandler<MouseEvent>()
         {
@@ -906,7 +872,6 @@ public class FXUtility
      * the returned binding will be updated.
      */
     @SuppressWarnings("i18n") // Because checker doesn't recognise what we're doing
-    @OnThread(Tag.FXPlatform)
     public static @Localized StringBinding bindString(@LocalizableKey String key, ObservableStringValue firstValue, ObservableStringValue... moreValues)
     {
     List<ObservableStringValue> values = new ArrayList<>();
@@ -925,7 +890,7 @@ public class FXUtility
     return Bindings.createStringBinding(() -> update.get(), values.<javafx.beans.Observable>toArray(new javafx.beans.Observable[0]));
 }
 
-    public static @Nullable ImageView makeImageView(String filename, @Nullable Integer maxWidth, @Nullable Integer maxHeight)
+    public static ImageView makeImageView(String filename, Integer maxWidth, Integer maxHeight)
     {
         URL imageURL = ResourceUtility.getResource(filename);
         if (imageURL != null)
@@ -998,9 +963,9 @@ public class FXUtility
             Hyperlink link = new Hyperlink(target);
             FXUtility.addChangeListenerPlatformNN(link.hoverProperty(), new FXPlatformConsumer<Boolean>()
             {
-                private @Nullable PopupControl info;
+                private PopupControl info;
                 @Override
-                public @OnThread(Tag.FXPlatform) void consume(Boolean hovering)
+                public void consume(Boolean hovering)
                 {
                     if (hovering && info == null)
                     {
@@ -1010,21 +975,18 @@ public class FXUtility
                         ctrl.setSkin(new Skin<PopupControl>()
                         {
                             @Override
-                            @OnThread(Tag.FX)
                             public PopupControl getSkinnable()
                             {
                                 return ctrl;
                             }
 
                             @Override
-                            @OnThread(Tag.FX)
                             public Node getNode()
                             {
                                 return label;
                             }
 
                             @Override
-                            @OnThread(Tag.FX)
                             public void dispose()
                             {
                             }
@@ -1052,22 +1014,21 @@ public class FXUtility
     }
 
     @SuppressWarnings("i18n") // Because we return original if there's an issue
-    @OnThread(Tag.FXPlatform)
-    public static Pair<@Localized String, @Nullable KeyCombination> getStringAndShortcut(@LocalizableKey String key)
+    public static Pair<@Localized String, KeyCombination> getStringAndShortcut(@LocalizableKey String key)
     {
         String original = TranslationUtility.getString(key);
         int atIndex = original.indexOf("@");
         if (atIndex != -1)
         {
-            @Nullable KeyCombination shortcut = null;
+            KeyCombination shortcut = null;
             try
             {
-                shortcut = Utility.<@Nullable KeyCombination, AcceleratorParser>parseAsOne(original.substring(atIndex + 1).trim(), AcceleratorLexer::new, AcceleratorParser::new, p ->
+                shortcut = Utility.<KeyCombination, AcceleratorParser>parseAsOne(original.substring(atIndex + 1).trim(), AcceleratorLexer::new, AcceleratorParser::new, p ->
                 {
-                    return new AcceleratorBaseVisitor<@Nullable KeyCombination>()
+                    return new AcceleratorBaseVisitor<KeyCombination>()
                     {
                         @Override
-                        public @Nullable KeyCombination visitAccelerator(AcceleratorContext ctx)
+                        public KeyCombination visitAccelerator(AcceleratorContext ctx)
                         {
                             List<Modifier> modifiers = new ArrayList<>();
                             if (ctx.SHORTCUT_MODIFIER() != null)
@@ -1102,13 +1063,10 @@ public class FXUtility
 
     public static interface DragHandler
     {
-        @OnThread(Tag.FXPlatform)
         default void dragExited() {}
 
-        @OnThread(Tag.FXPlatform)
         default void dragMoved(Point2D pointInScene) {};
 
-        @OnThread(Tag.FXPlatform)
         boolean dragEnded(Dragboard dragboard, Point2D pointInScene);
     }
 
@@ -1123,7 +1081,7 @@ public class FXUtility
         });
         destination.setOnDragOver(e -> {
             boolean accepts = false;
-            for (Entry<@KeyFor("receivers") DataFormat, DragHandler> receiver : receivers.entrySet())
+            for (Entry<DataFormat, DragHandler> receiver : receivers.entrySet())
             {
                 if (e.getDragboard().hasContent(receiver.getKey()))
                 {
@@ -1137,7 +1095,7 @@ public class FXUtility
         });
         destination.setOnDragDropped(e -> {
             boolean dropped = false;
-            for (Entry<@KeyFor("receivers") DataFormat, DragHandler> receiver : receivers.entrySet())
+            for (Entry<DataFormat, DragHandler> receiver : receivers.entrySet())
             {
                 if (e.getDragboard().hasContent(receiver.getKey()))
                 {
@@ -1154,12 +1112,12 @@ public class FXUtility
         return Bindings.createObjectBinding(() -> extract.apply(original.get()), original);
     }
 
-    public static <T, R> ObjectExpression<R> mapBindingEager(ObservableValue<@Nullable T> original, FXPlatformFunction<@Nullable T, R> extract)
+    public static <T, R> ObjectExpression<R> mapBindingEager(ObservableValue<T> original, FXPlatformFunction<T, R> extract)
     {
         return mapBindingEager(original, extract, ImmutableList.of());
     }
 
-    public static <T, R> ObjectExpression<R> mapBindingEager(ObservableValue<@Nullable T> original, FXPlatformFunction<@Nullable T, R> extract, ImmutableList<ObservableValue<?>> otherDependencies)
+    public static <T, R> ObjectExpression<R> mapBindingEager(ObservableValue<T> original, FXPlatformFunction<T, R> extract, ImmutableList<ObservableValue<?>> otherDependencies)
     {
         ObjectProperty<R> binding = new SimpleObjectProperty<>(extract.apply(original.getValue()));
         addChangeListenerPlatform(original, x -> binding.setValue(extract.apply(x)));
@@ -1170,20 +1128,18 @@ public class FXUtility
         return binding;
     }
 
-    public static <T, R> ObjectExpression<@NonNull R> mapBindingEagerNN(ObservableValue<@NonNull T> original, FXPlatformFunction<@NonNull T, @NonNull R> extract)
+    public static <T, R> ObjectExpression<R> mapBindingEagerNN(ObservableValue<T> original, FXPlatformFunction<T, R> extract)
     {
-        ObjectProperty<@NonNull R> binding = new SimpleObjectProperty<>(extract.apply(original.getValue()));
+        ObjectProperty<R> binding = new SimpleObjectProperty<>(extract.apply(original.getValue()));
         addChangeListenerPlatformNN(original, x -> binding.setValue(extract.apply(x)));
         return binding;
     }
 
-    @OnThread(Tag.FX)
-    public static void setPseudoclass(@UnknownInitialization(Node.class) Node node, String className, boolean on)
+    public static void setPseudoclass(Node node, String className, boolean on)
     {
         node.pseudoClassStateChanged(PseudoClass.getPseudoClass(className), on);
     }
 
-    @OnThread(Tag.FXPlatform)
     public static void bindPseudoclass(Node node, String className, BooleanExpression onExpression)
     {
         addChangeListenerPlatformNN(onExpression, b -> setPseudoclass(node, className, b));
@@ -1227,19 +1183,17 @@ public class FXUtility
         }
     }
 
-    @OnThread(Tag.Any)
-    public static void logAndShowError(@LocalizableKey String actionKey, Exception ex)
+    public static void logAndShowError(String actionKey, Exception ex)
     {
         _logAndShowError(actionKey, ex);
     }
 
     // I have no idea why, but this function causes an error if called directly from another module
     // but the proxy above does not:
-    @OnThread(Tag.Any)
-    private static void _logAndShowError(@LocalizableKey String actionKey, Exception ex)
+    private static void _logAndShowError(String actionKey, Exception ex)
     {
-        @Localized String actionString = TranslationUtility.getString(actionKey);
-        FXPlatformRunnable runAlert = () -> showError(actionString, (@Localized String s) -> Utility.universal(actionString + ": " + s), ex);
+        String actionString = TranslationUtility.getString(actionKey);
+        FXPlatformRunnable runAlert = () -> showError(actionString, (String s) -> Utility.universal(actionString + ": " + s), ex);
         if (Platform.isFxApplicationThread())
             ((Runnable)runAlert::run).run();
         else
@@ -1271,7 +1225,7 @@ public class FXUtility
      * Runs the given action once, either now or in the future, at the earliest
      * point that the item becomes non-null
      */
-    public static <T> void onceNotNull(ObservableObjectValue<T> obsValue, FXPlatformConsumer<@NonNull T> action)
+    public static <T> void onceNotNull(ObservableObjectValue<T> obsValue, FXPlatformConsumer<T> action)
     {
         T initial = obsValue.get();
         if (initial != null)
@@ -1281,7 +1235,6 @@ public class FXUtility
             obsValue.addListener(new ChangeListener<T>()
             {
                 @Override
-                @OnThread(value = Tag.FXPlatform, ignoreParent = true)
                 public void changed(ObservableValue<? extends T> a, T b, T newVal)
                 {
                     if (newVal != null)
@@ -1308,7 +1261,6 @@ public class FXUtility
             obsValue.addListener(new ChangeListener<Boolean>()
             {
                 @Override
-                @OnThread(value = Tag.FXPlatform, ignoreParent = true)
                 public void changed(ObservableValue<? extends Boolean> a, Boolean b, Boolean newVal)
                 {
                     if (newVal != null)
@@ -1327,7 +1279,7 @@ public class FXUtility
      * @param tag
      * @return
      */
-    public static @Nullable File chooseFileOpen(@LocalizableKey String titleKey, String tag, Window parent, ExtensionFilter... extensionFilters)
+    public static File chooseFileOpen(String titleKey, String tag, Window parent, ExtensionFilter... extensionFilters)
     {
         FileChooser fc = new FileChooser();
         fc.setTitle(TranslationUtility.getString(titleKey));
@@ -1338,7 +1290,7 @@ public class FXUtility
         File file = fc.showOpenDialog(parent);
         if (file != null)
         {
-            @Nullable String parentDir = file.getAbsoluteFile().getParent();
+            String parentDir = file.getAbsoluteFile().getParent();
             if (parentDir != null)
                 Utility.setProperty("recentdirs.txt", tag, parentDir);
         }
@@ -1351,7 +1303,7 @@ public class FXUtility
      * @param tag
      * @return
      */
-    public static @Nullable File chooseFileSave(@LocalizableKey String titleKey, String tag, Window parent, ExtensionFilter... extensionFilters)
+    public static File chooseFileSave(String titleKey, String tag, Window parent, ExtensionFilter... extensionFilters)
     {
         if (testingMode)
         {
@@ -1373,7 +1325,7 @@ public class FXUtility
         File file = fc.showSaveDialog(parent);
         if (file != null)
         {
-            @Nullable String parentDir = file.getAbsoluteFile().getParent();
+            String parentDir = file.getAbsoluteFile().getParent();
             if (parentDir != null)
                 Utility.setProperty("recentdirs.txt", tag, parentDir);
         }
@@ -1385,7 +1337,7 @@ public class FXUtility
         listView.addEventHandler(MouseEvent.MOUSE_CLICKED, e -> {
             if (e.getButton() == MouseButton.PRIMARY && e.getClickCount() == 2)
             {
-                @Nullable T selected = listView.getSelectionModel().getSelectedItem();
+                T selected = listView.getSelectionModel().getSelectedItem();
                 if (selected != null)
                 {
                     onDoubleClick.consume(selected);
@@ -1563,19 +1515,16 @@ public class FXUtility
     
     public static interface GenOrError<T>
     {
-        @OnThread(Tag.Simulation)
         T run() throws InternalException, UserException;
     }
 
     public static interface GenOrErrorFX<T>
     {
-        @OnThread(Tag.FXPlatform)
         T run() throws InternalException, UserException;
     }
 
     public static interface RunOrErrorFX
     {
-        @OnThread(Tag.FXPlatform)
         void run() throws InternalException, UserException;
     }
 }

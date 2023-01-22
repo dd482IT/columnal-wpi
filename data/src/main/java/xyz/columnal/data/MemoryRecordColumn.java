@@ -45,29 +45,27 @@ import java.util.stream.Stream;
 public class MemoryRecordColumn extends EditableColumn
 {
     private final RecordColumnStorage storage;
-    @OnThread(Tag.Any)
-    private final @Value Record defaultValue;
+    private final Record defaultValue;
 
-    public MemoryRecordColumn(RecordSet recordSet, ColumnId title, ImmutableMap<@ExpressionIdentifier String, DataType> dataTypes, @Value Record defaultValue) throws InternalException
+    public MemoryRecordColumn(RecordSet recordSet, ColumnId title, ImmutableMap<String, DataType> dataTypes, Record defaultValue) throws InternalException
     {
         super(recordSet, title);
         this.defaultValue = defaultValue;
         this.storage = new RecordColumnStorage(dataTypes, true);
     }
 
-    public MemoryRecordColumn(RecordSet recordSet, ColumnId title, ImmutableMap<@ExpressionIdentifier String, DataType> dataTypes, List<Either<String, @Value Record>> values, @Value Record defaultValue) throws InternalException
+    public MemoryRecordColumn(RecordSet recordSet, ColumnId title, ImmutableMap<String, DataType> dataTypes, List<Either<String, Record>> values, Record defaultValue) throws InternalException
     {
         this(recordSet, title, dataTypes, defaultValue);
         addAllValue(storage, values);
     }
 
-    private static void addAllValue(RecordColumnStorage storage, List<Either<String, @Value Record>> values) throws InternalException
+    private static void addAllValue(RecordColumnStorage storage, List<Either<String, Record>> values) throws InternalException
     {
         storage.addAll(values.stream());
     }
 
     @Override
-    @OnThread(Tag.Any)
     public synchronized DataTypeValue getType()
     {
         return storage.getType();
@@ -76,9 +74,9 @@ public class MemoryRecordColumn extends EditableColumn
     @Override
     public Column _test_shrink(RecordSet rs, int shrunkLength) throws InternalException, UserException
     {
-        MemoryRecordColumn shrunk = new MemoryRecordColumn(rs, getName(), storage.getType().getType().apply(new SpecificDataTypeVisitor<ImmutableMap<@ExpressionIdentifier String, DataType>>() {
+        MemoryRecordColumn shrunk = new MemoryRecordColumn(rs, getName(), storage.getType().getType().apply(new SpecificDataTypeVisitor<ImmutableMap<String, DataType>>() {
             @Override
-            public ImmutableMap<@ExpressionIdentifier String, DataType> record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, InternalException
+            public ImmutableMap<String, DataType> record(ImmutableMap<String, DataType> fields) throws InternalException, InternalException
             {
                 return fields;
             }
@@ -87,27 +85,26 @@ public class MemoryRecordColumn extends EditableColumn
         return shrunk;
     }
 
-    public void add(Either<String, @Value Record> tuple) throws InternalException
+    public void add(Either<String, Record> tuple) throws InternalException
     {
         storage.addAll(Stream.of(tuple));
     }
 
 
     @Override
-    public @OnThread(Tag.Simulation) SimulationRunnable insertRows(int index, int count) throws InternalException, UserException
+    public SimulationRunnable insertRows(int index, int count) throws InternalException, UserException
     {
-        return storage.insertRows(index, Utility.replicate(count, Either.<String, @Value Record>right(defaultValue)));
+        return storage.insertRows(index, Utility.replicate(count, Either.<String, Record>right(defaultValue)));
     }
 
     @Override
-    public @OnThread(Tag.Simulation) SimulationRunnable removeRows(int index, int count) throws InternalException, UserException
+    public SimulationRunnable removeRows(int index, int count) throws InternalException, UserException
     {
         return storage.removeRows(index, count);
     }
 
     @Override
-    @OnThread(Tag.Any)
-    public @Value Record getDefaultValue()
+    public Record getDefaultValue()
     {
         return defaultValue;
     }

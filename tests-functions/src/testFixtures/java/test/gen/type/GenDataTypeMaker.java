@@ -73,7 +73,6 @@ public class GenDataTypeMaker extends GenValueBase<DataTypeMaker>
             this.dataType = dataType;
         }
 
-        @OnThread(Tag.Any)
         public DataType getDataType()
         {
             return dataType;
@@ -84,7 +83,7 @@ public class GenDataTypeMaker extends GenValueBase<DataTypeMaker>
             return typeManager;
         }
         
-        public @Value Object makeValue() throws InternalException, UserException
+        public Object makeValue() throws InternalException, UserException
         {
             return GenDataTypeMaker.this.makeValue(dataType);
         }
@@ -143,7 +142,6 @@ public class GenDataTypeMaker extends GenValueBase<DataTypeMaker>
     }
     
     @Override
-    @OnThread(value = Tag.Simulation, ignoreParent = true)
     public DataTypeMaker generate(SourceOfRandomness r, GenerationStatus generationStatus)
     {
         this.r = r;
@@ -199,7 +197,7 @@ public class GenDataTypeMaker extends GenValueBase<DataTypeMaker>
             }
 
             @Override
-            public Boolean record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, InternalException
+            public Boolean record(ImmutableMap<String, DataType> fields) throws InternalException, InternalException
             {
                 for (DataType type : fields.values())
                 {
@@ -229,7 +227,6 @@ public class GenDataTypeMaker extends GenValueBase<DataTypeMaker>
 
     @Target({PARAMETER, FIELD, ANNOTATION_TYPE, TYPE_USE})
     @Retention(RUNTIME)
-    @GeneratorConfiguration
     public @interface MustHaveValues {
     }
     

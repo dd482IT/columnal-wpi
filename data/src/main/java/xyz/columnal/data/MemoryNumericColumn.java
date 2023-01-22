@@ -42,17 +42,16 @@ import java.util.stream.Stream;
 public class MemoryNumericColumn extends EditableColumn
 {
     private final NumericColumnStorage storage;
-    @OnThread(Tag.Any)
-    private final @Value Number defaultValue;
+    private final Number defaultValue;
 
-    private MemoryNumericColumn(RecordSet rs, ColumnId title, NumberInfo numberInfo, @Value Number defaultValue) throws InternalException
+    private MemoryNumericColumn(RecordSet rs, ColumnId title, NumberInfo numberInfo, Number defaultValue) throws InternalException
     {
         super(rs, title);
         this.defaultValue = defaultValue;
         storage = new NumericColumnStorage(numberInfo, true);
     }
 
-    public MemoryNumericColumn(RecordSet rs, ColumnId title, NumberInfo numberInfo, List<Either<String, Number>> values, @Value Number defaultValue) throws InternalException
+    public MemoryNumericColumn(RecordSet rs, ColumnId title, NumberInfo numberInfo, List<Either<String, Number>> values, Number defaultValue) throws InternalException
     {
         this(rs, title, numberInfo, defaultValue);
         storage.addAll(values.stream());
@@ -73,7 +72,6 @@ public class MemoryNumericColumn extends EditableColumn
     }
 
     @Override
-    @OnThread(Tag.Any)
     public DataTypeValue getType()
     {
         return storage.getType();
@@ -86,20 +84,19 @@ public class MemoryNumericColumn extends EditableColumn
     }
 
     @Override
-    public @OnThread(Tag.Simulation) SimulationRunnable insertRows(int index, int count) throws InternalException, UserException
+    public SimulationRunnable insertRows(int index, int count) throws InternalException, UserException
     {
         return storage.insertRows(index, Utility.<Either<String, Number>>replicate(count, Either.<String, Number>right(defaultValue)));
     }
 
     @Override
-    public @OnThread(Tag.Simulation) SimulationRunnable removeRows(int index, int count) throws InternalException, UserException
+    public SimulationRunnable removeRows(int index, int count) throws InternalException, UserException
     {
         return storage.removeRows(index, count);
     }
 
     @Override
-    @OnThread(Tag.Any)
-    public @Value Object getDefaultValue()
+    public Object getDefaultValue()
     {
         return defaultValue;
     }

@@ -91,9 +91,9 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
             public final TableId tableId;
             public final boolean tableCanBeOmitted;
             public final DataTypeValue dataTypeValue;
-            public final @Nullable Pair<StyledString, @Nullable QuickFix<Expression>> information;
+            public final Pair<StyledString, QuickFix<Expression>> information;
 
-            public FoundColumn(TableId tableId, boolean tableCanBeOmitted, DataTypeValue dataTypeValue, @Nullable Pair<StyledString, @Nullable QuickFix<Expression>> information)
+            public FoundColumn(TableId tableId, boolean tableCanBeOmitted, DataTypeValue dataTypeValue, Pair<StyledString, QuickFix<Expression>> information)
             {
                 this.tableId = tableId;
                 this.tableCanBeOmitted = tableCanBeOmitted;
@@ -108,22 +108,21 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
 
             public ImmutableMap<ColumnId, DataTypeValue> getColumnTypes() throws InternalException, UserException;
 
-            @OnThread(Tag.Simulation)
             public int getRowCount() throws InternalException, UserException;
         }
         
         // If you pass null for table, you get the default table (or null if none)
         // If no such table/column is found, null is returned
         // Calling getCollapsed  with row number on .dataTypeValue should get corresponding value.
-        public @Nullable FoundColumn getColumn(@Recorded Expression expression, @Nullable TableId tableId, ColumnId columnId);
+        public FoundColumn getColumn(Expression expression, TableId tableId, ColumnId columnId);
 
         // If no such table is found, null is returned.
         // If null is passed, uses the current table (if applicable; null return if not -- used for converting from column references)
-        public @Nullable FoundTable getTable(@Nullable TableId tableName) throws UserException, InternalException;
+        public FoundTable getTable(TableId tableName) throws UserException, InternalException;
         
         // This is really for the editor autocomplete, but it doesn't rely on any GUI
         // functionality so can be here:
-        public Stream<Pair<@Nullable TableId, ColumnId>> getAvailableColumnReferences();
+        public Stream<Pair<TableId, ColumnId>> getAvailableColumnReferences();
 
         // This is really for the editor autocomplete, but it doesn't rely on any GUI
         // functionality so can be here:
@@ -160,7 +159,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         public Stream<ClickedReference> getPossibleColumnReferences(TableId tableId, ColumnId columnId);
 
 
-        public default @Nullable QuickFix<Expression> getFixForIdent(@Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents, @Recorded Expression target)
+        public default QuickFix<Expression> getFixForIdent(String namespace, ImmutableList<String> idents, Expression target)
         {
             return null;
         }
@@ -192,7 +191,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
 
     public static class CheckedExp
     {
-        public final @Recorded TypeExp typeExp;
+        public final TypeExp typeExp;
         public final TypeState typeState;
         // We could actually apply these immediately, because it's disallowed
         // to have a pattern outside a pattern match.  But then any creation
@@ -202,14 +201,14 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         // Always empty if type is EXPRESSION
         private final ImmutableList<TypeExp> equalityRequirements;
 
-        private CheckedExp(@Recorded TypeExp typeExp, TypeState typeState, ImmutableList<TypeExp> equalityRequirements)
+        private CheckedExp(TypeExp typeExp, TypeState typeState, ImmutableList<TypeExp> equalityRequirements)
         {
             this.typeExp = typeExp;
             this.typeState = typeState;
             this.equalityRequirements = equalityRequirements;
         }
 
-        public CheckedExp(@Recorded TypeExp typeExp, TypeState typeState)
+        public CheckedExp(TypeExp typeExp, TypeState typeState)
         {
             this(typeExp, typeState, ImmutableList.of());
         }
@@ -256,7 +255,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
 
         // If the argument is null, just return this.
         // If non-null, check the item is an expression, and then apply the operator to our type
-        public CheckedExp applyToType(@Nullable UnaryOperator<@Recorded TypeExp> changeType)
+        public CheckedExp applyToType(UnaryOperator<TypeExp> changeType)
         {
             if (changeType == null)
                 return this;
@@ -276,51 +275,46 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
     
     // Checks that all used variable names (unless this is a pattern) and column references are defined,
     // and that types check.  Return null if any problems.
-    public abstract @Nullable CheckedExp check(@Recorded Expression this, ColumnLookup dataLookup, TypeState typeState, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException;
+    public abstract CheckedExp check(Expression this, ColumnLookup dataLookup, TypeState typeState, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException;
 
     // Calls check with EXPRESSION kind, and returns just the type, discarding the state.
-    public final @Nullable TypeExp checkExpression(@Recorded Expression this, ColumnLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public final TypeExp checkExpression(Expression this, ColumnLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         IdentExpression.resolveThroughout(this, dataLookup, typeState.getFunctionLookup(), typeState.getTypeManager());        
-        @Nullable CheckedExp check = check(dataLookup, typeState, ExpressionKind.EXPRESSION, LocationInfo.UNIT_DEFAULT, onError);
+        CheckedExp check = check(dataLookup, typeState, ExpressionKind.EXPRESSION, LocationInfo.UNIT_DEFAULT, onError);
         if (check == null)
             return null;
         return check.typeExp;
     }
 
-    @OnThread(Tag.Simulation)
-    protected final ValueResult result(@Value Object value, EvaluateState state)
+    protected final ValueResult result(Object value, EvaluateState state)
     {
         return result(value, state, ImmutableList.of());
     }
 
-    @OnThread(Tag.Simulation)
-    protected final ValueResult result(@Value Object value, EvaluateState state, ImmutableList<ValueResult> childrenForExplanations)
+    protected final ValueResult result(Object value, EvaluateState state, ImmutableList<ValueResult> childrenForExplanations)
     {
         return explanation(value, ExecutionType.VALUE, state, childrenForExplanations, ImmutableList.of(), false, null);
     }
 
-    @OnThread(Tag.Simulation)
-    protected final ValueResult resultIsLocation(@Value Object value, EvaluateState state, ImmutableList<ValueResult> childrenForExplanations, ExplanationLocation resultLocation, boolean skipChildrenIfTrivial)
+    protected final ValueResult resultIsLocation(Object value, EvaluateState state, ImmutableList<ValueResult> childrenForExplanations, ExplanationLocation resultLocation, boolean skipChildrenIfTrivial)
     {
         return explanation(value, ExecutionType.VALUE, state, childrenForExplanations, ImmutableList.of(resultLocation), skipChildrenIfTrivial, resultLocation);
     }
 
-    @OnThread(Tag.Simulation)
-    protected final ValueResult explanation(@Value Object value, ExecutionType executionType, EvaluateState state, ImmutableList<ValueResult> childrenForExplanations, ImmutableList<ExplanationLocation> usedLocations, boolean skipChildrenIfTrivial)
+    protected final ValueResult explanation(Object value, ExecutionType executionType, EvaluateState state, ImmutableList<ValueResult> childrenForExplanations, ImmutableList<ExplanationLocation> usedLocations, boolean skipChildrenIfTrivial)
     {
         return explanation(value, executionType, state, childrenForExplanations, usedLocations, skipChildrenIfTrivial, null);
     }
 
-    @OnThread(Tag.Simulation)
-    protected final ValueResult explanation(@Value Object value, ExecutionType executionType, EvaluateState state, ImmutableList<ValueResult> childrenForExplanations, ImmutableList<ExplanationLocation> usedLocations, boolean skipChildrenIfTrivial, @Nullable ExplanationLocation resultIsLocation)
+    protected final ValueResult explanation(Object value, ExecutionType executionType, EvaluateState state, ImmutableList<ValueResult> childrenForExplanations, ImmutableList<ExplanationLocation> usedLocations, boolean skipChildrenIfTrivial, ExplanationLocation resultIsLocation)
     {
         if (!state.recordExplanation())
         {
             return new ValueResult(value, state)
             {
                 @Override
-                public Explanation makeExplanation(@Nullable ExecutionType overrideExecutionType) throws InternalException
+                public Explanation makeExplanation(ExecutionType overrideExecutionType) throws InternalException
                 {
                     throw new InternalException("Fetching explanation but did not record explanation");
                 }
@@ -330,19 +324,17 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         return new ValueResult(value, state)
         {
             @Override
-            public Explanation makeExplanation(@Nullable ExecutionType overrideExecutionType)
+            public Explanation makeExplanation(ExecutionType overrideExecutionType)
             {
                 return new Explanation(Expression.this, overrideExecutionType != null ? overrideExecutionType : executionType, evaluateState, value, usedLocations, resultIsLocation)
                 {
                     @Override
-                    @OnThread(Tag.Simulation)
-                    public @Nullable StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation, ExpressionStyler expressionStyler, ImmutableList<ExplanationLocation> extraLocations, boolean skipIfTrivial) throws InternalException, UserException
+                    public StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation, ExpressionStyler expressionStyler, ImmutableList<ExplanationLocation> extraLocations, boolean skipIfTrivial) throws InternalException, UserException
                     {
                         return Expression.this.describe(value,this.executionType, evaluateState, hyperlinkLocation, expressionStyler, Utility.concatI(usedLocations, extraLocations), skipIfTrivial);
                     }
 
                     @Override
-                    @OnThread(Tag.Simulation)
                     public ImmutableList<Explanation> getDirectSubExplanations() throws InternalException
                     {
                         return Utility.mapListInt(childrenForExplanations, e -> e.makeExplanation(null));
@@ -364,9 +356,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         };
     }
 
-    @OnThread(Tag.Simulation)
-    @Nullable
-    protected final StyledString describe(@Value Object value, ExecutionType executionType, EvaluateState evaluateState,  Function<ExplanationLocation, StyledString> hyperlinkLocation, ExpressionStyler expressionStyler, ImmutableList<ExplanationLocation> usedLocations, boolean skipIfTrivial) throws UserException, InternalException
+    protected final StyledString describe(Object value, ExecutionType executionType, EvaluateState evaluateState,  Function<ExplanationLocation, StyledString> hyperlinkLocation, ExpressionStyler expressionStyler, ImmutableList<ExplanationLocation> usedLocations, boolean skipIfTrivial) throws UserException, InternalException
     {
         // Don't bother explaining literals, or trivial if we are skipping trivial:
         if (Expression.this.hideFromExplanation(skipIfTrivial))
@@ -388,7 +378,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
             return StyledString.concat(Expression.this.toDisplay(DisplayType.SIMPLE, BracketedStatus.DONT_NEED_BRACKETS, expressionStyler), StyledString.s(" was "), StyledString.s(DataTypeUtility.valueToString(value, null, false, new Truncater()
             {
                 @Override
-                public String truncateNumber(@ImmediateValue Number number) throws InternalException, UserException
+                public String truncateNumber(Number number) throws InternalException, UserException
                 {
                     if (!Utility.isIntegral(number))
                     {
@@ -407,25 +397,22 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         }
     }
 
-    @OnThread(Tag.Simulation)
     protected ValueResult result(EvaluateState state, RecordedFunctionResult recordedFunctionResult)
     {
         return new ValueResult(recordedFunctionResult.result, state)
         {
             @Override
-            public Explanation makeExplanation(@Nullable ExecutionType overrideExecutionType)
+            public Explanation makeExplanation(ExecutionType overrideExecutionType)
             {
                 return new Explanation(Expression.this, overrideExecutionType != null ? overrideExecutionType : ExecutionType.VALUE, evaluateState, value, recordedFunctionResult.usedLocations, recordedFunctionResult.resultIsLocation)
                 {
                     @Override
-                    @OnThread(Tag.Simulation)
-                    public @Nullable StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation, ExpressionStyler expressionStyler, ImmutableList<ExplanationLocation> extraLocations, boolean skipIfTrivial) throws InternalException, UserException
+                    public StyledString describe(Set<Explanation> alreadyDescribed, Function<ExplanationLocation, StyledString> hyperlinkLocation, ExpressionStyler expressionStyler, ImmutableList<ExplanationLocation> extraLocations, boolean skipIfTrivial) throws InternalException, UserException
                     {
                         return Expression.this.describe(value, this.executionType, evaluateState, hyperlinkLocation, expressionStyler, Utility.concatI(recordedFunctionResult.usedLocations, extraLocations), skipIfTrivial);
                     }
 
                     @Override
-                    @OnThread(Tag.Simulation)
                     public ImmutableList<Explanation> getDirectSubExplanations() throws InternalException
                     {
                         return recordedFunctionResult.childExplanations;
@@ -447,20 +434,19 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
      * If you override makeExplanation, it doesn't matter which Expression
      * instance is used to construct the object.
      */
-    @OnThread(Tag.Simulation)
     public abstract static class ValueResult
     {
-        public final @Value Object value;
+        public final Object value;
         // State after execution:
         public final EvaluateState evaluateState;
         
-        protected ValueResult(@Value Object value, EvaluateState state)
+        protected ValueResult(Object value, EvaluateState state)
         {
             this.value = value;
             this.evaluateState = state;
         }
 
-        public abstract Explanation makeExplanation(@Nullable ExecutionType overrideExecutionType) throws InternalException;
+        public abstract Explanation makeExplanation(ExecutionType overrideExecutionType) throws InternalException;
 
         // Locations used directly by this result, not including
         // locations from child explanations
@@ -473,11 +459,9 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
     /**
      * Gets the value for this expression at the given evaluation state
      */
-    @OnThread(Tag.Simulation)
     public abstract ValueResult calculateValue(EvaluateState state) throws EvaluationException, InternalException;
     
     // Fetches a sub-expression and adjusts stack trace and explanation if there is an exception.  If not, adds to passed builder and returns
-    @OnThread(Tag.Simulation)
     protected final ValueResult fetchSubExpression(Expression subExpression, EvaluateState state, ImmutableList.Builder<ValueResult> subExpressionsSoFar) throws EvaluationException, InternalException
     {
         try
@@ -492,8 +476,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         }
     }
 
-    @OnThread(Tag.Simulation)
-    protected final ValueResult matchSubExpressionAsPattern(Expression subExpression, @Value Object matchAgainst, EvaluateState state, ImmutableList.Builder<ValueResult> subExpressionsSoFar) throws EvaluationException, InternalException
+    protected final ValueResult matchSubExpressionAsPattern(Expression subExpression, Object matchAgainst, EvaluateState state, ImmutableList.Builder<ValueResult> subExpressionsSoFar) throws EvaluationException, InternalException
     {
         try
         {
@@ -514,7 +497,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
     {
         return visit(new ExpressionVisitorStream<String>() {
             @Override
-            public Stream<String> ident(IdentExpression self, @Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents, boolean isVariable)
+            public Stream<String> ident(IdentExpression self, String namespace, ImmutableList<String> idents, boolean isVariable)
             {
                 if (isVariable)
                     return Stream.of(idents.get(0));
@@ -530,7 +513,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         });
     }
     
-    public abstract <T> T visit(@Recorded Expression this, ExpressionVisitor<T> visitor);
+    public abstract <T> T visit(Expression this, ExpressionVisitor<T> visitor);
 
     public static interface SaveDestination
     {
@@ -540,14 +523,14 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
          * @param idents
          * @return
          */
-        Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> disambiguate(@Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents);
+        Pair<String, ImmutableList<String>> disambiguate(String namespace, ImmutableList<String> idents);
 
         /**
          * Makes a new save destination with the given names defined (namespace plus idents for each entry) 
          * @param names
          * @return
          */
-        SaveDestination withNames(ImmutableList<Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>>> names);
+        SaveDestination withNames(ImmutableList<Pair<String, ImmutableList<String>>> names);
 
         /**
          * Get all the defined names in the given namespace
@@ -563,14 +546,14 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         public static final SaveDestination TO_STRING = new SaveDestination()
         {
             @Override
-            public Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> disambiguate(@Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents)
+            public Pair<String, ImmutableList<String>> disambiguate(String namespace, ImmutableList<String> idents)
             {
                 // Give everything in full:
                 return new Pair<>(namespace, idents);
             }
 
             @Override
-            public SaveDestination withNames(ImmutableList<Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>>> names)
+            public SaveDestination withNames(ImmutableList<Pair<String, ImmutableList<String>>> names)
             {
                 return this;
             }
@@ -593,14 +576,14 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         public static final SaveDestination TO_FILE = new SaveDestination()
         {
             @Override
-            public Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> disambiguate(@Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents)
+            public Pair<String, ImmutableList<String>> disambiguate(String namespace, ImmutableList<String> idents)
             {
                 // Give everything in full:
                 return new Pair<>(namespace, idents);
             }
 
             @Override
-            public SaveDestination withNames(ImmutableList<Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>>> names)
+            public SaveDestination withNames(ImmutableList<Pair<String, ImmutableList<String>>> names)
             {
                 return this;
             }
@@ -620,15 +603,15 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         
         static final class ToEditor implements SaveDestination
         {
-            private final ImmutableList<Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>>> names;
+            private final ImmutableList<Pair<String, ImmutableList<String>>> names;
 
-            public ToEditor(ImmutableList<Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>>> names)
+            public ToEditor(ImmutableList<Pair<String, ImmutableList<String>>> names)
             {
                 this.names = names;
             }
 
             @Override
-            public Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> disambiguate(@Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents)
+            public Pair<String, ImmutableList<String>> disambiguate(String namespace, ImmutableList<String> idents)
             {
                 // Need to keep adding idents backwards from end until it is not ambigious:
                 boolean usingNamespace = false;
@@ -636,10 +619,10 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
                 // Can only increase scoping if we're not using the namespace or are not yet using all idents
                 increaseScoping: while (!usingNamespace || firstIdentUsed > 0)
                 {
-                    ImmutableList<@ExpressionIdentifier String> inUse = idents.subList(firstIdentUsed, idents.size());
+                    ImmutableList<String> inUse = idents.subList(firstIdentUsed, idents.size());
 
                     int matchCount = 0;
-                    for (Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>> name : names)
+                    for (Pair<String, ImmutableList<String>> name : names)
                     {
                         // We need to make sure that name resolving to its intended destination is not mistaken for a conflict.
                         // Our first step of resolution is to add the namespace, and if that isn't enough, we scope name further and further.
@@ -682,7 +665,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
                 return new Pair<>(usingNamespace ? namespace : null, idents.subList(firstIdentUsed, idents.size()));
             }
 
-            private static boolean couldMatch(ImmutableList<@ExpressionIdentifier String> currentCandidateScoping, ImmutableList<@ExpressionIdentifier String> fullName)
+            private static boolean couldMatch(ImmutableList<String> currentCandidateScoping, ImmutableList<String> fullName)
             {
                 if (currentCandidateScoping.size() > fullName.size())
                     return false; // Already scoped enough to avoid the confusion
@@ -699,7 +682,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
             }
 
             @Override
-            public SaveDestination withNames(ImmutableList<Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>>> names)
+            public SaveDestination withNames(ImmutableList<Pair<String, ImmutableList<String>>> names)
             {
                 return new ToEditor(Utility.concatI(this.names, names));
             }
@@ -721,13 +704,13 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         // We need names of tables, columns, functions, tags:
         public static SaveDestination toExpressionEditor(TypeManager typeManager, ColumnLookup columnLookup, FunctionLookup functionLookup)
         {
-            ImmutableList.Builder<Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>>> names = ImmutableList.builder();
+            ImmutableList.Builder<Pair<String, ImmutableList<String>>> names = ImmutableList.builder();
 
             for (TaggedTypeDefinition ttd : typeManager.getKnownTaggedTypes().values())
             {
                 for (TagType<JellyType> tag : ttd.getTags())
                 {
-                    names.add(new Pair<>("tag", ImmutableList.<@ExpressionIdentifier String>of(ttd.getTaggedTypeName().getRaw(), tag.getName())));
+                    names.add(new Pair<>("tag", ImmutableList.<String>of(ttd.getTaggedTypeName().getRaw(), tag.getName())));
                 }
             }
             try
@@ -742,13 +725,13 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
                 Log.log(e);
             }
 
-            for (Pair<@Nullable TableId, ColumnId> column : Utility.iterableStream(columnLookup.getAvailableColumnReferences()))
+            for (Pair<TableId, ColumnId> column : Utility.iterableStream(columnLookup.getAvailableColumnReferences()))
             {
-                names.add(new Pair<>("column", column.getFirst() == null ? ImmutableList.<@ExpressionIdentifier String>of(column.getSecond().getRaw()) : ImmutableList.<@ExpressionIdentifier String>of(column.getFirst().getRaw(), column.getSecond().getRaw())));
+                names.add(new Pair<>("column", column.getFirst() == null ? ImmutableList.<String>of(column.getSecond().getRaw()) : ImmutableList.<String>of(column.getFirst().getRaw(), column.getSecond().getRaw())));
             }
             for (TableId table : Utility.iterableStream(columnLookup.getAvailableTableReferences()))
             {
-                names.add(new Pair<>("table", ImmutableList.<@ExpressionIdentifier String>of(table.getRaw())));
+                names.add(new Pair<>("table", ImmutableList.<String>of(table.getRaw())));
             }
             
             return new ToEditor(names.build());
@@ -778,7 +761,6 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
      */
     public abstract String save(SaveDestination saveDestination, BracketedStatus surround, TableAndColumnRenames renames);
 
-    @Pure
     public Optional<Rational> constantFold()
     {
         return Optional.empty();
@@ -796,8 +778,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
     // as the current expression (and throw an InternalException if not)
     // If you override this, you should also override checkAsPattern
     // If there is a match, returns result with true value.  If no match, returns a result with false value.
-    @OnThread(Tag.Simulation)
-    public ValueResult matchAsPattern(@Value Object value, EvaluateState state) throws InternalException, EvaluationException
+    public ValueResult matchAsPattern(Object value, EvaluateState state) throws InternalException, EvaluationException
     {
         ValueResult ourValue = calculateValue(state);
         try
@@ -830,11 +811,11 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
     // If this item can't make a type failure by itself (e.g. a literal) then returns null
     // Otherwise, uses the given generator to make a copy of itself which contains a type failure
     // in this node.  E.g. an equals expression might replace the lhs or rhs with a different type
-    public abstract @Nullable Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException;
+    public abstract Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException;
 
     // Force sub-expressions to implement equals and hashCode:
     @Override
-    public abstract boolean equals(@Nullable Object o);
+    public abstract boolean equals(Object o);
     @Override
     public abstract int hashCode();
 
@@ -864,7 +845,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
     // Only for testing:
     public static interface _test_TypeVary
     {
-        public Expression getDifferentType(@Nullable TypeExp type) throws InternalException, UserException;
+        public Expression getDifferentType(TypeExp type) throws InternalException, UserException;
         public Expression getAnyType() throws UserException, InternalException;
         public Expression getNonNumericType() throws InternalException, UserException;
 
@@ -890,7 +871,7 @@ public abstract class Expression extends ExpressionBase implements StyledShowabl
         }
 
         @Override
-        protected @OnThread(Tag.FXPlatform) void style(Text t)
+        protected void style(Text t)
         {
             t.getStyleClass().add("expression-input");
         }

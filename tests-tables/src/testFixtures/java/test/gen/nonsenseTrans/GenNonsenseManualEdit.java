@@ -50,14 +50,12 @@ import java.util.HashMap;
 
 public class GenNonsenseManualEdit extends Generator<Transformation_Mgr>
 {
-    @OnThread(Tag.Any)
     public GenNonsenseManualEdit()
     {
         super(Transformation_Mgr.class);
     }
     
     @Override
-    @OnThread(value = Tag.Simulation, ignoreParent = true)
     public Transformation_Mgr generate(SourceOfRandomness random, GenerationStatus status)
     {
         try
@@ -69,10 +67,10 @@ public class GenNonsenseManualEdit extends Generator<Transformation_Mgr>
             HashMap<ColumnId, ColumnReplacementValues> replacements = new HashMap<>();
             
             
-            @Nullable TypeAndValueGen keyColumn = random.nextInt(4) == 1 ? null : genTypeAndValueGen.generate(random, status);
+            TypeAndValueGen keyColumn = random.nextInt(4) == 1 ? null : genTypeAndValueGen.generate(random, status);
             if (keyColumn != null)
                 mgr.getTypeManager()._test_copyTaggedTypesFrom(keyColumn.getTypeManager());
-            @Nullable Pair<ColumnId, DataType> replacementKey = keyColumn == null ? null : new Pair<>(TBasicUtil.generateColumnId(random), keyColumn.getType());
+            Pair<ColumnId, DataType> replacementKey = keyColumn == null ? null : new Pair<>(TBasicUtil.generateColumnId(random), keyColumn.getType());
             
             int columnsAffected = random.nextInt(0, 5);
             for (int i = 0; i < columnsAffected; i++)
@@ -90,7 +88,7 @@ public class GenNonsenseManualEdit extends Generator<Transformation_Mgr>
                     continue;
                 }
               
-                ImmutableList<Pair<@Value Object, Either<String, @Value Object>>> ps = TBasicUtil.<Pair<@Value Object, Either<String, @Value Object>>>makeList(random, 1, 5, () -> new Pair<>(keyColumn == null ? DataTypeUtility.value(random.nextInt()) : keyColumn.makeValue(), random.nextInt(5) == 1 ? Either.<String, @Value Object>left("#" + random.nextInt()) : Either.<String, @Value Object>right(typeAndValueGen.makeValue())));
+                ImmutableList<Pair<Object, Either<String, Object>>> ps = TBasicUtil.<Pair<Object, Either<String, Object>>>makeList(random, 1, 5, () -> new Pair<>(keyColumn == null ? DataTypeUtility.value(random.nextInt()) : keyColumn.makeValue(), random.nextInt(5) == 1 ? Either.<String, Object>left("#" + random.nextInt()) : Either.<String, Object>right(typeAndValueGen.makeValue())));
                 
                 replacements.put(columnId, new ColumnReplacementValues(typeAndValueGen.getType(), ps));
             }

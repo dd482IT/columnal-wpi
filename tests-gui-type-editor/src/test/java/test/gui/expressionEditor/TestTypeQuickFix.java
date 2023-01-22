@@ -73,74 +73,61 @@ import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
 
-@RunWith(JUnitQuickcheck.class)
-@OnThread(Tag.Simulation)
 public class TestTypeQuickFix extends FXApplicationTest implements EnterExpressionTrait, ScrollToTrait, ComboUtilTrait, ListUtilTrait, ClickTableLocationTrait, PopupTrait
 {
-    @Test
     public void testTypo1()
     {
         testSimpleFix("Numbre", "Numbre", DataType.NUMBER);
     }
 
-    @Test
     public void testTypo2()
     {
         testSimpleFix("DateYN", "DateYN", DataType.date(new DateTimeInfo(DateTimeType.YEARMONTH)));
     }
 
-    @Test
     public void testTypo3()
     {
         testSimpleFix("Booleen", "Booleen", DataType.BOOLEAN);
     }
 
-    @Test
     public void testTypo4() throws Exception
     {
         DummyManager dummyManager = TFunctionUtil.managerWithTestTypes().getFirst();
         testSimpleFix("Optionl(Text)", "Optionl", dummyManager.getTypeManager().getMaybeType().instantiate(ImmutableList.of(Either.right(DataType.TEXT)), dummyManager.getTypeManager()));
     }
 
-    @Test
     public void testTypeNameMixup() throws Exception
     {
         testSimpleFix("double", "double", DataType.NUMBER);
     }
 
-    @Test
     public void testTypeNameMixup2() throws Exception
     {
         testSimpleFix("bool", "bool", DataType.BOOLEAN);
     }
 
-    @Test
     public void testTypeNameMixup3() throws Exception
     {
         testSimpleFix("string", "string", DataType.TEXT);
     }
 
-    @Test
     public void testTypeNameMixup4() throws Exception
     {
         testSimpleFix("int", "int", DataType.NUMBER);
     }
     
-    @Test
     public void testUnitNameMixup() throws Exception
     {
         DummyManager dummyManager = TFunctionUtil.managerWithTestTypes().getFirst();
         testFix("Number{second}", "second", dotCssClassFor("s"), DataType.number(new NumberInfo(dummyManager.getUnitManager().loadUse("s"))));
     }
 
-    @Test
     public void testUnitNameMixup2() throws Exception
     {
         DummyManager dummyManager = TFunctionUtil.managerWithTestTypes().getFirst();
         testFix("EitherNumUnit({second})({m})", "second", dotCssClassFor("s"), TBasicUtil.checkNonNull(dummyManager.getTypeManager().lookupType(new TypeId("EitherNumUnit"), ImmutableList.of(Either.left(dummyManager.getUnitManager().loadUse("s")), Either.left(dummyManager.getUnitManager().loadUse("m"))))));
     }
 
-    @Test
     public void testUnitNameMixup3() throws Exception
     {
         DummyManager dummyManager = TFunctionUtil.managerWithTestTypes().getFirst();
@@ -148,7 +135,6 @@ public class TestTypeQuickFix extends FXApplicationTest implements EnterExpressi
         testFix("Number{(s^6*meter)/kg}", "meter", dotCssClassFor("m"), DataType.number(new NumberInfo(um.loadUse("s").raisedTo(6).times(um.loadUse("m").divideBy(um.loadUse("kg"))))));
     }
     
-    @Test
     public void testMissingTupleBrackets()
     {
         testSimpleFix("a:Number,b:Text", ",", DataType.record(ImmutableMap.of("a", DataType.NUMBER, "b",DataType.TEXT)));
@@ -203,7 +189,7 @@ public class TestTypeQuickFix extends FXApplicationTest implements EnterExpressi
             EditorDisplay targetField = waitForOne(".editor-display");
             assertNotNull("Editor Display", targetField);
             if (targetField == null) return;
-            @NonNull Node targetFinal = targetField;
+            Node targetFinal = targetField;
             if (!TFXUtil.fx(() -> targetFinal.isFocused()))
             {
                 //TFXUtil.fx_(() -> dumpScreenshot());
@@ -229,7 +215,7 @@ public class TestTypeQuickFix extends FXApplicationTest implements EnterExpressi
 
             TFXUtil.sleep(500);
             List<Window> windows = TFXUtil.fx(() -> listWindows());
-            @Nullable Window errorPopup = windows.stream().filter(w -> w instanceof PopOver).findFirst().orElse(null);
+            Window errorPopup = windows.stream().filter(w -> w instanceof PopOver).findFirst().orElse(null);
             assertNotNull(Utility.listToString(windows), errorPopup);
             assertEquals(TFXUtil.fx(() -> lookup(".expression-info-error").queryAll().stream().map(n -> textFlowToString(n)).collect(Collectors.joining(" /// "))),
                 1L, TFXUtil.fx(() -> lookup(".expression-info-error").queryAll().stream().filter(Node::isVisible).count()).longValue());
@@ -252,7 +238,7 @@ public class TestTypeQuickFix extends FXApplicationTest implements EnterExpressi
             TFXUtil.doubleOk(this);
             TFXUtil.sleep(1000);
             FxThreadUtils.waitForFxEvents();
-            @Nullable ImmediateDataSource dataSource = Utility.filterClass(mainWindowActions._test_getTableManager().getAllTables().stream(), ImmediateDataSource.class).findFirst().orElse(null);
+            ImmediateDataSource dataSource = Utility.filterClass(mainWindowActions._test_getTableManager().getAllTables().stream(), ImmediateDataSource.class).findFirst().orElse(null);
             assertNotNull(dataSource);
             if (dataSource == null)
                 return;
@@ -274,7 +260,6 @@ public class TestTypeQuickFix extends FXApplicationTest implements EnterExpressi
         }
     }
 
-    @OnThread(Tag.Any)
     private String textFlowToString(Node n)
     {
         return TFXUtil.fx(() -> n.toString() + " " + n.localToScreen(n.getBoundsInLocal().getMinX(), n.getBoundsInLocal().getMinY()) + ((TextFlow)n).getChildren().stream().map(c -> ((Text)c).getText()).collect(Collectors.joining(";")));

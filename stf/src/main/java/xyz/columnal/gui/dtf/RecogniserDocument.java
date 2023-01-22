@@ -66,15 +66,15 @@ public final class RecogniserDocument<V> extends DisplayDocument
     private final Saver<V> saveChange;
     private final FXPlatformConsumer<KeyCode> relinquishFocus;
     private final Class<V> itemClass;
-    private final @Nullable SimulationSupplierInt<Boolean> checkEditable;
-    private final @Nullable FXPlatformFunction<Boolean, ImmutableList<MenuItem>> getAdditionalMenuItems;
+    private final SimulationSupplierInt<Boolean> checkEditable;
+    private final FXPlatformFunction<Boolean, ImmutableList<MenuItem>> getAdditionalMenuItems;
     private OptionalInt curErrorPosition = OptionalInt.empty();
     private String valueOnFocusGain;
     private Either<ErrorDetails, SuccessDetails<V>> latestValue;
-    private @Nullable FXPlatformRunnable onFocusLost;
-    private @MonotonicNonNull Pair<ImmutableList<Pair<Set<String>, String>>, CaretPositionMapper> unfocusedDocument;
+    private FXPlatformRunnable onFocusLost;
+    private Pair<ImmutableList<Pair<Set<String>, String>>, CaretPositionMapper> unfocusedDocument;
 
-    public RecogniserDocument(String initialContent, Class<V> valueClass, Recogniser<V> recogniser, @Nullable SimulationSupplierInt<Boolean> checkStartEdit, Saver<V> saveChange, FXPlatformConsumer<KeyCode> relinquishFocus, @Nullable FXPlatformFunction<Boolean, ImmutableList<MenuItem>> getAdditionalMenuItems)
+    public RecogniserDocument(String initialContent, Class<V> valueClass, Recogniser<V> recogniser, SimulationSupplierInt<Boolean> checkStartEdit, Saver<V> saveChange, FXPlatformConsumer<KeyCode> relinquishFocus, FXPlatformFunction<Boolean, ImmutableList<MenuItem>> getAdditionalMenuItems)
     {
         super(initialContent);
         this.itemClass = valueClass;
@@ -93,7 +93,7 @@ public final class RecogniserDocument<V> extends DisplayDocument
     {
         if (focused && checkEditable != null)
         {
-            @Nullable SimulationSupplierInt<Boolean> checkEditableFinal = checkEditable;
+            SimulationSupplierInt<Boolean> checkEditableFinal = checkEditable;
             Workers.onWorkerThread("Check editable", Priority.FETCH, () -> {
                 try
                 {
@@ -133,16 +133,14 @@ public final class RecogniserDocument<V> extends DisplayDocument
         }
     }
 
-    @EnsuresNonNull({"latestValue", "unfocusedDocument"})
-    @RequiresNonNull({"recogniser", "saveChange", "curErrorPosition", "valueOnFocusGain"})
-    private void recognise(@UnknownInitialization(DisplayDocument.class) RecogniserDocument<V> this, boolean save)
+    private void recognise(RecogniserDocument<V> this, boolean save)
     {
         String text = getText();
         latestValue = recogniser.process(ParseProgress.fromStart(text), false)
                         .flatMap(SuccessDetails::requireEnd);
         // Once latestValue is set, we're fully initialised but checker doesn't know this:
         @SuppressWarnings("assignment")
-        @Initialized RecogniserDocument<V> initialized = this;
+        RecogniserDocument<V> initialized = this;
         FXPlatformRunnable reset = () -> {
             Utility.later(this).replaceText(0, Utility.later(this).getLength(), valueOnFocusGain);
             recognise(false);
@@ -150,15 +148,15 @@ public final class RecogniserDocument<V> extends DisplayDocument
             if (onFocusLost != null)
                 onFocusLost.run();
         };
-        Pair<String, @Nullable V> saveDetails;
-        saveDetails = latestValue.<Pair<String, @Nullable V>>either(err -> {
+        Pair<String, V> saveDetails;
+        saveDetails = latestValue.<Pair<String, V>>either(err -> {
             curErrorPosition = OptionalInt.of(err.errorPosition);
-            return new Pair<String, @Nullable V>(text, null);
+            return new Pair<String, V>(text, null);
         }, (SuccessDetails<V> x) -> {
             curErrorPosition = OptionalInt.empty();
             @SuppressWarnings("valuetype")
             V value = x.value;
-            return new Pair<String, @Nullable V>(x.immediateReplacementText != null ? x.immediateReplacementText : text, value);
+            return new Pair<String, V>(x.immediateReplacementText != null ? x.immediateReplacementText : text, value);
         });
         this.unfocusedDocument = new Pair<>(makeStyledSpans(curErrorPosition, saveDetails.getFirst()).collect(ImmutableList.<Pair<Set<String>, String>>toImmutableList()), n -> n);
         if (save)
@@ -247,7 +245,7 @@ public final class RecogniserDocument<V> extends DisplayDocument
     }
 
     @Override
-    public @Nullable String getUndo()
+    public String getUndo()
     {
         return valueOnFocusGain;
     }
@@ -260,7 +258,6 @@ public final class RecogniserDocument<V> extends DisplayDocument
 
     public static interface Saver<V>
     {
-        @OnThread(Tag.FXPlatform)
-        public void save(String text, @Nullable V recognisedValue, FXPlatformRunnable resetGraphics);
+        public void save(String text, V recognisedValue, FXPlatformRunnable resetGraphics);
     }
 }

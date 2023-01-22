@@ -44,13 +44,12 @@ import java.util.ArrayList;
  * Note that we end up with N^2 labels for N actually-visible labels, but
  * since N is <10, it's not a big issue.
  */
-@OnThread(Tag.FXPlatform)
 public class AlignedLabels
 {
     // One stack pane per visible row (N), each containing N labels 
     private final ArrayList<StackPane> stackPanes = new ArrayList<>();
     // The text items, same length as stackPanes.
-    private final ArrayList<@Localized String> labelTexts = new ArrayList<>();
+    private final ArrayList<String> labelTexts = new ArrayList<>();
 
     private final Pos alignment;
 
@@ -69,10 +68,10 @@ public class AlignedLabels
      * may be modified to have more invisible labels by future addLabel
      * calls.
      */
-    public StackPane addLabel(@LocalizableKey String labelKey, String... styleClasses)
+    public StackPane addLabel(String labelKey, String... styleClasses)
     {
         // Add this text to existing panes:
-        @Localized String labelText = TranslationUtility.getString(labelKey);
+        String labelText = TranslationUtility.getString(labelKey);
         for (StackPane existingPane : stackPanes)
         {
             Label l = new Label(labelText);

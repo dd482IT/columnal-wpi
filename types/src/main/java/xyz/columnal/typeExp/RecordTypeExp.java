@@ -41,7 +41,7 @@ import java.util.stream.Stream;
 
 public class RecordTypeExp extends TypeExp
 {
-    public final ImmutableMap<@ExpressionIdentifier String, TypeExp> knownMembers;
+    public final ImmutableMap<String, TypeExp> knownMembers;
     // If not complete, can have many more members than knownMembers
     // e.g. "first" uses this, has single knownMembers and complete==false
     public final boolean complete;
@@ -49,7 +49,7 @@ public class RecordTypeExp extends TypeExp
     // The type classes required by this record, if it is not complete:
     private TypeClassRequirements requiredTypeClasses = TypeClassRequirements.empty();
     
-    public RecordTypeExp(@Nullable ExpressionBase src, ImmutableMap<@ExpressionIdentifier String, TypeExp> knownMembers, boolean complete)
+    public RecordTypeExp(ExpressionBase src, ImmutableMap<String, TypeExp> knownMembers, boolean complete)
     {
         super(src);
         this.knownMembers = knownMembers;
@@ -73,22 +73,22 @@ public class RecordTypeExp extends TypeExp
         // Afterwards, the pending type classes are union-ed.
         
         // LHS of pair is us, RHS is b
-        HashMap<@ExpressionIdentifier String, Pair<@Nullable TypeExp, @Nullable TypeExp>> occurs = new HashMap<>();
-        knownMembers.forEach((k, v) -> occurs.put(k, new Pair<@Nullable TypeExp, @Nullable TypeExp>(v, null)));
-        bt.knownMembers.forEach((k, v) -> occurs.merge(k, new Pair<@Nullable TypeExp, @Nullable TypeExp>(null, v), (oldVal, newVal) -> new Pair<@Nullable TypeExp, @Nullable TypeExp>(oldVal.getFirst(), newVal.getSecond())));
+        HashMap<String, Pair<TypeExp, TypeExp>> occurs = new HashMap<>();
+        knownMembers.forEach((k, v) -> occurs.put(k, new Pair<TypeExp, TypeExp>(v, null)));
+        bt.knownMembers.forEach((k, v) -> occurs.merge(k, new Pair<TypeExp, TypeExp>(null, v), (oldVal, newVal) -> new Pair<TypeExp, TypeExp>(oldVal.getFirst(), newVal.getSecond())));
 
-        HashMap<@ExpressionIdentifier String, TypeExp> unified = new HashMap<>();
+        HashMap<String, TypeExp> unified = new HashMap<>();
         
-        for (Entry<@ExpressionIdentifier String, Pair<@Nullable TypeExp, @Nullable TypeExp>> entry : occurs.entrySet())
+        for (Entry<String, Pair<TypeExp, TypeExp>> entry : occurs.entrySet())
         {
-            Pair<@Nullable TypeExp, @Nullable TypeExp> p = entry.getValue();
+            Pair<TypeExp, TypeExp> p = entry.getValue();
             if (p.getFirst() == null || p.getSecond() == null)
             {
                 // Only occurs in one side, check completeness:
                 if ((p.getSecond() != null && complete) || (p.getFirst() != null && bt.complete))
-                    return Either.left(new TypeError(StyledString.s("Field \"" + entry.getKey() + "\" occurs in one record but not in the other complete record"), Utility.filterOutNulls(Stream.<@Nullable TypeExp>of(p.getFirst(), p.getSecond())).collect(ImmutableList.<TypeExp>toImmutableList())));
+                    return Either.left(new TypeError(StyledString.s("Field \"" + entry.getKey() + "\" occurs in one record but not in the other complete record"), Utility.filterOutNulls(Stream.<TypeExp>of(p.getFirst(), p.getSecond())).collect(ImmutableList.<TypeExp>toImmutableList())));
                 // Check type classes:
-                @Nullable TypeError typeClassErr = null;
+                TypeError typeClassErr = null;
                 if (p.getFirst() != null)
                 {
                     typeClassErr = p.getFirst().requireTypeClasses(bt.requiredTypeClasses);
@@ -125,8 +125,8 @@ public class RecordTypeExp extends TypeExp
     @Override
     protected Either<TypeConcretisationError, DataType> _concrete(TypeManager typeManager, boolean substituteDefaultIfPossible) throws InternalException, UserException
     {
-        Map<@ExpressionIdentifier String, DataType> fields = new HashMap<>();
-        for (Entry<@ExpressionIdentifier String, TypeExp> entry : knownMembers.entrySet())
+        Map<String, DataType> fields = new HashMap<>();
+        for (Entry<String, TypeExp> entry : knownMembers.entrySet())
         {
             Either<TypeConcretisationError, DataType> r = entry.getValue().toConcreteType(typeManager, substituteDefaultIfPossible);
             if (r.isLeft())
@@ -137,11 +137,11 @@ public class RecordTypeExp extends TypeExp
     }
 
     @Override
-    public @Nullable TypeError requireTypeClasses(TypeClassRequirements typeClasses, IdentityHashSet<MutVar> visitedMutVar)
+    public TypeError requireTypeClasses(TypeClassRequirements typeClasses, IdentityHashSet<MutVar> visitedMutVar)
     {
         for (TypeExp member : knownMembers.values())
         {
-            @Nullable TypeError err = member.requireTypeClasses(typeClasses, visitedMutVar);
+            TypeError err = member.requireTypeClasses(typeClasses, visitedMutVar);
             if (err != null)
                 return err;
         }

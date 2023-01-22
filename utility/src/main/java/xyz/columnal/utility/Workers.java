@@ -39,7 +39,6 @@ import java.util.stream.Stream;
 /**
  * Created by neil on 23/10/2016.
  */
-@OnThread(Tag.Simulation)
 public class Workers
 {
     /**
@@ -60,24 +59,18 @@ public class Workers
     }
 
     @FunctionalInterface
-    @UsesObjectEquals
     public static interface Worker
     {
-        @OnThread(Tag.Simulation)
         public void run();
 
         // Optional methods to get updates on your place in the queue:
         // addedToQueue is guaranteed to be called and return
         // before queueMoved is called.
-        @OnThread(Tag.Simulation)
         public default void queueMoved(long finished, long lastQueued) {};
         // Don't do too much here; the lock is held!
-        @OnThread(Tag.Any)
         public default void addedToQueue(long finished, long us) {};
     }
 
-    @OnThread(value = Tag.Any)
-    @GuardedBy("<self>")
     private static final Stack<WorkChunk> currentlyRunning = new Stack<>();
 
     private static class WorkChunk
@@ -98,12 +91,10 @@ public class Workers
         }
     }
 
-    @OnThread(value = Tag.Any, requireSynchronized = true)
-    private static final PriorityQueue<@NonNull WorkChunk> workQueue = new PriorityQueue<>(
+    private static final PriorityQueue<WorkChunk> workQueue = new PriorityQueue<>(
         Comparator.<WorkChunk, Priority>comparing(a -> a.priority).thenComparing(Comparator.comparingLong(a -> a.timeReady))
     );
 
-    @OnThread(value = Tag.Any, requireSynchronized = true)
     private static long finished = 0;
 
     private static final Thread thread = new Thread(() -> {
@@ -112,13 +103,13 @@ public class Workers
         {
             try
             {
-                @Nullable WorkChunk next = null;
+                WorkChunk next = null;
                 synchronized (Workers.class)
                 {
                     finished += 1; // Not strictly right on startup but doesn't matter
                     do
                     {
-                        @Nullable WorkChunk work = workQueue.peek();
+                        WorkChunk work = workQueue.peek();
                         if (work == null)
                         {
                             Workers.class.wait();
@@ -163,13 +154,11 @@ public class Workers
         thread.start();
     }
 
-    @OnThread(Tag.Any)
     public static void onWorkerThread(String title, Priority priority, Worker runnable)
     {
         onWorkerThread(title, priority, runnable, 0);
     }
 
-    @OnThread(Tag.Any)
     public static void onWorkerThread(String title, Priority priority, Worker runnable, long delay)
     {
         synchronized (Workers.class)
@@ -190,7 +179,6 @@ public class Workers
         }
     }
 
-    @OnThread(Tag.FXPlatform)
     public static void cancel(Worker worker)
     {
         synchronized (Workers.class)
@@ -286,13 +274,11 @@ public class Workers
         }
     }
 
-    @OnThread(Tag.FXPlatform)
     public static synchronized ImmutableList<WorkInfo> getTaskList()
     {
         return Stream.concat(currentlyRunning.stream(), workQueue.stream()).map(WorkInfo::new).collect(ImmutableList.<WorkInfo>toImmutableList());
     }
 
-    @OnThread(Tag.Any)
     public static String _test_getCurrentTaskName()
     {
         synchronized (currentlyRunning)
@@ -313,12 +299,12 @@ public class Workers
     {
         while (true)
         {
-            @Nullable WorkChunk next = null;
+            WorkChunk next = null;
             synchronized (Workers.class)
             {
                 do
                 {
-                    @Nullable WorkChunk work = workQueue.peek();
+                    WorkChunk work = workQueue.peek();
                     if (work == null)
                     {
                         return; // Nothing to run

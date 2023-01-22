@@ -44,7 +44,6 @@ import static org.junit.Assert.fail;
 public interface EnterColumnDetailsTrait extends FxRobotInterface, EnterTypeTrait, EnterStructuredValueTrait, QueryTrait
 {
     // Call once the dialog is showing.  We will click Ok button before returning.
-    @OnThread(Tag.Simulation)
     default public void enterColumnDetails(ColumnDetails columnDetails, Random r) throws InternalException, UserException
     {
         // We should be focused on name initially with the whole field selected, or blank:
@@ -62,7 +61,7 @@ public interface EnterColumnDetailsTrait extends FxRobotInterface, EnterTypeTrai
         Node defValue = waitForOne(".default-value");
         if (defValue != null)
         {
-            @NonNull Node defValueFinal = defValue;
+            Node defValueFinal = defValue;
             assertFalse(TFXUtil.fx(() -> defValueFinal.isDisabled()));
             clickOn(".default-value");
             assertTrue(TFXUtil.fx(() -> defValueFinal.isFocused()));

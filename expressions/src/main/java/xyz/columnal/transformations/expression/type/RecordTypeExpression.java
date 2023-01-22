@@ -43,19 +43,19 @@ import java.util.stream.Collectors;
 
 public class RecordTypeExpression extends TypeExpression
 {
-    private final ImmutableList<Pair<@ExpressionIdentifier String, @Recorded TypeExpression>> members;
+    private final ImmutableList<Pair<String, TypeExpression>> members;
 
-    public RecordTypeExpression(ImmutableList<Pair<@ExpressionIdentifier String, @Recorded TypeExpression>> members)
+    public RecordTypeExpression(ImmutableList<Pair<String, TypeExpression>> members)
     {
         this.members = members;
     }
     
     @Override
-    public @Nullable DataType toDataType(TypeManager typeManager)
+    public DataType toDataType(TypeManager typeManager)
     {
-        HashMap<@ExpressionIdentifier String, DataType> types = new HashMap<>();
+        HashMap<String, DataType> types = new HashMap<>();
 
-        for (Pair<@ExpressionIdentifier String, TypeExpression> member : members)
+        for (Pair<String, TypeExpression> member : members)
         {
             DataType memberType = member.getSecond().toDataType(typeManager);
             if (memberType == null || types.put(member.getFirst(), memberType) != null)
@@ -66,13 +66,13 @@ public class RecordTypeExpression extends TypeExpression
     }
 
     @Override
-    public @Recorded JellyType toJellyType(@Recorded RecordTypeExpression this, TypeManager typeManager, JellyRecorder jellyRecorder) throws InternalException, UnJellyableTypeExpression
+    public JellyType toJellyType(RecordTypeExpression this, TypeManager typeManager, JellyRecorder jellyRecorder) throws InternalException, UnJellyableTypeExpression
     {
-        HashMap<@ExpressionIdentifier String, Field> types = new HashMap<>();
+        HashMap<String, Field> types = new HashMap<>();
 
-        for (Pair<@ExpressionIdentifier String, @Recorded TypeExpression> member : members)
+        for (Pair<String, TypeExpression> member : members)
         {
-            @Recorded JellyType memberType = member.getSecond().toJellyType(typeManager, jellyRecorder);
+            JellyType memberType = member.getSecond().toJellyType(typeManager, jellyRecorder);
             if (types.put(member.getFirst(), new Field(memberType, true)) != null)
                 throw new UnJellyableTypeExpression("Duplicate field in record: \"" + member.getFirst() + "\"", this);
         }
@@ -87,7 +87,7 @@ public class RecordTypeExpression extends TypeExpression
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -108,7 +108,7 @@ public class RecordTypeExpression extends TypeExpression
         if (this == toReplace)
             return replaceWith;
         else
-            return new RecordTypeExpression(Utility.<Pair<@ExpressionIdentifier String, TypeExpression>, Pair<@ExpressionIdentifier String, TypeExpression>>mapListI(members, (Pair<@ExpressionIdentifier String, TypeExpression> p) -> p.mapSecond(e -> e.replaceSubExpression(toReplace, replaceWith))));
+            return new RecordTypeExpression(Utility.<Pair<String, TypeExpression>, Pair<String, TypeExpression>>mapListI(members, (Pair<String, TypeExpression> p) -> p.mapSecond(e -> e.replaceSubExpression(toReplace, replaceWith))));
     }
 
     @Override
@@ -123,13 +123,13 @@ public class RecordTypeExpression extends TypeExpression
         return "(" + members.stream().map(m -> m.getFirst() + ": " + m.getSecond().save(saveDestination, renames)).collect(Collectors.joining(", ")) + ")";
     }
 
-    public ImmutableList<Pair<@ExpressionIdentifier String, @Recorded TypeExpression>> _test_getItems()
+    public ImmutableList<Pair<String, TypeExpression>> _test_getItems()
     {
         return members;
     }
 
     @Override
-    public @Nullable @ExpressionIdentifier String asIdent()
+    public String asIdent()
     {
         return null;
     }

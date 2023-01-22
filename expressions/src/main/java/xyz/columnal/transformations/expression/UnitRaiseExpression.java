@@ -30,17 +30,17 @@ import xyz.columnal.styled.StyledString;
 
 public class UnitRaiseExpression extends UnitExpression
 {
-    private final @Recorded UnitExpression unit;
-    private final @Recorded UnitExpression power;
+    private final UnitExpression unit;
+    private final UnitExpression power;
 
-    public UnitRaiseExpression(@Recorded UnitExpression unit, @Recorded UnitExpression power)
+    public UnitRaiseExpression(UnitExpression unit, UnitExpression power)
     {
         this.unit = unit;
         this.power = power;
     }
 
     @Override
-    public JellyUnit asUnit(@Recorded UnitRaiseExpression this, UnitManager unitManager) throws UnitLookupException
+    public JellyUnit asUnit(UnitRaiseExpression this, UnitManager unitManager) throws UnitLookupException
     {
         if (!(power instanceof UnitExpressionIntLiteral))
         {
@@ -59,7 +59,7 @@ public class UnitRaiseExpression extends UnitExpression
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;

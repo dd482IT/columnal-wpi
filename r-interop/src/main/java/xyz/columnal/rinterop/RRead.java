@@ -120,10 +120,10 @@ public class RRead
             case RUtility.SYMBOL: // Symbol
             {
                 RValue symbol = readItem(d, atoms);
-                symbol.visit(new SpecificRVisitor<@Nullable @Value String>()
+                symbol.visit(new SpecificRVisitor<String>()
                 {
                     @Override
-                    public @Nullable @Value String visitString(@Nullable @Value String s, boolean isSymbol) throws InternalException, UserException
+                    public String visitString(String s, boolean isSymbol) throws InternalException, UserException
                     {
                         if (s != null)
                             addAtom(atoms, s);
@@ -200,7 +200,7 @@ public class RRead
             }
             case RUtility.STRING_SINGLE: // String
             {
-                @Nullable String s = readLenString(d);
+                String s = readLenString(d);
                 return RUtility.string(s, false);
             }
             case RUtility.INT_VECTOR: // Integer vector
@@ -211,15 +211,15 @@ public class RRead
                 {
                     values[i] = d.readInt();
                 }
-                final @Nullable RValue attr = objHeader.readAttributes(d, atoms);
-                ImmutableList<String> factorNames = attr == null ? null : attr.visit(new DefaultRVisitor<@Nullable ImmutableList<String>>(null) {
+                final RValue attr = objHeader.readAttributes(d, atoms);
+                ImmutableList<String> factorNames = attr == null ? null : attr.visit(new DefaultRVisitor<ImmutableList<String>>(null) {
                     @Override
-                    public @Nullable ImmutableList<String> visitPairList(ImmutableList<PairListEntry> items) throws InternalException, UserException
+                    public ImmutableList<String> visitPairList(ImmutableList<PairListEntry> items) throws InternalException, UserException
                     {
                         if (items.size() >= 1 && items.get(0).tag != null && items.get(0).tag.visit(new DefaultRVisitor<Boolean>(false)
                         {
                             @Override
-                            public Boolean visitString(@Nullable String s, boolean isSymbol) throws InternalException, UserException
+                            public Boolean visitString(String s, boolean isSymbol) throws InternalException, UserException
                             {
                                 return "levels".equals(s);
                             }
@@ -228,13 +228,13 @@ public class RRead
                             {
                                 @SuppressWarnings("optional")
                                 @Override
-                                public ImmutableList<String> visitStringList(ImmutableList<Optional<@Value String>> values, @Nullable RValue attributes) throws InternalException, UserException
+                                public ImmutableList<String> visitStringList(ImmutableList<Optional<String>> values, RValue attributes) throws InternalException, UserException
                                 {
-                                    return Utility.<Optional<@Value String>, String>mapListExI(values, v -> v.orElseThrow(() -> new UserException("Unexpected NA in factors")));
+                                    return Utility.<Optional<String>, String>mapListExI(values, v -> v.orElseThrow(() -> new UserException("Unexpected NA in factors")));
                                 }
 
                                 @Override
-                                public ImmutableList<String> visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes, boolean isObject) throws InternalException, UserException
+                                public ImmutableList<String> visitGenericList(ImmutableList<RValue> values, RValue attributes, boolean isObject) throws InternalException, UserException
                                 {
                                     return Utility.mapListExI(values, RUtility::getStringNN);
                                 }
@@ -261,7 +261,7 @@ public class RRead
             {
                 int vecLen = d.readInt();
                 boolean[] values = new boolean[vecLen];
-                boolean @MonotonicNonNull [] isNA = null;
+                boolean[] isNA = null;
                 for (int i = 0; i < vecLen; i++)
                 {
                     int n = d.readInt();
@@ -273,7 +273,7 @@ public class RRead
                         isNA[i] = true;
                     }
                 }
-                final @Nullable RValue attr = objHeader.readAttributes(d, atoms);
+                final RValue attr = objHeader.readAttributes(d, atoms);
                 return RUtility.logicalVector(values, isNA, attr);
             }
             case RUtility.DOUBLE_VECTOR: // Floating point vector
@@ -284,7 +284,7 @@ public class RRead
                 {
                     values[i] = d.readDouble();
                 }
-                final @Nullable RValue attr = objHeader.readAttributes(d, atoms);
+                final RValue attr = objHeader.readAttributes(d, atoms);
                 ImmutableMap<String, RValue> attrMap = RUtility.pairListToMap(attr);
                 if (RUtility.isClass(attrMap, "Date"))
                     return RUtility.dateVector(values, attr);
@@ -296,13 +296,13 @@ public class RRead
             case RUtility.STRING_VECTOR: // Character vector
             {
                 int vecLen = d.readInt();
-                ImmutableList.Builder<Optional<@Value String>> valueBuilder = ImmutableList.builderWithExpectedSize(vecLen);
+                ImmutableList.Builder<Optional<String>> valueBuilder = ImmutableList.builderWithExpectedSize(vecLen);
                 for (int i = 0; i < vecLen; i++)
                 {
                     valueBuilder.add(Optional.ofNullable(RUtility.getString(readItem(d, atoms))));
                 }
-                ImmutableList<Optional<@Value String>> values = valueBuilder.build();
-                final @Nullable RValue attr = objHeader.readAttributes(d, atoms);
+                ImmutableList<Optional<String>> values = valueBuilder.build();
+                final RValue attr = objHeader.readAttributes(d, atoms);
                 return RUtility.stringVector(values, attr);
             }
             case RUtility.GENERIC_VECTOR: // Generic vector
@@ -314,7 +314,7 @@ public class RRead
                     valueBuilder.add(readItem(d, atoms));
                 }
                 ImmutableList<RValue> values = valueBuilder.build();
-                final @Nullable RValue attr = objHeader.readAttributes(d, atoms);
+                final RValue attr = objHeader.readAttributes(d, atoms);
                 return RUtility.genericVector(values, attr, objHeader.isObject());
             }
             case 238: // ALTREP_SXP
@@ -329,7 +329,7 @@ public class RRead
         }
     }
 
-    private static Stream<PairListEntry> flattenPairList(RValue head, RValue tail, @Nullable RValue attr, @Nullable RValue tag) throws UserException, InternalException
+    private static Stream<PairListEntry> flattenPairList(RValue head, RValue tail, RValue attr, RValue tag) throws UserException, InternalException
     {
         return Stream.<PairListEntry>concat(Stream.<PairListEntry>of(new PairListEntry(attr, tag, head)), tail.<Stream<PairListEntry>>visit(new DefaultRVisitor<Stream<PairListEntry>>(Stream.of(new PairListEntry(null, null, tail)))
         {
@@ -362,7 +362,7 @@ public class RRead
                     return state.visit(new SpecificRVisitor<RValue>()
                     {
                         @Override
-                        public RValue visitDoubleList(double[] values, @Nullable RValue attributes) throws InternalException, UserException
+                        public RValue visitDoubleList(double[] values, RValue attributes) throws InternalException, UserException
                         {
                             double[] expanded = new double[(int)values[0]];
                             double x = values[1];
@@ -386,7 +386,7 @@ public class RRead
         throw new UserException("Unsupported R class: " + p + " " + c);
     }
 
-    private static @Nullable String readLenString(DataInputStream d) throws IOException
+    private static String readLenString(DataInputStream d) throws IOException
     {
         int len = d.readInt();
         if (len < 0)

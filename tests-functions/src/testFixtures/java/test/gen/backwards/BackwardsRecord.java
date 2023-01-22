@@ -46,29 +46,29 @@ public class BackwardsRecord extends BackwardsProvider
     }
 
     @Override
-    public List<ExpressionMaker> terminals(DataType targetType, @Value Object targetValue) throws InternalException, UserException
+    public List<ExpressionMaker> terminals(DataType targetType, Object targetValue) throws InternalException, UserException
     {
         return ImmutableList.of();
     }
 
     @Override
-    public List<ExpressionMaker> deep(int maxLevels, DataType targetType, @Value Object targetValue) throws InternalException, UserException
+    public List<ExpressionMaker> deep(int maxLevels, DataType targetType, Object targetValue) throws InternalException, UserException
     {
         return ImmutableList.of(() -> {
             // Make a record then access its field:
-            ArrayList<Pair<@ExpressionIdentifier String, DataType>> fields = new ArrayList<>();
-            @ExpressionIdentifier String ourField = TBasicUtil.generateExpressionIdentifier(r);
+            ArrayList<Pair<String, DataType>> fields = new ArrayList<>();
+            String ourField = TBasicUtil.generateExpressionIdentifier(r);
             fields.add(new Pair<>(ourField, targetType));
             // Add a few more:
-            fields.addAll(TBasicUtil.<Pair<@ExpressionIdentifier String, DataType>>makeList(r, 1, 3, () -> new Pair<>(TBasicUtil.generateExpressionIdentifier(r), parent.makeType())));
+            fields.addAll(TBasicUtil.<Pair<String, DataType>>makeList(r, 1, 3, () -> new Pair<>(TBasicUtil.generateExpressionIdentifier(r), parent.makeType())));
 
-            ImmutableMap<@ExpressionIdentifier String, DataType> fieldMap = fields.stream().collect(ImmutableMap.toImmutableMap(p -> p.getFirst(), p -> p.getSecond(), (a, b) -> a));
+            ImmutableMap<String, DataType> fieldMap = fields.stream().collect(ImmutableMap.toImmutableMap(p -> p.getFirst(), p -> p.getSecond(), (a, b) -> a));
             DataType recordType = DataType.record(fieldMap);
             
-            HashMap<@ExpressionIdentifier String, @Value Object> valueMap = new HashMap<>();
+            HashMap<String, Object> valueMap = new HashMap<>();
             valueMap.put(ourField, targetValue);
 
-            for (Entry<@ExpressionIdentifier String, DataType> f : fieldMap.entrySet())
+            for (Entry<String, DataType> f : fieldMap.entrySet())
             {
                 if (!f.getKey().equals(ourField))
                     valueMap.put(f.getKey(), parent.makeValue(f.getValue()));

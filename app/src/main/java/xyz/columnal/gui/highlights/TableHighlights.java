@@ -58,12 +58,11 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
-@OnThread(Tag.FXPlatform)
 public class TableHighlights
 {
     private ImmutableList<GridAreaHighlight> highlightedGridArea = ImmutableList.of();
     private ImmutableList<TableArrow> highlightedGridAreaArrows = ImmutableList.of();
-    private @Nullable PickResult<?> picked;
+    private PickResult<?> picked;
     private final VirtualGrid grid;
 
     public TableHighlights(VirtualGrid grid)
@@ -87,11 +86,11 @@ public class TableHighlights
         grid.redoLayoutAfterScroll();
     }
 
-    public <T> @Nullable T highlightAtScreenPos(Point2D screenPos, Picker<T> picker, FXPlatformConsumer<@Nullable Cursor> setCursor)
+    public <T> T highlightAtScreenPos(Point2D screenPos, Picker<T> picker, FXPlatformConsumer<Cursor> setCursor)
     {
         Point2D localPos = grid.getNode().screenToLocal(screenPos);
-        @Nullable Pair<CellPosition, Point2D> cellAtScreenPos = grid.getCellPositionAt(localPos.getX(), localPos.getY());
-        @Nullable PickResult<?> oldPicked = picked;
+        Pair<CellPosition, Point2D> cellAtScreenPos = grid.getCellPositionAt(localPos.getX(), localPos.getY());
+        PickResult<?> oldPicked = picked;
         final PickResult<T> result;
         if (cellAtScreenPos == null)
         {
@@ -99,10 +98,10 @@ public class TableHighlights
         }
         else
         {
-            @NonNull CellPosition pos = cellAtScreenPos.getFirst();
+            CellPosition pos = cellAtScreenPos.getFirst();
             result = grid.getGridAreas().stream().filter(g -> g.contains(pos))
                     .flatMap(g -> Utility.streamNullable(picker.pick(new Pair<>(g, pos))))
-                    .findFirst().<@Nullable Pair<RectangleBounds, T>>orElseGet((Supplier<@Nullable PickResult<T>>) () -> picker.pick(null));
+                    .findFirst().<Pair<RectangleBounds, T>>orElseGet((Supplier<PickResult<T>>) () -> picker.pick(null));
         }
         picked = result;
         if (!Objects.equals(picked, oldPicked))
@@ -173,7 +172,7 @@ public class TableHighlights
         // We don't use value in .equals(), we're only interested
         // whether it causes the same pick display.
         @Override
-        public boolean equals(@Nullable Object o)
+        public boolean equals(Object o)
         {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
@@ -193,10 +192,9 @@ public class TableHighlights
     {
         // Given a grid area and a cell contained within it, is it a valid pick?  If so,
         // return a non-null pair of the area to highlight, and some custom type T.
-        public @Nullable PickResult<T> pick(@Nullable Pair<GridArea, CellPosition> gridAreaAndCell);
+        public PickResult<T> pick(Pair<GridArea, CellPosition> gridAreaAndCell);
     }
     
-    @OnThread(Tag.FXPlatform)
     private class GridAreaHighlight extends RectangleOverlayItem
     {
         private final int index;
@@ -237,7 +235,6 @@ public class TableHighlights
         }
     }
 
-    @OnThread(Tag.FXPlatform)
     private class TableArrow extends FloatingItem<Path>
     {
         private final int index;
@@ -260,8 +257,7 @@ public class TableHighlights
             return Optional.empty();
         }
 
-        @OnThread(Tag.FXPlatform)
-        private Point2D setPathElements(@Nullable Path path, VisibleBounds visibleBounds)
+        private Point2D setPathElements(Path path, VisibleBounds visibleBounds)
         {
             if (picked != null && picked.arrowToScreenPos != null && index < picked.highlightBounds.size() && index < picked.arrowToScreenPos.size())
             {
@@ -303,7 +299,7 @@ public class TableHighlights
         }
 
         @Override
-        public @Nullable Pair<ItemState, @Nullable StyledString> getItemState(CellPosition cellPosition, Point2D screenPos)
+        public Pair<ItemState, StyledString> getItemState(CellPosition cellPosition, Point2D screenPos)
         {
             return null;
         }

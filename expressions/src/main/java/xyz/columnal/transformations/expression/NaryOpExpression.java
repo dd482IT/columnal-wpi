@@ -51,39 +51,39 @@ import java.util.stream.Stream;
  */
 public abstract class NaryOpExpression extends Expression
 {
-    protected final ImmutableList<@Recorded Expression> expressions;
+    protected final ImmutableList<Expression> expressions;
     
-    protected @Nullable ImmutableList<ExplanationLocation> booleanExplanation;
+    protected ImmutableList<ExplanationLocation> booleanExplanation;
 
-    public NaryOpExpression(List<@Recorded Expression> expressions)
+    public NaryOpExpression(List<Expression> expressions)
     {
         this.expressions = ImmutableList.copyOf(expressions);
     }
 
     @Override
-    public final @Nullable CheckedExp check(@Recorded NaryOpExpression this, ColumnLookup dataLookup, TypeState typeState, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public final CheckedExp check(NaryOpExpression this, ColumnLookup dataLookup, TypeState typeState, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        Pair<@Nullable UnaryOperator<@Recorded TypeExp>, TypeState> lambda = ImplicitLambdaArg.detectImplicitLambda(this, expressions, typeState, onError);
+        Pair<UnaryOperator<TypeExp>, TypeState> lambda = ImplicitLambdaArg.detectImplicitLambda(this, expressions, typeState, onError);
         typeState = lambda.getSecond();
-        @Nullable CheckedExp checked = checkNaryOp(dataLookup, typeState, kind, onError);
+        CheckedExp checked = checkNaryOp(dataLookup, typeState, kind, onError);
         return checked == null ? null : checked.applyToType(lambda.getFirst());
     }
 
-    public abstract @Nullable CheckedExp checkNaryOp(@Recorded NaryOpExpression this, ColumnLookup dataLookup, TypeState typeState, ExpressionKind kind, ErrorAndTypeRecorder onError) throws UserException, InternalException;
+    public abstract CheckedExp checkNaryOp(NaryOpExpression this, ColumnLookup dataLookup, TypeState typeState, ExpressionKind kind, ErrorAndTypeRecorder onError) throws UserException, InternalException;
 
     // Will be same length as expressions, if null use existing
-    public final NaryOpExpression copy(List<@Nullable @Recorded Expression> replacements)
+    public final NaryOpExpression copy(List<Expression> replacements)
     {
-        List<@Recorded Expression> newExps = new ArrayList<>();
+        List<Expression> newExps = new ArrayList<>();
         for (int i = 0; i < expressions.size(); i++)
         {
-            @Nullable @Recorded Expression newExp = replacements.get(i);
+            Expression newExp = replacements.get(i);
             newExps.add(newExp != null ? newExp : expressions.get(i));
         }
         return copyNoNull(newExps);
     }
 
-    public abstract NaryOpExpression copyNoNull(List<@Recorded Expression> replacements);
+    public abstract NaryOpExpression copyNoNull(List<Expression> replacements);
 
     @Override
     @SuppressWarnings("recorded") // Because the replaced version is immediately loaded again
@@ -143,11 +143,11 @@ public abstract class NaryOpExpression extends Expression
             expressions.get(i)._test_allMutationPoints().map(p -> new Pair<Expression, Function<Expression, Expression>>(p.getFirst(), (Expression exp) -> copy(makeNullList(i, p.getSecond().apply(exp)))))).flatMap(s -> s);
     }
 
-    protected List<@Nullable Expression> makeNullList(int index, Expression newExp)
+    protected List<Expression> makeNullList(int index, Expression newExp)
     {
         if (index < 0 || index >= expressions.size())
             throw new RuntimeException("makeNullList invalid " + index + " compared to " + expressions.size());
-        ArrayList<@Nullable Expression> r = new ArrayList<>();
+        ArrayList<Expression> r = new ArrayList<>();
         for (int i = 0; i < expressions.size(); i++)
         {
             r.add(i == index ? newExp : null);
@@ -156,7 +156,7 @@ public abstract class NaryOpExpression extends Expression
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -198,28 +198,27 @@ public abstract class NaryOpExpression extends Expression
     {
         // Same length as expressions.
         private final ImmutableList<Optional<TypeExp>> expressionTypes;
-        public final ImmutableList<@Recorded Expression> expressions;
+        public final ImmutableList<Expression> expressions;
         final int index;
 
-        TypeProblemDetails(ImmutableList<Optional<TypeExp>> expressionTypes, ImmutableList<@Recorded Expression> expressions, int index)
+        TypeProblemDetails(ImmutableList<Optional<TypeExp>> expressionTypes, ImmutableList<Expression> expressions, int index)
         {
             this.expressionTypes = expressionTypes;
             this.expressions = expressions;
             this.index = index;
         }
 
-        @Pure
-        public @Nullable TypeExp getOurType()
+        public TypeExp getOurType()
         {
             return getType(index);
         }
         
-        public @Nullable TypeExp getType(int index)
+        public TypeExp getType(int index)
         {
             return expressionTypes.get(index).orElse(null);
         }
 
-        public @Recorded Expression getOurExpression()
+        public Expression getOurExpression()
         {
             return expressions.get(index);
         }
@@ -232,16 +231,16 @@ public abstract class NaryOpExpression extends Expression
     
     protected interface CustomError
     {
-        ImmutableMap<@Recorded Expression, Pair<@Nullable TypeError, ImmutableList<QuickFix<Expression>>>> getCustomErrorAndFix(TypeProblemDetails typeProblemDetails);
+        ImmutableMap<Expression, Pair<TypeError, ImmutableList<QuickFix<Expression>>>> getCustomErrorAndFix(TypeProblemDetails typeProblemDetails);
     }
     
-    public @Nullable TypeExp checkAllOperandsSameTypeAndNotPatterns(TypeExp target, ColumnLookup data, TypeState state, LocationInfo locationInfo, ErrorAndTypeRecorder onError, CustomError getCustomErrorAndFix) throws InternalException, UserException
+    public TypeExp checkAllOperandsSameTypeAndNotPatterns(TypeExp target, ColumnLookup data, TypeState state, LocationInfo locationInfo, ErrorAndTypeRecorder onError, CustomError getCustomErrorAndFix) throws InternalException, UserException
     {
         boolean allValid = true;
-        ArrayList<@Nullable Pair<@Nullable TypeError, TypeExp>> unificationOutcomes = new ArrayList<>(expressions.size());
-        for (@Recorded Expression expression : expressions)
+        ArrayList<Pair<TypeError, TypeExp>> unificationOutcomes = new ArrayList<>(expressions.size());
+        for (Expression expression : expressions)
         {
-            @Nullable CheckedExp type = expression.check(data, state, ExpressionKind.EXPRESSION, locationInfo, onError);
+            CheckedExp type = expression.check(data, state, ExpressionKind.EXPRESSION, locationInfo, onError);
             
             // Make sure to execute always (don't use short-circuit and with allValid):
             if (type == null)
@@ -253,23 +252,23 @@ public abstract class NaryOpExpression extends Expression
             {
                 Either<TypeError, TypeExp> unified = TypeExp.unifyTypes(target, type.typeExp);
                 // We have to recreate either to add nullable constraint:
-                unificationOutcomes.add(new Pair<>(unified.<@Nullable TypeError>either(err -> err, u -> null), type.typeExp));
+                unificationOutcomes.add(new Pair<>(unified.<TypeError>either(err -> err, u -> null), type.typeExp));
                 if (unified.isLeft())
                     allValid = false;
             }
         }
 
-        ImmutableList<Optional<TypeExp>> expressionTypes = unificationOutcomes.stream().<Optional<TypeExp>>map((@Nullable Pair<@Nullable TypeError, TypeExp> p) -> p == null ? Optional.<TypeExp>empty() : Optional.<TypeExp>of(p.getSecond())).collect(ImmutableList.<Optional<TypeExp>>toImmutableList());
+        ImmutableList<Optional<TypeExp>> expressionTypes = unificationOutcomes.stream().<Optional<TypeExp>>map((Pair<TypeError, TypeExp> p) -> p == null ? Optional.<TypeExp>empty() : Optional.<TypeExp>of(p.getSecond())).collect(ImmutableList.<Optional<TypeExp>>toImmutableList());
 
         if (!allValid)
         {
             for (int i = 0; i < expressions.size(); i++)
             {
                 Expression expression = expressions.get(i);
-                ImmutableMap<@Recorded Expression, Pair<@Nullable TypeError, ImmutableList<QuickFix<Expression>>>> customErrors = getCustomErrorAndFix.getCustomErrorAndFix(new TypeProblemDetails(expressionTypes, expressions, i));
-                @Nullable TypeError unifyError = unificationOutcomes.get(i) != null ? unificationOutcomes.get(i).getFirst() : null;
+                ImmutableMap<Expression, Pair<TypeError, ImmutableList<QuickFix<Expression>>>> customErrors = getCustomErrorAndFix.getCustomErrorAndFix(new TypeProblemDetails(expressionTypes, expressions, i));
+                TypeError unifyError = unificationOutcomes.get(i) != null ? unificationOutcomes.get(i).getFirst() : null;
                 boolean recordedCustomError = false;
-                for (Entry<@Recorded Expression, Pair<@Nullable TypeError, ImmutableList<QuickFix<Expression>>>> entry : customErrors.entrySet())
+                for (Entry<Expression, Pair<TypeError, ImmutableList<QuickFix<Expression>>>> entry : customErrors.entrySet())
                 {
                     if (entry.getValue().getFirst() != null)
                     {

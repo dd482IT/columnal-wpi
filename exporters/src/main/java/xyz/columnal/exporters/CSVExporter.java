@@ -43,19 +43,18 @@ import java.util.List;
 public class CSVExporter implements Exporter
 {
     @Override
-    public @Localized String getName()
+    public String getName()
     {
         return TranslationUtility.getString("importer.files.text");
     }
 
     @Override
-    public @OnThread(Tag.Any) ImmutableList<String> getSupportedFileTypes()
+    public ImmutableList<String> getSupportedFileTypes()
     {
         return ImmutableList.of("*.csv", "*.txt");
     }
 
     @Override
-    @OnThread(Tag.Simulation)
     public void exportData(File dest, Table data) throws UserException, InternalException
     {
         RecordSet rs = data.getData();
@@ -88,7 +87,6 @@ public class CSVExporter implements Exporter
         }
     }
 
-    @OnThread(Tag.Any)
     private static String quoteCSV(String original)
     {
         return "\"" + original.replace("\"", "\"\"\"") + "\"";

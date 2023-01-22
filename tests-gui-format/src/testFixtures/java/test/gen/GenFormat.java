@@ -81,7 +81,7 @@ public class GenFormat extends Generator<FinalTextFormat>
         super(FinalTextFormat.class);
     }
 
-    public static FinalTextFormat f(int headerRows, ImmutableList<ColumnInfo> columns, @Nullable String sep, @Nullable String quote, Charset charset)
+    public static FinalTextFormat f(int headerRows, ImmutableList<ColumnInfo> columns, String sep, String quote, Charset charset)
     {
         return new FinalTextFormat(new InitialTextFormat(charset, sep, quote), new TrimChoice(headerRows, 0, 0, 0), columns);
     }
@@ -121,7 +121,7 @@ public class GenFormat extends Generator<FinalTextFormat>
             // Don't let all be text/blank:
             if (i == columnCount - 1 && columns.stream().allMatch(c -> c.type instanceof TextColumnType || c.type instanceof BlankColumnType))
                 type = new CleanDateColumnType(DateTimeType.YEARMONTHDAY, true, sourceOfRandomness.choose(dateFormats), LocalDate::from);
-            @ExpressionIdentifier String title = IdentifierUtility.identNum(hasTitle ? "GenCol" : "Unspec", i);
+            String title = IdentifierUtility.identNum(hasTitle ? "GenCol" : "Unspec", i);
             columns.add(new ColumnInfo(type, new ColumnId(title)));
         }
         // Don't pick a charset which can't represent the currency signs:

@@ -62,19 +62,19 @@ public class IfThenElseExpression extends NonOperatorExpression
     private final CanonicalSpan thenLocation;
     private final CanonicalSpan elseLocation;
     private final CanonicalSpan endLocation;
-    private final @Recorded Expression condition;
-    private final @Recorded Expression thenExpression;
-    private final @Recorded Expression elseExpression;
+    private final Expression condition;
+    private final Expression thenExpression;
+    private final Expression elseExpression;
 
-    public static IfThenElseExpression unrecorded(@Recorded Expression condition, @Recorded Expression thenExpression, @Recorded Expression elseExpression)
+    public static IfThenElseExpression unrecorded(Expression condition, Expression thenExpression, Expression elseExpression)
     {
         CanonicalSpan dummy = new CanonicalSpan(CanonicalLocation.ZERO, CanonicalLocation.ZERO);
         return new IfThenElseExpression(dummy, condition, dummy, thenExpression, dummy, elseExpression, dummy);
     }
 
-    public IfThenElseExpression(CanonicalSpan ifLocation, @Recorded Expression condition, 
-                                CanonicalSpan thenLocation, @Recorded Expression thenExpression, 
-                                CanonicalSpan elseLocation, @Recorded Expression elseExpression,
+    public IfThenElseExpression(CanonicalSpan ifLocation, Expression condition, 
+                                CanonicalSpan thenLocation, Expression thenExpression, 
+                                CanonicalSpan elseLocation, Expression elseExpression,
                                 CanonicalSpan endLocation)
     {
         this.ifLocation = ifLocation;
@@ -88,25 +88,25 @@ public class IfThenElseExpression extends NonOperatorExpression
 
 
     @Override
-    public @Nullable CheckedExp check(@Recorded IfThenElseExpression this, ColumnLookup dataLookup, TypeState state, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public CheckedExp check(IfThenElseExpression this, ColumnLookup dataLookup, TypeState state, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        Pair<@Nullable UnaryOperator<@Recorded TypeExp>, TypeState> lambda = ImplicitLambdaArg.detectImplicitLambda(this, ImmutableList.of(condition, thenExpression, elseExpression), state, onError);
+        Pair<UnaryOperator<TypeExp>, TypeState> lambda = ImplicitLambdaArg.detectImplicitLambda(this, ImmutableList.of(condition, thenExpression, elseExpression), state, onError);
         state = lambda.getSecond();
-        @Nullable CheckedExp checked = checkIfThenElse(dataLookup, state, onError);
+        CheckedExp checked = checkIfThenElse(dataLookup, state, onError);
         return checked == null ? null : checked.applyToType(lambda.getFirst());
     }
 
-    private @Nullable CheckedExp checkIfThenElse(@Recorded IfThenElseExpression this, ColumnLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    private CheckedExp checkIfThenElse(IfThenElseExpression this, ColumnLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        @Nullable CheckedExp conditionType = condition.check(dataLookup, state, ExpressionKind.EXPRESSION, LocationInfo.UNIT_DEFAULT, onError);
+        CheckedExp conditionType = condition.check(dataLookup, state, ExpressionKind.EXPRESSION, LocationInfo.UNIT_DEFAULT, onError);
         if (conditionType == null)
             return null;
         if (onError.recordError(condition, TypeExp.unifyTypes(TypeExp.bool(this), conditionType.typeExp)) == null)
         {
             return null;
         }
-        @Nullable CheckedExp thenType = thenExpression.check(dataLookup, conditionType.typeState, ExpressionKind.EXPRESSION, LocationInfo.UNIT_DEFAULT, onError);
-        @Nullable CheckedExp elseType = elseExpression.check(dataLookup, state, ExpressionKind.EXPRESSION, LocationInfo.UNIT_DEFAULT, onError);
+        CheckedExp thenType = thenExpression.check(dataLookup, conditionType.typeState, ExpressionKind.EXPRESSION, LocationInfo.UNIT_DEFAULT, onError);
+        CheckedExp elseType = elseExpression.check(dataLookup, state, ExpressionKind.EXPRESSION, LocationInfo.UNIT_DEFAULT, onError);
         if (thenType == null || elseType == null)
             return null;
 
@@ -117,7 +117,7 @@ public class IfThenElseExpression extends NonOperatorExpression
     @Override
     public ValueResult calculateValue(EvaluateState state) throws EvaluationException, InternalException
     {
-        ImmutableList<@Recorded Expression> expressions = ImmutableList.of(condition, thenExpression, elseExpression);
+        ImmutableList<Expression> expressions = ImmutableList.of(condition, thenExpression, elseExpression);
         if (expressions.stream().anyMatch(e -> e instanceof ImplicitLambdaArg))
         {
             return ImplicitLambdaArg.makeImplicitFunction(this, expressions, state, s -> getIfThenElseValue(s));
@@ -128,7 +128,6 @@ public class IfThenElseExpression extends NonOperatorExpression
         }
     }
 
-    @OnThread(Tag.Simulation)
     private ValueResult getIfThenElseValue(EvaluateState state) throws EvaluationException, InternalException
     {
         ImmutableList.Builder<ValueResult> valueResults = ImmutableList.builderWithExpectedSize(2);
@@ -155,26 +154,26 @@ public class IfThenElseExpression extends NonOperatorExpression
         Set<String> patternVars = findPatternVars(condition).collect(ImmutableSet.<String>toImmutableSet());
         
         Set<String> definedVars = saveDestination.definedNames("var").stream().<String>map(v -> v.get(0)).collect(ImmutableSet.<String>toImmutableSet());
-        SaveDestination thenSave = saveDestination.withNames(Utility.filterOutNulls(Sets.<String>difference(patternVars, definedVars).stream().<@Nullable @ExpressionIdentifier String>map(IdentifierUtility::asExpressionIdentifier)).<Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>>>map(v -> new Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>>("var", ImmutableList.of(v))).collect(ImmutableList.<Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>>>toImmutableList()));
+        SaveDestination thenSave = saveDestination.withNames(Utility.filterOutNulls(Sets.<String>difference(patternVars, definedVars).stream().<String>map(IdentifierUtility::asExpressionIdentifier)).<Pair<String, ImmutableList<String>>>map(v -> new Pair<String, ImmutableList<String>>("var", ImmutableList.of(v))).collect(ImmutableList.<Pair<String, ImmutableList<String>>>toImmutableList()));
         
         
         String content = "@if " + condition.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, renames) + " @then " + thenExpression.save(thenSave, BracketedStatus.DONT_NEED_BRACKETS, renames) + " @else " + elseExpression.save(saveDestination, BracketedStatus.DONT_NEED_BRACKETS, renames) + " @endif";
         return content;
     }
 
-    private static Stream<String> findPatternVars(@Recorded Expression conditionPart)
+    private static Stream<String> findPatternVars(Expression conditionPart)
     {
         return conditionPart.visit(new ExpressionVisitorFlat<Stream<String>>()
         {
             // Only ands of equal expressions with patterns:
             @Override
-            public Stream<String> and(AndExpression self, ImmutableList<@Recorded Expression> expressions)
+            public Stream<String> and(AndExpression self, ImmutableList<Expression> expressions)
             {
                 return expressions.stream().flatMap(e -> findPatternVars(e));
             }
 
             @Override
-            public Stream<String> equal(EqualExpression self, ImmutableList<@Recorded Expression> expressions, boolean lastIsPattern)
+            public Stream<String> equal(EqualExpression self, ImmutableList<Expression> expressions, boolean lastIsPattern)
             {
                 if (lastIsPattern)
                 {
@@ -214,13 +213,13 @@ public class IfThenElseExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
+    public Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
     {
         return null; // TODO
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;

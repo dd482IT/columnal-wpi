@@ -137,16 +137,16 @@ public abstract class TypeExp implements StyledShowable
         "Equatable", "Comparable", "Readable", "Showable"
     );
     
-    public static final @ExpressionIdentifier String CONS_TEXT = "Text";
-    public static final @ExpressionIdentifier String CONS_BOOLEAN = "Boolean";
-    public static final @ExpressionIdentifier String CONS_LIST = "List";
-    public static final @ExpressionIdentifier String CONS_FUNCTION = "Function";
-    public static final @ExpressionIdentifier String CONS_TYPE = "Type";
-    public static final @ExpressionIdentifier String CONS_UNIT = "Unit";
+    public static final String CONS_TEXT = "Text";
+    public static final String CONS_BOOLEAN = "Boolean";
+    public static final String CONS_LIST = "List";
+    public static final String CONS_FUNCTION = "Function";
+    public static final String CONS_TYPE = "Type";
+    public static final String CONS_UNIT = "Unit";
     // For recording errors:
-    protected final @Nullable ExpressionBase src;
+    protected final ExpressionBase src;
     
-    protected TypeExp(@Nullable ExpressionBase src)
+    protected TypeExp(ExpressionBase src)
     {
         this.src = src;
     }
@@ -178,24 +178,24 @@ public abstract class TypeExp implements StyledShowable
     }
 
     // This is like a function: type -> Type type, except that the parameter is not a value of that type, it's the type itself.
-    public static TypeExp dataTypeToTypeGADT(@Nullable ExpressionBase src, DataType dataType) throws InternalException
+    public static TypeExp dataTypeToTypeGADT(ExpressionBase src, DataType dataType) throws InternalException
     {
         return typeExpToTypeGADT(src, fromDataType(src, dataType));
     }
 
     // This is like a function: type -> Type type, except that the parameter is not a value of that type, it's the type itself.
-    public static TypeExp typeExpToTypeGADT(@Nullable ExpressionBase src, TypeExp exp) throws InternalException
+    public static TypeExp typeExpToTypeGADT(ExpressionBase src, TypeExp exp) throws InternalException
     {
         return new TypeCons(src, CONS_TYPE, ImmutableList.of(Either.<UnitExp, TypeExp>right(exp)), ImmutableSet.of());
     }
 
     // This is like a function: unit -> Unit unit, except that the parameter is not a value of that unit, it's the unit itself.
-    public static TypeExp unitExpToUnitGADT(@Nullable ExpressionBase src, UnitExp exp) throws InternalException
+    public static TypeExp unitExpToUnitGADT(ExpressionBase src, UnitExp exp) throws InternalException
     {
         return new TypeCons(src, CONS_UNIT, ImmutableList.of(Either.<UnitExp, TypeExp>left(exp)), ImmutableSet.of());
     }
     
-    public static TypeExp record(@Nullable ExpressionBase src, Map<@ExpressionIdentifier String, TypeExp> fieldTypes, boolean complete)
+    public static TypeExp record(ExpressionBase src, Map<String, TypeExp> fieldTypes, boolean complete)
     {
         return new RecordTypeExp(src, ImmutableMap.copyOf(fieldTypes), complete);
     }
@@ -241,7 +241,7 @@ public abstract class TypeExp implements StyledShowable
     
     // The first part of the pair is the overall tagged type.  The second part is a list, for all the constructors,
     // of the types of that constructor
-    public static Pair<TypeExp, ImmutableList<TypeExp>> fromTagged(@Nullable ExpressionBase src, TaggedTypeDefinition taggedTypeDefinition) throws InternalException
+    public static Pair<TypeExp, ImmutableList<TypeExp>> fromTagged(ExpressionBase src, TaggedTypeDefinition taggedTypeDefinition) throws InternalException
     {
         ImmutableList.Builder<Either<UnitExp, TypeExp>> typeVarsInOrder = ImmutableList.builder();
         Map<String, Either<MutUnitVar, MutVar>> typeVarsByName = new HashMap<>();
@@ -274,32 +274,32 @@ public abstract class TypeExp implements StyledShowable
         , tagTypes.build());
     }
 
-    public static TypeExp bool(@Nullable ExpressionBase src)
+    public static TypeExp bool(ExpressionBase src)
     {
         return new TypeCons(src, TypeExp.CONS_BOOLEAN, ALL_TYPE_CLASSES);
     }
     
-    public static TypeExp text(@Nullable ExpressionBase src)
+    public static TypeExp text(ExpressionBase src)
     {
         return new TypeCons(src, CONS_TEXT, ALL_TYPE_CLASSES);
     }
 
-    public static TypeExp plainNumber(@Nullable ExpressionBase src)
+    public static TypeExp plainNumber(ExpressionBase src)
     {
         return new NumTypeExp(src, UnitExp.SCALAR);
     }
 
-    public static TypeExp list(@Nullable ExpressionBase src, TypeExp inner)
+    public static TypeExp list(ExpressionBase src, TypeExp inner)
     {
         return new TypeCons(src, TypeExp.CONS_LIST, ImmutableList.of(Either.<UnitExp, TypeExp>right(inner)), ALL_TYPE_CLASSES);
     }
     
-    public static TypeExp function(@Nullable ExpressionBase src, ImmutableList<TypeExp> paramTypes, TypeExp returnType)
+    public static TypeExp function(ExpressionBase src, ImmutableList<TypeExp> paramTypes, TypeExp returnType)
     {
         return new TypeCons(src, TypeExp.CONS_FUNCTION, Utility.<Either<UnitExp, TypeExp>>concatI(Utility.<TypeExp, Either<UnitExp, TypeExp>>mapListI(paramTypes, p -> Either.<UnitExp, TypeExp>right(p)), ImmutableList.<Either<UnitExp, TypeExp>>of(Either.<UnitExp, TypeExp>right(returnType))), ImmutableSet.of());
     }
 
-    public static TypeExp fromDataType(@Nullable ExpressionBase src, DataType dataType) throws InternalException
+    public static TypeExp fromDataType(ExpressionBase src, DataType dataType) throws InternalException
     {
         return dataType.apply(new DataTypeVisitorEx<TypeExp, InternalException>()
         {
@@ -319,7 +319,7 @@ public abstract class TypeExp implements StyledShowable
             public TypeExp date(DateTimeInfo dateTimeInfo) throws InternalException, InternalException
             {
                 @SuppressWarnings("identifier")
-                @ExpressionIdentifier String typeName = dataType.toString();
+                String typeName = dataType.toString();
                 return new TypeCons(src, typeName, ALL_TYPE_CLASSES);
             }
 
@@ -336,13 +336,13 @@ public abstract class TypeExp implements StyledShowable
             }
 
             @Override
-            public TypeExp record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, InternalException
+            public TypeExp record(ImmutableMap<String, DataType> fields) throws InternalException, InternalException
             {
                 return new RecordTypeExp(src, Utility.mapValuesInt(fields, t -> fromDataType(src, t)), true);
             }
 
             @Override
-            public TypeExp array(@Nullable DataType inner) throws InternalException, InternalException
+            public TypeExp array(DataType inner) throws InternalException, InternalException
             {
                 return new TypeCons(src, CONS_LIST, ImmutableList.of(Either.<UnitExp, TypeExp>right(inner == null ? new MutVar(src) : fromDataType(src, inner))), ALL_TYPE_CLASSES);
             }
@@ -385,22 +385,22 @@ public abstract class TypeExp implements StyledShowable
         return typeExp instanceof TypeCons && ((TypeCons)typeExp).name.equals(TypeCons.CONS_FUNCTION);
     }
     
-    public static @Nullable ImmutableList<TypeExp> getFunctionArg(TypeExp functionTypeExp)
+    public static ImmutableList<TypeExp> getFunctionArg(TypeExp functionTypeExp)
     {
         if (isFunction(functionTypeExp))
         {
             ImmutableList<Either<UnitExp, TypeExp>> operands = ((TypeCons) functionTypeExp).operands;
-            return Either.<UnitExp, TypeExp, Either<UnitExp, TypeExp>>mapM(operands.subList(0, operands.size() - 1), Function.<Either<UnitExp, TypeExp>>identity()).<@Nullable ImmutableList<TypeExp>>either(u -> null, t -> t);
+            return Either.<UnitExp, TypeExp, Either<UnitExp, TypeExp>>mapM(operands.subList(0, operands.size() - 1), Function.<Either<UnitExp, TypeExp>>identity()).<ImmutableList<TypeExp>>either(u -> null, t -> t);
         }
         return null;
     }
 
-    public static @Nullable TypeExp getFunctionResult(TypeExp functionTypeExp)
+    public static TypeExp getFunctionResult(TypeExp functionTypeExp)
     {
         if (isFunction(functionTypeExp))
         {
             ImmutableList<Either<UnitExp, TypeExp>> operands = ((TypeCons) functionTypeExp).operands;
-            return operands.get(operands.size() - 1).<@Nullable TypeExp>either(u -> null, t -> t);
+            return operands.get(operands.size() - 1).<TypeExp>either(u -> null, t -> t);
         }
         return null;
     }
@@ -408,7 +408,7 @@ public abstract class TypeExp implements StyledShowable
     /**
      * Adds all the given type-classes as constraints to this TypeExp if possible.  If not, an error is returned.
      */
-    public final @Nullable TypeError requireTypeClasses(TypeClassRequirements typeClasses)
+    public final TypeError requireTypeClasses(TypeClassRequirements typeClasses)
     {
         return requireTypeClasses(typeClasses, new IdentityHashSet<>());
     }
@@ -418,7 +418,7 @@ public abstract class TypeExp implements StyledShowable
      * The visitedMutVar keeps track of visited MutVar to prevent infinite
      * recursion in case of there being a cycle in the type.
      */
-    public abstract @Nullable TypeError requireTypeClasses(TypeClassRequirements typeClasses, IdentityHashSet<MutVar> visitedMutVar);
+    public abstract TypeError requireTypeClasses(TypeClassRequirements typeClasses, IdentityHashSet<MutVar> visitedMutVar);
 
     @Override
     public final StyledString toStyledString()

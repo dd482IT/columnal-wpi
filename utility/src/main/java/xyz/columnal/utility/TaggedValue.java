@@ -30,16 +30,15 @@ import threadchecker.Tag;
 /**
  * Created by neil on 10/01/2017.
  */
-@OnThread(Tag.Any)
-public final @Value class TaggedValue
+public final class TaggedValue
 {
     private final int tagIndex;
     // The tagIndex is the canonical value, the tagName is for info only:
     private final String tagName;
-    private final @Nullable @Value Object innerItem;
+    private final Object innerItem;
 
     @SuppressWarnings("valuetype")
-    public @Value TaggedValue(int tagIndex, @Nullable @Value Object innerItem, TaggedTypeDefinitionBase taggedTypeDefinition)
+    public TaggedValue(int tagIndex, Object innerItem, TaggedTypeDefinitionBase taggedTypeDefinition)
     {
         this.tagIndex = tagIndex;
         this.innerItem = innerItem;
@@ -47,29 +46,28 @@ public final @Value class TaggedValue
     }
     
     @SuppressWarnings("valuetype")
-    public static @ImmediateValue TaggedValue immediate(int tagIndex, @Nullable @ImmediateValue Object innerItem, TaggedTypeDefinitionBase taggedTypeDefinition)
+    public static TaggedValue immediate(int tagIndex, Object innerItem, TaggedTypeDefinitionBase taggedTypeDefinition)
     {
         return new TaggedValue(tagIndex, innerItem, taggedTypeDefinition);
     }    
 
-    public @Pure int getTagIndex()
+    public int getTagIndex()
     {
         return tagIndex;
     }
 
-    @Pure
-    public @Nullable @Value Object getInner()
+    public Object getInner()
     {
         return innerItem;
     }
 
-    public @Pure String getTagName()
+    public String getTagName()
     {
         return tagName;
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;

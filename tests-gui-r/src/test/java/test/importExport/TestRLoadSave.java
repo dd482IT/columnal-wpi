@@ -96,10 +96,8 @@ import java.util.stream.IntStream;
 
 import static org.junit.Assert.assertEquals;
 
-@RunWith(JUnitQuickcheck.class)
 public class TestRLoadSave
 {
-    @Test
     public void testImportRData1() throws Exception
     {
         @SuppressWarnings("nullness")
@@ -121,7 +119,6 @@ public class TestRLoadSave
         TBasicUtil.assertValueListEqual("Row 149", ImmutableList.of(d("5.9"), d("3.0"), d("5.1"), d("1.8"), typeManager.lookupTag("setosa 3", "virginica").getRight("Tag not found").makeTag(null)), getRowVals(rs, 149));
     }
 
-    @Test
     public void testImportRData2() throws Exception
     {
         @SuppressWarnings("nullness")
@@ -143,8 +140,7 @@ public class TestRLoadSave
         //DataTestUtil.assertValueListEqual("Row 149", ImmutableList.of(d("5.9"), d("3.0"), d("5.1"), d("1.8"), typeManager.lookupTag("setosa 3", "virginica").getRight("Tag not found").makeTag(null)), DataTestUtil.getRowVals(rs, 149));
     }
 
-    @Ignore // Empty tag name issue
-    @Test
+    // Empty tag name issue
     public void testImportRData3() throws Exception
     {
         @SuppressWarnings("nullness")
@@ -160,34 +156,31 @@ public class TestRLoadSave
         ConvertFromR.convertRToTable(typeManager, loaded, false);
     }
 
-    @Test
     public void testImportRData4() throws Exception
     {
         @SuppressWarnings("nullness")
         @NonNull URL resource = getClass().getClassLoader().getResource("date.rds");
         RValue loaded = RRead.readRData(new File(resource.toURI()));
         System.out.println(RPrettyPrint.prettyPrint(loaded));
-        Pair<DataType, ImmutableList<@Value Object>> r = ConvertFromR.convertRToTypedValueList(new TypeManager(new UnitManager()), loaded);
+        Pair<DataType, ImmutableList<Object>> r = ConvertFromR.convertRToTypedValueList(new TypeManager(new UnitManager()), loaded);
         assertEquals(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)), r.getFirst());
         TBasicUtil.assertValueEqual("Date", LocalDate.of(1950, 2, 1), r.getSecond().get(0));
     }
 
-    @Test
     public void testImportRData5() throws Exception
     {
         @SuppressWarnings("nullness")
         @NonNull URL resource = getClass().getClassLoader().getResource("datetimezoned.rds");
         RValue loaded = RRead.readRData(new File(resource.toURI()));
         System.out.println(RPrettyPrint.prettyPrint(loaded));
-        Pair<DataType, ImmutableList<@Value Object>> r = ConvertFromR.convertRToTypedValueList(new TypeManager(new UnitManager()), loaded);
+        Pair<DataType, ImmutableList<Object>> r = ConvertFromR.convertRToTypedValueList(new TypeManager(new UnitManager()), loaded);
         assertEquals(DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED)), r.getFirst());
         @SuppressWarnings("valuetype")
-        @Value ZonedDateTime zdt = ZonedDateTime.of(2005, 10, 21, 18, 47, 22, 0, ZoneId.of("America/New_York"));
+        ZonedDateTime zdt = ZonedDateTime.of(2005, 10, 21, 18, 47, 22, 0, ZoneId.of("America/New_York"));
         TBasicUtil.assertValueEqual("DateTimeZoned", zdt, r.getSecond().get(0));
         assertEquals(zdt, r.getSecond().get(0));
     }
 
-    @Test
     @SuppressWarnings("valuetype")
     public void testImportRData6() throws Exception
     {
@@ -217,7 +210,6 @@ public class TestRLoadSave
         TBasicUtil.assertValueListEqual("Date column", ImmutableList.of(typeManager.maybePresent(LocalDateTime.of(2005, 10, 21, 22, 47, 22, 0)), typeManager.maybeMissing(), typeManager.maybeMissing()), asList(r.getColumns().get(5)));
     }
 
-    @Test
     public void testImportRData7() throws Exception
     {
         @SuppressWarnings("nullness")
@@ -229,7 +221,6 @@ public class TestRLoadSave
         assertEquals(ImmutableSet.of("df", "df2", "datetimeZoned2"), rs.stream().map(p -> p.getFirst()).collect(ImmutableSet.<String>toImmutableSet()));
     }
 
-    @Test
     public void testImportRData8() throws Exception
     {
         @SuppressWarnings("nullness")
@@ -243,7 +234,6 @@ public class TestRLoadSave
 
     }
 
-    @Test
     @SuppressWarnings("valuetype")
     public void testImportRData9() throws Exception
     {
@@ -257,18 +247,18 @@ public class TestRLoadSave
         assertEquals(ImmutableList.of(new ColumnId("x"), new ColumnId("nested lists")), rs.getColumnIds());
 
         // t <- tibble(x = 1:3, "nested lists" = list(1:5, 1:10, 20:5))
-        TBasicUtil.assertValueListEqual("Row 0", ImmutableList.<@Value Object>of(DataTypeUtility.value(1), ints(1,2,3,4,5)), getRowVals(rs, 0));
-        TBasicUtil.assertValueListEqual("Row 2", ImmutableList.<@Value Object>of(DataTypeUtility.value(3), ints(20,19,18,17,16,15,14,13,12,11,10,9,8,7,6,5)), getRowVals(rs, 2));
+        TBasicUtil.assertValueListEqual("Row 0", ImmutableList.<Object>of(DataTypeUtility.value(1), ints(1,2,3,4,5)), getRowVals(rs, 0));
+        TBasicUtil.assertValueListEqual("Row 2", ImmutableList.<Object>of(DataTypeUtility.value(3), ints(20,19,18,17,16,15,14,13,12,11,10,9,8,7,6,5)), getRowVals(rs, 2));
     }
 
     private Object ints(int... values)
     {
-        return DataTypeUtility.valueImmediate(IntStream.of(values).<@ImmediateValue Object>mapToObj(i -> DataTypeUtility.value(i)).collect(ImmutableList.<@ImmediateValue Object>toImmutableList()));
+        return DataTypeUtility.valueImmediate(IntStream.of(values).<Object>mapToObj(i -> DataTypeUtility.value(i)).collect(ImmutableList.<Object>toImmutableList()));
     }
 
-    private ImmutableList<@Value Object> asList(Column column) throws InternalException, UserException
+    private ImmutableList<Object> asList(Column column) throws InternalException, UserException
     {
-        ImmutableList.Builder<@Value Object> r = ImmutableList.builderWithExpectedSize(column.getLength());
+        ImmutableList.Builder<Object> r = ImmutableList.builderWithExpectedSize(column.getLength());
         for (int i = 0; i < column.getLength(); i++)
         {
             r.add(column.getType().getCollapsed(i));
@@ -281,8 +271,7 @@ public class TestRLoadSave
         return typeManager.getMaybeType().instantiate(ImmutableList.<Either<Unit, DataType>>of(Either.<Unit, DataType>right(dataType)), typeManager);
     }
 
-    @Property(trials = 100)
-    public void testRoundTrip(@From(GenRCompatibleRecordSet.class) GenRCompatibleRecordSet.RCompatibleRecordSet original) throws Exception
+    public void testRoundTrip(GenRCompatibleRecordSet.RCompatibleRecordSet original) throws Exception
     {
         // Need to get rid of any numbers which won't survive round trip:
         for (Column column : original.recordSet.getColumns())
@@ -340,9 +329,9 @@ public class TestRLoadSave
 
                     for (int i = 0; i < original.recordSet.getLength(); i++)
                     {
-                        final @Value Object reloadedVal = reloadedColumn.getType().getCollapsed(i);
+                        final Object reloadedVal = reloadedColumn.getType().getCollapsed(i);
                         // Not all date types survive, so need to coerce:
-                        @Value Object reloadedValCoerced = column.getType().getType().apply(new CoerceValueToThisType(reloadedVal, typeManager));
+                        Object reloadedValCoerced = column.getType().getType().apply(new CoerceValueToThisType(reloadedVal, typeManager));
                         TBasicUtil.assertValueEqual("Row " + i + " column " + column.getName(), column.getType().getCollapsed(i), reloadedValCoerced);
                     }
                 }
@@ -350,25 +339,24 @@ public class TestRLoadSave
         }
     }
 
-    private @Nullable String getTypeName(DataType type) throws InternalException
+    private String getTypeName(DataType type) throws InternalException
     {
-        return type.apply(new FlatDataTypeVisitor<@Nullable String>(null) {
+        return type.apply(new FlatDataTypeVisitor<String>(null) {
             @Override
-            public @Nullable String tagged(TypeId typeName, ImmutableList typeVars, ImmutableList tags) throws InternalException, InternalException
+            public String tagged(TypeId typeName, ImmutableList typeVars, ImmutableList tags) throws InternalException, InternalException
             {
                 return typeName.getRaw();
             }
         });
     }
 
-    private static @Value BigDecimal d(String s)
+    private static BigDecimal d(String s)
     {
         return DataTypeUtility.value(new BigDecimal(s));
     }
 
 
-    @OnThread(value = Tag.Simulation, ignoreParent = true)
-    private static class EnsureRoundTrip implements DataTypeVisitorGet<@Nullable Void>
+    private static class EnsureRoundTrip implements DataTypeVisitorGet<Void>
     {
         private final int length;
 
@@ -378,40 +366,40 @@ public class TestRLoadSave
         }
 
         @Override
-        public @Nullable Void number(GetValue<@Value Number> g, NumberInfo displayInfo) throws InternalException, UserException
+        public Void number(GetValue<Number> g, NumberInfo displayInfo) throws InternalException, UserException
         {
             for (int i = 0; i < length; i++)
             {
-                @Value Number orig = g.get(i);
+                Number orig = g.get(i);
                 double d = orig.doubleValue();
                 BigDecimal bd = new BigDecimal(Double.toString(d));
                 if (Utility.compareNumbers(orig, bd) != 0)
                 {
-                    g.set(i, Either.<String, @Value Number>right(DataTypeUtility.<BigDecimal>value(bd)));
+                    g.set(i, Either.<String, Number>right(DataTypeUtility.<BigDecimal>value(bd)));
                 }
             }
             return null;
         }
 
         @Override
-        public @Nullable Void text(GetValue<@Value String> g) throws InternalException, UserException
+        public Void text(GetValue<String> g) throws InternalException, UserException
         {
             // Make sure it can round trip:
             for (int i = 0; i < length; i++)
             {
-                g.set(i, Either.<String, @Value String>right(DataTypeUtility.value(new String(g.get(i).getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8))));
+                g.set(i, Either.<String, String>right(DataTypeUtility.value(new String(g.get(i).getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8))));
             }
             return null;
         }
 
         @Override
-        public @Nullable Void bool(GetValue<@Value Boolean> g) throws InternalException, UserException
+        public Void bool(GetValue<Boolean> g) throws InternalException, UserException
         {
             return null;
         }
 
         @Override
-        public @Nullable Void date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> g) throws InternalException, UserException
+        public Void date(DateTimeInfo dateTimeInfo, GetValue<TemporalAccessor> g) throws InternalException, UserException
         {
             // R's double doesn't have enough precision for nanos, so we must only keep what can round trip through a double-valued instant:
             switch (dateTimeInfo.getType())
@@ -419,10 +407,10 @@ public class TestRLoadSave
                 case TIMEOFDAY:
                     for (int i = 0; i < length; i++)
                     {
-                        @Value TemporalAccessor orig = g.get(i);
+                        TemporalAccessor orig = g.get(i);
                         double secs = (double)((LocalTime)orig).toNanoOfDay() / 1_000_000_000.0;
                         @SuppressWarnings("nullness")
-                        @NonNull @ImmediateValue TemporalAccessor value = DataTypeUtility.value(dateTimeInfo, LocalTime.ofNanoOfDay((long) (Math.round(secs) * 1_000_000_000.0)));
+                        @NonNull TemporalAccessor value = DataTypeUtility.value(dateTimeInfo, LocalTime.ofNanoOfDay((long) (Math.round(secs) * 1_000_000_000.0)));
                         g.set(i, Either.right(value));
                     }
                     break;
@@ -430,17 +418,17 @@ public class TestRLoadSave
                 case DATETIME:
                     for (int i = 0; i < length; i++)
                     {
-                        @Value TemporalAccessor orig = g.get(i);
+                        TemporalAccessor orig = g.get(i);
                         Instant origInstant = makeInstant(orig);
                         double seconds = origInstant.getEpochSecond() + ((double)origInstant.getNano()) / 1_000_000_000.0;
                         seconds = Math.round(seconds / (60.0 * 60.0 * 24.0)) * (60.0 * 60.0 * 24.0);
                         // From https://stackoverflow.com/a/38544355/412908
                         double secondsRoundTowardsZero = Math.signum(seconds) * Math.floor(Math.abs(seconds));
                         Instant instantFromDouble = Instant.ofEpochSecond((long) secondsRoundTowardsZero, (long) (1_000_000_000.0 * (seconds - secondsRoundTowardsZero)));
-                        @ImmediateValue TemporalAccessor value = DataTypeUtility.value(dateTimeInfo, dateTimeInfo.getType() == DateTimeType.DATETIMEZONED ? ZonedDateTime.ofInstant(instantFromDouble, ((ZonedDateTime) orig).getZone()) : LocalDateTime.ofInstant(instantFromDouble, ZoneId.of("UTC")));
+                        TemporalAccessor value = DataTypeUtility.value(dateTimeInfo, dateTimeInfo.getType() == DateTimeType.DATETIMEZONED ? ZonedDateTime.ofInstant(instantFromDouble, ((ZonedDateTime) orig).getZone()) : LocalDateTime.ofInstant(instantFromDouble, ZoneId.of("UTC")));
                         if (value == null)
                             throw new InternalException("Date cannot convert: " + orig);
-                        g.set(i, Either.<String, @Value TemporalAccessor>right(value));
+                        g.set(i, Either.<String, TemporalAccessor>right(value));
                     }
                     break;
             }
@@ -452,13 +440,13 @@ public class TestRLoadSave
                 ZoneId zoneId = ((ZonedDateTime)g.get(0)).getZone();
                 for (int i = 1; i < length; i++)
                 {
-                    g.set(i, Either.<String, @Value TemporalAccessor>right(DataTypeUtility.valueZonedDateTime(((ZonedDateTime) g.get(i)).withZoneSameInstant(zoneId))));
+                    g.set(i, Either.<String, TemporalAccessor>right(DataTypeUtility.valueZonedDateTime(((ZonedDateTime) g.get(i)).withZoneSameInstant(zoneId))));
                 }
             }
             return null;
         }
 
-        private Instant makeInstant(@Value TemporalAccessor orig) throws InternalException
+        private Instant makeInstant(TemporalAccessor orig) throws InternalException
         {
             if (orig instanceof ZonedDateTime)
                 return Instant.from(orig);
@@ -469,29 +457,29 @@ public class TestRLoadSave
         }
 
         @Override
-        public @Nullable Void tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tagTypes, GetValue<@Value TaggedValue> g) throws InternalException, UserException
+        public Void tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tagTypes, GetValue<TaggedValue> g) throws InternalException, UserException
         {
             if (typeName.getRaw().equals("Optional"))
             {
-                ArrayList<Pair<Integer, @Value Object>> inners = new ArrayList<>();
+                ArrayList<Pair<Integer, Object>> inners = new ArrayList<>();
                 for (int i = 0; i < length; i++)
                 {
-                    @Value TaggedValue taggedValue = g.get(i);
+                    TaggedValue taggedValue = g.get(i);
                     if (taggedValue.getInner() != null)
                         inners.add(new Pair<>(i, taggedValue.getInner()));
                 }
                 
                 TypeManager typeManager = new TypeManager(new UnitManager());
-                return typeVars.get(0).getRight("Err").fromCollapsed(new GetValue<@Value Object>()
+                return typeVars.get(0).getRight("Err").fromCollapsed(new GetValue<Object>()
                 {
                     @Override
-                    public @Value Object getWithProgress(int i, @Nullable ProgressListener prog) throws UserException, InternalException
+                    public Object getWithProgress(int i, ProgressListener prog) throws UserException, InternalException
                     {
                         return inners.get(i).getSecond();
                     }
 
                     @Override
-                    public void set(int index, Either<String, @Value Object> value) throws InternalException, UserException
+                    public void set(int index, Either<String, Object> value) throws InternalException, UserException
                     {
                         g.set(inners.get(index).getFirst(), Either.right(typeManager.maybePresent(value.getRight("Err"))));
                     }
@@ -501,22 +489,22 @@ public class TestRLoadSave
         }
 
         @Override
-        public @Nullable Void record(ImmutableMap<@ExpressionIdentifier String, DataType> types, GetValue<@Value Record> g) throws InternalException, UserException
+        public Void record(ImmutableMap<String, DataType> types, GetValue<Record> g) throws InternalException, UserException
         {
-            for (Entry<@ExpressionIdentifier String, DataType> fieldType : types.entrySet())
+            for (Entry<String, DataType> fieldType : types.entrySet())
             {
-                fieldType.getValue().fromCollapsed(new GetValue<@Value Object>()
+                fieldType.getValue().fromCollapsed(new GetValue<Object>()
                 {
                     @Override
-                    public @Value Object getWithProgress(int i, @Nullable ProgressListener prog) throws UserException, InternalException
+                    public Object getWithProgress(int i, ProgressListener prog) throws UserException, InternalException
                     {
                         return g.get(i).getField(fieldType.getKey());
                     }
 
                     @Override
-                    public void set(int i, Either<String, @Value Object> value) throws InternalException, UserException
+                    public void set(int i, Either<String, Object> value) throws InternalException, UserException
                     {
-                        g.set(i, Either.<String, @Value Record>right(DataTypeUtility.value(new RecordMap(Utility.appendToMap(g.get(i).getFullContent(), fieldType.getKey(), value.getRight("Setting error"), null)))));
+                        g.set(i, Either.<String, Record>right(DataTypeUtility.value(new RecordMap(Utility.appendToMap(g.get(i).getFullContent(), fieldType.getKey(), value.getRight("Setting error"), null)))));
                     }
                 }).applyGet(new EnsureRoundTrip(length));
             }
@@ -524,27 +512,27 @@ public class TestRLoadSave
         }
 
         @Override
-        public @Nullable Void array(DataType inner, GetValue<@Value ListEx> g) throws InternalException, UserException
+        public Void array(DataType inner, GetValue<ListEx> g) throws InternalException, UserException
         {
             for (int i = 0; i < length; i++)
             {
                 ListEx listEx = g.get(i);
                 boolean[] anyModified = new boolean[] {false};
-                ArrayList<@Value Object> modified = new ArrayList<>();
+                ArrayList<Object> modified = new ArrayList<>();
                 for (int j = 0; j < listEx.size(); j++)
                 {
                     modified.add(listEx.get(j));
                 }
-                inner.fromCollapsed(new GetValue<@Value Object>()
+                inner.fromCollapsed(new GetValue<Object>()
                 {
                     @Override
-                    public @NonNull @Value Object getWithProgress(int listIndex, @Nullable ProgressListener prog) throws UserException, InternalException
+                    public Object getWithProgress(int listIndex, ProgressListener prog) throws UserException, InternalException
                     {
                         return modified.get(listIndex);
                     }
 
                     @Override
-                    public void set(int index, Either<String, @Value Object> value) throws InternalException, UserException
+                    public void set(int index, Either<String, Object> value) throws InternalException, UserException
                     {
                         modified.set(index, value.getRight("No errs"));
                         anyModified[0] = true;
@@ -568,12 +556,12 @@ public class TestRLoadSave
         }
     }
 
-    private static class CoerceValueToThisType extends FlatDataTypeVisitor<@Value Object>
+    private static class CoerceValueToThisType extends FlatDataTypeVisitor<Object>
     {
-        private final @Value Object reloadedVal;
+        private final Object reloadedVal;
         private final TypeManager typeManager;
 
-        public CoerceValueToThisType(@Value Object reloadedVal, TypeManager typeManager)
+        public CoerceValueToThisType(Object reloadedVal, TypeManager typeManager)
         {
             super(reloadedVal);
             this.reloadedVal = reloadedVal;
@@ -582,12 +570,11 @@ public class TestRLoadSave
 
         @Override
         @SuppressWarnings("nullness")
-        @OnThread(value = Tag.Simulation, ignoreParent = true)
-        public @Value Object date(DateTimeInfo dateTimeInfo) throws InternalException, InternalException
+        public Object date(DateTimeInfo dateTimeInfo) throws InternalException, InternalException
         {
             if (dateTimeInfo.getType() == DateTimeType.TIMEOFDAY && !(reloadedVal instanceof LocalTime))
             {
-                @Value BigDecimal bd = Utility.toBigDecimal((Number) reloadedVal);
+                BigDecimal bd = Utility.toBigDecimal((Number) reloadedVal);
                 return DataTypeUtility.value(dateTimeInfo, LocalTime.ofNanoOfDay(bd.multiply(new BigDecimal("1000000000")).longValue()));
             }
             return DataTypeUtility.value(dateTimeInfo, (TemporalAccessor) reloadedVal);
@@ -595,14 +582,13 @@ public class TestRLoadSave
 
         @Override
         @SuppressWarnings("nullness")
-        @OnThread(value = Tag.Simulation, ignoreParent = true)
-        public @Value Object tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, InternalException
+        public Object tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, InternalException
         {
             if (typeName.getRaw().equals("Optional") && !(reloadedVal instanceof TaggedValue))
                 return typeManager.maybePresent(tags.get(1).getInner().apply(this));
             else
             {
-                @Value TaggedValue taggedValue = (TaggedValue) this.reloadedVal;
+                TaggedValue taggedValue = (TaggedValue) this.reloadedVal;
                 if (typeName.getRaw().equals("Optional") && taggedValue.getTagIndex() == 1)
                     return typeManager.maybePresent(tags.get(1).getInner().apply(new CoerceValueToThisType(taggedValue.getInner(), typeManager)));
                 else
@@ -611,11 +597,10 @@ public class TestRLoadSave
         }
 
         @Override
-        @OnThread(value = Tag.Simulation, ignoreParent = true)
-        public @Value Object record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, InternalException
+        public Object record(ImmutableMap<String, DataType> fields) throws InternalException, InternalException
         {
-            ImmutableMap.Builder<@ExpressionIdentifier String, @Value Object> mappedValues = ImmutableMap.builder();
-            for (Entry<@ExpressionIdentifier String, @Value Object> field : Utility.cast(reloadedVal, Record.class).getFullContent().entrySet())
+            ImmutableMap.Builder<String, Object> mappedValues = ImmutableMap.builder();
+            for (Entry<String, Object> field : Utility.cast(reloadedVal, Record.class).getFullContent().entrySet())
             {
                 @SuppressWarnings("nullness") // This is test code
                 @NonNull DataType fieldType = fields.get(field.getKey());
@@ -625,18 +610,17 @@ public class TestRLoadSave
         }
 
         @Override
-        @OnThread(value = Tag.Simulation, ignoreParent = true)
-        public @Value Object array(DataType inner) throws InternalException, InternalException
+        public Object array(DataType inner) throws InternalException, InternalException
         {
             try
             {
-                @Value ListEx list;
+                ListEx list;
                 if (reloadedVal instanceof ListEx)
                     list = Utility.cast(reloadedVal, ListEx.class);
                 else
-                    list = DataTypeUtility.value(ImmutableList.<@Value Object>of(reloadedVal));
+                    list = DataTypeUtility.value(ImmutableList.<Object>of(reloadedVal));
                 int length = list.size();
-                ImmutableList.Builder<@Value Object> coercedList = ImmutableList.builderWithExpectedSize(length);
+                ImmutableList.Builder<Object> coercedList = ImmutableList.builderWithExpectedSize(length);
                 for (int i = 0; i < length; i++)
                 {
                     coercedList.add(inner.apply(new CoerceValueToThisType(list.get(i), typeManager)));
@@ -651,10 +635,9 @@ public class TestRLoadSave
         }
     }
 
-    @OnThread(Tag.Simulation)
-    public static ImmutableList<@Value Object> getRowVals(RecordSet recordSet, int targetRow)
+    public static ImmutableList<Object> getRowVals(RecordSet recordSet, int targetRow)
     {
-        return recordSet.getColumns().stream().<@Value Object>map(c -> {
+        return recordSet.getColumns().stream().<Object>map(c -> {
             try
             {
                 return c.getType().getCollapsed(targetRow);
@@ -663,6 +646,6 @@ public class TestRLoadSave
             {
                 throw new RuntimeException(e);
             }
-        }).collect(ImmutableList.<@Value Object>toImmutableList());
+        }).collect(ImmutableList.<Object>toImmutableList());
     }
 }

@@ -55,7 +55,7 @@ public class CleanDateColumnType extends ColumnType
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -89,7 +89,7 @@ public class CleanDateColumnType extends ColumnType
         return formatter;
     }
 
-    public Either<String, TemporalAccessor> parse(@NonNull String s) throws InternalException
+    public Either<String, TemporalAccessor> parse(String s) throws InternalException
     {
         s = s.trim();
         try

@@ -33,11 +33,10 @@ import java.lang.annotation.Target;
  * A location on the screen in pixels
  */
 @Documented
-@SubtypeOf(value=UnknownUnits.class)
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE_USE, ElementType.TYPE_PARAMETER})
 public @interface DisplayPixels
 {
-    public static @DisplayPixels int ONE = 1;
-    public static @DisplayPixels int ZERO = 0;
+    public static int ONE = 1;
+    public static int ZERO = 0;
 }

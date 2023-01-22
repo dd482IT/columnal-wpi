@@ -51,10 +51,10 @@ public class StringReplaceMany extends FunctionDefinition
     private static class Instance extends ValueFunction
     {
         @Override
-        public @Value Object _call() throws UserException, InternalException
+        public Object _call() throws UserException, InternalException
         {
             ListEx replacements = arg(0, ListEx.class);
-            @Value String whole = arg(1, String.class);
+            String whole = arg(1, String.class);
             String[] finds = new String[replacements.size()];
             String[] replaces = new String[finds.length];
             for (int i = 0; i < finds.length; i++)

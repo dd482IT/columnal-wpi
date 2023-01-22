@@ -33,11 +33,10 @@ import java.lang.annotation.Target;
  * A location in the lex editor's canonical content.
  */
 @Documented
-@SubtypeOf(value= UnknownUnits.class)
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE_USE, ElementType.TYPE_PARAMETER})
 public @interface CanonicalLocation
 {
-    public static final @CanonicalLocation int ZERO = 0;
-    public static final @CanonicalLocation int ONE = 1;
+    public static final int ZERO = 0;
+    public static final int ONE = 1;
 }

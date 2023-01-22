@@ -33,21 +33,20 @@ import threadchecker.Tag;
  * A grid area cell position is a location in a particular subgrid (e.g. table)
  */
 /* package-visible */
-@OnThread(Tag.Any)
 public class GridAreaCellPosition
 {
     // Both are zero-based:
-    public final @GridAreaRowIndex int rowIndex;
-    public final @GridAreaColIndex int columnIndex;
+    public final int rowIndex;
+    public final int columnIndex;
 
-    public GridAreaCellPosition(@GridAreaRowIndex int rowIndex, @GridAreaColIndex int columnIndex)
+    public GridAreaCellPosition(int rowIndex, int columnIndex)
     {
         this.rowIndex = rowIndex;
         this.columnIndex = columnIndex;
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;

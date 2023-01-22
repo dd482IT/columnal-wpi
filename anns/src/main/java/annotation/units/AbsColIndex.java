@@ -33,10 +33,9 @@ import java.lang.annotation.Target;
  * only to the overall grid.  Starts at 0 on the left.
  */
 @Documented
-@SubtypeOf(RowOrColIndex.class)
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE_USE, ElementType.TYPE_PARAMETER})
 public @interface AbsColIndex
 {
-    public static final @AbsColIndex int ONE = 1;
+    public static final int ONE = 1;
 }

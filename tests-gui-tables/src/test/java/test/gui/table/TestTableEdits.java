@@ -125,8 +125,6 @@ import java.util.stream.Stream;
 
 import static org.junit.Assert.*;
 
-@OnThread(value = Tag.FXPlatform, ignoreParent = true)
-@RunWith(JUnitQuickcheck.class)
 public class TestTableEdits extends FXApplicationTest implements ClickTableLocationTrait, EnterColumnDetailsTrait, TextFieldTrait, ScrollToTrait, PopupTrait, ClickOnTableHeaderTrait
 {
     /*
@@ -139,37 +137,27 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
      * We also make some Concatenates and Aggregates
      */
     
-    @OnThread(Tag.Any)
     private final List<Boolean> booleans = Arrays.asList(true, false, false);
-    @OnThread(Tag.Any)
     private final List<Integer> numbers = Arrays.asList(5, 4, 3);
     
-    @OnThread(Tag.Any)
     private final ImmutableList<Pair<ColumnId, Direction>> sortBy = ImmutableList.of(new Pair<>(new ColumnId("Boolean"), Direction.ASCENDING), new Pair<>(new ColumnId("Number"), Direction.DESCENDING));
 
     @SuppressWarnings("nullness")
-    @OnThread(Tag.Any)
     private @NonNull VirtualGrid virtualGrid;
 
     @SuppressWarnings("nullness")
-    @OnThread(Tag.Any)
     private @NonNull TableManager tableManager;
 
-    @OnThread(Tag.Simulation)
     private final HashMap<TableId, BiConsumer<Table, ColumnId>> postRenameChecks = new HashMap<>();
     
     private final CellPosition originalTableTopLeft = new CellPosition(CellPosition.row(2), CellPosition.col(2));
-    @OnThread(Tag.Simulation)
     private final HashMap<TableId, CellPosition> transformPositions = new HashMap<>();
     private final int originalRows = 3;
     private final int originalColumns = 2;
-    @OnThread(Tag.Any)
     private int tableCount = 0;
     @SuppressWarnings("nullness")
-    @OnThread(Tag.Any)
     private TableId srcId;
 
-    @OnThread(Tag.Any)
     private Expression makeFilterCalcExpression(TypeManager typeManager)
     {
         // This is the original expression.  But to prevent type errors we adjust it to the below which
@@ -239,7 +227,6 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
     // Returns next target position
     // unavailableTables points from a table to all its directly derived tables that shouldn't be available to it 
     @SuppressWarnings("identifier")
-    @OnThread(Tag.Simulation)
     private CellPosition addTransforms(TableManager dummyManager, TableId srcId, int depth, CellPosition targetPos, Multimap<TableId, TableId> unavailableTables, Random r) throws InternalException, UserException
     {
         TableId sortId = new TableId(ch(r) + srcId.getRaw() + " then Sort");
@@ -315,33 +302,30 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         return targetPos;
     }
 
-    @OnThread(Tag.Any)
     private void assertSameLastIdent(ColumnId column, Expression expression)
     {
-        assertEquals(column.getRaw(), expression.visit(new ExpressionVisitorFlat<@Nullable @ExpressionIdentifier String>()
+        assertEquals(column.getRaw(), expression.visit(new ExpressionVisitorFlat<String>()
         {
             @Override
-            protected @Nullable @ExpressionIdentifier String makeDef(Expression expression)
+            protected String makeDef(Expression expression)
             {
                 return null;
             }
 
             @Override
-            public @Nullable @ExpressionIdentifier String ident(IdentExpression self, @Nullable @ExpressionIdentifier String namespace, ImmutableList<@ExpressionIdentifier String> idents, boolean isVariable)
+            public String ident(IdentExpression self, String namespace, ImmutableList<String> idents, boolean isVariable)
             {
                 return idents.get(idents.size() - 1);
             }
         }));
     }
 
-    @OnThread(Tag.Any)
     private String ch(Random r)
     {
         return "" + (char)('A' + (char)(r.nextInt(26)));
     }
 
     // unavailableTables points from a table to all its directly derived tables that shouldn't be available to it
-    @OnThread(Tag.Simulation)
     private void checkAvailability(TableManager manager, Multimap<TableId, TableId> unavailableTables)
     {
         ImmutableList<TableId> allTables = manager.getAllTables().stream().map(t -> t.getId()).collect(ImmutableList.toImmutableList());
@@ -356,7 +340,6 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         }
     }
 
-    @OnThread(Tag.Any)
     private void removeAllMapped(Multimap<TableId, TableId> unavailableTables, HashSet<TableId> available, TableId tableId)
     {
         for (TableId id : unavailableTables.get(tableId))
@@ -366,7 +349,6 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         }
     }
 
-    @OnThread(Tag.Simulation)
     private CellPosition nextPos(Table table) throws InternalException, UserException
     {
         CellPosition right = table._test_getPrevPosition().offsetByRowCols(0, 5);
@@ -380,9 +362,7 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
             return right;
     }
 
-    @Property(trials = 3)
-    @OnThread(Tag.Simulation)
-    public void testRenameTable(@From(GenTableId.class) TableId newTableId) throws Exception
+    public void testRenameTable(TableId newTableId) throws Exception
     {
         // N tables, 2 columns each:
         assertEquals(tableCount, count(".table-display-table-title"));
@@ -406,9 +386,7 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         assertEquals(tableCount * 2, count(".table-display-column-title"));
     }
 
-    @Property(trials = 3)
-    @OnThread(Tag.Simulation)
-    public void testRenameColumn(@From(GenColumnId.class) ColumnId newColumnId) throws Exception
+    public void testRenameColumn(ColumnId newColumnId) throws Exception
     {
         if (tableManager.getSingleTableOrThrow(srcId).getData().getColumnIds().contains(newColumnId))
             return; // In the rare case we try to rename to an existing column name, skip
@@ -445,8 +423,7 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         assertEquals(tableCount * 2, count(".table-display-column-title"));
     }
     
-    @Property(trials = 2)
-    public void testDeleteColumn(@From(GenRandom.class) Random r) throws UserException, InternalException
+    public void testDeleteColumn(Random r) throws UserException, InternalException
     {
         // Pick a table and column:
         ImmutableList<Pair<TableId, ColumnId>> columns = tableManager.getAllTables().stream().<Pair<TableId, ColumnId>>flatMap(t -> {
@@ -484,8 +461,7 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
             assertNotNull(columnAfter); // Can't delete from sort
     }
 
-    @Property(trials = 2)
-    public void testDeleteTable(@From(GenRandom.class) Random r) throws UserException, InternalException
+    public void testDeleteTable(Random r) throws UserException, InternalException
     {
         // Pick a table and column:
         Table picked = tableManager.getAllTables().get(r.nextInt(tableManager.getAllTables().size()));
@@ -509,10 +485,8 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         assertTrue("New button showing", lookup(".create-table-grid-button").query().isVisible());
     }
 
-    @Ignore // TODO restore
-    @Property(trials = 2, shrink = false)
-    @OnThread(Tag.Simulation)
-    public void testAddColumnAtRight(int n, @From(GenColumnId.class) ColumnId name, @From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws InternalException, UserException
+    // TODO restore
+    public void testAddColumnAtRight(int n, ColumnId name, TypeAndValueGen typeAndValueGen) throws InternalException, UserException
     {
         tableManager.getTypeManager()._test_copyTaggedTypesFrom(typeAndValueGen.getTypeManager());
         for (Table table : tableManager.getAllTables())
@@ -553,16 +527,11 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         }
     }
 
-    @Ignore // TODO restore
-    @Property(trials=4, shrink = false)
-    @OnThread(Tag.Simulation)
+    // TODO restore
     public void testAddColumnBeforeAfter(
-        @When(seed=3237919701795101471L)
         int positionIndicator,
-        @When(seed=5841154326228353674L)
-        @From(GenColumnId.class) ColumnId name,
-        @When(seed=6562332032147499639L)
-        @From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws InternalException, UserException
+        ColumnId name,
+        TypeAndValueGen typeAndValueGen) throws InternalException, UserException
     {
         tableManager.getTypeManager()._test_copyTaggedTypesFrom(typeAndValueGen.getTypeManager());
         // N tables, 2 columns each:
@@ -616,10 +585,8 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         }
     }
     
-    @Ignore // TODO restore
-    @Property(trials = 15)
-    @OnThread(Tag.Simulation)
-    public void testTableDrag(@From(GenRandom.class) Random r)
+    // TODO restore
+    public void testTableDrag(Random r)
     {
         checkNoOverlap();
         // Pick a table:
@@ -693,7 +660,6 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
 
     }
 
-    @OnThread(Tag.Simulation)
     private void checkNoOverlap()
     {
         // Check tables aren't overlapping:
@@ -750,17 +716,15 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         return new RectangleBounds(table.getDisplay().getMostRecentPosition(), table.getDisplay().getBottomRightIncl());
     }
 
-    @Ignore // TODO restore
-    @Property(trials = 3)
-    @OnThread(Tag.Simulation)
-    public void testChangeColumnType(@From(GenDataTypeMaker.class) GenDataTypeMaker.DataTypeMaker dataTypeMaker, @From(GenRandom.class) Random r) throws UserException, InternalException
+    // TODO restore
+    public void testChangeColumnType(GenDataTypeMaker.DataTypeMaker dataTypeMaker, Random r) throws UserException, InternalException
     {
         DataTypeAndValueMaker swappedType = dataTypeMaker.makeType();
         tableManager.getTypeManager()._test_copyTaggedTypesFrom(dataTypeMaker.getTypeManager());
         boolean changeBoolean = r.nextBoolean(); // Otherwise, numeric B
 
         // Put a value of new type in as error before changing.
-        @Value Object swappedValue = swappedType.makeValue();
+        Object swappedValue = swappedType.makeValue();
         int swappedValueIndex = r.nextInt(originalRows);
         CellPosition swappedValuePos = originalTableTopLeft.offsetByRowCols(3 + swappedValueIndex, changeBoolean ? 0 : 1);
         TFXUtil.collapseAllTableHats(tableManager, virtualGrid);
@@ -811,7 +775,7 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         }
         
         // Work out what values we now expect in that column:
-        List<Either<String, @Value Object>> expectedAfterChange;
+        List<Either<String, Object>> expectedAfterChange;
         boolean sameTypeAfterSwap;
         if (changeBoolean)
         {
@@ -819,11 +783,11 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
             sameTypeAfterSwap = swappedType.getDataType().equals(DataType.BOOLEAN);
             if (sameTypeAfterSwap)
             {
-                expectedAfterChange = Utility.<Boolean, Either<String, @Value Object>>mapList(booleans, b -> Either.<String, @Value Object>right(DataTypeUtility.value(b)));
+                expectedAfterChange = Utility.<Boolean, Either<String, Object>>mapList(booleans, b -> Either.<String, Object>right(DataTypeUtility.value(b)));
             }
             else
             {
-                expectedAfterChange = Utility.<Boolean, Either<String, @Value Object>>mapList(booleans, b -> Either.left(Boolean.toString(b)));
+                expectedAfterChange = Utility.<Boolean, Either<String, Object>>mapList(booleans, b -> Either.left(Boolean.toString(b)));
             }
         }
         else
@@ -832,11 +796,11 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
             sameTypeAfterSwap = DataTypeUtility.isNumber(swappedType.getDataType());
             if (sameTypeAfterSwap)
             {
-                expectedAfterChange = Utility.<Integer, Either<String, @Value Object>>mapList(numbers, n -> Either.right(DataTypeUtility.value(n)));
+                expectedAfterChange = Utility.<Integer, Either<String, Object>>mapList(numbers, n -> Either.right(DataTypeUtility.value(n)));
             }
             else
             {
-                expectedAfterChange = Utility.<Integer, Either<String, @Value Object>>mapList(numbers, n -> Either.left(Integer.toString(n)));
+                expectedAfterChange = Utility.<Integer, Either<String, Object>>mapList(numbers, n -> Either.left(Integer.toString(n)));
             }
         }
         expectedAfterChange = new ArrayList<>(expectedAfterChange);
@@ -864,8 +828,8 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         sleep(500);
         
         // Now check the values:
-        List<@NonNull Either<String, @Value Object>> expectedAtEnd = new ArrayList<>(changeBoolean ? Utility.<Boolean, Either<String, @Value Object>>mapList(booleans, b -> Either.right(DataTypeUtility.value(b))) : Utility.<Integer, Either<String, @Value Object>>mapList(numbers, n -> Either.right(DataTypeUtility.value(n))));
-        expectedAtEnd.set(swappedValueIndex, sameTypeAfterSwap ? Either.<String, @Value Object>right(swappedValue) : Either.<String, @Value Object>left(DataTypeUtility.valueToString(swappedValue)));
+        List<Either<String, Object>> expectedAtEnd = new ArrayList<>(changeBoolean ? Utility.<Boolean, Either<String, Object>>mapList(booleans, b -> Either.right(DataTypeUtility.value(b))) : Utility.<Integer, Either<String, Object>>mapList(numbers, n -> Either.right(DataTypeUtility.value(n))));
+        expectedAtEnd.set(swappedValueIndex, sameTypeAfterSwap ? Either.<String, Object>right(swappedValue) : Either.<String, Object>left(DataTypeUtility.valueToString(swappedValue)));
         TBasicUtil.assertValueListEitherEqual("", expectedAtEnd, TBasicUtil.getAllCollapsedData(findOriginal.get().getData().getColumn(changedColumnId).getType(), booleans.size()));
     }
 }

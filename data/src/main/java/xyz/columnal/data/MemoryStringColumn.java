@@ -41,7 +41,7 @@ import java.util.stream.Stream;
 public class MemoryStringColumn extends EditableColumn
 {
     private final StringColumnStorage storage;
-    private final @Value String defaultValue;
+    private final String defaultValue;
 
     public MemoryStringColumn(RecordSet recordSet, ColumnId title, List<Either<String, String>> values, String defaultValue) throws InternalException
     {
@@ -57,7 +57,6 @@ public class MemoryStringColumn extends EditableColumn
     }
 
     @Override
-    @OnThread(Tag.Any)
     public synchronized DataTypeValue getType()
     {
         return storage.getType();
@@ -70,26 +69,25 @@ public class MemoryStringColumn extends EditableColumn
     }
 
     @Override
-    public @OnThread(Tag.Simulation) SimulationRunnable insertRows(int index, int count) throws InternalException, UserException
+    public SimulationRunnable insertRows(int index, int count) throws InternalException, UserException
     {
         return storage.insertRows(index, Utility.replicate(count, Either.<String, String>right(defaultValue)));
     }
 
     @Override
-    public @OnThread(Tag.Simulation) SimulationRunnable removeRows(int index, int count) throws InternalException, UserException
+    public SimulationRunnable removeRows(int index, int count) throws InternalException, UserException
     {
         return storage.removeRows(index, count);
     }
 
     @Override
-    @OnThread(Tag.Any)
-    public @Value Object getDefaultValue()
+    public Object getDefaultValue()
     {
         return defaultValue;
     }
 
     // Used by InferTypeColumn to easily directly access the values:
-    public void setValue(int index, @Value String value) throws InternalException
+    public void setValue(int index, String value) throws InternalException
     {
         storage.setValue(index, value);
     }

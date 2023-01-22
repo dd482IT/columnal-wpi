@@ -31,9 +31,9 @@ import xyz.columnal.utility.Utility;
 
 public class UnitTimesExpression extends UnitExpression
 {
-    private final ImmutableList<@Recorded UnitExpression> operands;
+    private final ImmutableList<UnitExpression> operands;
 
-    public UnitTimesExpression(ImmutableList<@Recorded UnitExpression> operands)
+    public UnitTimesExpression(ImmutableList<UnitExpression> operands)
     {
         this.operands = operands;
     }
@@ -42,7 +42,7 @@ public class UnitTimesExpression extends UnitExpression
     public JellyUnit asUnit(UnitManager unitManager) throws UnitLookupException
     {
         JellyUnit r = JellyUnit.fromConcrete(Unit.SCALAR);
-        for (@Recorded UnitExpression operand : operands)
+        for (UnitExpression operand : operands)
         {
             r = r.times(operand.asUnit(unitManager));
         }
@@ -68,13 +68,13 @@ public class UnitTimesExpression extends UnitExpression
         return b.toString();
     }
 
-    public ImmutableList<@Recorded UnitExpression> getOperands()
+    public ImmutableList<UnitExpression> getOperands()
     {
         return operands;
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;

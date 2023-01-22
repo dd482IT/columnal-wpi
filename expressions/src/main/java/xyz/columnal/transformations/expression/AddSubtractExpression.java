@@ -60,9 +60,9 @@ public class AddSubtractExpression extends NaryOpTotalExpression
     public static enum AddSubtractOp
     { ADD, SUBTRACT };
     private final ImmutableList<AddSubtractOp> ops;
-    private @Nullable CheckedExp type;
+    private CheckedExp type;
 
-    public AddSubtractExpression(List<@Recorded Expression> expressions, List<AddSubtractOp> addSubtractOps)
+    public AddSubtractExpression(List<Expression> expressions, List<AddSubtractOp> addSubtractOps)
     {
         super(expressions);
         this.ops = ImmutableList.copyOf(addSubtractOps);
@@ -71,7 +71,7 @@ public class AddSubtractExpression extends NaryOpTotalExpression
     }
 
     @Override
-    public NaryOpExpression copyNoNull(List<@Recorded Expression> replacements)
+    public NaryOpExpression copyNoNull(List<Expression> replacements)
     {
         return new AddSubtractExpression(replacements, ops);
     }
@@ -100,10 +100,10 @@ public class AddSubtractExpression extends NaryOpTotalExpression
     }
 
     @Override
-    public @Nullable CheckedExp checkNaryOp(@Recorded AddSubtractExpression this, ColumnLookup dataLookup, TypeState state, ExpressionKind kind, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public CheckedExp checkNaryOp(AddSubtractExpression this, ColumnLookup dataLookup, TypeState state, ExpressionKind kind, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         type = onError.recordType(this, state, checkAllOperandsSameTypeAndNotPatterns(new NumTypeExp(this, new UnitExp(new MutUnitVar())), dataLookup, state, LocationInfo.UNIT_CONSTRAINED, onError, p -> {
-            @Nullable TypeExp ourType = p.getOurType();
+            TypeExp ourType = p.getOurType();
             if (ourType == null)
                 return ImmutableMap.of();
             if (ourType.prune() instanceof NumTypeExp)
@@ -112,9 +112,9 @@ public class AddSubtractExpression extends NaryOpTotalExpression
                 if (fixes.isEmpty())
                     return ImmutableMap.of();
                 else
-                    return ImmutableMap.of(this, new Pair<@Nullable TypeError, ImmutableList<QuickFix<Expression>>>(null, fixes));
+                    return ImmutableMap.of(this, new Pair<TypeError, ImmutableList<QuickFix<Expression>>>(null, fixes));
             }
-            @Nullable TypeError err = null;
+            TypeError err = null;
             if (p.getAvailableTypesForError().size() > 1)
             {
                 err = new TypeError(StyledString.concat(StyledString.s("Adding/subtracting requires numbers (with identical units), but found "), ourType.toStyledString()), p.getAvailableTypesForError());
@@ -150,16 +150,15 @@ public class AddSubtractExpression extends NaryOpTotalExpression
             if (ourType instanceof NumTypeExp)
                 fixes.addAll(ExpressionUtil.getFixesForMatchingNumericUnits(state, p));
             ImmutableList<QuickFix<Expression>> builtFixes = fixes.build();
-            return err == null && builtFixes.isEmpty() ? ImmutableMap.<@Recorded Expression, Pair<@Nullable TypeError, ImmutableList<QuickFix<Expression>>>>of() : ImmutableMap.<@Recorded Expression, Pair<@Nullable TypeError, ImmutableList<QuickFix<Expression>>>>of(p.getOurExpression(), new Pair<@Nullable TypeError, ImmutableList<QuickFix<Expression>>>(err, builtFixes));
+            return err == null && builtFixes.isEmpty() ? ImmutableMap.<Expression, Pair<TypeError, ImmutableList<QuickFix<Expression>>>>of() : ImmutableMap.<Expression, Pair<TypeError, ImmutableList<QuickFix<Expression>>>>of(p.getOurExpression(), new Pair<TypeError, ImmutableList<QuickFix<Expression>>>(err, builtFixes));
         }));
         return type;
     }
 
     @Override
-    @OnThread(Tag.Simulation)
     public ValueResult getValueNaryOp(ImmutableList<ValueResult> values, EvaluateState state) throws InternalException
     {
-        @Value Number n = Utility.cast(values.get(0).value, Number.class);
+        Number n = Utility.cast(values.get(0).value, Number.class);
         for (int i = 1; i < expressions.size(); i++)
         {
             //System.err.println("Actual Cur: " + Utility.toBigDecimal(n).toPlainString() + " after " + expressions.get(i-1).save(true));

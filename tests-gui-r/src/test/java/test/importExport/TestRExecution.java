@@ -67,10 +67,8 @@ import java.util.stream.Stream;
 import static org.junit.Assert.assertEquals;
 
 @SuppressWarnings("valuetype")
-@RunWith(JUnitQuickcheck.class)
 public class TestRExecution
 {
-    @Test
     public void testSimple() throws UserException, InternalException
     {
         TypeManager typeManager = new TypeManager(new UnitManager());
@@ -78,7 +76,6 @@ public class TestRExecution
         TBasicUtil.assertValueListEqual("Column", ImmutableList.of(6, 8), TBasicUtil.getAllCollapsedDataValid(column.getType(), column.getLength()));
     }
     
-    @Test
     public void testSimple2() throws UserException, InternalException
     {
         TypeManager typeManager = new TypeManager(new UnitManager());
@@ -86,7 +83,6 @@ public class TestRExecution
         TBasicUtil.assertValueListEqual("Column", ImmutableList.of(1, 3, 5, 7, 9), TBasicUtil.getAllCollapsedDataValid(column.getType(), column.getLength()));
     }
 
-    @Test
     public void testSimple3() throws UserException, InternalException
     {
         TypeManager typeManager = new TypeManager(new UnitManager());
@@ -94,7 +90,6 @@ public class TestRExecution
         TBasicUtil.assertValueListEqual("Column", ImmutableList.of("Möøõsę!"), TBasicUtil.getAllCollapsedDataValid(column.getType(), column.getLength()));
     }
 
-    @Test
     public void testSimple4() throws UserException, InternalException
     {
         TypeManager typeManager = new TypeManager(new UnitManager());
@@ -103,35 +98,31 @@ public class TestRExecution
     }
 
     @SuppressWarnings("valuetype")
-    @Test
     public void testRecord() throws UserException, InternalException
     {
         TypeManager typeManager = new TypeManager(new UnitManager());
         Column column = ConvertFromR.convertRToTable(typeManager, RExecution.runRExpression("list(x=5, y= 7)"), false).get(0).getSecond().getColumns().get(0);
-        TBasicUtil.assertValueListEqual("Column", ImmutableList.of(new RecordMap(ImmutableMap.<@ExpressionIdentifier String, @Value Object>of("x", 5, "y", 7))), TBasicUtil.getAllCollapsedDataValid(column.getType(), column.getLength()));
+        TBasicUtil.assertValueListEqual("Column", ImmutableList.of(new RecordMap(ImmutableMap.<String, Object>of("x", 5, "y", 7))), TBasicUtil.getAllCollapsedDataValid(column.getType(), column.getLength()));
     }
 
     @SuppressWarnings("valuetype")
-    @Test
     public void testRecord2() throws UserException, InternalException
     {
         TypeManager typeManager = new TypeManager(new UnitManager());
-        ImmutableList<@Value Object> expected = ImmutableList.of(new RecordMap(ImmutableMap.<@ExpressionIdentifier String, @Value Object>of("x", 5, "y", 7)), new RecordMap(ImmutableMap.<@ExpressionIdentifier String, @Value Object>of("x", new BigDecimal("1.2"), "y", -3)));
+        ImmutableList<Object> expected = ImmutableList.of(new RecordMap(ImmutableMap.<String, Object>of("x", 5, "y", 7)), new RecordMap(ImmutableMap.<String, Object>of("x", new BigDecimal("1.2"), "y", -3)));
         Column column = ConvertFromR.convertRToTable(typeManager, RExecution.runRExpression("list(list(x=5, y= 7), list(x=1.2, y= -3))"), false).get(0).getSecond().getColumns().get(0);
         TBasicUtil.assertValueListEqual("Column", expected, TBasicUtil.getAllCollapsedDataValid(column.getType(), column.getLength()));
     }
     
     @SuppressWarnings("valuetype")
-    @Test
     public void testRecord3() throws UserException, InternalException
     {
         TypeManager typeManager = new TypeManager(new UnitManager());
-        ImmutableList<@Value Object> expected = ImmutableList.of(new RecordMap(ImmutableMap.<@ExpressionIdentifier String, @Value Object>of("x", 5, "y", typeManager.maybePresent(7), "z", typeManager.maybeMissing())), new RecordMap(ImmutableMap.<@ExpressionIdentifier String, @Value Object>of("x", new BigDecimal("1.2"), "y", typeManager.maybeMissing(), "z", typeManager.maybePresent(-3))));
+        ImmutableList<Object> expected = ImmutableList.of(new RecordMap(ImmutableMap.<String, Object>of("x", 5, "y", typeManager.maybePresent(7), "z", typeManager.maybeMissing())), new RecordMap(ImmutableMap.<String, Object>of("x", new BigDecimal("1.2"), "y", typeManager.maybeMissing(), "z", typeManager.maybePresent(-3))));
         Column column = ConvertFromR.convertRToTable(typeManager, RExecution.runRExpression("list(list(x=5, y= 7), list(x=1.2, z = -3))"), false).get(0).getSecond().getColumns().get(0);
         TBasicUtil.assertValueListEqual("Column", expected, TBasicUtil.getAllCollapsedDataValid(column.getType(), column.getLength()));
     }
     
-    @Test
     public void testAIC() throws InternalException, UserException
     {
         TypeManager typeManager = new TypeManager(new UnitManager());
@@ -156,7 +147,6 @@ public class TestRExecution
             ));
     }
 
-    @Test
     public void testTable() throws InternalException, UserException
     {
         TypeManager typeManager = new TypeManager(new UnitManager());
@@ -165,46 +155,42 @@ public class TestRExecution
     }
 
     @SuppressWarnings("valuetype")
-    @Test
     public void testTable2() throws InternalException, UserException
     {
         TypeManager typeManager = new TypeManager(new UnitManager());
         RecordSet recordSet = ConvertFromR.convertRToTable(typeManager, RExecution.runRExpression("foo$baz[2:3]", ImmutableList.of(),
             ImmutableMap.of("foo", new <EditableColumn>KnownLengthRecordSet(ImmutableList.<SimulationFunction<RecordSet, EditableColumn>>of(
                 rs -> new MemoryNumericColumn(rs, new ColumnId("bar"), NumberInfo.DEFAULT, Stream.of("3", "4", "5")),
-                rs -> new MemoryStringColumn(rs, new ColumnId("baz"), ImmutableList.of(Either.<String, @Value String>right("A"), Either.<String, @Value String>right("B"), Either.<String, @Value String>right("C")), "Z")
+                rs -> new MemoryStringColumn(rs, new ColumnId("baz"), ImmutableList.of(Either.<String, String>right("A"), Either.<String, String>right("B"), Either.<String, String>right("C")), "Z")
             ), 3))), false).get(0).getSecond();
         TBasicUtil.assertValueListEqual("Column", ImmutableList.of("B", "C"), TBasicUtil.getAllCollapsedDataValid(recordSet.getColumns().get(0).getType(), recordSet.getLength()));
     }
 
     @SuppressWarnings("valuetype")
-    @Test
     public void testTable2b() throws InternalException, UserException
     {
         TypeManager typeManager = new TypeManager(new UnitManager());
         RecordSet recordSet = ConvertFromR.convertRToTable(typeManager, RExecution.runRExpression("data.frame(foo)$baz[2:3]", ImmutableList.of(),
             ImmutableMap.of("foo", new <EditableColumn>KnownLengthRecordSet(ImmutableList.<SimulationFunction<RecordSet, EditableColumn>>of(
                 rs -> new MemoryNumericColumn(rs, new ColumnId("bar"), NumberInfo.DEFAULT, Stream.of("3", "4", "5")),
-                rs -> new MemoryStringColumn(rs, new ColumnId("baz"), ImmutableList.of(Either.<String, @Value String>right("A"), Either.<String, @Value String>right("B"), Either.<String, @Value String>right("C")), "Z")
+                rs -> new MemoryStringColumn(rs, new ColumnId("baz"), ImmutableList.of(Either.<String, String>right("A"), Either.<String, String>right("B"), Either.<String, String>right("C")), "Z")
             ), 3))), false).get(0).getSecond();
         TBasicUtil.assertValueListEqual("Column", ImmutableList.of("B", "C"), TBasicUtil.getAllCollapsedDataValid(recordSet.getColumns().get(0).getType(), recordSet.getLength()));
     }
 
     // Test tibble features: spaces in column names, lists in cells
     @SuppressWarnings("valuetype")
-    @Test
     public void testTable3() throws InternalException, UserException
     {
         TypeManager typeManager = new TypeManager(new UnitManager());
         RecordSet recordSet = ConvertFromR.convertRToTable(typeManager, RExecution.runRExpression("foo$\"bar bar black sheep\"[2:3]", ImmutableList.of(),
             ImmutableMap.of("foo", new <EditableColumn>KnownLengthRecordSet(ImmutableList.<SimulationFunction<RecordSet, EditableColumn>>of(
-                rs -> new MemoryArrayColumn(rs, new ColumnId("bar bar black sheep"), DataType.NUMBER, ImmutableList.of(numberList("3"), numberList("4", "4.1"), numberList("5", "5.2", "5.21")), DataTypeUtility.value(ImmutableList.<@Value Object>of())),
-                rs -> new MemoryStringColumn(rs, new ColumnId("baz"), ImmutableList.of(Either.<String, @Value String>right("A"), Either.<String, @Value String>right("B"), Either.<String, @Value String>right("C")), "Z")
+                rs -> new MemoryArrayColumn(rs, new ColumnId("bar bar black sheep"), DataType.NUMBER, ImmutableList.of(numberList("3"), numberList("4", "4.1"), numberList("5", "5.2", "5.21")), DataTypeUtility.value(ImmutableList.<Object>of())),
+                rs -> new MemoryStringColumn(rs, new ColumnId("baz"), ImmutableList.of(Either.<String, String>right("A"), Either.<String, String>right("B"), Either.<String, String>right("C")), "Z")
             ), 3))), false).get(0).getSecond();
         TBasicUtil.assertValueListEqual("Column", ImmutableList.of(DataTypeUtility.value(ImmutableList.of(new BigDecimal("4"), new BigDecimal("4.1"))), DataTypeUtility.value(ImmutableList.of(new BigDecimal("5.0"), new BigDecimal("5.2"), new BigDecimal("5.21")))), TBasicUtil.getAllCollapsedDataValid(recordSet.getColumns().get(0).getType(), recordSet.getLength()));
     }
 
-    @Test
     public void testAOV() throws InternalException, UserException
     {
         TypeManager typeManager = new TypeManager(new UnitManager());
@@ -214,12 +200,12 @@ public class TestRExecution
                 , ImmutableList.of(), ImmutableMap.of()), false).get(0).getSecond();
         
         assertEquals(ImmutableList.of(new ColumnId("Object")), recordSet.getColumnIds());
-        ImmutableSet.Builder<@ExpressionIdentifier String> exp = ImmutableSet.builder();
+        ImmutableSet.Builder<String> exp = ImmutableSet.builder();
         exp.add("assign", "call", "coefficients", "contrasts", "df residual", "effects", "fitted values", "model", "qr", "rank", "residuals", "terms", "xlevels");
-        ImmutableSet<@ExpressionIdentifier String> expected = exp.build();
-        assertEquals(expected, recordSet.getColumns().get(0).getType().getType().apply(new SpecificDataTypeVisitor<ImmutableSet<@ExpressionIdentifier String>>() {
+        ImmutableSet<String> expected = exp.build();
+        assertEquals(expected, recordSet.getColumns().get(0).getType().getType().apply(new SpecificDataTypeVisitor<ImmutableSet<String>>() {
             @Override
-            public ImmutableSet<@ExpressionIdentifier String> record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, InternalException
+            public ImmutableSet<String> record(ImmutableMap<String, DataType> fields) throws InternalException, InternalException
             {
                 return fields.keySet();
             }
@@ -227,7 +213,6 @@ public class TestRExecution
         // TODO compare values
     }
 
-    @Test
     public void testAOVSummary() throws InternalException, UserException
     {
         TypeManager typeManager = new TypeManager(new UnitManager());
@@ -240,12 +225,11 @@ public class TestRExecution
         // TODO values
     }
 
-    private Either<String, @Value ListEx> numberList(String... numbers)
+    private Either<String, ListEx> numberList(String... numbers)
     {
-        return Either.right(DataTypeUtility.value(Arrays.stream(numbers).map(s -> DataTypeUtility.value(new BigDecimal(s))).collect(ImmutableList.<@Value Object>toImmutableList())));
+        return Either.right(DataTypeUtility.value(Arrays.stream(numbers).map(s -> DataTypeUtility.value(new BigDecimal(s))).collect(ImmutableList.<Object>toImmutableList())));
     }
 
-    @Test
     public void testCO2() throws InternalException, UserException
     {
         TypeManager typeManager = new TypeManager(new UnitManager());
@@ -256,7 +240,6 @@ public class TestRExecution
         assertEquals("Qn1", taggedValue.getTagName());
     }
     
-    @Test
     public void testTimeout() throws InternalException
     {
         long start = System.currentTimeMillis();

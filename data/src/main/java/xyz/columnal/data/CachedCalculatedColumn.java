@@ -42,11 +42,10 @@ import java.util.stream.Stream;
 public class CachedCalculatedColumn<T, S extends ColumnStorage<T>> extends CalculatedColumn<S>
 {
     private final S cache;
-    private final ExFunction<Integer, @NonNull T> calculateItem;
-    @OnThread(Tag.Any)
+    private final ExFunction<Integer, T> calculateItem;
     private final DataTypeValue cacheType;
 
-    public CachedCalculatedColumn(RecordSet recordSet, ColumnId name, FunctionInt<BeforeGet<S>, S> cache, ExFunction<Integer, @NonNull T> calculateItem, FunctionInt<DataTypeValue, DataTypeValue> addManualEdit) throws InternalException
+    public CachedCalculatedColumn(RecordSet recordSet, ColumnId name, FunctionInt<BeforeGet<S>, S> cache, ExFunction<Integer, T> calculateItem, FunctionInt<DataTypeValue, DataTypeValue> addManualEdit) throws InternalException
     {
         super(recordSet, name);
         this.calculateItem = calculateItem;
@@ -55,7 +54,6 @@ public class CachedCalculatedColumn<T, S extends ColumnStorage<T>> extends Calcu
     }
 
     @Override
-    @OnThread(Tag.Any)
     public DataTypeValue getType() throws InternalException, UserException
     {
         return cacheType;
@@ -64,7 +62,7 @@ public class CachedCalculatedColumn<T, S extends ColumnStorage<T>> extends Calcu
     @Override
     protected void fillNextCacheChunk() throws InternalException
     {
-        Either<String, @NonNull T> value;
+        Either<String, T> value;
         try
         {
             value = Either.right(calculateItem.apply(cache.filled()));
@@ -76,7 +74,7 @@ public class CachedCalculatedColumn<T, S extends ColumnStorage<T>> extends Calcu
             value = Either.left(e.getLocalizedMessage());
         }
         
-        cache.addAll(Stream.<Either<String, @NonNull T>>of(value));
+        cache.addAll(Stream.<Either<String, T>>of(value));
     }
 
     @Override
@@ -86,7 +84,7 @@ public class CachedCalculatedColumn<T, S extends ColumnStorage<T>> extends Calcu
     }
 
     @Override
-    public @OnThread(Tag.Any) AlteredState getAlteredState()
+    public AlteredState getAlteredState()
     {
         return AlteredState.OVERWRITTEN;
     }

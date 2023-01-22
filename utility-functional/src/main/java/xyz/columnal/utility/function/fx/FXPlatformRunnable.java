@@ -28,7 +28,6 @@ import threadchecker.Tag;
  */
 public interface FXPlatformRunnable
 {
-    @OnThread(Tag.FXPlatform)
     public void run();
 
     public static FXPlatformRunnable EMPTY = () -> {};

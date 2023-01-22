@@ -64,7 +64,7 @@ class RUtility
     static final String[] CLASS_DATA_FRAME = {"data.frame"};
     static final String[] CLASS_TIBBLE = {"tbl_df", "tbl", "data.frame"};
 
-    public static RValue intVector(int[] values, @Nullable RValue attributes)
+    public static RValue intVector(int[] values, RValue attributes)
     {
         return new RValue()
         {
@@ -76,7 +76,7 @@ class RUtility
         };
     }
 
-    public static RValue doubleVector(double[] values, @Nullable RValue attributes)
+    public static RValue doubleVector(double[] values, RValue attributes)
     {
         return new RValue()
         {
@@ -88,7 +88,7 @@ class RUtility
         };
     }
 
-    public static RValue logicalVector(boolean[] values, boolean @Nullable [] isNA, @Nullable RValue attributes)
+    public static RValue logicalVector(boolean[] values, boolean[] isNA, RValue attributes)
     {
         return new RValue()
         {
@@ -100,7 +100,7 @@ class RUtility
         };
     }
 
-    public static RValue genericVector(ImmutableList<RValue> values, @Nullable RValue attributes, boolean isObject)
+    public static RValue genericVector(ImmutableList<RValue> values, RValue attributes, boolean isObject)
     {
         return new RValue()
         {
@@ -112,12 +112,12 @@ class RUtility
         };
     }
 
-    public static RValue stringVector(@Value @Nullable String singleValue)
+    public static RValue stringVector(String singleValue)
     {
-        return stringVector(ImmutableList.<Optional<@Value String>>of(Optional.<@Value String>ofNullable(singleValue)), null);
+        return stringVector(ImmutableList.<Optional<String>>of(Optional.<String>ofNullable(singleValue)), null);
     }
 
-    public static RValue stringVector(ImmutableList<Optional<@Value String>> values, @Nullable RValue attributes)
+    public static RValue stringVector(ImmutableList<Optional<String>> values, RValue attributes)
     {
         return new RValue()
         {
@@ -129,7 +129,7 @@ class RUtility
         };
     }
 
-    public static RValue string(@Nullable String value, boolean isSymbol)
+    public static RValue string(String value, boolean isSymbol)
     {
         return new RValue()
         {
@@ -158,12 +158,12 @@ class RUtility
         };
     }
 
-    static @Value String getStringNN(RValue rValue) throws UserException, InternalException
+    static String getStringNN(RValue rValue) throws UserException, InternalException
     {
-        return rValue.visit(new SpecificRVisitor<@Value String>()
+        return rValue.visit(new SpecificRVisitor<String>()
         {
             @Override
-            public @Value String visitString(@Nullable @Value String s, boolean isSymbol) throws InternalException, UserException
+            public String visitString(String s, boolean isSymbol) throws InternalException, UserException
             {
                 if (s != null)
                     return s;
@@ -173,12 +173,12 @@ class RUtility
         });
     }
 
-    static @Nullable @Value String getString(RValue rValue) throws UserException, InternalException
+    static String getString(RValue rValue) throws UserException, InternalException
     {
-        return rValue.visit(new SpecificRVisitor<@Nullable @Value String>()
+        return rValue.visit(new SpecificRVisitor<String>()
         {
             @Override
-            public @Nullable @Value String visitString(@Nullable @Value String s, boolean isSymbol) throws InternalException, UserException
+            public String visitString(String s, boolean isSymbol) throws InternalException, UserException
             {
                 return s;
             }
@@ -190,13 +190,13 @@ class RUtility
         return info.visit(new SpecificRVisitor<RValue>() {
 
             @Override
-            public RValue visitStringList(ImmutableList<Optional<@Value String>> values, @Nullable RValue attributes) throws InternalException, UserException
+            public RValue visitStringList(ImmutableList<Optional<String>> values, RValue attributes) throws InternalException, UserException
             {
                 return string(values.get(index).orElse(null), false);
             }
 
             @Override
-            public RValue visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes, boolean isObject) throws InternalException, UserException
+            public RValue visitGenericList(ImmutableList<RValue> values, RValue attributes, boolean isObject) throws InternalException, UserException
             {
                 return values.get(index);
             }
@@ -208,25 +208,25 @@ class RUtility
             }
 
             @Override
-            public RValue visitDoubleList(double[] values, @Nullable RValue attributes) throws InternalException, UserException
+            public RValue visitDoubleList(double[] values, RValue attributes) throws InternalException, UserException
             {
                 return doubleVector(new double [] {values[index]}, attributes);
             }
 
             @Override
-            public RValue visitIntList(int[] values, @Nullable RValue attributes) throws InternalException, UserException
+            public RValue visitIntList(int[] values, RValue attributes) throws InternalException, UserException
             {
                 return intVector(new int[] {values[index]}, attributes);
             }
 
             @Override
-            public RValue visitLogicalList(boolean[] values, boolean @Nullable [] isNA, @Nullable RValue attributes) throws InternalException, UserException
+            public RValue visitLogicalList(boolean[] values, boolean[] isNA, RValue attributes) throws InternalException, UserException
             {
                 return logicalVector(new boolean[] {values[index]}, isNA == null ? null : new boolean[] {isNA[index]}, attributes);
             }
 
             @Override
-            public RValue visitTemporalList(DateTimeType dateTimeType, ImmutableList<Optional<@Value TemporalAccessor>> values, @Nullable RValue attributes) throws InternalException, UserException
+            public RValue visitTemporalList(DateTimeType dateTimeType, ImmutableList<Optional<TemporalAccessor>> values, RValue attributes) throws InternalException, UserException
             {
                 return new RValue()
                 {
@@ -253,14 +253,14 @@ class RUtility
         });
     }
 
-    static Utility.@ImmediateValue ListEx valueImmediate(int[] values)
+    static Utility.ListEx valueImmediate(int[] values)
     {
-        return DataTypeUtility.valueImmediate(IntStream.of(values).<@ImmediateValue Object>mapToObj(i -> DataTypeUtility.value(i)).collect(ImmutableList.<@ImmediateValue Object>toImmutableList()));
+        return DataTypeUtility.valueImmediate(IntStream.of(values).<Object>mapToObj(i -> DataTypeUtility.value(i)).collect(ImmutableList.<Object>toImmutableList()));
     }
 
-    static Utility.@ImmediateValue ListEx valueImmediate(boolean[] values)
+    static Utility.ListEx valueImmediate(boolean[] values)
     {
-        return DataTypeUtility.valueImmediate(Booleans.asList(values).stream().<@ImmediateValue Object>map(b -> DataTypeUtility.value(b)).collect(ImmutableList.<@ImmediateValue Object>toImmutableList()));
+        return DataTypeUtility.valueImmediate(Booleans.asList(values).stream().<Object>map(b -> DataTypeUtility.value(b)).collect(ImmutableList.<Object>toImmutableList()));
     }
 
     static boolean isClass(ImmutableMap<String, RValue> attrMap, String... classNames) throws UserException, InternalException
@@ -276,7 +276,7 @@ class RUtility
         return true;
     }
 
-    static ImmutableMap<String, RValue> pairListToMap(@Nullable RValue attributes) throws UserException, InternalException
+    static ImmutableMap<String, RValue> pairListToMap(RValue attributes) throws UserException, InternalException
     {
         if (attributes == null)
             return ImmutableMap.of();
@@ -301,16 +301,16 @@ class RUtility
 
     static RValue makeClassAttributes(String[] className, ImmutableMap<String, RValue> otherItems)
     {
-        return pairListFromMap(Utility.appendToMap(otherItems, "class", stringVector(Arrays.stream(className).<Optional<@Value String>>map(s -> Optional.<@Value String>of(DataTypeUtility.value(s))).collect(ImmutableList.<Optional<@Value String>>toImmutableList()), null), null));
+        return pairListFromMap(Utility.appendToMap(otherItems, "class", stringVector(Arrays.stream(className).<Optional<String>>map(s -> Optional.<String>of(DataTypeUtility.value(s))).collect(ImmutableList.<Optional<String>>toImmutableList()), null), null));
     }
 
-    static RValue dateTimeZonedVector(double[] values, @Nullable RValue attr) throws InternalException, UserException
+    static RValue dateTimeZonedVector(double[] values, RValue attr) throws InternalException, UserException
     {
         ImmutableMap<String, RValue> attrMap = pairListToMap(attr);
         RValue tzone = attrMap.get("tzone");
         if (tzone != null)
         {
-            ImmutableList.Builder<Optional<@Value TemporalAccessor>> b = ImmutableList.builderWithExpectedSize(values.length);
+            ImmutableList.Builder<Optional<TemporalAccessor>> b = ImmutableList.builderWithExpectedSize(values.length);
             for (double value : values)
             {
                 if (Double.isNaN(value))
@@ -319,7 +319,7 @@ class RUtility
                 {
                     BigDecimal bd = doubleToValue(value);
                     @SuppressWarnings("valuetype")
-                    @Value ZonedDateTime zdt = ZonedDateTime.ofInstant(Instant.ofEpochSecond(bd.longValue(), bd.remainder(BigDecimal.ONE).scaleByPowerOfTen(9).longValue()), ZoneId.of(getStringNN(getListItem(tzone, 0))));
+                    ZonedDateTime zdt = ZonedDateTime.ofInstant(Instant.ofEpochSecond(bd.longValue(), bd.remainder(BigDecimal.ONE).scaleByPowerOfTen(9).longValue()), ZoneId.of(getStringNN(getListItem(tzone, 0))));
                     b.add(Optional.of(zdt));
                 }
             }
@@ -327,7 +327,7 @@ class RUtility
         }
         else
         {
-            ImmutableList.Builder<Optional<@Value TemporalAccessor>> b = ImmutableList.builderWithExpectedSize(values.length);
+            ImmutableList.Builder<Optional<TemporalAccessor>> b = ImmutableList.builderWithExpectedSize(values.length);
             for (double value : values)
             {
                 if (Double.isNaN(value))
@@ -336,7 +336,7 @@ class RUtility
                 {
                     BigDecimal bd = doubleToValue(value);
                     @SuppressWarnings("valuetype")
-                    @Value LocalDateTime ldt = LocalDateTime.ofInstant(Instant.ofEpochSecond(bd.longValue(), bd.remainder(BigDecimal.ONE).scaleByPowerOfTen(9).longValue()), ZoneId.of("UTC"));
+                    LocalDateTime ldt = LocalDateTime.ofInstant(Instant.ofEpochSecond(bd.longValue(), bd.remainder(BigDecimal.ONE).scaleByPowerOfTen(9).longValue()), ZoneId.of("UTC"));
                     b.add(Optional.of(ldt));
                 }
             }
@@ -344,17 +344,17 @@ class RUtility
         }
     }
 
-    static RValue dateVector(double[] values, @Nullable RValue attr) throws InternalException
+    static RValue dateVector(double[] values, RValue attr) throws InternalException
     {
         if (DoubleStream.of(values).allMatch(d -> Double.isNaN(d) || d == (int)d))
         {
-            ImmutableList<Optional<@Value TemporalAccessor>> dates = DoubleStream.of(values).<Optional<@Value TemporalAccessor>>mapToObj(d -> {
+            ImmutableList<Optional<TemporalAccessor>> dates = DoubleStream.of(values).<Optional<TemporalAccessor>>mapToObj(d -> {
                 if (Double.isNaN(d))
                     return Optional.empty();
                 @SuppressWarnings("valuetype")
-                @Value LocalDate date = LocalDate.ofEpochDay((int) d);
+                LocalDate date = LocalDate.ofEpochDay((int) d);
                 return Optional.of(date);
-            }).collect(ImmutableList.<Optional<@Value TemporalAccessor>>toImmutableList());
+            }).collect(ImmutableList.<Optional<TemporalAccessor>>toImmutableList());
             return new RValue()
             {
                 @Override
@@ -366,14 +366,14 @@ class RUtility
         }
         else
         {
-            ImmutableList<Optional<@Value TemporalAccessor>> dates = DoubleStream.of(values).<Optional<@Value TemporalAccessor>>mapToObj(d -> {
+            ImmutableList<Optional<TemporalAccessor>> dates = DoubleStream.of(values).<Optional<TemporalAccessor>>mapToObj(d -> {
                 if (Double.isNaN(d))
                     return Optional.empty();
                 BigDecimal bd = doubleToValue(d).multiply(new BigDecimal(60.0 * 60.0 * 24.0));
                 @SuppressWarnings("valuetype")
-                @Value LocalDateTime date = LocalDateTime.ofEpochSecond(bd.longValue(), bd.remainder(BigDecimal.ONE).abs().scaleByPowerOfTen(9).intValue(), ZoneOffset.UTC);
+                LocalDateTime date = LocalDateTime.ofEpochSecond(bd.longValue(), bd.remainder(BigDecimal.ONE).abs().scaleByPowerOfTen(9).intValue(), ZoneOffset.UTC);
                 return Optional.of(date);
-            }).collect(ImmutableList.<Optional<@Value TemporalAccessor>>toImmutableList());
+            }).collect(ImmutableList.<Optional<TemporalAccessor>>toImmutableList());
             return new RValue()
             {
                 @Override
@@ -385,7 +385,7 @@ class RUtility
         }
     }
 
-    static @ImmediateValue BigDecimal doubleToValue(double value)
+    static BigDecimal doubleToValue(double value)
     {
         // Go through Double.toString which zeroes out the boring end part:
         return DataTypeUtility.value(new BigDecimal(Double.toString(value)));

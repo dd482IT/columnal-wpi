@@ -229,7 +229,6 @@ public class RExecution
         }
 
         @Override
-        @OnThread(Tag.Any)
         public void close()
         {
             for (File f : files)

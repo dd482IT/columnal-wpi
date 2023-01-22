@@ -121,7 +121,6 @@ import java.util.TreeSet;
  * then generate the integer values to match.
  */
 @SuppressWarnings("recorded")
-@OnThread(Tag.Simulation)
 public class GenExpressionValueForwards extends GenExpressionValueBase
 {
     @SuppressWarnings("initialization")
@@ -136,7 +135,6 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
     private int targetSize;
 
     @Override
-    @OnThread(value = Tag.Simulation, ignoreParent = true)
     public ExpressionValue generate()
     {
         this.columns = new ArrayList<>();
@@ -144,7 +142,7 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
         try
         {
             DataType type = makeType(r);
-            Pair<List<@Value Object>, Expression> p = makeOfType(type);
+            Pair<List<Object>, Expression> p = makeOfType(type);
             return new ExpressionValue(type, p.getFirst(), dummyManager.getTypeManager(), tableId, getRecordSet(), p.getSecond(), this);
         }
         catch (InternalException | UserException e)
@@ -153,7 +151,6 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
         }
     }
 
-    @OnThread(Tag.Simulation)
     public KnownLengthRecordSet getRecordSet() throws InternalException, UserException
     {
         List<SimulationFunction<RecordSet, Column>> columns = this.columns;
@@ -163,35 +160,33 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
     }
 
     // Only valid after calling generate
-    @OnThread(value = Tag.Simulation, ignoreParent = true)
-    public Pair<List<@Value Object>, Expression> makeOfType(DataType type) throws UserException, InternalException
+    public Pair<List<Object>, Expression> makeOfType(DataType type) throws UserException, InternalException
     {
         return make(type, 4);
     }
 
-    private Pair<List<@Value Object>, Expression> make(DataType type, int maxLevels) throws UserException, InternalException
+    private Pair<List<Object>, Expression> make(DataType type, int maxLevels) throws UserException, InternalException
     {
-        return type.apply(new DataTypeVisitor<Pair<List<@Value Object>, Expression>>()
+        return type.apply(new DataTypeVisitor<Pair<List<Object>, Expression>>()
         {
             @Override
-            @OnThread(value = Tag.Simulation,ignoreParent = true)
-            public Pair<List<@Value Object>, Expression> number(NumberInfo displayInfo) throws InternalException, UserException
+            public Pair<List<Object>, Expression> number(NumberInfo displayInfo) throws InternalException, UserException
             {
                 return termDeep(maxLevels, type, l(
                     columnRef(type),
                     () ->
                     {
-                        @Value Number number = TBasicUtil.generateNumberV(r, gs);
+                        Number number = TBasicUtil.generateNumberV(r, gs);
                         return literal(number, new NumericLiteral(number, makeUnitExpression(displayInfo.getUnit())));
                     }
                 ), l(fix(maxLevels - 1, type), () -> {
                     int numArgs = r.nextInt(2, 6);
                     List<Expression> expressions = new ArrayList<>();
                     List<AddSubtractOp> addSubtractOps = new ArrayList<>();
-                    List<@Value Number> curTotals = replicate(DataTypeUtility.value(0));
+                    List<Number> curTotals = replicate(DataTypeUtility.value(0));
                     for (int i = 0; i < numArgs; i++)
                     {
-                        Pair<List<@Value Object>, Expression> pair = make(type, maxLevels - 1);
+                        Pair<List<Object>, Expression> pair = make(type, maxLevels - 1);
                         expressions.add(pair.getSecond());
                         // First one we count as add, because we're adding to the zero running total:
                         boolean opIsAdd = i == 0 || r.nextBoolean();
@@ -204,8 +199,8 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
                     // Either just use target unit, or make up crazy one
                     Unit numUnit = r.nextBoolean() ? displayInfo.getUnit() : makeUnit();
                     Unit denomUnit = calculateRequiredMultiplyUnit(numUnit, displayInfo.getUnit()).reciprocal();
-                    Pair<List<@Value Object>, Expression> numerator = make(DataType.number(new NumberInfo(numUnit)), maxLevels - 1);
-                    Pair<List<@Value Object>, Expression> denominator = make(DataType.number(new NumberInfo(denomUnit)), maxLevels - 1);
+                    Pair<List<Object>, Expression> numerator = make(DataType.number(new NumberInfo(numUnit)), maxLevels - 1);
+                    Pair<List<Object>, Expression> denominator = make(DataType.number(new NumberInfo(denomUnit)), maxLevels - 1);
                     // We avoid divide by zeros and return -7 in that case (arbitrary pick unlikely to come up by accident/bug):
                     return map2(numerator, denominator, (top, bottom) -> Utility.compareValues(bottom, DataTypeUtility.value(0)) == 0 ? DataTypeUtility.value(-7) : Utility.divideNumbers((Number) top, (Number) bottom), (topE, bottomE) -> IfThenElseExpression.unrecorded(new EqualExpression(ImmutableList.of(bottomE, new NumericLiteral(0, makeUnitExpression(denomUnit))), false), new NumericLiteral(-7, makeUnitExpression(displayInfo.getUnit())), new DivideExpression(topE, bottomE)));
                 }, /* TODO put RaiseExpression back again
@@ -296,7 +291,7 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
                     }
                 }, */
                 () -> {
-                    List<@Value Number> runningTotals = replicate(DataTypeUtility.value(1));
+                    List<Number> runningTotals = replicate(DataTypeUtility.value(1));
                     Unit runningUnit = Unit.SCALAR;
                     int numArgs = r.nextInt(2, 6);
                     List<Expression> expressions = new ArrayList<>();
@@ -304,7 +299,7 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
                     {
                         Unit unit = i == numArgs - 1 ? calculateRequiredMultiplyUnit(runningUnit, displayInfo.getUnit()) : makeUnit();
                         runningUnit = runningUnit.times(unit);
-                        Pair<List<@Value Object>, Expression> pair = make(DataType.number(new NumberInfo(unit)), maxLevels - 1);
+                        Pair<List<Object>, Expression> pair = make(DataType.number(new NumberInfo(unit)), maxLevels - 1);
                         eachI(runningTotals, (row, runningTotal) -> Utility.multiplyNumbers(runningTotal, Utility.cast(pair.getFirst().get(row), Number.class)));
                         expressions.add(pair.getSecond());
                     }
@@ -313,23 +308,22 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
             }
 
             @Override
-            @OnThread(value = Tag.Simulation,ignoreParent = true)
-            public Pair<List<@Value Object>, Expression> text() throws InternalException, UserException
+            public Pair<List<Object>, Expression> text() throws InternalException, UserException
             {
                 return termDeep(maxLevels, type, l(
                     columnRef(type),
                     () ->
                     {
-                        @Value String value = TBasicUtil.makeStringV(r, gs);
+                        String value = TBasicUtil.makeStringV(r, gs);
                         return literal(value, TFunctionUtil.makeStringLiteral(value, r));
                     }
                 ), l(fix(maxLevels - 1, type), () -> {
                     int numOperands = r.nextInt(2, 5);
                     List<Expression> operands = new ArrayList<>();
-                    List<@Value Object> results = GenExpressionValueForwards.this.<@Value Object>replicate(DataTypeUtility.value(""));
+                    List<Object> results = GenExpressionValueForwards.this.<Object>replicate(DataTypeUtility.value(""));
                     for (int i = 0; i < numOperands; i++)
                     {
-                        Pair<List<@Value Object>, Expression> item = make(DataType.TEXT, maxLevels - 1);
+                        Pair<List<Object>, Expression> item = make(DataType.TEXT, maxLevels - 1);
                         operands.add(item.getSecond());
                         for (int row = 0; row < targetSize; row++)
                         {
@@ -341,8 +335,7 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
             }
 
             @Override
-            @OnThread(value = Tag.Simulation,ignoreParent = true)
-            public Pair<List<@Value Object>, Expression> date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
+            public Pair<List<Object>, Expression> date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
                 List<ExpressionMaker> deep = new ArrayList<>();
                 // We don't use the from-integer versions here with deeper expressions because we can't
@@ -355,7 +348,7 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
                             Pair<String, DateTimeType> convertAndType = r.choose(Arrays.asList(
                                 new Pair<>("date from datetime", DateTimeType.DATETIME),
                                 new Pair<>("date from datetimezoned", DateTimeType.DATETIMEZONED)));
-                            Pair<List<@Value Object>, Expression> dateTimes = make(DataType.date(new DateTimeInfo(convertAndType.getSecond())), maxLevels - 1);
+                            Pair<List<Object>, Expression> dateTimes = make(DataType.date(new DateTimeInfo(convertAndType.getSecond())), maxLevels - 1);
                             return map(dateTimes, v -> LocalDate.from((TemporalAccessor) v), e -> call(convertAndType.getFirst(), e));
                         });
                         /*
@@ -374,7 +367,7 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
                         deep.add(() -> {
                             Pair<String, DateTimeType> convertAndType = r.choose(Arrays.asList(
                                 new Pair<>("dateym from date", DateTimeType.YEARMONTHDAY)));
-                            Pair<List<@Value Object>, Expression> dateTimes = make(DataType.date(new DateTimeInfo(convertAndType.getSecond())), maxLevels - 1);
+                            Pair<List<Object>, Expression> dateTimes = make(DataType.date(new DateTimeInfo(convertAndType.getSecond())), maxLevels - 1);
                             return map(dateTimes, v -> YearMonth.from((TemporalAccessor) v), e -> call(convertAndType.getFirst(), e));
                         });
                         break;
@@ -384,7 +377,7 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
                                 //new Pair<>("time.from.timezoned", DateTimeType.TIMEOFDAYZONED),
                                 new Pair<>("time from datetime", DateTimeType.DATETIME), 
                                 new Pair<>("time from datetimezoned", DateTimeType.DATETIMEZONED)));
-                            Pair<List<@Value Object>, Expression> dateTimes = make(DataType.date(new DateTimeInfo(convertAndType.getSecond())), maxLevels - 1);
+                            Pair<List<Object>, Expression> dateTimes = make(DataType.date(new DateTimeInfo(convertAndType.getSecond())), maxLevels - 1);
                             return map(dateTimes, v -> LocalTime.from((TemporalAccessor) v), e -> call(convertAndType.getFirst(), e));
                         });
                         break;
@@ -404,13 +397,13 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
                     case DATETIME:
                         // down cast:
                         deep.add(() -> {
-                            Pair<List<@Value Object>, Expression> dateTimes = make(DataType.date(new DateTimeInfo(r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.DATETIMEZONED)))), maxLevels - 1);
+                            Pair<List<Object>, Expression> dateTimes = make(DataType.date(new DateTimeInfo(r.<DateTimeType>choose(Arrays.asList(DateTimeType.DATETIMEZONED)))), maxLevels - 1);
                             return map(dateTimes, v -> LocalDateTime.from((TemporalAccessor) v), e -> call("datetime from datetimezoned", e));
                         });
                         // date + time:
                         deep.add(() -> {
-                            Pair<List<@Value Object>, Expression> dates = make(DataType.date(new DateTimeInfo(r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.YEARMONTHDAY)))), maxLevels - 1);
-                            Pair<List<@Value Object>, Expression> times = make(DataType.date(new DateTimeInfo(r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.TIMEOFDAY)))), maxLevels - 1);
+                            Pair<List<Object>, Expression> dates = make(DataType.date(new DateTimeInfo(r.<DateTimeType>choose(Arrays.asList(DateTimeType.YEARMONTHDAY)))), maxLevels - 1);
+                            Pair<List<Object>, Expression> times = make(DataType.date(new DateTimeInfo(r.<DateTimeType>choose(Arrays.asList(DateTimeType.TIMEOFDAY)))), maxLevels - 1);
                             return map2(dates, times, (date, time) -> LocalDateTime.of((LocalDate) date, (LocalTime) time), (dateE, timeE) -> call("datetime from dt", dateE, timeE));
                         });
                         break;
@@ -425,8 +418,8 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
                         */
                         // date+time+zone:
                         deep.add(() -> {
-                            Pair<List<@Value Object>, Expression> dates = make(DataType.date(new DateTimeInfo(r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.YEARMONTHDAY)))), maxLevels - 1);
-                            Pair<List<@Value Object>, Expression> times = make(DataType.date(new DateTimeInfo(r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.TIMEOFDAY)))), maxLevels - 1);
+                            Pair<List<Object>, Expression> dates = make(DataType.date(new DateTimeInfo(r.<DateTimeType>choose(Arrays.asList(DateTimeType.YEARMONTHDAY)))), maxLevels - 1);
+                            Pair<List<Object>, Expression> times = make(DataType.date(new DateTimeInfo(r.<DateTimeType>choose(Arrays.asList(DateTimeType.TIMEOFDAY)))), maxLevels - 1);
                             ZoneOffset zone = TBasicUtil.generateZoneOffset(r, gs);
                             return map2(dates, times, (date, time) -> ZonedDateTime.of((LocalDate)date, (LocalTime) time, zone), (dateE, timeE) -> call("datetimezoned from dtz", dateE, timeE, TFunctionUtil.makeStringLiteral(zone.toString(), r)));
                         });
@@ -435,12 +428,12 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
                 List<ExpressionMaker> shallow = new ArrayList<>();
                 shallow.add((ExpressionMaker)() ->
                 {
-                    @Value TemporalAccessor value = makeTemporalValue(dateTimeInfo);
+                    TemporalAccessor value = makeTemporalValue(dateTimeInfo);
                     return literal(value, call("from text to", new TypeLiteralExpression(new TypePrimitiveLiteral(DataType.date(dateTimeInfo))), new StringLiteral(value.toString())));
                 });
                 shallow.add((ExpressionMaker)() ->
                 {
-                    @Value TemporalAccessor value = makeTemporalValue(dateTimeInfo);
+                    TemporalAccessor value = makeTemporalValue(dateTimeInfo);
                     return literal(value, new TemporalLiteral(dateTimeInfo.getType(), value.toString()));
                 });
 
@@ -487,8 +480,7 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
             }
 
             @Override
-            @OnThread(value = Tag.Simulation,ignoreParent = true)
-            public Pair<List<@Value Object>, Expression> bool() throws InternalException, UserException
+            public Pair<List<Object>, Expression> bool() throws InternalException, UserException
             {
                 return termDeep(maxLevels, type, l(columnRef(type), () ->
                 {
@@ -498,28 +490,28 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
                     () -> {
                         DataType t = makeType(r);
                         int size = r.nextInt(2, 5);
-                        ArrayList<Pair<List<@Value Object>, Expression>> items = new ArrayList<>();
+                        ArrayList<Pair<List<Object>, Expression>> items = new ArrayList<>();
                         List<Boolean> result = replicate(true);
                         for (int i = 0; i < size; i++)
                         {
-                            Pair<List<@Value Object>, Expression> item = make(t, maxLevels - 1);
+                            Pair<List<Object>, Expression> item = make(t, maxLevels - 1);
                             items.add(item);
                             eachI(result, (j, v) -> v & Utility.compareValues(items.get(0).getFirst().get(j), item.getFirst().get(j)) == 0);
                         }
-                        return new Pair<>(Utility.<Boolean, @Value Object>mapList(result, b -> DataTypeUtility.value(b)), new EqualExpression(Utility.mapList(items, (Pair<List<@Value Object>, Expression> p) -> p.getSecond()), false));
+                        return new Pair<>(Utility.<Boolean, Object>mapList(result, b -> DataTypeUtility.value(b)), new EqualExpression(Utility.mapList(items, (Pair<List<Object>, Expression> p) -> p.getSecond()), false));
                     },
                     () -> {
                         DataType t = makeType(r);
 
-                        Pair<List<@Value Object>, Expression> lhs = make(t, maxLevels - 1);
-                        Pair<List<@Value Object>, Expression> rhs = make(t, maxLevels - 1);
+                        Pair<List<Object>, Expression> lhs = make(t, maxLevels - 1);
+                        Pair<List<Object>, Expression> rhs = make(t, maxLevels - 1);
                         return map2(lhs, rhs, (l, r) -> DataTypeUtility.value(Utility.compareValues(l, r) != 0), NotEqualExpression::new);
                     },
                     () ->
                     {
                         DataType t = makeType(r);
 
-                        List<Pair<List<@Value Object>, Expression>> args = TBasicUtil.<Pair<List<@Value Object>, Expression>>makeList(r, 2, 4, () -> make(t, maxLevels - 1));
+                        List<Pair<List<Object>, Expression>> args = TBasicUtil.<Pair<List<Object>, Expression>>makeList(r, 2, 4, () -> make(t, maxLevels - 1));
                         boolean lt = r.nextBoolean();
                         List<ComparisonOperator> ops = new ArrayList<>();
                         List<Boolean> result = replicate(true);
@@ -529,8 +521,8 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
                                 (lt ? ComparisonOperator.LESS_THAN : ComparisonOperator.GREATER_THAN)
                                 : (lt ? ComparisonOperator.LESS_THAN_OR_EQUAL_TO : ComparisonOperator.GREATER_THAN_OR_EQUAL_TO)
                             );
-                            List<@Value Object> lhs = args.get(argIndex).getFirst();
-                            List<@Value Object> rhs = args.get(argIndex + 1).getFirst();
+                            List<Object> lhs = args.get(argIndex).getFirst();
+                            List<Object> rhs = args.get(argIndex + 1).getFirst();
                             switch (ops.get(ops.size() - 1))
                             {
                                 case LESS_THAN:
@@ -547,7 +539,7 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
                                     break;
                             }
                         }
-                        return new Pair<>(Utility.<Boolean, @Value Object>mapList(result, b -> DataTypeUtility.value(b)), new ComparisonExpression(Utility.mapList(args, (Pair<List<@Value Object>, Expression> p) -> p.getSecond()), ImmutableList.copyOf(ops)));
+                        return new Pair<>(Utility.<Boolean, Object>mapList(result, b -> DataTypeUtility.value(b)), new ComparisonExpression(Utility.mapList(args, (Pair<List<Object>, Expression> p) -> p.getSecond()), ImmutableList.copyOf(ops)));
                     },
                     () -> {
                         int size = r.nextInt(2, 5);
@@ -556,21 +548,20 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
                         ArrayList<Expression> exps = new ArrayList<Expression>();
                         for (int i = 0; i < size; i++)
                         {
-                            Pair<List<@Value Object>, Expression> pair = make(DataType.BOOLEAN, maxLevels - 1);
+                            Pair<List<Object>, Expression> pair = make(DataType.BOOLEAN, maxLevels - 1);
                             if (and)
                                 eachI(values, (vi, v) -> v & (Boolean)pair.getFirst().get(vi));
                             else
                                 eachI(values, (vi, v) -> v | (Boolean)pair.getFirst().get(vi));
                             exps.add(pair.getSecond());
                         }
-                        return new Pair<>(Utility.<Boolean, @Value Object>mapList(values, b -> DataTypeUtility.value(b)), and ? new AndExpression(exps) : new OrExpression(exps));
+                        return new Pair<>(Utility.<Boolean, Object>mapList(values, b -> DataTypeUtility.value(b)), and ? new AndExpression(exps) : new OrExpression(exps));
                     }
                 ));
             }
 
             @Override
-            @OnThread(value = Tag.Simulation,ignoreParent = true)
-            public Pair<List<@Value Object>, Expression> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+            public Pair<List<Object>, Expression> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 List<ExpressionMaker> terminals = new ArrayList<>();
                 List<ExpressionMaker> nonTerm = new ArrayList<>();
@@ -578,21 +569,21 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
                 nonTerm.add(fix(maxLevels - 1, type));
                 int tagIndex = r.nextInt(0, tags.size() - 1);
                 TagType<DataType> tag = tags.get(tagIndex);
-                @Nullable TaggedTypeDefinition typeDefinition = dummyManager.getTypeManager().lookupDefinition(typeName);
+                TaggedTypeDefinition typeDefinition = dummyManager.getTypeManager().lookupDefinition(typeName);
                 if (typeDefinition == null)
                     throw new InternalException("Looked up type but null definition: " + typeName);
                 TagInfo tagInfo = new TagInfo(typeDefinition, tagIndex);
-                final @Nullable DataType inner = tag.getInner();
+                final DataType inner = tag.getInner();
                 if (inner == null)
                 {
                     terminals.add(() -> literal(new TaggedValue(tagIndex, null, DataTypeUtility.fromTags(tags)), TFunctionUtil.tagged(dummyManager.getUnitManager(), tagInfo, null, type, true)));
                 }
                 else
                 {
-                    final @NonNull DataType nonNullInner = inner;
+                    final DataType nonNullInner = inner;
                     nonTerm.add(() ->
                     {
-                        Pair<List<@Value Object>, Expression> innerVal = make(nonNullInner, maxLevels - 1);
+                        Pair<List<Object>, Expression> innerVal = make(nonNullInner, maxLevels - 1);
                         return map(innerVal, v -> new TaggedValue(tagIndex, v, DataTypeUtility.fromTags(tags)), e -> TFunctionUtil.tagged(dummyManager.getUnitManager(), tagInfo, e, type, true));
                     });
                 }
@@ -600,63 +591,61 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
             }
 
             @Override
-            @OnThread(Tag.Simulation)
-            public Pair<List<@Value Object>, Expression> record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, UserException
+            public Pair<List<Object>, Expression> record(ImmutableMap<String, DataType> fields) throws InternalException, UserException
             {
                 if (fields.size() < 1)
                     throw new InternalException("Invalid record type of size " + fields.size() + " during generation");
 
                 return termDeep(maxLevels, type, l(columnRef(type)), l(fix(maxLevels - 1, type), () ->
                 {
-                    List<HashMap<@ExpressionIdentifier String, @Value Object>> records = GenExpressionValueForwards.this.<HashMap<@ExpressionIdentifier String, @Value Object>>replicateM(() -> new HashMap<>());
-                    List<Pair<@ExpressionIdentifier String, Expression>> expressions = new ArrayList<>();
-                    for (Entry<@ExpressionIdentifier String, DataType> entry : fields.entrySet())
+                    List<HashMap<String, Object>> records = GenExpressionValueForwards.this.<HashMap<String, Object>>replicateM(() -> new HashMap<>());
+                    List<Pair<String, Expression>> expressions = new ArrayList<>();
+                    for (Entry<String, DataType> entry : fields.entrySet())
                     {
                         // We don't reduce max levels as it may make nested tuples
                         // not feature complex expressions, and the finiteness of the type
                         // prevents infinite expansion:
-                        Pair<List<@Value Object>, Expression> item = make(entry.getValue(), maxLevels);
+                        Pair<List<Object>, Expression> item = make(entry.getValue(), maxLevels);
                         for (int row = 0; row < records.size(); row++)
                             records.get(row).put(entry.getKey(), item.getFirst().get(row));
                         expressions.add(new Pair<>(entry.getKey(), item.getSecond()));
                     }
                     Collections.shuffle(expressions, new Random(r.nextLong()));
                     
-                    return new Pair<>(Utility.<HashMap<@ExpressionIdentifier String, @Value Object>, @Value Object>mapList(records, r -> DataTypeUtility.value(new RecordMap(r))), new RecordExpression(ImmutableList.copyOf(expressions)));
+                    return new Pair<>(Utility.<HashMap<String, Object>, Object>mapList(records, r -> DataTypeUtility.value(new RecordMap(r))), new RecordExpression(ImmutableList.copyOf(expressions)));
                 }));
             }
 
             @Override
-            @OnThread(value = Tag.Simulation,ignoreParent = true)
-            public Pair<List<@Value Object>, Expression> array(@Nullable DataType inner) throws InternalException, UserException
+            public Pair<List<Object>, Expression> array(DataType inner) throws InternalException, UserException
             {
                 if (inner == null)
                     return literal(DataTypeUtility.value(Collections.emptyList()), new ArrayExpression(ImmutableList.of()));
-                @Nullable DataType innerFinal = inner;
+                DataType innerFinal = inner;
                 return termDeep(maxLevels, type, l(columnRef(type)), l(fix(maxLevels - 1, type), () ->
                 {
                     int length = r.nextInt(1, 12);
                     // Each outer list item is one row in the final set of expression values
                     // Each inner list is an entire array.
-                    List<List<@Value Object>> values = GenExpressionValueForwards.this.<List<@Value Object>>replicateM(ArrayList<@Value Object>::new);
+                    List<List<Object>> values = GenExpressionValueForwards.this.<List<Object>>replicateM(ArrayList<Object>::new);
                     List<Expression> expressions = new ArrayList<>();
                     for (int i = 0; i < length; i++)
                     {
-                        Pair<List<@Value Object>, Expression> item = make(innerFinal, maxLevels - 1);
+                        Pair<List<Object>, Expression> item = make(innerFinal, maxLevels - 1);
                         // This is the set of items for the i-th item in each array, so add accordingly:
                         for (int j = 0; j < item.getFirst().size() /* aka targetSize */; j++)
                             values.get(j).add(item.getFirst().get(j));
                         expressions.add(item.getSecond());
                     }
-                    return new Pair<>(Utility.<List<@Value Object>, @Value Object>mapList(values, DataTypeUtility::value), new ArrayExpression(ImmutableList.copyOf(expressions)));
+                    return new Pair<>(Utility.<List<Object>, Object>mapList(values, DataTypeUtility::value), new ArrayExpression(ImmutableList.copyOf(expressions)));
                 }));
             }
         });
     }
 
-    protected @Value TemporalAccessor makeTemporalValue(DateTimeInfo dateTimeInfo)
+    protected TemporalAccessor makeTemporalValue(DateTimeInfo dateTimeInfo)
     {
-        @Value TemporalAccessor value;
+        TemporalAccessor value;
         switch (dateTimeInfo.getType())
         {
             case YEARMONTHDAY:
@@ -683,9 +672,9 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
         return value;
     }
 
-    private Pair<List<@Value Object>, Expression> num(List<@Value Number> values, Expression expression)
+    private Pair<List<Object>, Expression> num(List<Number> values, Expression expression)
     {
-        return new Pair<>(Utility.<@Value Number, @Value Object>mapList(values, n -> n), expression);
+        return new Pair<>(Utility.<Number, Object>mapList(values, n -> n), expression);
     }
 
     private Number safeAbs(Long l)
@@ -710,7 +699,7 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
     private Unit makeUnit() throws InternalException, UserException
     {
         UnitManager m = dummyManager.getUnitManager();
-        return r.<@NonNull Unit>choose(Arrays.asList(
+        return r.<Unit>choose(Arrays.asList(
             m.loadUse("m"),
             m.loadUse("cm"),
             m.loadUse("inch"),
@@ -732,10 +721,10 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
     {
         ColumnId name = new ColumnId(IdentifierUtility.identNum("GEV Col", columns.size()));
         return () -> {
-            @Nullable DataType listInnerType = type.apply(new FlatDataTypeVisitor<@Nullable DataType>(null)
+            DataType listInnerType = type.apply(new FlatDataTypeVisitor<DataType>(null)
             {
                 @Override
-                public @Nullable DataType array(DataType inner) throws InternalException, InternalException
+                public DataType array(DataType inner) throws InternalException, InternalException
                 {
                     return inner;
                 }
@@ -743,14 +732,14 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
             if (listInnerType != null)
             {
                 // Return whole column:
-                List<@Value Object> value = GenExpressionValueForwards.this.<@Value Object>replicateM(() -> makeValue(listInnerType));
+                List<Object> value = GenExpressionValueForwards.this.<Object>replicateM(() -> makeValue(listInnerType));
                 columns.add(rs -> ColumnUtility.makeCalculatedColumn(listInnerType, rs, name, i -> value.get(i), t -> t));
                 // Each row gets the same full list:
-                return new Pair<List<@Value Object>, Expression>(GenExpressionValueForwards.this.<@Value Object>replicateM(() -> new ListExList(value)), IdentExpression.makeEntireColumnReference(tableId, name));
+                return new Pair<List<Object>, Expression>(GenExpressionValueForwards.this.<Object>replicateM(() -> new ListExList(value)), IdentExpression.makeEntireColumnReference(tableId, name));
             }
             else
             {
-                List<@Value Object> value = GenExpressionValueForwards.this.<@Value Object>replicateM(() -> makeValue(type));
+                List<Object> value = GenExpressionValueForwards.this.<Object>replicateM(() -> makeValue(type));
                 columns.add(rs -> ColumnUtility.makeCalculatedColumn(type, rs, name, i -> value.get(i), t -> t));
 
                 FunctionLookup functionLookup = FunctionList.getFunctionLookup(dummyManager.getUnitManager());
@@ -758,12 +747,12 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
                 if (r.nextBoolean())
                 {
                     // Use #column name
-                    return new Pair<List<@Value Object>, Expression>(value, new CallExpression(functionLookup, "element", IdentExpression.makeEntireColumnReference(tableId, name), IdentExpression.load("row")));
+                    return new Pair<List<Object>, Expression>(value, new CallExpression(functionLookup, "element", IdentExpression.makeEntireColumnReference(tableId, name), IdentExpression.load("row")));
                 }
                 else
                 {
                     // Use #rows
-                    return new Pair<List<@Value Object>, Expression>(value, new FieldAccessExpression(new CallExpression(functionLookup, "element", new FieldAccessExpression(IdentExpression.table(tableId.getRaw()), "rows"), IdentExpression.load("row")), name.getRaw()));
+                    return new Pair<List<Object>, Expression>(value, new FieldAccessExpression(new CallExpression(functionLookup, "element", new FieldAccessExpression(IdentExpression.table(tableId.getRaw()), "rows"), IdentExpression.load("row")), name.getRaw()));
                 }
             }
         };
@@ -773,7 +762,7 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
     {
         TypeManager m = dummyManager.getTypeManager();
         return () -> {
-            Pair<List<@Value Object>, Expression> inner = make(type, maxLevels);
+            Pair<List<Object>, Expression> inner = make(type, maxLevels);
             return new Pair<>(inner.getFirst(), TypeLiteralExpression.fixType(m, FunctionList.getFunctionLookup(m.getUnitManager()), JellyType.fromConcrete(type), inner.getSecond()));
         };
     }
@@ -781,15 +770,14 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
     @FunctionalInterface
     public interface ExpressionMaker
     {
-        @OnThread(Tag.Simulation)
-        public Pair<List<@Value Object>, Expression> make() throws InternalException, UserException;
+        public Pair<List<Object>, Expression> make() throws InternalException, UserException;
     }
 
     // Replicates the first argument.  Useful when you have a constant expression
     // which will just be repeated:
-    private Pair<List<@Value Object>, Expression> literal(@Value Object o, Expression e)
+    private Pair<List<Object>, Expression> literal(Object o, Expression e)
     {
-        return new Pair<>(this.<@Value Object>replicate(o), e);
+        return new Pair<>(this.<Object>replicate(o), e);
     }
 
     // Replicates an item targetSize times into a list:
@@ -816,7 +804,6 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
 
     private static interface ExBiFunction<S, T, R>
     {
-        @OnThread(Tag.Simulation)
         public R apply(S s, T t) throws UserException, InternalException;
     }
 
@@ -830,7 +817,6 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
     }
 
     // Like each but supplies index too
-    @OnThread(Tag.Simulation)
     private <T> void eachI(List<T> list, ExBiFunction<Integer, T, T> modify) throws InternalException, UserException
     {
         for (int i = 0; i < list.size(); i++)
@@ -839,20 +825,18 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
         }
     }
 
-    @OnThread(Tag.Simulation)
-    private <T> Pair<List<@Value Object>, Expression> map(Pair<List<@Value Object>, Expression> src, ExFunction<@Value Object, @Value Object> eachValue, ExFunction<Expression, Expression> withExpression) throws InternalException, UserException
+    private <T> Pair<List<Object>, Expression> map(Pair<List<Object>, Expression> src, ExFunction<Object, Object> eachValue, ExFunction<Expression, Expression> withExpression) throws InternalException, UserException
     {
-        List<@Value Object> list = new ArrayList<>(src.getFirst());
+        List<Object> list = new ArrayList<>(src.getFirst());
         each(list, eachValue);
         return new Pair<>(list, withExpression.apply(src.getSecond()));
     }
 
     // zipWith, by another name
-    @OnThread(Tag.Simulation)
-    private <T> Pair<List<@Value Object>, Expression> map2(Pair<List<@Value Object>, Expression> srcA, Pair<List<@Value Object>, Expression> srcB, ExBiFunction<@Value Object, @Value Object, @Value Object> eachValue, ExBiFunction<Expression, Expression, Expression> withExpression) throws InternalException, UserException
+    private <T> Pair<List<Object>, Expression> map2(Pair<List<Object>, Expression> srcA, Pair<List<Object>, Expression> srcB, ExBiFunction<Object, Object, Object> eachValue, ExBiFunction<Expression, Expression, Expression> withExpression) throws InternalException, UserException
     {
-        List<@Value Object> list = new ArrayList<>(srcA.getFirst());
-        List<@Value Object> listB = new ArrayList<>(srcB.getFirst());
+        List<Object> list = new ArrayList<>(srcA.getFirst());
+        List<Object> listB = new ArrayList<>(srcB.getFirst());
         for (int i = 0; i < list.size(); i++)
         {
             list.set(i, eachValue.apply(list.get(i), listB.get(i)));
@@ -865,8 +849,7 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
         return Arrays.asList(suppliers);
     }
 
-    @OnThread(Tag.Simulation)
-    private Pair<List<@Value Object>, Expression> termDeep(int maxLevels, DataType type, List<ExpressionMaker> terminals, List<ExpressionMaker> deeper) throws UserException, InternalException
+    private Pair<List<Object>, Expression> termDeep(int maxLevels, DataType type, List<ExpressionMaker> terminals, List<ExpressionMaker> deeper) throws UserException, InternalException
     {
         /*
         if (maxLevels > 1 && r.nextInt(0, 5) == 0)
@@ -876,13 +859,13 @@ public class GenExpressionValueForwards extends GenExpressionValueBase
         */
 
         //TODO generate match expressions here (valid for all types)
-        final Pair<List<@Value Object>, Expression> valueExp;
+        final Pair<List<Object>, Expression> valueExp;
         if (deeper.isEmpty() || (!terminals.isEmpty() && (maxLevels <= 1 || deeper.isEmpty() || r.nextInt(0, 2) == 0)))
             valueExp = r.choose(terminals).make();
         else
             valueExp = r.choose(deeper).make();
         // Can only substitute with literal if it has constant value:
-        TreeSet<@Value Object> allValues = new TreeSet<@Value Object>((@Value Object a, @Value Object b) -> {
+        TreeSet<Object> allValues = new TreeSet<Object>((Object a, Object b) -> {
             try
             {
                 return Utility.compareValues(a, b);

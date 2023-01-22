@@ -90,16 +90,16 @@ public abstract class JellyType
 
     public abstract TypeExp makeTypeExp(ImmutableMap<String, Either<MutUnitVar, MutVar>> typeVariables) throws InternalException;
 
-    public abstract DataType makeDataType(@Recorded JellyType this, ImmutableMap<String, Either<Unit, DataType>> typeVariables, TypeManager mgr) throws InternalException, UnknownTypeException, TaggedInstantiationException;
+    public abstract DataType makeDataType(JellyType this, ImmutableMap<String, Either<Unit, DataType>> typeVariables, TypeManager mgr) throws InternalException, UnknownTypeException, TaggedInstantiationException;
     
     //public static class TypeQuickFix {}
     
     public static class UnknownTypeException extends UserException
     {
         private final ImmutableList<JellyType> suggestedFixes;
-        private final @Recorded JellyType replacementTarget;
+        private final JellyType replacementTarget;
 
-        public UnknownTypeException(String message, @Recorded JellyType replacementTarget, ImmutableList<JellyType> suggestedFixes)
+        public UnknownTypeException(String message, JellyType replacementTarget, ImmutableList<JellyType> suggestedFixes)
         {
             super(message);
             this.replacementTarget = replacementTarget;
@@ -111,7 +111,7 @@ public abstract class JellyType
             return suggestedFixes;
         }
 
-        public @Recorded JellyType getReplacementTarget()
+        public JellyType getReplacementTarget()
         {
             return replacementTarget;
         }
@@ -119,24 +119,24 @@ public abstract class JellyType
 
     public abstract void save(OutputBuilder output);
 
-    public abstract boolean equals(@Nullable Object o);
+    public abstract boolean equals(Object o);
 
     public abstract int hashCode();
 
     // For every tagged type use anywhere within this type, call back the given function with the name.
     public abstract void forNestedTagged(Consumer<TypeId> nestedTagged);
     
-    public static JellyType typeVariable(@ExpressionIdentifier String name)
+    public static JellyType typeVariable(String name)
     {
         return new JellyTypeIdent(name);
     }
     
-    public static JellyType record(ImmutableMap<@ExpressionIdentifier String, Field> members)
+    public static JellyType record(ImmutableMap<String, Field> members)
     {
         return new JellyTypeRecord(members, true);
     }
 
-    public static JellyType tagged(TypeId name, ImmutableList<Either<JellyUnit, @Recorded JellyType>> params)
+    public static JellyType tagged(TypeId name, ImmutableList<Either<JellyUnit, JellyType>> params)
     {
         if (params.isEmpty())
             return new JellyTypeIdent(name.getRaw());
@@ -144,7 +144,7 @@ public abstract class JellyType
             return new JellyTypeApply(name, params);
     }
     
-    public static JellyType list(@Recorded JellyType inner)
+    public static JellyType list(JellyType inner)
     {
         return new JellyTypeArray(inner);
     }
@@ -167,10 +167,10 @@ public abstract class JellyType
             return load(ctx.type(), mgr);
         else if (ctx.record() != null)
         {
-            HashMap<@ExpressionIdentifier String, Field> fields = new HashMap<>();
+            HashMap<String, Field> fields = new HashMap<>();
             for (int i = 0; i < ctx.record().columnName().size(); i++)
             {
-                @ExpressionIdentifier String fieldName = IdentifierUtility.fromParsed(ctx.record().columnName(i));
+                String fieldName = IdentifierUtility.fromParsed(ctx.record().columnName(i));
                 JellyType type = load(ctx.record().type(i), mgr);
                 if (fields.put(fieldName, new Field(type, true)) != null)
                     throw new UserException("Duplicated field: \"" + fieldName + "\"");
@@ -215,7 +215,7 @@ public abstract class JellyType
         else if (ctx.ident() != null)
         {
             // TODO is it right that @typevar comes to same place as plain ident?
-            @ExpressionIdentifier String name = IdentifierUtility.fromParsed(ctx.ident());
+            String name = IdentifierUtility.fromParsed(ctx.ident());
             return new JellyTypeIdent(name);
         }
         else if (ctx.functionType() != null)
@@ -260,12 +260,12 @@ public abstract class JellyType
         R date(DateTimeInfo dateTimeInfo) throws InternalException, E;
         R bool() throws InternalException, E;
 
-        R applyTagged(TypeId typeName, ImmutableList<Either<JellyUnit, @Recorded JellyType>> typeParams) throws InternalException, E;
-        R record(ImmutableMap<@ExpressionIdentifier String, JellyTypeRecord.Field> fields, boolean complete) throws InternalException, E;
+        R applyTagged(TypeId typeName, ImmutableList<Either<JellyUnit, JellyType>> typeParams) throws InternalException, E;
+        R record(ImmutableMap<String, JellyTypeRecord.Field> fields, boolean complete) throws InternalException, E;
         // If null, array is empty and thus of unknown type
-        R array(@Recorded JellyType inner) throws InternalException, E;
+        R array(JellyType inner) throws InternalException, E;
 
-        R function(ImmutableList<@Recorded JellyType> argTypes, JellyType resultType) throws InternalException, E;
+        R function(ImmutableList<JellyType> argTypes, JellyType resultType) throws InternalException, E;
         
         R ident(String name) throws InternalException, E;
     }
@@ -319,7 +319,7 @@ public abstract class JellyType
             }
 
             @Override
-            public JellyType record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, InternalException
+            public JellyType record(ImmutableMap<String, DataType> fields) throws InternalException, InternalException
             {
                 return new JellyTypeRecord(Utility.mapValuesInt(fields, t -> new Field(fromConcrete(t), false)), true);
             }

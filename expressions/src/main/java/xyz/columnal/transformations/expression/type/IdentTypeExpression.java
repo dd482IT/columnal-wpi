@@ -40,9 +40,9 @@ import java.util.Objects;
 
 public class IdentTypeExpression extends TypeExpression
 {
-    private final @ExpressionIdentifier String value;
+    private final String value;
 
-    public IdentTypeExpression(@ExpressionIdentifier String value)
+    public IdentTypeExpression(String value)
     {
         this.value = value;
     }
@@ -60,7 +60,7 @@ public class IdentTypeExpression extends TypeExpression
     }
 
     @Override
-    public @Nullable DataType toDataType(TypeManager typeManager)
+    public DataType toDataType(TypeManager typeManager)
     {
         // TODO pass in type variable subsitutions to this method
         try
@@ -80,7 +80,7 @@ public class IdentTypeExpression extends TypeExpression
     }
 
     @Override
-    public @Recorded JellyType toJellyType(@Recorded IdentTypeExpression this, TypeManager typeManager, JellyRecorder jellyRecorder)
+    public JellyType toJellyType(IdentTypeExpression this, TypeManager typeManager, JellyRecorder jellyRecorder)
     {
         return jellyRecorder.record(JellyType.typeVariable(value), this);
     }
@@ -92,13 +92,13 @@ public class IdentTypeExpression extends TypeExpression
     }
 
     @Override
-    public @ExpressionIdentifier String asIdent()
+    public String asIdent()
     {
         return value;
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;

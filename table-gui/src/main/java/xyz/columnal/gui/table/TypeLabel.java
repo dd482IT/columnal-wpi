@@ -36,17 +36,16 @@ import xyz.columnal.utility.gui.FXUtility;
 /**
  * Displays the type of the given expression, dynamically
  */
-@OnThread(Tag.FXPlatform)
 public class TypeLabel extends Label
 {
-    public TypeLabel(ObjectExpression<@Nullable DataType> typeProperty)
+    public TypeLabel(ObjectExpression<DataType> typeProperty)
     {
         getStyleClass().add("type-label");
         FXUtility.addChangeListenerPlatform(typeProperty, this::updateType);
         updateType(typeProperty.getValue());
     }
 
-    private void updateType(@UnknownInitialization(Label.class) TypeLabel this, @Nullable DataType type)
+    private void updateType(TypeLabel this, DataType type)
     {
         if (type != null)
         {

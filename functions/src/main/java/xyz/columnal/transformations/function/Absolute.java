@@ -50,9 +50,9 @@ public class Absolute extends SingleNumericInOutFunction
         return new ValueFunction()
         {
             @Override
-            public @Value Object _call() throws UserException, InternalException
+            public Object _call() throws UserException, InternalException
             {
-                return Utility.<@Value Number>withNumber(arg(0), l -> {
+                return Utility.<Number>withNumber(arg(0), l -> {
                     if (l == Long.MIN_VALUE)
                         return DataTypeUtility.value(BigDecimal.valueOf(l).negate());
                     else

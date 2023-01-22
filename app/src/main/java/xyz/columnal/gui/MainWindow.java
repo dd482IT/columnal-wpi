@@ -83,7 +83,6 @@ import java.util.function.Consumer;
 /**
  * Created by neil on 17/04/2017.
  */
-@OnThread(Tag.FXPlatform)
 public class MainWindow
 {
     private final static IdentityHashMap<View, Stage> views = new IdentityHashMap<>();
@@ -99,33 +98,28 @@ public class MainWindow
 
     public static interface MainWindowActions
     {
-        @OnThread(Tag.FXPlatform)
         public void importFile(File file);
         
-        @OnThread(Tag.Any)
         public TableManager _test_getTableManager();
 
-        @OnThread(Tag.Any)
         public VirtualGrid _test_getVirtualGrid();
 
-        @OnThread(Tag.FXPlatform)
-        public DataCellSupplier.@Nullable VersionedSTF _test_getDataCell(CellPosition position);
+        public DataCellSupplier.VersionedSTF _test_getDataCell(CellPosition position);
         
         // What file are we saving to in this main window?
-        @OnThread(Tag.FXPlatform)
         public File _test_getCurFile();
 
         public int _test_getSaveCount();
     }
 
     // If src is null, make new
-    public static MainWindowActions show(final Stage stage, File destinationFile, @Nullable Pair<File, String> src, @Nullable CompletionStage<Optional<UpgradeInfo>> upgradeInfo) throws UserException, InternalException
+    public static MainWindowActions show(final Stage stage, File destinationFile, Pair<File, String> src, CompletionStage<Optional<UpgradeInfo>> upgradeInfo) throws UserException, InternalException
     {
         MainWindow mainWindow = new MainWindow(stage, destinationFile, src, upgradeInfo);
         return mainWindow.getActions();
     }
 
-    private MainWindow(final Stage stage, File destinationFile, @Nullable Pair<File, String> src, @Nullable CompletionStage<Optional<UpgradeInfo>> upgradeInfo) throws UserException, InternalException
+    private MainWindow(final Stage stage, File destinationFile, Pair<File, String> src, CompletionStage<Optional<UpgradeInfo>> upgradeInfo) throws UserException, InternalException
     {
         this.stage = stage;
         v = new View(destinationFile);
@@ -249,7 +243,6 @@ public class MainWindow
             upgradeInfo.thenAccept(new Consumer<Optional<UpgradeInfo>>()
             {
                 @Override
-                @OnThread(value = Tag.Worker, ignoreParent = true)
                 public void accept(Optional<UpgradeInfo> opt)
                 {
                     opt.ifPresent(u -> Platform.runLater(() -> u.showIn(stackPane, 1)));
@@ -272,7 +265,7 @@ public class MainWindow
 
         if (src != null)
         {
-            @NonNull Pair<File, String> srcFinal = src;
+            Pair<File, String> srcFinal = src;
             Workers.onWorkerThread("Load", Priority.LOAD_FROM_DISK, () -> FXUtility.alertOnError_(TranslationUtility.getString("error.loading", srcFinal.getFirst().getName()), err -> {
                 Platform.runLater(() -> updateBanner(v, banner, false));
                 return TranslationUtility.getString("error.loading.file", srcFinal.getFirst().getAbsolutePath(), err);
@@ -339,35 +332,30 @@ public class MainWindow
             }
 
             @Override
-            @OnThread(Tag.Any)
             public TableManager _test_getTableManager()
             {
                 return v.getManager();
             }
 
             @Override
-            @OnThread(Tag.Any)
             public VirtualGrid _test_getVirtualGrid()
             {
                 return v.getGrid();
             }
 
             @Override
-            @OnThread(Tag.FXPlatform)
-            public DataCellSupplier.@Nullable VersionedSTF _test_getDataCell(CellPosition position)
+            public DataCellSupplier.VersionedSTF _test_getDataCell(CellPosition position)
             {
                 return v.getDataCellSupplier()._test_getCellAt(position);
             }
 
             @Override
-            @OnThread(Tag.FXPlatform)
             public File _test_getCurFile()
             {
                 return v.getSaveFile();
             }
 
             @Override
-            @OnThread(Tag.FXPlatform)
             public int _test_getSaveCount()
             {
                 return v.test_getSaveCount();
@@ -416,7 +404,6 @@ public class MainWindow
             ImporterManager.getInstance().chooseAndImportURL(stage, v.getManager(), ds -> recordTable(v, ds));
         }
     */
-    @OnThread(Tag.Any)
     private static void recordTable(View v, DataSource ds)
     {
         Workers.onWorkerThread("Registering table", Priority.SAVE, () -> v.getManager().record(ds));
@@ -431,13 +418,11 @@ public class MainWindow
         });
     }
 
-    @OnThread(Tag.FXPlatform)
     public static Map<View, Stage> _test_getViews()
     {
         return views;
     }
     
-    @OnThread(Tag.FXPlatform)
     private class LeftPane extends StackPane
     {
         private SmallDeleteButton closeButton = new SmallDeleteButton();
@@ -449,7 +434,7 @@ public class MainWindow
             closeButton.setOnAction(() -> showLeftPane(LeftPaneType.NONE));
         }
         
-        protected void setContent(@UnknownInitialization(LeftPane.class) LeftPane this, Node content)
+        protected void setContent(LeftPane this, Node content)
         {
             getChildren().setAll(content, closeButton);
         }
@@ -459,7 +444,6 @@ public class MainWindow
         }
     }
 
-    @OnThread(Tag.FXPlatform)
     private final class ChecksLeftPane extends LeftPane implements ChecksStateListener
     {
         private final CheckSummaryLabel checkSummaryLabel;

@@ -80,13 +80,13 @@ public class TypePrimitiveLiteral extends TypeExpression
     }
 
     @Override
-    public @Nullable DataType toDataType(TypeManager typeManager)
+    public DataType toDataType(TypeManager typeManager)
     {
         return dataType;
     }
 
     @Override
-    public @Recorded JellyType toJellyType(@Recorded TypePrimitiveLiteral this, TypeManager typeManager, JellyRecorder jellyRecorder) throws InternalException
+    public JellyType toJellyType(TypePrimitiveLiteral this, TypeManager typeManager, JellyRecorder jellyRecorder) throws InternalException
     {
         return jellyRecorder.record(JellyType.fromConcrete(dataType), this);
     }
@@ -103,7 +103,7 @@ public class TypePrimitiveLiteral extends TypeExpression
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -126,7 +126,7 @@ public class TypePrimitiveLiteral extends TypeExpression
 
     @SuppressWarnings("identifier")
     @Override
-    public @Nullable @ExpressionIdentifier String asIdent()
+    public String asIdent()
     {
         return dataType.toString();
     }

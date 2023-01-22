@@ -71,15 +71,14 @@ import java.util.concurrent.ConcurrentMap;
 /**
  * Row label supplier for all tables for a given grid.
  */
-@OnThread(Tag.FXPlatform)
 public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
 {
     // For displaying the border/shadow overlays without repeating code:
     private final VirtualGridSupplierFloating virtualGridSupplierFloating;
     private final HashMap<DataDisplay, RowLabels> currentRowLabels = new HashMap<>();
-    private @MonotonicNonNull DoubleExpression containerTranslateX;
+    private DoubleExpression containerTranslateX;
     // Used to make sure we don't queue up multiple requests for a relayout:
-    private @Nullable FXPlatformRunnable cancelRelayout;
+    private FXPlatformRunnable cancelRelayout;
 
     private void setContainerTranslateX(DoubleExpression containerTranslateX)
     {
@@ -95,12 +94,11 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
         }
     }
 
-    @OnThread(Tag.FXPlatform)
     private class RowLabels
     {
-        private final Cache<@TableDataRowIndex Integer, LabelPane> rowLabelCache;
+        private final Cache<Integer, LabelPane> rowLabelCache;
         // For ease of use, keep reference to rowLabelCache.asMap():
-        private final ConcurrentMap<@TableDataRowIndex Integer, LabelPane> rowLabels;
+        private final ConcurrentMap<Integer, LabelPane> rowLabels;
         private final RowLabelBorder borderShadowRectangle;
         private final DataDisplay dataDisplay;
         private boolean floating = false;
@@ -135,13 +133,12 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
             }
         }
 
-        @OnThread(Tag.FXPlatform)
         private class RowLabelBorder extends RectangleOverlayItem
         {
-            private final ConcurrentMap<@TableDataRowIndex Integer, LabelPane> rowLabelMap;
+            private final ConcurrentMap<Integer, LabelPane> rowLabelMap;
             private final DataDisplay dataDisplay;
 
-            public RowLabelBorder(ConcurrentMap<@TableDataRowIndex Integer, LabelPane> rowLabelMap, DataDisplay dataDisplay)
+            public RowLabelBorder(ConcurrentMap<Integer, LabelPane> rowLabelMap, DataDisplay dataDisplay)
             {
                 super(ViewOrder.TABLE_BORDER);
                 this.rowLabelMap = rowLabelMap;
@@ -185,7 +182,6 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
                     calcClip(getNode());
             }
 
-            @OnThread(Tag.FXPlatform)
             private void calcClip(Rectangle r)
             {
                 Shape originalClip = Shape.subtract(
@@ -218,14 +214,14 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
     @Override
     protected void layoutItems(ContainerChildren containerChildren, VisibleBounds visibleBounds, VirtualGrid virtualGrid)
     {        
-        for (@KeyFor("currentRowLabels") DataDisplay dataDisplay : currentRowLabels.keySet())
+        for (DataDisplay dataDisplay : currentRowLabels.keySet())
         {
             Optional<RectangleBounds> visibleGrid = getVisibleDataArea(visibleBounds, dataDisplay);
             
             // Remove all non-visible:
             final RowLabels labels = currentRowLabels.get(dataDisplay);
-            labels.rowLabels.entrySet().removeIf((Entry<@TableDataRowIndex Integer, LabelPane> e) -> {
-                @AbsRowIndex int absIndex = dataDisplay.getAbsRowIndexFromTableRow(e.getKey());
+            labels.rowLabels.entrySet().removeIf((Entry<Integer, LabelPane> e) -> {
+                int absIndex = dataDisplay.getAbsRowIndexFromTableRow(e.getKey());
                 boolean remove = visibleGrid.map(b -> {
                     return absIndex < b.topLeftIncl.rowIndex || absIndex > b.bottomRightIncl.rowIndex;
                 }).orElse(true); // Remove if nothing visible
@@ -236,9 +232,9 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
             
             // Add all visible:
             visibleGrid.ifPresent(b -> {
-                for (@AbsRowIndex int i = b.topLeftIncl.rowIndex; i <= b.bottomRightIncl.rowIndex; i++)
+                for (int i = b.topLeftIncl.rowIndex; i <= b.bottomRightIncl.rowIndex; i++)
                 {
-                    @TableDataRowIndex int relIndex = dataDisplay.getTableRowIndexFromAbsRow(i);
+                    int relIndex = dataDisplay.getTableRowIndexFromAbsRow(i);
                     labels.rowLabels.computeIfAbsent(relIndex, _x -> {
                         LabelPane labelPane = new LabelPane(labels);
                         labelPane.setRow(labels, relIndex);
@@ -253,7 +249,7 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
                 // Find number of digits, min 2:
                 int numDigits = Math.max(2, Integer.toString(highestRow).length());
 
-                @AbsColIndex int colIndex = dataDisplay.getPosition().columnIndex;
+                int colIndex = dataDisplay.getPosition().columnIndex;
                 double x = visibleBounds.getXCoord(colIndex);
                 
                 // The furthest we go is to the left edge of the rightmost data cell:
@@ -262,7 +258,7 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
                 boolean anyWidthZero = false;
                 
                 // Set position of all:
-                for (Entry<@TableDataRowIndex Integer, LabelPane> label : labels.rowLabels.entrySet())
+                for (Entry<Integer, LabelPane> label : labels.rowLabels.entrySet())
                 {
                     label.getValue().setMinDigits(numDigits);
                     double width = label.getValue().prefWidth(-1);
@@ -273,7 +269,7 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
                     if (width == 0)
                         anyWidthZero = true;
                     
-                    @AbsRowIndex int row = dataDisplay.getAbsRowIndexFromTableRow(label.getKey());
+                    int row = dataDisplay.getAbsRowIndexFromTableRow(label.getKey());
                     double y = visibleBounds.getYCoord(row);
                     double height = visibleBounds.getYCoordAfter(row) - y;
                     
@@ -298,7 +294,6 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
     /**
      * Returns empty if no data area is visible.
      */
-    @OnThread(Tag.FXPlatform)
     private Optional<RectangleBounds> getVisibleDataArea(VisibleBounds visibleBounds, DataDisplay dataDisplay)
     {
         CellPosition topLeft = dataDisplay.getDataDisplayTopLeftIncl().from(dataDisplay.getPosition());
@@ -313,7 +308,7 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
     }
 
     @Override
-    protected @Nullable Pair<ItemState, @Nullable StyledString> getItemState(CellPosition cellPosition, Point2D screenPosition)
+    protected Pair<ItemState, StyledString> getItemState(CellPosition cellPosition, Point2D screenPosition)
     {
         return null;
     }
@@ -380,7 +375,6 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
     }
     */
 
-    @OnThread(Tag.FXPlatform)
     public void addTable(VirtualGrid virtualGrid, DataDisplay tableDisplay, boolean showAlways)
     {
         final SimpleObjectProperty<ImmutableList<Visible>> visible = new SimpleObjectProperty<>(showAlways ? ImmutableList.of(Visible.VISIBLE) : ImmutableList.of());
@@ -399,10 +393,9 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
         // We float so no keyboard activation
     }
 
-    @OnThread(Tag.FXPlatform)
     public void removeGrid(DataDisplay display, ContainerChildren containerChildren)
     {
-        @Nullable RowLabels rowLabels = currentRowLabels.remove(display);
+        RowLabels rowLabels = currentRowLabels.remove(display);
         if (rowLabels != null)
         {
             virtualGridSupplierFloating.removeItem(rowLabels.borderShadowRectangle);
@@ -414,7 +407,7 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
     }
 
     @Override
-    public OptionalDouble getPrefColumnWidth(@AbsColIndex int colIndex)
+    public OptionalDouble getPrefColumnWidth(int colIndex)
     {
         // Row labels float, so we don't use them to size a column:
         return OptionalDouble.empty();
@@ -422,13 +415,12 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
 
     public static enum Visible { VISIBLE }
     
-    @OnThread(Tag.FXPlatform)
     public class LabelPane extends BorderPane
     {
         // Zero based row
-        private @TableDataRowIndex int row;
+        private int row;
         private final Label label = new Label();
-        private @MonotonicNonNull Tooltip tooltip;
+        private Tooltip tooltip;
         private RowLabels rowLabels;
         private int curMinDigits = 1;
         private final ResizableRectangle clip = new ResizableRectangle();
@@ -444,7 +436,7 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
             label.setMaxHeight(Double.MAX_VALUE);
             BorderPane.setAlignment(label, Pos.CENTER_RIGHT);
             label.setOnContextMenuRequested(e -> {
-                @Nullable ContextMenu contextMenu = rowLabels.dataDisplay.makeRowContextMenu(this.row);
+                ContextMenu contextMenu = rowLabels.dataDisplay.makeRowContextMenu(this.row);
                 if (contextMenu != null)
                     contextMenu.show(label, e.getScreenX(), e.getScreenY());
             });
@@ -468,7 +460,7 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
             FXUtility.setPseudoclass(FXUtility.mouse(label), "row-header-floating", floating);
         }
 
-        public void setRow(RowLabels rowLabels, @TableDataRowIndex int row)
+        public void setRow(RowLabels rowLabels, int row)
         {
             this.rowLabels = rowLabels;
             this.row = row;
@@ -519,7 +511,7 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
             updateClipAndTranslate();
         }
         
-        public @Nullable TableId _test_getTableId()
+        public TableId _test_getTableId()
         {
             DataDisplay dataDisplay = rowLabels.dataDisplay;
             if (dataDisplay instanceof TableDisplayBase)

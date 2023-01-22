@@ -92,21 +92,18 @@ import java.util.function.Predicate;
 /**
  * Created by neil on 01/05/2017.
  */
-@OnThread(Tag.FXPlatform)
 public class TableDisplayUtility
 {
     
     public static interface GetAdditionalMenuItems
     {
-        @OnThread(Tag.FXPlatform)
-        public ImmutableList<MenuItem> getAdditionalMenuItems(boolean focused, ColumnId columnId, @TableDataRowIndex int rowIndex);
+        public ImmutableList<MenuItem> getAdditionalMenuItems(boolean focused, ColumnId columnId, int rowIndex);
     }
 
-    @OnThread(Tag.FXPlatform)
-    public static ImmutableList<ColumnDetails> makeStableViewColumns(RecordSet recordSet, Pair<Display, Predicate<ColumnId>> columnSelection, Function<ColumnId, @Nullable FXPlatformConsumer<ColumnId>> renameColumn, GetDataPosition getTablePos, @Nullable FXPlatformRunnable onModify, @Nullable GetAdditionalMenuItems getAdditionalMenuItems)
+    public static ImmutableList<ColumnDetails> makeStableViewColumns(RecordSet recordSet, Pair<Display, Predicate<ColumnId>> columnSelection, Function<ColumnId, FXPlatformConsumer<ColumnId>> renameColumn, GetDataPosition getTablePos, FXPlatformRunnable onModify, GetAdditionalMenuItems getAdditionalMenuItems)
     {
         ImmutableList.Builder<ColumnDetails> r = ImmutableList.builder();
-        @TableDataColIndex int displayColumnIndex = displayCol(0);
+        int displayColumnIndex = displayCol(0);
         for (int origColIndex = 0; origColIndex < recordSet.getColumns().size(); origColIndex++)
         {
             Column col = recordSet.getColumns().get(origColIndex);
@@ -119,32 +116,32 @@ public class TableDisplayUtility
                 }
                 catch (InternalException | UserException e)
                 {
-                    final @TableDataColIndex int columnIndexFinal = displayColumnIndex;
+                    final int columnIndexFinal = displayColumnIndex;
                     // Show a dummy column with an error message:
                     item = new ColumnDetails(col.getName(), DataType.TEXT, null, new ColumnHandler()
                     {
                         @Override
-                        public @OnThread(Tag.FXPlatform) void modifiedDataItems(int startRowIncl, int endRowIncl)
+                        public void modifiedDataItems(int startRowIncl, int endRowIncl)
                         {
                         }
 
                         @Override
-                        public @OnThread(Tag.FXPlatform) void removedAddedRows(int startRowIncl, int removedRowsCount, int addedRowsCount)
+                        public void removedAddedRows(int startRowIncl, int removedRowsCount, int addedRowsCount)
                         {
                         }
 
                         @Override
-                        public @OnThread(Tag.FXPlatform) void addedColumn(Column newColumn)
+                        public void addedColumn(Column newColumn)
                         {
                         }
 
                         @Override
-                        public @OnThread(Tag.FXPlatform) void removedColumn(ColumnId oldColumnId)
+                        public void removedColumn(ColumnId oldColumnId)
                         {
                         }
 
                         @Override
-                        public void fetchValue(@TableDataRowIndex int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformBiConsumer<KeyCode, CellPosition> relinquishFocus, EditorKitCallback setCellContent)
+                        public void fetchValue(int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformBiConsumer<KeyCode, CellPosition> relinquishFocus, EditorKitCallback setCellContent)
                         {
                             setCellContent.loadedValue(rowIndex, columnIndexFinal, new ReadOnlyDocument("Error: " + e.getLocalizedMessage(), true));
                         }
@@ -162,7 +159,7 @@ public class TableDisplayUtility
                         }
 
                         @Override
-                        public @OnThread(Tag.Simulation) @Value Object getValue(int index) throws InternalException, UserException
+                        public Object getValue(int index) throws InternalException, UserException
                         {
                             throw new UserException("No values");
                         }
@@ -180,10 +177,9 @@ public class TableDisplayUtility
         return r.build();
     }
 
-    @OnThread(Tag.FXPlatform)
-    private static ColumnDetails getDisplay(@TableDataColIndex int columnIndex, @NonNull Column column, @Nullable FXPlatformConsumer<ColumnId> rename, GetDataPosition getTablePos, ImmutableList<String> extraColumnStyles, FXPlatformRunnable onModify, @Nullable GetAdditionalMenuItems getAdditionalMenuItems) throws UserException, InternalException
+    private static ColumnDetails getDisplay(int columnIndex, Column column, FXPlatformConsumer<ColumnId> rename, GetDataPosition getTablePos, ImmutableList<String> extraColumnStyles, FXPlatformRunnable onModify, GetAdditionalMenuItems getAdditionalMenuItems) throws UserException, InternalException
     {
-        return new ColumnDetails(column.getName(), column.getType().getType(), rename, makeField(columnIndex, column.getType(), column.getEditableStatus(), getTablePos, onModify, getAdditionalMenuItems == null ? null : (FXPlatformBiFunction<@TableDataRowIndex Integer, Boolean, ImmutableList<MenuItem>>)(@TableDataRowIndex Integer r, Boolean f) -> getAdditionalMenuItems.getAdditionalMenuItems(f, column.getName(), r)), extraColumnStyles);
+        return new ColumnDetails(column.getName(), column.getType().getType(), rename, makeField(columnIndex, column.getType(), column.getEditableStatus(), getTablePos, onModify, getAdditionalMenuItems == null ? null : (FXPlatformBiFunction<Integer, Boolean, ImmutableList<MenuItem>>)(Integer r, Boolean f) -> getAdditionalMenuItems.getAdditionalMenuItems(f, column.getName(), r)), extraColumnStyles);
         /*column.getType().<ColumnHandler, UserException>applyGet(new DataTypeVisitorGetEx<ColumnHandler, UserException>()
         {
             @Override
@@ -328,8 +324,7 @@ public class TableDisplayUtility
     }
 
     @SuppressWarnings("units")
-    @OnThread(Tag.Any)
-    public static @TableDataColIndex int displayCol(int col)
+    public static int displayCol(int col)
     {
         return col;
     }
@@ -339,32 +334,27 @@ public class TableDisplayUtility
      */
     public interface GetDataPosition
     {
-        @OnThread(Tag.FXPlatform)
-        public CellPosition getDataPosition(@TableDataRowIndex int rowIndex, @TableDataColIndex int columnIndex);
+        public CellPosition getDataPosition(int rowIndex, int columnIndex);
         
-        @OnThread(Tag.FXPlatform)
-        public @TableDataRowIndex int getFirstVisibleRowIncl();
+        public int getFirstVisibleRowIncl();
 
-        @OnThread(Tag.FXPlatform)
-        public @TableDataRowIndex int getLastVisibleRowIncl();
+        public int getLastVisibleRowIncl();
     }
     
-    public static class GetValueAndComponent<T extends @NonNull Object>
+    public static class GetValueAndComponent<T extends Object>
     {
         private final DataType dataType;
-        private final Class<@UnknownIfValue T> itemClass;
-        public final GetValue<@Value T> g;
-        public final Recogniser<@ImmediateValue T> recogniser;
-        private final @Nullable FXPlatformConsumer<EditorKitCache<@ImmediateValue T>.VisibleDetails> formatter;
+        private final Class<T> itemClass;
+        public final GetValue<T> g;
+        public final Recogniser<T> recogniser;
+        private final FXPlatformConsumer<EditorKitCache<T>.VisibleDetails> formatter;
 
-        @OnThread(Tag.Any)
-        public GetValueAndComponent(DataType dataType, Class<@UnknownIfValue T> itemClass, GetValue<@Value T> g, Recogniser<@ImmediateValue T> recogniser)
+        public GetValueAndComponent(DataType dataType, Class<T> itemClass, GetValue<T> g, Recogniser<T> recogniser)
         {
             this(dataType, itemClass, g, recogniser, null);
         }
 
-        @OnThread(Tag.Any)
-        public GetValueAndComponent(DataType dataType, Class<@UnknownIfValue T> itemClass, GetValue<@Value T> g, Recogniser<@ImmediateValue T> recogniser, @Nullable FXPlatformConsumer<EditorKitCache<@ImmediateValue T>.VisibleDetails> formatter)
+        public GetValueAndComponent(DataType dataType, Class<T> itemClass, GetValue<T> g, Recogniser<T> recogniser, FXPlatformConsumer<EditorKitCache<T>.VisibleDetails> formatter)
         {
             this.dataType = dataType;
             this.itemClass = itemClass;
@@ -373,16 +363,15 @@ public class TableDisplayUtility
             this.formatter = formatter;
         }
         
-        @OnThread(Tag.Any)
-        public EditorKitCache<@Value T> makeDisplayCache(@TableDataColIndex int columnIndex, EditableStatus editableStatus, ImmutableList<String> stfStyles, GetDataPosition getDataPosition, FXPlatformRunnable onModify, @Nullable FXPlatformBiFunction<@TableDataRowIndex Integer, Boolean, ImmutableList<MenuItem>> getAdditionalMenuItems)
+        public EditorKitCache<T> makeDisplayCache(int columnIndex, EditableStatus editableStatus, ImmutableList<String> stfStyles, GetDataPosition getDataPosition, FXPlatformRunnable onModify, FXPlatformBiFunction<Integer, Boolean, ImmutableList<MenuItem>> getAdditionalMenuItems)
         {
-            MakeEditorKit<@Value T> makeEditorKit = (@TableDataRowIndex int rowIndex, Pair<String, @Nullable @Value T> value, FXPlatformBiConsumer<KeyCode, CellPosition> relinquishFocus) -> {
-                Saver<@Value T> saveChange = (String s, @Nullable @Value T v, FXPlatformRunnable reset) -> {};
+            MakeEditorKit<T> makeEditorKit = (int rowIndex, Pair<String, T> value, FXPlatformBiConsumer<KeyCode, CellPosition> relinquishFocus) -> {
+                Saver<T> saveChange = (String s, T v, FXPlatformRunnable reset) -> {};
                 if (editableStatus.editable)
-                    saveChange = new Saver<@Value T>()
+                    saveChange = new Saver<T>()
                     {
                         @Override
-                        public @OnThread(Tag.FXPlatform) void save(String text, @Nullable @Value T v, FXPlatformRunnable reset)
+                        public void save(String text, T v, FXPlatformRunnable reset)
                         {
                             Workers.onWorkerThread("Saving value: " + text, Priority.SAVE, () -> FXUtility.alertOnError_(TranslationUtility.getString("error.storing.data"), () -> {
                                 try
@@ -403,7 +392,7 @@ public class TableDisplayUtility
                 {
                     SimulationSupplierInt<Boolean> checkEditable = makeCheckRow(editableStatus, rowIndex);
 
-                    editorKit = new RecogniserDocument<@Value T>(value.getFirst(), (Class<@Value T>) itemClass, (Recogniser<@Value T>)recogniser, checkEditable, saveChange, relinquishFocusRunnable, getAdditionalMenuItems == null ? null : focused -> getAdditionalMenuItems.apply(rowIndex, focused)); // stfStyles));
+                    editorKit = new RecogniserDocument<T>(value.getFirst(), (Class<T>) itemClass, (Recogniser<T>)recogniser, checkEditable, saveChange, relinquishFocusRunnable, getAdditionalMenuItems == null ? null : focused -> getAdditionalMenuItems.apply(rowIndex, focused)); // stfStyles));
                 }
                 else
                 {
@@ -411,16 +400,15 @@ public class TableDisplayUtility
                 }
                 return editorKit;
             };
-            return new EditorKitCache<@Value T>(columnIndex, dataType, g, formatter != null ? formatter : vis -> {}, getDataPosition, makeEditorKit);
+            return new EditorKitCache<T>(columnIndex, dataType, g, formatter != null ? formatter : vis -> {}, getDataPosition, makeEditorKit);
         }
 
-        private @Nullable SimulationSupplierInt<Boolean> makeCheckRow(EditableStatus editableStatus, @TableDataRowIndex int rowIndex)
+        private SimulationSupplierInt<Boolean> makeCheckRow(EditableStatus editableStatus, int rowIndex)
         {
-            SimulationFunctionInt<@TableDataRowIndex Integer, Boolean> checkRowEditable = editableStatus.checkEditable;
+            SimulationFunctionInt<Integer, Boolean> checkRowEditable = editableStatus.checkEditable;
             return checkRowEditable == null ? null : new SimulationSupplierInt<Boolean>()
             {
                 @Override
-                @OnThread(Tag.Simulation)
                 public Boolean get() throws InternalException
                 {
                     return checkRowEditable.apply(rowIndex);
@@ -429,13 +417,11 @@ public class TableDisplayUtility
         }
     }
 
-    @OnThread(Tag.FXPlatform)
-    private static EditorKitCache<?> makeField(@TableDataColIndex int columnIndex, DataTypeValue dataTypeValue, EditableStatus editableStatus, GetDataPosition getTablePos, FXPlatformRunnable onModify, @Nullable FXPlatformBiFunction<@TableDataRowIndex Integer, Boolean, ImmutableList<MenuItem>> getAdditionalMenuItems) throws InternalException
+    private static EditorKitCache<?> makeField(int columnIndex, DataTypeValue dataTypeValue, EditableStatus editableStatus, GetDataPosition getTablePos, FXPlatformRunnable onModify, FXPlatformBiFunction<Integer, Boolean, ImmutableList<MenuItem>> getAdditionalMenuItems) throws InternalException
     {
         return valueAndComponent(dataTypeValue, true).makeDisplayCache(columnIndex, editableStatus, stfStylesFor(dataTypeValue.getType()), getTablePos, onModify, getAdditionalMenuItems);
     }
 
-    @OnThread(Tag.Any)
     public static ImmutableList<String> stfStylesFor(DataType dataType) throws InternalException
     {
         return dataType.apply(new DataTypeVisitorEx<ImmutableList<String>, InternalException>()
@@ -471,46 +457,45 @@ public class TableDisplayUtility
             }
 
             @Override
-            public ImmutableList<String> record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, InternalException
+            public ImmutableList<String> record(ImmutableMap<String, DataType> fields) throws InternalException, InternalException
             {
                 return ImmutableList.of("stf-cell-record");
             }
 
             @Override
-            public ImmutableList<String> array(@Nullable DataType inner) throws InternalException
+            public ImmutableList<String> array(DataType inner) throws InternalException
             {
                 return ImmutableList.of("stf-cell-array");
             }
         });
     }
 
-    @OnThread(Tag.FXPlatform)
-    private static GetValueAndComponent<? extends @NonNull Object> valueAndComponent(DataTypeValue dataTypeValue, boolean topLevel) throws InternalException
+    private static GetValueAndComponent<? extends Object> valueAndComponent(DataTypeValue dataTypeValue, boolean topLevel) throws InternalException
     {
-        return dataTypeValue.applyGet(new DataTypeVisitorGetEx<GetValueAndComponent<? extends @NonNull Object>, InternalException>()
+        return dataTypeValue.applyGet(new DataTypeVisitorGetEx<GetValueAndComponent<? extends Object>, InternalException>()
         {
             @Override
-            public GetValueAndComponent<? extends @NonNull Object> number(GetValue<@Value Number> g, NumberInfo displayInfo) throws InternalException
+            public GetValueAndComponent<? extends Object> number(GetValue<Number> g, NumberInfo displayInfo) throws InternalException
             {
-                return new GetValueAndComponent<@ImmediateValue Number>(dataTypeValue.getType(), Number.class, g, new NumberRecogniser(), new NumberColumnFormatter());
+                return new GetValueAndComponent<Number>(dataTypeValue.getType(), Number.class, g, new NumberRecogniser(), new NumberColumnFormatter());
             }
 
             @Override
-            public GetValueAndComponent<? extends @NonNull Object> text(GetValue<@Value String> g) throws InternalException
+            public GetValueAndComponent<? extends Object> text(GetValue<String> g) throws InternalException
             {
-                return new GetValueAndComponent<@ImmediateValue String>(dataTypeValue.getType(), String.class, g, new StringRecogniser(topLevel));
+                return new GetValueAndComponent<String>(dataTypeValue.getType(), String.class, g, new StringRecogniser(topLevel));
             }
 
             @Override
-            public GetValueAndComponent<? extends @NonNull Object> bool(GetValue<@Value Boolean> g) throws InternalException
+            public GetValueAndComponent<? extends Object> bool(GetValue<Boolean> g) throws InternalException
             {
-                return new GetValueAndComponent<@Value Boolean>(dataTypeValue.getType(), Boolean.class, g, new BooleanRecogniser());
+                return new GetValueAndComponent<Boolean>(dataTypeValue.getType(), Boolean.class, g, new BooleanRecogniser());
             }
 
             @Override
-            public GetValueAndComponent<? extends @NonNull Object> date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> g) throws InternalException
+            public GetValueAndComponent<? extends Object> date(DateTimeInfo dateTimeInfo, GetValue<TemporalAccessor> g) throws InternalException
             {
-                return new GetValueAndComponent<@Value TemporalAccessor>(dataTypeValue.getType(), TemporalAccessor.class, g, new TemporalRecogniser(dateTimeInfo.getType()));
+                return new GetValueAndComponent<TemporalAccessor>(dataTypeValue.getType(), TemporalAccessor.class, g, new TemporalRecogniser(dateTimeInfo.getType()));
                 
                 //switch (dateTimeInfo.getType())
                 //{
@@ -539,26 +524,24 @@ public class TableDisplayUtility
             }
 
             @Override
-            public GetValueAndComponent<? extends @NonNull Object> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tagTypes, GetValue<TaggedValue> getTagged) throws InternalException
+            public GetValueAndComponent<? extends Object> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tagTypes, GetValue<TaggedValue> getTagged) throws InternalException
             {
-                return new GetValueAndComponent<TaggedValue>(dataTypeValue.getType(), TaggedValue.class, getTagged, new TaggedRecogniser(Utility.<TagType<DataType>, TagType<Recogniser<? extends @NonNull @ImmediateValue Object>>>mapListInt(tagTypes, tt -> tt.<Recogniser<? extends @NonNull @ImmediateValue Object>>mapInt(t -> recogniser(t, false).recogniser))));
+                return new GetValueAndComponent<TaggedValue>(dataTypeValue.getType(), TaggedValue.class, getTagged, new TaggedRecogniser(Utility.<TagType<DataType>, TagType<Recogniser<? extends Object>>>mapListInt(tagTypes, tt -> tt.<Recogniser<? extends Object>>mapInt(t -> recogniser(t, false).recogniser))));
                     //(parents, v) -> (Component<@Value TaggedValue>)new TaggedComponent(parents, tagTypes, v));
             }
 
             @Override
-            @OnThread(Tag.FXPlatform)
-            public GetValueAndComponent<? extends @NonNull Object> record(ImmutableMap<@ExpressionIdentifier String, DataType> types, GetValue<@Value Record> g) throws InternalException, InternalException
+            public GetValueAndComponent<? extends Object> record(ImmutableMap<String, DataType> types, GetValue<Record> g) throws InternalException, InternalException
             {
-                ImmutableMap<@ExpressionIdentifier String, Recogniser<? extends @NonNull @ImmediateValue Object>> recognisers = Utility.<@ExpressionIdentifier String, DataType, Recogniser<? extends @NonNull @ImmediateValue Object>>mapValuesInt(types, t -> recogniser(t, false).recogniser);
+                ImmutableMap<String, Recogniser<? extends Object>> recognisers = Utility.<String, DataType, Recogniser<? extends Object>>mapValuesInt(types, t -> recogniser(t, false).recogniser);
 
-                return new GetValueAndComponent<@Value Record>(dataTypeValue.getType(), (Class<@Value Record>)Record.class, g, new RecordRecogniser(recognisers));
+                return new GetValueAndComponent<Record>(dataTypeValue.getType(), (Class<Record>)Record.class, g, new RecordRecogniser(recognisers));
             }
 
             @Override
-            @OnThread(Tag.FXPlatform)
-            public GetValueAndComponent<? extends @NonNull Object> array(DataType inner, GetValue<@Value ListEx> g) throws InternalException
+            public GetValueAndComponent<? extends Object> array(DataType inner, GetValue<ListEx> g) throws InternalException
             {
-                return new GetValueAndComponent<@ImmediateValue ListEx>(dataTypeValue.getType(), ListEx.class, g, new ListRecogniser(recogniser(inner, false).recogniser));
+                return new GetValueAndComponent<ListEx>(dataTypeValue.getType(), ListEx.class, g, new ListRecogniser(recogniser(inner, false).recogniser));
                     /*
                 (parents, value) ->
                 {
@@ -663,53 +646,53 @@ public class TableDisplayUtility
     }
     
     
-    public static RecogniserAndType<? extends @NonNull @ImmediateValue Object> recogniser(DataType dataType, boolean topLevel) throws InternalException
+    public static RecogniserAndType<? extends Object> recogniser(DataType dataType, boolean topLevel) throws InternalException
     {   
-        return dataType.apply(new DataTypeVisitorEx<RecogniserAndType<? extends @ImmediateValue @NonNull Object>, InternalException>()
+        return dataType.apply(new DataTypeVisitorEx<RecogniserAndType<? extends Object>, InternalException>()
         {
-            private <T> RecogniserAndType<? extends @ImmediateValue @NonNull Object> r(Recogniser<@NonNull @ImmediateValue T> recogniser, Class<@UnknownIfValue T> itemClass)
+            private <T> RecogniserAndType<? extends Object> r(Recogniser<T> recogniser, Class<T> itemClass)
             {
-                return new RecogniserAndType<@NonNull @ImmediateValue T>(recogniser, (Class<@NonNull @ImmediateValue T>)itemClass);
+                return new RecogniserAndType<T>(recogniser, (Class<T>)itemClass);
             }
             
             @Override
-            public RecogniserAndType<? extends @NonNull @ImmediateValue Object> number(NumberInfo numberInfo) throws InternalException
+            public RecogniserAndType<? extends Object> number(NumberInfo numberInfo) throws InternalException
             {
                 return r(new NumberRecogniser(), Number.class);
             }
 
             @Override
-            public RecogniserAndType<? extends @NonNull @ImmediateValue Object> text() throws InternalException
+            public RecogniserAndType<? extends Object> text() throws InternalException
             {
                 return r(new StringRecogniser(topLevel), String.class);
             }
 
             @Override
-            public RecogniserAndType<? extends @NonNull @ImmediateValue Object> date(DateTimeInfo dateTimeInfo) throws InternalException
+            public RecogniserAndType<? extends Object> date(DateTimeInfo dateTimeInfo) throws InternalException
             {
                 return r(new TemporalRecogniser(dateTimeInfo.getType()), TemporalAccessor.class);
             }
 
             @Override
-            public RecogniserAndType<? extends @NonNull @ImmediateValue Object> bool() throws InternalException
+            public RecogniserAndType<? extends Object> bool() throws InternalException
             {
                 return r(new BooleanRecogniser(), Boolean.class);
             }
 
             @Override
-            public RecogniserAndType<? extends @NonNull @ImmediateValue Object> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException
+            public RecogniserAndType<? extends Object> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException
             {
-                return r(new TaggedRecogniser(Utility.<TagType<DataType>, TagType<Recogniser<? extends @NonNull @ImmediateValue Object>>>mapListInt(tags, tt -> tt.<Recogniser<? extends @NonNull @ImmediateValue Object>>mapInt(t -> recogniser(t, false).recogniser))), TaggedValue.class);
+                return r(new TaggedRecogniser(Utility.<TagType<DataType>, TagType<Recogniser<? extends Object>>>mapListInt(tags, tt -> tt.<Recogniser<? extends Object>>mapInt(t -> recogniser(t, false).recogniser))), TaggedValue.class);
             }
 
             @Override
-            public RecogniserAndType<? extends @NonNull @ImmediateValue Object> record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, InternalException
+            public RecogniserAndType<? extends Object> record(ImmutableMap<String, DataType> fields) throws InternalException, InternalException
             {
-                return r(new RecordRecogniser(Utility.<@ExpressionIdentifier String, DataType, Recogniser<? extends @NonNull @ImmediateValue Object>>mapValuesInt(fields, t -> recogniser(t, false).recogniser)), (Class<@ImmediateValue Record>)Record.class);
+                return r(new RecordRecogniser(Utility.<String, DataType, Recogniser<? extends Object>>mapValuesInt(fields, t -> recogniser(t, false).recogniser)), (Class<Record>)Record.class);
             }
 
             @Override
-            public RecogniserAndType<? extends @NonNull @ImmediateValue Object> array(DataType inner) throws InternalException
+            public RecogniserAndType<? extends Object> array(DataType inner) throws InternalException
             {
                 return r(new ListRecogniser(recogniser(inner, false).recogniser), ListEx.class);
             }

@@ -33,11 +33,10 @@ import java.lang.annotation.Target;
  * A location in some imagined virtual space, in pixels. 
  */
 @Documented
-@SubtypeOf(value=UnknownUnits.class)
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE_USE, ElementType.TYPE_PARAMETER})
 public @interface VirtualPixels
 {
-    public static @VirtualPixels int ONE = 1;
-    public static @VirtualPixels int ZERO = 0;
+    public static int ONE = 1;
+    public static int ZERO = 0;
 }

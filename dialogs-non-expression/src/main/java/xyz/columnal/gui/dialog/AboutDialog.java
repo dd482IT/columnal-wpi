@@ -36,7 +36,6 @@ import xyz.columnal.utility.gui.DimmableParent;
 import xyz.columnal.utility.gui.FXUtility;
 import xyz.columnal.utility.gui.GUI;
 
-@OnThread(Tag.FXPlatform)
 public class AboutDialog extends Dialog<Void>
 {
     public AboutDialog(DimmableParent owner)

@@ -33,7 +33,7 @@ public interface RequestBackwardsExpression
 {
     public Expression make(DataType type, Object targetValue, int maxLevels) throws UserException, InternalException;
 
-    public @Value Object makeValue(DataType t) throws UserException, InternalException;
+    public Object makeValue(DataType t) throws UserException, InternalException;
     
     public DataType makeType() throws InternalException, UserException;
     
@@ -41,5 +41,5 @@ public interface RequestBackwardsExpression
     
     public UnitExpression makeUnitExpression(Unit unit);
 
-    public @Value long genInt();
+    public long genInt();
 }

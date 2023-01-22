@@ -38,13 +38,11 @@ import xyz.columnal.utility.function.fx.FXPlatformRunnable;
  * A GUI list of quick-fix suggestions.  Like a ListView, but sizes to fit properly
  * and allows for key events on other items (e.g. a text field) to control it and trigger it.
  */
-@OnThread(Tag.FXPlatform)
 public class FixList extends VBox
 {
     private int selectedIndex; // TODO add support for keyboard selection
     private ImmutableList<FixInfo> fixes;
 
-    @OnThread(Tag.FXPlatform)
     public FixList(ImmutableList<FixInfo> fixes)
     {
         selectedIndex = -1;
@@ -54,8 +52,7 @@ public class FixList extends VBox
         setFixes(fixes);
     }
 
-    @EnsuresNonNull("this.fixes")
-    public void setFixes(@UnknownInitialization(VBox.class) FixList this, ImmutableList<FixInfo> fixes)
+    public void setFixes(FixList this, ImmutableList<FixInfo> fixes)
     {
         this.fixes = fixes;
         getChildren().clear();
@@ -100,7 +97,6 @@ public class FixList extends VBox
     {
         private final FXPlatformRunnable execute;
 
-        @OnThread(Tag.FXPlatform)
         public FixRow(FixInfo fixInfo)
         {
             this.execute = fixInfo.executeFix;
@@ -115,9 +111,7 @@ public class FixList extends VBox
             });
         }
 
-        @OnThread(Tag.FXPlatform)
-        @RequiresNonNull("execute")
-        private void doFix(@UnknownInitialization(BorderPane.class) FixRow this)
+        private void doFix(FixRow this)
         {
             execute.run();
         }

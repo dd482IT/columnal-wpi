@@ -52,7 +52,6 @@ import java.util.OptionalDouble;
  * abstract method for doing the layout.  Most subclasses will want to extend {@link VirtualGridSupplierIndividual},
  * which has extra logic for most common cases.
  */
-@OnThread(Tag.FXPlatform)
 public abstract class VirtualGridSupplier<T extends Node>
 {
     /**
@@ -74,7 +73,7 @@ public abstract class VirtualGridSupplier<T extends Node>
      * 
      * If no nodes are in that column, returns empty instead.
      */
-    public abstract OptionalDouble getPrefColumnWidth(@AbsColIndex int colIndex);
+    public abstract OptionalDouble getPrefColumnWidth(int colIndex);
 
     /**
      * EDITING means it has focus and should receive all mouse events.
@@ -89,18 +88,17 @@ public abstract class VirtualGridSupplier<T extends Node>
      * If none, return null;
      * The second item in the pair is a tooltip to show on hover
      */
-    protected abstract @Nullable Pair<ItemState, @Nullable StyledString> getItemState(CellPosition cellPosition, Point2D screenPosition);
+    protected abstract Pair<ItemState, StyledString> getItemState(CellPosition cellPosition, Point2D screenPosition);
 
     protected abstract void keyboardActivate(CellPosition cellPosition);
     
     /**
      * Start editing that cell, if possible
      */
-    protected void startEditing(@Nullable Point2D screenPosition, CellPosition cellPosition, @Nullable String startType)
+    protected void startEditing(Point2D screenPosition, CellPosition cellPosition, String startType)
     {
     }
 
-    @OnThread(Tag.FXPlatform)
     public static interface ContainerChildren
     {
         // Returns a pair of the translate-X and translate-Y for the container,
@@ -148,16 +146,15 @@ public abstract class VirtualGridSupplier<T extends Node>
     /**
      * Specifies the visible extents being rendered.
      */
-    @OnThread(Tag.FXPlatform)
     public static abstract class VisibleBounds
     {
         // Index of the first column/row visible (inclusive)
-        public final @AbsRowIndex int firstRowIncl;
-        public final @AbsRowIndex int lastRowIncl;
-        public final @AbsColIndex int firstColumnIncl;
-        public final @AbsColIndex int lastColumnIncl;
+        public final int firstRowIncl;
+        public final int lastRowIncl;
+        public final int firstColumnIncl;
+        public final int lastColumnIncl;
 
-        public VisibleBounds(@AbsRowIndex int firstRowIncl, @AbsRowIndex int lastRowIncl, @AbsColIndex int firstColumnIncl, @AbsColIndex int lastColumnIncl)
+        public VisibleBounds(int firstRowIncl, int lastRowIncl, int firstColumnIncl, int lastColumnIncl)
         {
             this.firstRowIncl = firstRowIncl;
             this.lastRowIncl = lastRowIncl;
@@ -166,23 +163,19 @@ public abstract class VirtualGridSupplier<T extends Node>
         }
 
         // The X position of the left of the given item index
-        @OnThread(Tag.FXPlatform)
-        @Pure public abstract double getXCoord(@AbsColIndex int colIndex);
+        public abstract double getXCoord(int colIndex);
 
         // The X position of the top of the given item index
-        @OnThread(Tag.FXPlatform)
-        @Pure public abstract double getYCoord(@AbsRowIndex int rowIndex);
+        public abstract double getYCoord(int rowIndex);
         
         // The X position of the right of the given item index
-        @OnThread(Tag.FXPlatform)
-        @Pure public final double getXCoordAfter(@AbsColIndex int colIndex)
+        public final double getXCoordAfter(int colIndex)
         {
             return getXCoord(colIndex + CellPosition.col(1));
         }
 
         // The Y position of the bottom of the given item index
-        @OnThread(Tag.FXPlatform)
-        @Pure public final double getYCoordAfter(@AbsRowIndex int rowIndex)
+        public final double getYCoordAfter(int rowIndex)
         {
             return getYCoord(rowIndex + CellPosition.row(1));
         }

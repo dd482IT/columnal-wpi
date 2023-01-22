@@ -54,8 +54,7 @@ import java.util.function.Function;
 
 public class ImporterGUI
 {
-    @OnThread(Tag.FXPlatform)
-    public static <C> Row makeGUI(ChoiceDetails<C> choiceDetails, ObjectProperty<@Nullable C> currentChoice)
+    public static <C> Row makeGUI(ChoiceDetails<C> choiceDetails, ObjectProperty<C> currentChoice)
     {
         Node choiceNode;
         if (choiceDetails.quickPicks.isEmpty() && choiceDetails.stringEntry == null)
@@ -79,20 +78,20 @@ public class ImporterGUI
             }
             if (choiceDetails.stringEntry != null)
                 quickAndOther.add(new PickOrOther<>());
-            final @NonNull @Initialized ComboBox<PickOrOther<C>> combo = GUI.comboBoxStyled(FXCollections.<PickOrOther<C>>observableArrayList(quickAndOther));
+            final ComboBox<PickOrOther<C>> combo = GUI.comboBoxStyled(FXCollections.<PickOrOther<C>>observableArrayList(quickAndOther));
             GUI.addIdClass(combo, choiceDetails.getLabelKey());
-            @Nullable C choice = currentChoice.get();
+            C choice = currentChoice.get();
             if (choice == null || !combo.getItems().contains(new PickOrOther<>(choice)))
                 combo.getSelectionModel().selectFirst();
             else
                 combo.getSelectionModel().select(new PickOrOther<>(choice));
 
-            final @Nullable @Initialized ObjectExpression<@Nullable C> fieldValue;
+            final ObjectExpression<C> fieldValue;
             if (choiceDetails.stringEntry != null)
             {
-                final @NonNull Function<String, Either<@Localized String, @NonNull C>> stringEntry = choiceDetails.stringEntry;
-                ErrorableTextField<@NonNull C> field = new ErrorableTextField<@NonNull C>(s -> {
-                    return stringEntry.apply(s).<ConversionResult<@NonNull C>>either(e -> ConversionResult.<@NonNull C>error(StyledString.s(e)), v -> ConversionResult.<@NonNull C>success(v));
+                final Function<String, Either<String, C>> stringEntry = choiceDetails.stringEntry;
+                ErrorableTextField<C> field = new ErrorableTextField<C>(s -> {
+                    return stringEntry.apply(s).<ConversionResult<C>>either(e -> ConversionResult.<C>error(StyledString.s(e)), v -> ConversionResult.<C>success(v));
                 });
                 fieldValue = field.valueProperty();
                 choiceNode = new HBox(combo, field.getNode());
@@ -108,8 +107,8 @@ public class ImporterGUI
                 fieldValue = null;
                 choiceNode = combo;
             }
-            ReadOnlyObjectProperty<@Nullable PickOrOther<C>> selectedItemProperty = combo.getSelectionModel().selectedItemProperty();
-            FXPlatformFunction<@Nullable PickOrOther<C>, @Nullable C> extract = (@Nullable PickOrOther<C> selectedItem) -> {
+            ReadOnlyObjectProperty<PickOrOther<C>> selectedItemProperty = combo.getSelectionModel().selectedItemProperty();
+            FXPlatformFunction<PickOrOther<C>, C> extract = (PickOrOther<C> selectedItem) -> {
                 if (selectedItem != null && selectedItem.value != null)
                     return selectedItem.value;
                 else if (selectedItem != null && selectedItem.value == null && fieldValue != null && fieldValue.get() != null)
@@ -134,7 +133,7 @@ public class ImporterGUI
     // Public for testing
     public static class PickOrOther<C>
     {
-        private final @Nullable C value;
+        private final C value;
 
         public PickOrOther()
         {
@@ -147,7 +146,7 @@ public class ImporterGUI
         }
 
         @Override
-        public boolean equals(@Nullable Object o)
+        public boolean equals(Object o)
         {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
@@ -164,7 +163,7 @@ public class ImporterGUI
         }
 
         @Override
-        public @Localized String toString()
+        public String toString()
         {
             return value == null ? TranslationUtility.getString("import.choice.specify") : Utility.universal(convertInvisible(value.toString()));
         }

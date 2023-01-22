@@ -28,10 +28,10 @@ import xyz.columnal.transformations.expression.Expression.SaveDestination;
 
 public class UnitDivideExpression extends UnitExpression
 {
-    private final @Recorded UnitExpression numerator;
-    private final @Recorded UnitExpression denominator;
+    private final UnitExpression numerator;
+    private final UnitExpression denominator;
 
-    public UnitDivideExpression(@Recorded UnitExpression numerator, @Recorded UnitExpression denominator)
+    public UnitDivideExpression(UnitExpression numerator, UnitExpression denominator)
     {
         this.numerator = numerator;
         this.denominator = denominator;
@@ -67,7 +67,7 @@ public class UnitDivideExpression extends UnitExpression
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;

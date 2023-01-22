@@ -59,12 +59,9 @@ import static org.junit.Assert.assertNotNull;
 /**
  * Created by neil on 05/06/2017.
  */
-@RunWith(JUnitQuickcheck.class)
 public class PropStorageSet
 {
-    @Property(trials = 100)
-    @OnThread(Tag.Simulation)
-    public void testSet(@From(GenTypeAndValueGen.class) GenTypeAndValueGen.TypeAndValueGen typeAndValueGen, @From(GenRandom.class) Random r) throws UserException, InternalException, Exception
+    public void testSet(GenTypeAndValueGen.TypeAndValueGen typeAndValueGen, Random r) throws UserException, InternalException, Exception
     {
         // Make sure FX is initialised:
         SwingUtilities.invokeAndWait(() -> new JFXPanel());
@@ -77,10 +74,10 @@ public class PropStorageSet
         int length = 20;
         recordSet.insertRows(0, length);
         
-        HashMap<Integer, Either<String, @Value Object>> vals = new HashMap<>();
+        HashMap<Integer, Either<String, Object>> vals = new HashMap<>();
         for (int i = 0; i < length; i++)
         {
-            @Value Object defaultValue = c.getDefaultValue();
+            Object defaultValue = c.getDefaultValue();
             vals.put(i, defaultValue == null ? Either.left("") : Either.right(defaultValue));
         }
 
@@ -106,10 +103,10 @@ public class PropStorageSet
                         vals = mapKeys(vals, k -> k < rowIndex ? k : k + count);
                         for (int newItem = 0; newItem < count; newItem++)
                         {
-                            @Value Object defaultValue = c.getDefaultValue();
+                            Object defaultValue = c.getDefaultValue();
                             assertNotNull(defaultValue);
                             if (defaultValue != null)
-                                vals.put(rowIndex + newItem, Either.<String, @Value Object>right(defaultValue));
+                                vals.put(rowIndex + newItem, Either.<String, Object>right(defaultValue));
                         }
                         length += count;
                     }
@@ -141,9 +138,9 @@ public class PropStorageSet
             }
             else
             {
-                @Value Object value = typeAndValueGen.makeValue();
+                Object value = typeAndValueGen.makeValue();
                 DataTypeValue columnType = c.getType();
-                Either<String, @Value Object> valueOrErr = r.nextInt(5) == 1 ? Either.left(("Err " + i)) : Either.right(value);
+                Either<String, Object> valueOrErr = r.nextInt(5) == 1 ? Either.left(("Err " + i)) : Either.right(value);
                 columnType.setCollapsed(rowIndex, valueOrErr);
                 TBasicUtil.assertValueEitherEqual("Type: " + typeAndValueGen.getType() + " index " + rowIndex, valueOrErr, collapseErr(c.getType(), rowIndex));
                 vals.put(rowIndex, valueOrErr);
@@ -156,17 +153,15 @@ public class PropStorageSet
         assertEquals(length, c.getLength());
     }
 
-    @OnThread(Tag.Simulation)
-    private void checkAll(DataType dataType, Column c, HashMap<Integer, Either<String, @Value Object>> vals) throws UserException, InternalException
+    private void checkAll(DataType dataType, Column c, HashMap<Integer, Either<String, Object>> vals) throws UserException, InternalException
     {
-        for (Entry<@KeyFor("vals") Integer, Either<String, @Value Object>> entry : vals.entrySet())
+        for (Entry<Integer, Either<String, Object>> entry : vals.entrySet())
         {
             TBasicUtil.assertValueEitherEqual("Type: " + dataType + " index " + entry.getKey(), entry.getValue(), collapseErr(c.getType(), entry.getKey()));
         }
     }
 
-    @OnThread(Tag.Simulation)
-    private Either<String, @Value Object> collapseErr(DataTypeValue type, int rowIndex) throws UserException, InternalException
+    private Either<String, Object> collapseErr(DataTypeValue type, int rowIndex) throws UserException, InternalException
     {
         try
         {
@@ -178,9 +173,9 @@ public class PropStorageSet
         }
     }
     
-    private static HashMap<Integer, Either<String, @Value Object>> mapKeys(HashMap<Integer, Either<String, @Value Object>> prev, IntFunction<@Nullable Integer> mapper)
+    private static HashMap<Integer, Either<String, Object>> mapKeys(HashMap<Integer, Either<String, Object>> prev, IntFunction<Integer> mapper)
     {
-        HashMap<Integer, Either<String, @Value Object>> r = new HashMap<>();
+        HashMap<Integer, Either<String, Object>> r = new HashMap<>();
         prev.forEach((k, v) -> {
             Integer mapped = mapper.apply(k);
             if (mapped != null)

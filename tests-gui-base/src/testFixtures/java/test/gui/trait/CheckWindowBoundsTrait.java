@@ -38,7 +38,6 @@ import static org.junit.Assert.assertEquals;
 
 public interface CheckWindowBoundsTrait extends FxRobotInterface
 {
-    @OnThread(Tag.Any)
     public default void checkWindowWithinScreen()
     {
         for (Window window : TFXUtil.fx(() -> listWindows()))

@@ -49,19 +49,18 @@ import xyz.columnal.utility.gui.Help.HelpInfo;
  * A little question mark in a circle which offers a short toolip when hovered over,
  * or a longer tooltip if clicked.
  */
-@OnThread(Tag.FXPlatform)
 class HelpBox extends StackPane
 {
-    private final @HelpKey String helpId;
-    private @MonotonicNonNull PopOver popOver;
+    private final String helpId;
+    private PopOver popOver;
     // Showing full is also equivalent to whether it is pinned.
     private final BooleanProperty showingFull = new SimpleBooleanProperty(false);
     private final BooleanProperty keyboardFocused = new SimpleBooleanProperty(false);
-    private @Nullable FXPlatformRunnable cancelHover;
+    private FXPlatformRunnable cancelHover;
     // To prevent GC issues:
-    private @Nullable BooleanExpression keyboardFocusedBoundTo;
+    private BooleanExpression keyboardFocusedBoundTo;
 
-    public HelpBox(@HelpKey String helpId)
+    public HelpBox(String helpId)
     {
         this.helpId = helpId;
         getStyleClass().add("help-box");
@@ -112,18 +111,16 @@ class HelpBox extends StackPane
     }
 
 
-    @EnsuresNonNullIf(expression = "popOver", result = true)
-    private boolean popupShowing(@UnknownInitialization(StackPane.class) HelpBox this)
+    private boolean popupShowing(HelpBox this)
     {
         return popOver != null && popOver.isShowing();
     }
 
-    @OnThread(Tag.FXPlatform)
     private void showPopOver()
     {
         if (popOver == null)
         {
-            @Nullable HelpInfo helpInfo = Help.getHelpInfo(helpId);
+            HelpInfo helpInfo = Help.getHelpInfo(helpId);
             if (helpInfo != null)
             {
                 Text shortText = new Text(helpInfo.shortText);
@@ -204,7 +201,7 @@ class HelpBox extends StackPane
         }
     }
 
-    public void bindKeyboardFocused(@Nullable BooleanExpression keyboardFocused)
+    public void bindKeyboardFocused(BooleanExpression keyboardFocused)
     {
         if (keyboardFocused != null)
             this.keyboardFocused.bind(keyboardFocused);

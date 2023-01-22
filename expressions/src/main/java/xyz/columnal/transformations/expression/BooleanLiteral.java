@@ -34,7 +34,7 @@ import xyz.columnal.styled.StyledString;
  */
 public class BooleanLiteral extends Literal
 {
-    private final @Value Boolean value;
+    private final Boolean value;
 
     public BooleanLiteral(boolean value)
     {
@@ -42,7 +42,7 @@ public class BooleanLiteral extends Literal
     }
 
     @Override
-    protected @Nullable TypeExp checkType(TypeState typeState, LocationInfo locationInfo, ErrorAndTypeRecorder onError)
+    protected TypeExp checkType(TypeState typeState, LocationInfo locationInfo, ErrorAndTypeRecorder onError)
     {
         return TypeExp.bool(this);
     }
@@ -66,7 +66,7 @@ public class BooleanLiteral extends Literal
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;

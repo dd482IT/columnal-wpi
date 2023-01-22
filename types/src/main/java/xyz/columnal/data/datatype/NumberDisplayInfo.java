@@ -46,13 +46,11 @@ public class NumberDisplayInfo
         this.rightPadding = rightPadding;
     }
 
-    @Pure
     public int getMinimumDP()
     {
         return minimumDP;
     }
 
-    @Pure
     public int getMaximumDP()
     {
         return maximumDP;
@@ -63,7 +61,7 @@ public class NumberDisplayInfo
         return rightPadding == Padding.ZERO ? "0" : " ";
     }
 
-    public static @Nullable NumberDisplayInfo merge(@Nullable NumberDisplayInfo a, @Nullable NumberDisplayInfo b)
+    public static NumberDisplayInfo merge(NumberDisplayInfo a, NumberDisplayInfo b)
     {
         if (a == null && b == null)
             return null;
@@ -78,7 +76,7 @@ public class NumberDisplayInfo
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;

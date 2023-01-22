@@ -69,18 +69,15 @@ import java.util.OptionalInt;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-@OnThread(Tag.FXPlatform)
 public final class EditorDisplay extends TextEditorBase implements TimedFocusable, LexAutoComplete.EditorDisplayInterface
 {
     private boolean hasBeenFocused = false;
     private long lastFocusLeft;
 
-    @OnThread(Tag.FXPlatform)
     public static class TokenBackground extends Style<TokenBackground>
     {
         private final ImmutableList<String> styleClasses;
 
-        @OnThread(Tag.Any)
         public TokenBackground(ImmutableList<String> styleClasses)
         {
             super(TokenBackground.class);
@@ -89,20 +86,18 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
 
 
         @Override
-        protected @OnThread(Tag.FXPlatform) void style(Text t)
+        protected void style(Text t)
         {
             // We don't style the text directly
         }
 
         @Override
-        @OnThread(Tag.Any)
         protected TokenBackground combine(TokenBackground with)
         {
             return new TokenBackground(Utility.concatI(styleClasses, with.styleClasses));
         }
 
         @Override
-        @OnThread(Tag.Any)
         protected boolean equalsStyle(TokenBackground item)
         {
             return styleClasses.equals(item.styleClasses);
@@ -113,13 +108,13 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
     private final LexAutoComplete autoComplete;
     private final TopLevelEditor<?, ?, ?> editor;
 
-    public EditorDisplay(EditorContent<?, ?> theContent, FXPlatformConsumer<Integer> triggerFix, @UnknownInitialization TopLevelEditor<?, ?, ?> editor)
+    public EditorDisplay(EditorContent<?, ?> theContent, FXPlatformConsumer<Integer> triggerFix, TopLevelEditor<?, ?, ?> editor)
     {
         super(ImmutableList.of());
         this.autoComplete = Utility.later(new LexAutoComplete(this, new LexCompletionListener()
         {
             @Override
-            public void insert(@Nullable @CanonicalLocation Integer start, String text)
+            public void insert(Integer start, String text)
             {
                 theContent.insert(start, text);
             }
@@ -175,16 +170,16 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
                 triggerFix.consume(fKey.getAsInt() - 1);
             }
             
-            @CanonicalLocation int[] caretPositions = content.getValidCaretPositions();
+            int[] caretPositions = content.getValidCaretPositions();
             int caretPosIndex = content.getCaretPosAsValidIndex();
-            @CanonicalLocation int caretPosition = content.getCaretPosition();
+            int caretPosition = content.getCaretPosition();
             switch (keyEvent.getCode())
             {
                 case LEFT:
                     if (caretPosition != content.getAnchorPosition() && !keyEvent.isShiftDown())
                     {
                         @SuppressWarnings("units")
-                        @CanonicalLocation int start = Math.min(caretPosition, content.getAnchorPosition());
+                        int start = Math.min(caretPosition, content.getAnchorPosition());
                         content.positionCaret(start, true);
                     }
                     else if (FXUtility.wordSkip(keyEvent))
@@ -196,7 +191,7 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
                     if (caretPosition != content.getAnchorPosition() && !keyEvent.isShiftDown())
                     {
                         @SuppressWarnings("units")
-                        @CanonicalLocation int end = Math.max(caretPosition, content.getAnchorPosition());
+                        int end = Math.max(caretPosition, content.getAnchorPosition());
                         content.positionCaret(end, true);
                     }
                     else if (FXUtility.wordSkip(keyEvent))
@@ -316,7 +311,7 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
                 {
                     // Overtype instead
                     @SuppressWarnings("units")
-                    @CanonicalLocation int one = 1;
+                    int one = 1;
                     this.content.positionCaret(content.getCaretPosition() + one, true);
                 }
                 else if ("({[\"".contains(character) && !content.suppressBracketMatch(content.getCaretPosition()) && content.getCaretPosition() == content.getAnchorPosition())
@@ -357,9 +352,9 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
     private void selectWordAt(double localX, double localY)
     {
         positionCaret(localX, localY, true);
-        @CanonicalLocation int start = content.prevWordPosition(true);
+        int start = content.prevWordPosition(true);
         content.positionCaret(start, true);
-        @CanonicalLocation int end = content.nextWordPosition();
+        int end = content.nextWordPosition();
         if (start == end)
         {
             start = content.prevWordPosition(false);
@@ -375,13 +370,12 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
         if (hitInfo != null)
         {
             @SuppressWarnings("units")
-            @DisplayLocation int insertionIndex = hitInfo.getInsertionIndex();
+            int insertionIndex = hitInfo.getInsertionIndex();
             content.positionCaret(content.mapDisplayToContent(insertionIndex, !hitInfo.isLeading()), moveAnchor);
         }
     }
 
     @Override
-    @OnThread(Tag.FXPlatform)
     public long lastFocusedTime()
     {
         return isFocused() ? System.currentTimeMillis() : lastFocusLeft;
@@ -394,7 +388,7 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
     }
 
     @Override
-    public @OnThread(value = Tag.FXPlatform) void focusChanged(boolean focused)
+    public void focusChanged(boolean focused)
     {
         if (!focused)
         {
@@ -427,10 +421,10 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
         }
         else if (p.furtherDetails != null)
         {
-            p.furtherDetails.ifRight(new Consumer<Pair<String, @Nullable String>>()
+            p.furtherDetails.ifRight(new Consumer<Pair<String, String>>()
             {
                 @Override
-                public void accept(Pair<String, @Nullable String> furtherDetailsURL)
+                public void accept(Pair<String, String> furtherDetailsURL)
                 {
                     SwingUtilities.invokeLater(() -> {
                         try
@@ -461,7 +455,7 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
             caretAndSelectionNodes.queueUpdateCaretShape(contentChanged);
     }
     
-    void showCompletions(@Nullable ImmutableList<LexCompletionGroup> completions)
+    void showCompletions(ImmutableList<LexCompletionGroup> completions)
     {
         if (completions != null && isFocused())
             autoComplete.show(completions);
@@ -471,7 +465,6 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
 
     // How many right presses (positive) or left (negative) to
     // reach nearest end of given content?
-    @OnThread(Tag.FXPlatform)
     public int _test_getCaretMoveDistance(String targetContent)
     {
         return content._test_getCaretMoveDistance(targetContent);
@@ -489,52 +482,49 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
         return this;
     }
 
-    public @Nullable Point2D getCaretBottomOnScreen()
+    public Point2D getCaretBottomOnScreen()
     {
         return getCaretBottomOnScreen(content.getCaretPosition());
     }
 
     @Override
-    public @Nullable Point2D getCaretBottomOnScreen(@CanonicalLocation int caretPos)
+    public Point2D getCaretBottomOnScreen(int caretPos)
     {
         // localToScreen can return null if not in window, hence the @Nullable return
         return localToScreen(textFlow.getClickPosFor(content.mapContentToDisplay(caretPos), VPos.BOTTOM, new Dimension2D(0, 0)).getFirst());
     }
 
-    public @Nullable Point2D getCaretTopOnScreen()
+    public Point2D getCaretTopOnScreen()
     {
         return localToScreen(textFlow.getClickPosFor(content.mapContentToDisplay(content.getCaretPosition()), VPos.TOP, new Dimension2D(0, 0)).getFirst());
     }
     
-    @OnThread(Tag.FXPlatform)
     @Override
-    public @CanonicalLocation int getCaretPosition()
+    public int getCaretPosition()
     {
         return content.getCaretPosition();
     }
     
-    public @OnThread(Tag.FXPlatform) int getAnchorPosition()
+    public int getAnchorPosition()
     {
         return content.getAnchorPosition();
     }
 
     @Override
-    @OnThread(Tag.FXPlatform)
-    public @DisplayLocation int getDisplayCaretPosition()
+    public int getDisplayCaretPosition()
     {
         return content.getDisplayCaretPosition();
     }
 
     @Override
-    @OnThread(Tag.FXPlatform)
-    public @DisplayLocation int getDisplayAnchorPosition()
+    public int getDisplayAnchorPosition()
     {
         return content.getDisplayAnchorPosition();
     }
 
     @Override
     @SuppressWarnings("units")
-    public @OnThread(Tag.FXPlatform) BitSet getErrorCharacters()
+    public BitSet getErrorCharacters()
     {
         BitSet errorChars = new BitSet();
         for (ErrorDetails error : content.getErrors())
@@ -576,7 +566,7 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
         return editor;
     }
 
-    public Bounds _test_getCaretBounds(@CanonicalLocation int pos)
+    public Bounds _test_getCaretBounds(int pos)
     {
         try
         {
@@ -604,7 +594,7 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) ImmutableList<BackgroundInfo> getBackgrounds()
+    public ImmutableList<BackgroundInfo> getBackgrounds()
     {
         ImmutableList.Builder<BackgroundInfo> r = ImmutableList.builder();
         content.getDisplay().forEach(new BiConsumer<ImmutableList<StyledString.Style<?>>, String>()
@@ -633,13 +623,12 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
     }
 
     @Override
-    protected @OnThread(Tag.FXPlatform) Point2D translateHit(double x, double y)
+    protected Point2D translateHit(double x, double y)
     {
         return new Point2D(x, y);
     }
 
     @Override
-    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     protected void layoutChildren()
     {
         double wholeTextHeight = textFlow.prefHeight(getWidth());
@@ -663,27 +652,25 @@ public final class EditorDisplay extends TextEditorBase implements TimedFocusabl
     }
 
     @Override
-    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     protected double computeMinHeight(double width)
     {
         return textFlow.prefHeight(width);
     }
 
     @Override
-    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     protected double computePrefHeight(double width)
     {
         return textFlow.prefHeight(width);
     }
 
     @Override
-    protected @OnThread(Tag.FXPlatform) void replaceSelection(String replacement)
+    protected void replaceSelection(String replacement)
     {
         content.replaceSelection(replacement);
     }
 
     @Override
-    protected @OnThread(Tag.FXPlatform) String getSelectedText()
+    protected String getSelectedText()
     {
         return content.getText().substring(Math.min(content.getCaretPosition(), content.getAnchorPosition()), Math.max(content.getCaretPosition(), content.getAnchorPosition()));
     }

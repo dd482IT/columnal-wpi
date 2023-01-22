@@ -51,7 +51,6 @@ public interface AutoCompleteTrait extends FxRobotInterface, QueryTrait
         push(KeyCode.ENTER);
     }
 
-    @OnThread(Tag.Any)
     default void scrollLexAutoCompleteToOption(String content)
     {
         List<Window> autos = TFXUtil.fx(() -> listWindows()).stream().filter(w -> TFXUtil.fx(() -> w.isShowing())).filter(w -> w instanceof LexAutoCompleteWindow).collect(Collectors.toList());
@@ -61,9 +60,9 @@ public interface AutoCompleteTrait extends FxRobotInterface, QueryTrait
 
         // Move to top:
         String prev = "\u0000";
-        while (!Objects.equals(prev, TFXUtil.<@Nullable String>fx(() -> autoComplete._test_getSelectedContent())))
+        while (!Objects.equals(prev, TFXUtil.<String>fx(() -> autoComplete._test_getSelectedContent())))
         {
-            prev = TFXUtil.<@Nullable String>fx(() -> autoComplete._test_getSelectedContent());
+            prev = TFXUtil.<String>fx(() -> autoComplete._test_getSelectedContent());
             push(KeyCode.PAGE_UP);
         }
 
@@ -71,16 +70,16 @@ public interface AutoCompleteTrait extends FxRobotInterface, QueryTrait
 
         // Now scroll down until we find it, or reach end:
         prev = "\u0000";
-        while (!Objects.equals(prev, TFXUtil.<@Nullable String>fx(() -> autoComplete._test_getSelectedContent()))
-            && !Objects.equals(content, TFXUtil.<@Nullable String>fx(() -> autoComplete._test_getSelectedContent())))
+        while (!Objects.equals(prev, TFXUtil.<String>fx(() -> autoComplete._test_getSelectedContent()))
+            && !Objects.equals(content, TFXUtil.<String>fx(() -> autoComplete._test_getSelectedContent())))
         {
-            prev = TFXUtil.<@Nullable String>fx(() -> autoComplete._test_getSelectedContent());
+            prev = TFXUtil.<String>fx(() -> autoComplete._test_getSelectedContent());
             if (prev != null)
                 all.add(prev);
             push(KeyCode.DOWN);
         }
 
-        Assert.assertEquals("Options: " + all.stream().collect(Collectors.joining(";")), content, TFXUtil.<@Nullable String>fx(() -> autoComplete._test_getSelectedContent()));
+        Assert.assertEquals("Options: " + all.stream().collect(Collectors.joining(";")), content, TFXUtil.<String>fx(() -> autoComplete._test_getSelectedContent()));
     }
 
 
@@ -91,7 +90,7 @@ public interface AutoCompleteTrait extends FxRobotInterface, QueryTrait
         for (int i = TFXUtil.fx(() -> listView.getSelectionModel().getSelectedIndex()); i < itemCount; i++)
         {
             push(KeyCode.DOWN);
-            if (Objects.equals(TFXUtil.<@Nullable String>fx(() -> Utility.onNullable(listView.getSelectionModel().getSelectedItem(), x -> x._test_getContent())), completion))
+            if (Objects.equals(TFXUtil.<String>fx(() -> Utility.onNullable(listView.getSelectionModel().getSelectedItem(), x -> x._test_getContent())), completion))
             {
                 push(useTab ? KeyCode.TAB : KeyCode.ENTER);
                 return;

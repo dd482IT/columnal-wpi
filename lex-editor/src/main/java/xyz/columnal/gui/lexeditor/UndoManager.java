@@ -29,7 +29,7 @@ import java.util.ArrayList;
 //package-visible
 class UndoManager
 {
-    private final ArrayList<Pair<String, @CanonicalLocation Integer>> undoList = new ArrayList<>();
+    private final ArrayList<Pair<String, Integer>> undoList = new ArrayList<>();
     private int curIndex = 0;
     
     public UndoManager(String originalContent)
@@ -37,7 +37,7 @@ class UndoManager
         undoList.add(new Pair<>(originalContent, CanonicalLocation.ZERO));
     }
     
-    public @Nullable Pair<String, @CanonicalLocation Integer> undo()
+    public Pair<String, Integer> undo()
     {
         if (curIndex > 0)
         {
@@ -47,7 +47,7 @@ class UndoManager
         return null;
     }
 
-    public @Nullable Pair<String, @CanonicalLocation Integer> redo()
+    public Pair<String, Integer> redo()
     {
         if (curIndex + 1 < undoList.size())
         {
@@ -57,7 +57,7 @@ class UndoManager
         return null;
     }
     
-    public void contentChanged(String newContent, @CanonicalLocation int caretPosition)
+    public void contentChanged(String newContent, int caretPosition)
     {
         if (curIndex == undoList.size() - 1)
         {

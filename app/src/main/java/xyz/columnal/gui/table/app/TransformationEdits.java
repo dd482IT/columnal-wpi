@@ -73,7 +73,6 @@ import java.util.concurrent.TimeUnit;
 
 public class TransformationEdits
 {
-    @OnThread(Tag.FXPlatform)
     static void editColumn_Calc(View parent, Calculate calc, ColumnId columnId) throws InternalException, UserException
     {
         // Start with the existing value.
@@ -93,12 +92,11 @@ public class TransformationEdits
         });
     }
 
-    @OnThread(Tag.FXPlatform)
     static void editAggregateSplitBy(View parent, Aggregate aggregate)
     {
         CompletableFuture<Optional<Pair<ColumnId, ImmutableList<String>>>> exampleSplitColumn = new CompletableFuture<>();
         new Thread(() -> {
-            @Nullable Pair<ColumnId, ImmutableList<String>> example = null;
+            Pair<ColumnId, ImmutableList<String>> example = null;
             long limit = System.currentTimeMillis() + 500;
             Workers.onWorkerThread("Fetch example split", Priority.FETCH, () -> {
                 try
@@ -122,7 +120,7 @@ public class TransformationEdits
             {
                 // Never mind, just show the dialog without
             }
-            final @Nullable Pair<ColumnId, ImmutableList<String>> exampleFinal = example;
+            final Pair<ColumnId, ImmutableList<String>> exampleFinal = example;
             FXUtility.runAfter(() -> {
                 new EditAggregateSplitByDialog(parent, null, parent.getManager().getSingleTableOrNull(aggregate.getSrcTableId()), exampleFinal, aggregate.getSplitBy()).showAndWait().ifPresent(splitBy -> Workers.onWorkerThread("Edit aggregate", Priority.SAVE, () -> {
                     FXUtility.alertOnError_(TranslationUtility.getString("error.editing.aggregate"), () -> parent.getManager().edit(aggregate, id -> new Aggregate(parent.getManager(), aggregate.getDetailsForCopy(id), aggregate.getSrcTableId(), aggregate.getColumnExpressions(), splitBy), RenameOnEdit.ifOldAuto(Aggregate.suggestedName(splitBy, aggregate.getColumnExpressions()))));
@@ -131,8 +129,7 @@ public class TransformationEdits
         }).start();
     }
 
-    @OnThread(Tag.Simulation)
-    private static @Nullable Pair<ColumnId, ImmutableList<String>> calculateExampleSplit(long end, @Nullable Table table) throws InternalException, UserException
+    private static Pair<ColumnId, ImmutableList<String>> calculateExampleSplit(long end, Table table) throws InternalException, UserException
     {
         if (table == null)
             return null;
@@ -141,7 +138,7 @@ public class TransformationEdits
         // Check first 100 rows:
         int len = Math.min(100, data.getLength());
         int bestGuessSize = len;
-        @Nullable Pair<ColumnId, ImmutableList<String>> bestGuess = null;
+        Pair<ColumnId, ImmutableList<String>> bestGuess = null;
         for (Column column : data.getColumns())
         {
             // No point taking longer than the time-out
@@ -178,7 +175,6 @@ public class TransformationEdits
         return bestGuess;
     }
 
-    @OnThread(Tag.FXPlatform)
     static void editColumn_Agg(View parent, Aggregate agg, ColumnId columnId) throws InternalException, UserException
     {
         // Start with the existing value.
@@ -210,13 +206,12 @@ public class TransformationEdits
         }
     }
 
-    @OnThread(Tag.FXPlatform)
-    static void editColumn_IDS(View parent, ImmediateDataSource data, ColumnId columnId, @Nullable DataType type, InitialFocus initialFocus)
+    static void editColumn_IDS(View parent, ImmediateDataSource data, ColumnId columnId, DataType type, InitialFocus initialFocus)
     {
         new EditImmediateColumnDialog(parent, parent.getManager(),columnId, type, false, initialFocus).showAndWait().ifPresent(columnDetails -> {
             Workers.onWorkerThread("Editing column", Priority.SAVE, () -> {
                 FXUtility.alertOnError_(TranslationUtility.getString("error.saving.column"), () -> {
-                    @Nullable TableMaker<ImmediateDataSource> makeReplacement = null;
+                    TableMaker<ImmediateDataSource> makeReplacement = null;
                     // If column type and default value are unaltered, don't need to re-do table:
                     final Column oldColumn = data.getData().getColumn(columnId);
                     if (!(oldColumn instanceof EditableColumn))
@@ -231,7 +226,7 @@ public class TransformationEdits
                         List<SimulationFunction<RecordSet, EditableColumn>> columns = Utility.mapListEx(data.getData().getColumns(), c -> {
                             if (c.getName().equals(columnId))
                             {
-                                ImmutableList.Builder<Either<String, @Value Object>> newValues = ImmutableList.builderWithExpectedSize(length);
+                                ImmutableList.Builder<Either<String, Object>> newValues = ImmutableList.builderWithExpectedSize(length);
                                 for (int i = 0; i < length; i++)
                                 {
                                     String stringVersion;

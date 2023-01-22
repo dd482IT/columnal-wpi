@@ -62,7 +62,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  */
 public class GenImmediateData extends Generator<ImmediateData_Mgr>
 {
-    private @Nullable NumTables numTables;
+    private NumTables numTables;
     private boolean mustIncludeNumber = false;
     private int nextTableNum = 0;
     private boolean canHaveErrorValues = false;
@@ -88,7 +88,6 @@ public class GenImmediateData extends Generator<ImmediateData_Mgr>
     }
 
     @Override
-    @OnThread(value = Tag.Simulation,ignoreParent = true)
     public ImmediateData_Mgr generate(SourceOfRandomness r, GenerationStatus generationStatus)
     {
         try
@@ -102,7 +101,7 @@ public class GenImmediateData extends Generator<ImmediateData_Mgr>
             for (int t = 0; t < numTables; t++)
             {
                 // Bias towards small:
-                final @Initialized int length = r.nextBoolean() ? r.nextInt(0, 10) : r.nextInt(0, 400);
+                final int length = r.nextBoolean() ? r.nextInt(0, 10) : r.nextInt(0, 400);
 
                 int numColumns = r.nextInt(1, 12);
                 List<SimulationFunction<RecordSet, EditableColumn>> columns = new ArrayList<>();
@@ -154,7 +153,6 @@ public class GenImmediateData extends Generator<ImmediateData_Mgr>
 
     @Target({PARAMETER, FIELD, ANNOTATION_TYPE, TYPE_USE})
     @Retention(RUNTIME)
-    @GeneratorConfiguration
     public @interface NumTables {
         int minTables() default 1;
         int maxTables() default 1;
@@ -162,13 +160,11 @@ public class GenImmediateData extends Generator<ImmediateData_Mgr>
 
     @Target({PARAMETER, FIELD, ANNOTATION_TYPE, TYPE_USE})
     @Retention(RUNTIME)
-    @GeneratorConfiguration
     public @interface MustIncludeNumber {
     }
 
     @Target({PARAMETER, FIELD, ANNOTATION_TYPE, TYPE_USE})
     @Retention(RUNTIME)
-    @GeneratorConfiguration
     public @interface CanHaveErrorValues {
     }
 

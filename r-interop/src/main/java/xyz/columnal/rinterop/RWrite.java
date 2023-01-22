@@ -56,7 +56,7 @@ public class RWrite
         d.writeInt(0x03_05_00);
         d.writeInt("UTF-8".length());
         d.writeBytes("UTF-8");
-        topLevel.visit(new RVisitor<@Nullable Void>()
+        topLevel.visit(new RVisitor<Void>()
         {
             private void writeInt(int value) throws UserException
             {
@@ -70,12 +70,12 @@ public class RWrite
                 }
             }
 
-            private void writeHeader(int value, @Nullable RValue attributes, @Nullable RValue tag) throws UserException, InternalException
+            private void writeHeader(int value, RValue attributes, RValue tag) throws UserException, InternalException
             {
                 writeHeader(value, attributes, tag, false);
             }
 
-            private void writeHeader(int value, @Nullable RValue attributes, @Nullable RValue tag, boolean isObject) throws UserException, InternalException
+            private void writeHeader(int value, RValue attributes, RValue tag, boolean isObject) throws UserException, InternalException
             {
                 try
                 {
@@ -118,7 +118,7 @@ public class RWrite
                 }
             }
             
-            private void writeAttributes(@Nullable RValue attributes) throws UserException, InternalException
+            private void writeAttributes(RValue attributes) throws UserException, InternalException
             {
                 if (attributes == null)
                     return;
@@ -126,7 +126,7 @@ public class RWrite
             }
             
             @Override
-            public @Nullable Void visitString(@Nullable @Value String s, boolean isSymbol) throws InternalException, UserException
+            public Void visitString(String s, boolean isSymbol) throws InternalException, UserException
             {
                 if (isSymbol)
                     writeInt(RUtility.SYMBOL);
@@ -135,7 +135,7 @@ public class RWrite
                 return null;
             }
 
-            private void writeLenString(@Nullable String s) throws UserException
+            private void writeLenString(String s) throws UserException
             {
                 if (s == null)
                     writeInt(-1);
@@ -148,11 +148,11 @@ public class RWrite
             }
 
             @Override
-            public @Nullable Void visitStringList(ImmutableList<Optional<@Value String>> values, @Nullable RValue attributes) throws InternalException, UserException
+            public Void visitStringList(ImmutableList<Optional<String>> values, RValue attributes) throws InternalException, UserException
             {
                 writeHeader(RUtility.STRING_VECTOR, attributes, null);
                 writeInt(values.size());
-                for (Optional<@Value String> value : values)
+                for (Optional<String> value : values)
                 {
                     writeInt(RUtility.STRING_SINGLE);
                     writeLenString(value.orElse(null));
@@ -162,14 +162,14 @@ public class RWrite
             }
 
             @Override
-            public @Nullable Void visitTemporalList(DateTimeType dateTimeType, ImmutableList<Optional<@Value TemporalAccessor>> values, @Nullable RValue attributes) throws InternalException, UserException
+            public Void visitTemporalList(DateTimeType dateTimeType, ImmutableList<Optional<TemporalAccessor>> values, RValue attributes) throws InternalException, UserException
             {
                 switch (dateTimeType)
                 {
                     case YEARMONTHDAY:
                         writeHeader(RUtility.DOUBLE_VECTOR, attributes, null);
                         writeInt(values.size());
-                        for (Optional<@Value TemporalAccessor> value : values)
+                        for (Optional<TemporalAccessor> value : values)
                         {
                             if (value.isPresent())
                                 writeDouble(((LocalDate)value.get()).toEpochDay());
@@ -181,7 +181,7 @@ public class RWrite
                     case DATETIME:
                         writeHeader(RUtility.DOUBLE_VECTOR, attributes, null);
                         writeInt(values.size());
-                        for (Optional<@Value TemporalAccessor> value : values)
+                        for (Optional<TemporalAccessor> value : values)
                         {
                             if (value.isPresent())
                             {
@@ -197,7 +197,7 @@ public class RWrite
                     case DATETIMEZONED:
                         writeHeader(RUtility.DOUBLE_VECTOR, attributes, null);
                         writeInt(values.size());
-                        for (Optional<@Value TemporalAccessor> value : values)
+                        for (Optional<TemporalAccessor> value : values)
                         {
                             if (value.isPresent())
                             {
@@ -212,7 +212,7 @@ public class RWrite
                     case TIMEOFDAY:
                         writeHeader(RUtility.DOUBLE_VECTOR, attributes, null);
                         writeInt(values.size());
-                        for (Optional<@Value TemporalAccessor> value : values)
+                        for (Optional<TemporalAccessor> value : values)
                         {
                             if (value.isPresent())
                             {
@@ -227,7 +227,7 @@ public class RWrite
                     case YEARMONTH:
                         writeHeader(RUtility.DOUBLE_VECTOR, attributes, null);
                         writeInt(values.size());
-                        for (Optional<@Value TemporalAccessor> value : values)
+                        for (Optional<TemporalAccessor> value : values)
                         {
                             if (value.isPresent())
                             {
@@ -244,7 +244,7 @@ public class RWrite
             }
 
             @Override
-            public @Nullable Void visitIntList(int[] values, @Nullable RValue attributes) throws InternalException, UserException
+            public Void visitIntList(int[] values, RValue attributes) throws InternalException, UserException
             {
                 writeHeader(RUtility.INT_VECTOR, attributes, null);
                 writeInt(values.length);
@@ -257,7 +257,7 @@ public class RWrite
             }
 
             @Override
-            public @Nullable Void visitDoubleList(double[] values, @Nullable RValue attributes) throws InternalException, UserException
+            public Void visitDoubleList(double[] values, RValue attributes) throws InternalException, UserException
             {
                 writeHeader(RUtility.DOUBLE_VECTOR, attributes, null);
                 writeInt(values.length);
@@ -270,7 +270,7 @@ public class RWrite
             }
 
             @Override
-            public @Nullable Void visitLogicalList(boolean[] values, boolean @Nullable [] isNA, @Nullable RValue attributes) throws InternalException, UserException
+            public Void visitLogicalList(boolean[] values, boolean[] isNA, RValue attributes) throws InternalException, UserException
             {
                 writeHeader(RUtility.LOGICAL_VECTOR, attributes, null);
                 writeInt(values.length);
@@ -283,7 +283,7 @@ public class RWrite
             }
 
             @Override
-            public @Nullable Void visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes, boolean isObject) throws InternalException, UserException
+            public Void visitGenericList(ImmutableList<RValue> values, RValue attributes, boolean isObject) throws InternalException, UserException
             {
                 writeHeader(RUtility.GENERIC_VECTOR, attributes, null, isObject);
                 writeInt(values.size());
@@ -296,7 +296,7 @@ public class RWrite
             }
 
             @Override
-            public @Nullable Void visitPairList(ImmutableList<PairListEntry> items) throws InternalException, UserException
+            public Void visitPairList(ImmutableList<PairListEntry> items) throws InternalException, UserException
             {
                 switch (items.size())
                 {
@@ -323,14 +323,14 @@ public class RWrite
             }
 
             @Override
-            public @Nullable Void visitFactorList(int[] values, ImmutableList<String> levelNames) throws InternalException, UserException
+            public Void visitFactorList(int[] values, ImmutableList<String> levelNames) throws InternalException, UserException
             {
-                RValue attributes = RUtility.makePairList(ImmutableList.of(new PairListEntry(null, RUtility.string("levels", false), RUtility.stringVector(Utility.<String, Optional<@Value String>>mapListI(levelNames, s -> Optional.of(DataTypeUtility.value(s))), null))));
+                RValue attributes = RUtility.makePairList(ImmutableList.of(new PairListEntry(null, RUtility.string("levels", false), RUtility.stringVector(Utility.<String, Optional<String>>mapListI(levelNames, s -> Optional.of(DataTypeUtility.value(s))), null))));
                 return visitIntList(values, attributes);
             }
 
             @Override
-            public @Nullable Void visitNil() throws InternalException, UserException
+            public Void visitNil() throws InternalException, UserException
             {
                 writeInt(RUtility.NIL);
                 return null;

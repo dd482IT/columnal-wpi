@@ -65,7 +65,7 @@ public abstract class GenValueBaseE<T> extends GenValueBase<T>
         // TODO add UnitRaiseExpression more (don't always split units into single powers)
 
         // Flatten into a list of units, true for numerator, false for denom:
-        List<Pair<SingleUnit, Boolean>> singleUnits = unit.getDetails().entrySet().stream().flatMap((Entry<@KeyFor("unit.getDetails()") SingleUnit, Integer> e) -> Utility.replicate(Math.abs(e.getValue()), new Pair<>((SingleUnit)e.getKey(), e.getValue() > 0)).stream()).collect(Collectors.toList());
+        List<Pair<SingleUnit, Boolean>> singleUnits = unit.getDetails().entrySet().stream().flatMap((Entry<SingleUnit, Integer> e) -> Utility.replicate(Math.abs(e.getValue()), new Pair<>((SingleUnit)e.getKey(), e.getValue() > 0)).stream()).collect(Collectors.toList());
 
         // Now shuffle them and form a compound expression:
         Collections.shuffle(singleUnits, new Random(r.nextLong()));
@@ -93,7 +93,7 @@ public abstract class GenValueBaseE<T> extends GenValueBase<T>
                 // Times.  Could join it to existing one:
                 if (u instanceof UnitTimesExpression && r.nextBoolean())
                 {
-                    List<@Recorded UnitExpression> prevOperands = new ArrayList<>(((UnitTimesExpression)u).getOperands());
+                    List<UnitExpression> prevOperands = new ArrayList<>(((UnitTimesExpression)u).getOperands());
 
                     prevOperands.add(sExp);
                     u = new UnitTimesExpression(ImmutableList.copyOf(prevOperands));

@@ -91,19 +91,16 @@ import java.util.stream.Stream;
  * (adding to/replacing the existing columns depending on name)
  * by evaluating an expression for each.
  */
-@OnThread(Tag.Simulation)
 public class Calculate extends VisitableTransformation implements SingleSourceTransformation
 {
     // If any columns overlap the source table's columns, they are shown in that position.
     // If they are new, they are shown at the end, in the order provided by this list
     // (Note that Guava's ImmutableMap respects insertion order for iteration, which
     // we rely on here).
-    @OnThread(Tag.Any)
     private final ImmutableMap<ColumnId, Expression> newColumns;
     private final TableId srcTableId;
-    private final @Nullable Table src;
-    private final @Nullable RecordSet recordSet;
-    @OnThread(Tag.Any)
+    private final Table src;
+    private final RecordSet recordSet;
     private StyledString error = StyledString.s("");
 
     public Calculate(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, ImmutableMap<ColumnId, Expression> toCalculate) throws InternalException
@@ -121,7 +118,7 @@ public class Calculate extends VisitableTransformation implements SingleSourceTr
         }
 
 
-        @Nullable RecordSet theResult = null;
+        RecordSet theResult = null;
         try
         {
             RecordSet srcRecordSet = this.src.getData();
@@ -138,13 +135,13 @@ public class Calculate extends VisitableTransformation implements SingleSourceTr
                     columns.add(rs -> new Column(rs, c.getName())
                     {
                         @Override
-                        public @OnThread(Tag.Any) DataTypeValue getType() throws InternalException, UserException
+                        public DataTypeValue getType() throws InternalException, UserException
                         {
                             return addManualEditSet(getName(), c.getType());
                         }
 
                         @Override
-                        public @OnThread(Tag.Any) AlteredState getAlteredState()
+                        public AlteredState getAlteredState()
                         {
                             return AlteredState.UNALTERED;
                         }
@@ -170,7 +167,7 @@ public class Calculate extends VisitableTransformation implements SingleSourceTr
                 }
 
                 @Override
-                public @TableDataRowIndex int getLength() throws UserException, InternalException
+                public int getLength() throws UserException, InternalException
                 {
                     return srcRecordSet.getLength();
                 }
@@ -184,9 +181,7 @@ public class Calculate extends VisitableTransformation implements SingleSourceTr
         recordSet = theResult;
     }
 
-    @RequiresNonNull({"newColumns", "srcTableId"})
-    @OnThread(Tag.Any)
-    public CalculationEditor makeEditor(@UnknownInitialization(Transformation.class) Calculate this, ColumnId columnId)
+    public CalculationEditor makeEditor(Calculate this, ColumnId columnId)
     {
         return new CalculationEditor()
         {
@@ -197,7 +192,7 @@ public class Calculate extends VisitableTransformation implements SingleSourceTr
             }
 
             @Override
-            public @OnThread(Tag.FXPlatform) SimulationConsumer<Pair<@Nullable ColumnId, Expression>> moveExpressionToNewCalculation()
+            public SimulationConsumer<Pair<ColumnId, Expression>> moveExpressionToNewCalculation()
             {
                 CellPosition targetPos = getManager().getNextInsertPosition(getId());
                 return details -> {
@@ -217,14 +212,14 @@ public class Calculate extends VisitableTransformation implements SingleSourceTr
         };
     }
 
-    private SimulationFunction<RecordSet, Column> makeCalcColumn(@UnknownInitialization(Transformation.class) Calculate this,
+    private SimulationFunction<RecordSet, Column> makeCalcColumn(Calculate this,
                                                                  TableManager mgr, ColumnLookup columnLookup, ColumnId columnId, Expression expression) throws InternalException
     {
         try
         {
             ErrorAndTypeRecorderStorer errorAndTypeRecorder = new ErrorAndTypeRecorderStorer();
             @SuppressWarnings("recorded")
-            @Nullable TypeExp type = expression.checkExpression(columnLookup, makeTypeState(mgr), errorAndTypeRecorder);
+            TypeExp type = expression.checkExpression(columnLookup, makeTypeState(mgr), errorAndTypeRecorder);
 
             DataType concrete = type == null ? null : errorAndTypeRecorder.recordLeftError(mgr.getTypeManager(), FunctionList.getFunctionLookup(mgr.getUnitManager()), expression, type.toConcreteType(mgr.getTypeManager()));
             if (type == null || concrete == null)
@@ -232,7 +227,7 @@ public class Calculate extends VisitableTransformation implements SingleSourceTr
                 StyledString checkErrors = errorAndTypeRecorder.getAllErrors().collect(StyledString.joining(", "));
                 throw new UserException(StyledString.concat(StyledString.s("Error in " + columnId.getRaw() + " expression: "), checkErrors.toPlain().isEmpty() ? StyledString.s("Invalid expression") : checkErrors)); // A bit redundant to throw and catch again below, but control flow will pan out right
             }
-            @NonNull DataType typeFinal = concrete;
+            DataType typeFinal = concrete;
             return rs -> ColumnUtility.makeCalculatedColumn(typeFinal, rs, columnId, index -> expression.calculateValue(new EvaluateState(mgr.getTypeManager(), OptionalInt.of(index))).value, t -> addManualEditSet(columnId, t));
         }
         catch (UserException e)
@@ -241,39 +236,36 @@ public class Calculate extends VisitableTransformation implements SingleSourceTr
         }
     }
 
-    @OnThread(Tag.Any)
     public static TypeState makeTypeState(TableManager mgr) throws InternalException
     {
         return TypeState.withRowNumber(mgr.getTypeManager(), FunctionList.getFunctionLookup(mgr.getUnitManager()));
     }
 
     @Override
-    @OnThread(Tag.Any)
     public Stream<TableId> getPrimarySources()
     {
         return Stream.of(srcTableId);
     }
 
     @Override
-    @OnThread(Tag.Any)
     public Stream<TableId> getSourcesFromExpressions()
     {
         return ExpressionUtil.tablesFromExpressions(newColumns.values().stream());
     }
 
     @Override
-    protected @OnThread(Tag.Any) String getTransformationName()
+    protected String getTransformationName()
     {
         return "calculate";
     }
 
     @Override
-    protected @OnThread(Tag.Any) List<String> saveDetail(@Nullable File destination, TableAndColumnRenames renames)
+    protected List<String> saveDetail(File destination, TableAndColumnRenames renames)
     {
         renames.useColumnsFromTo(srcTableId, getId());
         return newColumns.entrySet().stream().map(entry -> {
             OutputBuilder b = new OutputBuilder();
-            Pair<@Nullable TableId, ColumnId> renamed = renames.columnId(getId(), entry.getKey(), srcTableId);
+            Pair<TableId, ColumnId> renamed = renames.columnId(getId(), entry.getKey(), srcTableId);
             b.kw("CALCULATE").id(renamed.getSecond());
             b.kw("@EXPRESSION");
             b.raw(entry.getValue().save(SaveDestination.TO_FILE, BracketedStatus.DONT_NEED_BRACKETS, renames.withDefaultTableId(srcTableId)));
@@ -282,7 +274,7 @@ public class Calculate extends VisitableTransformation implements SingleSourceTr
     }
 
     @Override
-    public @OnThread(Tag.Any) RecordSet getData() throws UserException, InternalException
+    public RecordSet getData() throws UserException, InternalException
     {
         if (recordSet == null)
             throw new UserException(error == null ? StyledString.s("Unknown error") : error);
@@ -290,7 +282,7 @@ public class Calculate extends VisitableTransformation implements SingleSourceTr
     }
 
     @Override
-    public @OnThread(Tag.Any) TableOperations getOperations()
+    public TableOperations getOperations()
     {
         // Renames and deletes are valid, if they refer to
         // columns derived from us.
@@ -298,14 +290,13 @@ public class Calculate extends VisitableTransformation implements SingleSourceTr
         return new TableOperations(getManager().getRenameTableOperation(this), deleteId -> newColumns.containsKey(deleteId) ? this::deleteColumn : null, null, null, null);
     }
 
-    @OnThread(Tag.Any)
     public TableId getSrcTableId()
     {
         return srcTableId;
     }
 
     @Override
-    public @OnThread(Tag.Simulation) Transformation withNewSource(TableId newSrcTableId) throws InternalException
+    public Transformation withNewSource(TableId newSrcTableId) throws InternalException
     {
         return new Calculate(getManager(), getDetailsForCopy(getId()), newSrcTableId, newColumns);
     }
@@ -345,7 +336,6 @@ public class Calculate extends VisitableTransformation implements SingleSourceTr
         return result;
     }
 
-    @OnThread(Tag.Any)
     public ImmutableMap<ColumnId, Expression> getCalculatedColumns()
     {
         return newColumns;
@@ -359,7 +349,7 @@ public class Calculate extends VisitableTransformation implements SingleSourceTr
         }
 
         @Override
-        public @OnThread(Tag.Simulation) Transformation loadSingle(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, String detail, ExpressionVersion expressionVersion) throws InternalException, UserException
+        public Transformation loadSingle(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, String detail, ExpressionVersion expressionVersion) throws InternalException, UserException
         {
             ImmutableMap.Builder<ColumnId, Expression> columns = ImmutableMap.builder();
 
@@ -375,14 +365,13 @@ public class Calculate extends VisitableTransformation implements SingleSourceTr
         }
         
         @Override
-        protected @OnThread(Tag.Simulation) Transformation makeWithSource(TableManager mgr, CellPosition destination, Table srcTable) throws InternalException
+        protected Transformation makeWithSource(TableManager mgr, CellPosition destination, Table srcTable) throws InternalException
         {
             return new Calculate(mgr, new InitialLoadDetails(null, null, destination, null), srcTable.getId(), ImmutableMap.of());
         }
     }
 
     @Override
-    @OnThread(Tag.Any)
     public <T> T visit(TransformationVisitor<T> visitor)
     {
         return visitor.calculate(this);
@@ -396,9 +385,9 @@ public class Calculate extends VisitableTransformation implements SingleSourceTr
 
     public static TableId suggestedName(ImmutableMap<ColumnId, Expression> calcColumns)
     {
-        ImmutableList.Builder<@ExpressionIdentifier String> parts = ImmutableList.builder();
+        ImmutableList.Builder<String> parts = ImmutableList.builder();
         parts.add("Calc");
-        parts.add(IdentifierUtility.shorten(calcColumns.entrySet().stream().sorted(Comparator.comparing(e -> e.getKey())).<@ExpressionIdentifier String>map(e -> e.getKey().getRaw()).findFirst().orElse("none")));
+        parts.add(IdentifierUtility.shorten(calcColumns.entrySet().stream().sorted(Comparator.comparing(e -> e.getKey())).<String>map(e -> e.getKey().getRaw()).findFirst().orElse("none")));
         return new TableId(IdentifierUtility.spaceSeparated(parts.build()));
     }
 }

@@ -103,19 +103,14 @@ import java.util.stream.Stream;
 /**
  * Created by neil on 14/11/2016.
  */
-@OnThread(Tag.Any)
 public class TableManager
 {
     private static final Random RANDOM = new Random();
-    @OnThread(value = Tag.Any, requireSynchronized = true)
-    private static @MonotonicNonNull Settings settings;
+    private static Settings settings;
     
     // We use a TreeMap here to have reliable ordering for tables, especially when saving:
-    @OnThread(value = Tag.Any,requireSynchronized = true)
     private final Map<TableId, Set<Table>> usedIds = new TreeMap<>();
-    @OnThread(value = Tag.Any,requireSynchronized = true)
     private final Set<DataSource> sources = Sets.newIdentityHashSet();
-    @OnThread(value = Tag.Any,requireSynchronized = true)
     private final Set<Transformation> transformations = Sets.newIdentityHashSet();
     private final List<GridComment> comments = new ArrayList<>();
     private final UnitManager unitManager;
@@ -128,9 +123,7 @@ public class TableManager
     // could be sent from an untrusted source then opened.  So we keep track of files we made and their hashes, and those files
     // are trusted.  Everything else is untrusted, which is done by banning R expressions during load, and keeping track of all
     // the banned ones.  They remain banned for the whole session until manually re-run or modified.
-    @OnThread(Tag.Simulation)
     private boolean banningAllRExpressions = false;
-    @OnThread(Tag.Simulation)
     private final HashSet<String> bannedRExpressions = new HashSet<>();
 
     public TableManager(TransformationLoader transformationLoader, PluggedContentHandler pluggedContentHandler) throws UserException, InternalException
@@ -164,8 +157,7 @@ public class TableManager
         Utility.setProperty(SETTINGS_FILE_NAME, "useColumnalRLibs", Boolean.toString(settings.useColumnalRLibs));
     }
 
-    @Pure
-    public synchronized @Nullable Table getSingleTableOrNull(TableId tableId)
+    public synchronized Table getSingleTableOrNull(TableId tableId)
     {
         Set<Table> tables = usedIds.get(tableId);
         if (tables != null && tables.size() == 1)
@@ -174,17 +166,15 @@ public class TableManager
             return null;
     }
 
-    @Pure
     public Table getSingleTableOrThrow(TableId tableId) throws UserException
     {
-        @Nullable Table t = getSingleTableOrNull(tableId);
+        Table t = getSingleTableOrNull(tableId);
         if (t == null)
             throw new UserException("Could not find table \"" + tableId + "\"");
         return t;
     }
 
     // Generates a new unused ID and registers it.
-    @OnThread(Tag.Simulation)
     public synchronized TableId registerNextFreeId()
     {
         TableId id;
@@ -199,7 +189,6 @@ public class TableManager
         return id;
     }
 
-    @OnThread(Tag.Simulation)
     public synchronized <T extends Table> T record(T table)
     {
         Set<Table> tablesForId = usedIds.computeIfAbsent(table.getId(), x -> Sets.<Table>newIdentityHashSet());
@@ -271,7 +260,6 @@ public class TableManager
     }
 
     // Throws exception if not OK
-    @OnThread(Tag.Simulation)
     public void checkROKToRun(String rExpression) throws UserException
     {
         // This is called while loading the R transformation, so if we're in banning mode, ban this one too:
@@ -287,19 +275,16 @@ public class TableManager
         }
     }
 
-    @OnThread(Tag.Simulation)
     public void setBanAllR(boolean banAllR)
     {
         this.banningAllRExpressions = banAllR;
     }
 
-    @OnThread(Tag.Simulation)
     public void unban(String rExpression)
     {
         bannedRExpressions.remove(rExpression);
     }
 
-    @OnThread(Tag.Simulation)
     public boolean isBannedRExpression(String rExpression)
     {
         return bannedRExpressions.contains(rExpression);
@@ -319,7 +304,7 @@ public class TableManager
         }
 
         @Override
-        public boolean equals(@Nullable Object o)
+        public boolean equals(Object o)
         {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
@@ -336,7 +321,6 @@ public class TableManager
         }
     }
     
-    @OnThread(Tag.Simulation)
     public synchronized Loaded loadAll(String completeSrc,  SimulationConsumer<ImmutableList<Pair<Integer, Double>>> setColumnWidths) throws UserException, InternalException
     {
         OverallVersion version = detectVersion(completeSrc);
@@ -457,21 +441,18 @@ public class TableManager
             throw new InternalException("Unrecognised exception", exceptions.get(0));
     }
 
-    @OnThread(Tag.Simulation)
     private Transformation loadOneTransformation(Pair<SaveTag, String> tagAndContent, ExpressionVersion expressionVersion) throws InternalException, UserException
     {
         TableTransformationContext trans = Utility.parseAsOne(tagAndContent.getSecond(), TableLexer2::new, TableParser2::new, p -> p.tableTransformation());
         return transformationLoader.loadOne(this, tagAndContent.getFirst(), trans, expressionVersion);
     }
 
-    @OnThread(Tag.Simulation)
     private Table loadOneDataTable(Pair<SaveTag, String> tagAndContent) throws InternalException, UserException
     {
         TableDataContext table = Utility.parseAsOne(tagAndContent.getSecond(), TableLexer2::new, TableParser2::new, p -> p.tableData());
         return DataSource.loadOne(this, tagAndContent.getFirst(), table);
     }
 
-    @OnThread(Tag.Simulation)
     public void parseDisplayDetail(SimulationConsumer<ImmutableList<Pair<Integer, Double>>> setColumnWidths, String displayDetail) throws InternalException, UserException
     {
         ImmutableList.Builder<Pair<Integer, Double>> widths = ImmutableList.builder();
@@ -493,7 +474,6 @@ public class TableManager
         setColumnWidths.consume(widths.build());
     }
 
-    @OnThread(Tag.Simulation)
     public Either<Exception, GridComment> loadComment(SaveTag saveTag, CommentContext commentContext) throws UserException, InternalException
     {
         String comment = GrammarUtility.processEscapes(Utility.getDetail(commentContext.detail()).trim(), false);
@@ -512,7 +492,6 @@ public class TableManager
         return Either.right(new GridComment(saveTag, comment, new CellPosition(items[1] * AbsRowIndex.ONE, items[0] * AbsColIndex.ONE), items[2], items[3]));
     }
 
-    @OnThread(Tag.Simulation)
     public Either<Exception, GridComment> loadComment(SaveTag saveTag, TableParser2.CommentContext commentContext) throws UserException, InternalException
     {
         String comment = GrammarUtility.processEscapes(Utility.getDetail(commentContext.detail()).trim(), false);
@@ -532,7 +511,6 @@ public class TableManager
     }
 
 
-    @OnThread(Tag.Simulation)
     public Either<Exception, Table> loadOneTable(TableContext tableContext, ExpressionVersion expressionVersion)
     {
         if (tableContext.dataSource() != null)
@@ -567,8 +545,7 @@ public class TableManager
         return typeManager;
     }
 
-    @OnThread(Tag.Simulation)
-    public void save(@Nullable File destination, Saver saver) //throws InternalException, UserException
+    public void save(File destination, Saver saver) //throws InternalException, UserException
     {
         unitManager.save().forEach(saver::saveUnit);
         typeManager.save().forEach(saver::saveType);
@@ -576,13 +553,13 @@ public class TableManager
         // Deep copy:
         synchronized (this)
         {
-            for (Entry<@KeyFor("usedIds") TableId, Set<Table>> tables : usedIds.entrySet())
+            for (Entry<TableId, Set<Table>> tables : usedIds.entrySet())
             {
                 values.put(tables.getKey(), new TablesWithSameId(tables.getKey(), tables.getValue()));
             }
         }
 
-        Map<@NonNull TablesWithSameId, List<TablesWithSameId>> incomingEdges = new HashMap<>();
+        Map<TablesWithSameId, List<TablesWithSameId>> incomingEdges = new HashMap<>();
         for (TablesWithSameId tablesWithSameId : values.values())
         {
             for (Table table : tablesWithSameId.tables)
@@ -622,14 +599,14 @@ public class TableManager
         }
     }
     
-    public synchronized ImmutableList<Table> getAllTablesAvailableTo(@Nullable TableId tableId, boolean includeSelf)
+    public synchronized ImmutableList<Table> getAllTablesAvailableTo(TableId tableId, boolean includeSelf)
     {
         // Sources are always available.  Transformations require that they do not
         // (transitively) depend on us.
         Map<TableId, Collection<TableId>> edges = new HashMap<>();
         HashSet<TableId> allIds = new HashSet<>();
         fetchIdsAndEdges(edges, allIds);
-        List<TableId> linearised = GraphUtility.<@NonNull TableId>lineariseDAG(allIds, edges, tableId == null ? ImmutableList.<@NonNull TableId>of() : ImmutableList.<@NonNull TableId>of(tableId));
+        List<TableId> linearised = GraphUtility.<TableId>lineariseDAG(allIds, edges, tableId == null ? ImmutableList.<TableId>of() : ImmutableList.<TableId>of(tableId));
         int lastIndexIncl = tableId != null ? linearised.indexOf(tableId) : linearised.size() - 1;
         if (lastIndexIncl == -1)
             lastIndexIncl = linearised.size() - 1;
@@ -637,7 +614,7 @@ public class TableManager
         return Utility.filterOutNulls(linearised.subList(0, lastIndexIncl + 1)
             .stream()
             .filter(id -> includeSelf || !id.equals(tableId))
-            .<@Nullable Table>map(t -> getSingleTableOrNull(t)))
+            .<Table>map(t -> getSingleTableOrNull(t)))
             .collect(ImmutableList.<Table>toImmutableList());
     }
 
@@ -650,24 +627,23 @@ public class TableManager
      * Finds a suitable position for a table inserted to the
      * right of the given position, or at the far right-hand end
      */
-    @OnThread(Tag.FXPlatform)
-    public CellPosition getNextInsertPosition(@Nullable TableId toRightOf)
+    public CellPosition getNextInsertPosition(TableId toRightOf)
     {
-        @Nullable TableDisplayBase toRightOfDisplay = toRightOf == null ? null : Optional.ofNullable(getSingleTableOrNull(toRightOf)).map(Table::getDisplay).orElse(null);
+        TableDisplayBase toRightOfDisplay = toRightOf == null ? null : Optional.ofNullable(getSingleTableOrNull(toRightOf)).map(Table::getDisplay).orElse(null);
         if (toRightOfDisplay == null)
         {
-            return Utility.filterOutNulls(getAllTables().stream().<@Nullable TableDisplayBase>map(t -> t.getDisplay())).map(d -> getTopRight(d)).max(Comparator.comparing(p -> p.columnIndex)).orElse(CellPosition.ORIGIN).offsetByRowCols(1, 1);
+            return Utility.filterOutNulls(getAllTables().stream().<TableDisplayBase>map(t -> t.getDisplay())).map(d -> getTopRight(d)).max(Comparator.comparing(p -> p.columnIndex)).orElse(CellPosition.ORIGIN).offsetByRowCols(1, 1);
         }
         else
         {
             // We usually leave a blank space to the right
             // of the table, unless there's another table beginning in that column:
-            @Nullable TableDisplayBase tableToRight = toRightOfDisplay;
+            TableDisplayBase tableToRight = toRightOfDisplay;
             do
             {
                 toRightOfDisplay = tableToRight;
-                @AbsColIndex int nextCol = toRightOfDisplay.getBottomRightIncl().offsetByRowCols(0, 1).columnIndex;
-                tableToRight = getAllTables().stream().<@Nullable TableDisplayBase>map(t -> t.getDisplay()).filter(d -> d != null && d.getMostRecentPosition().columnIndex == nextCol).findFirst().orElse(null);
+                int nextCol = toRightOfDisplay.getBottomRightIncl().offsetByRowCols(0, 1).columnIndex;
+                tableToRight = getAllTables().stream().<TableDisplayBase>map(t -> t.getDisplay()).filter(d -> d != null && d.getMostRecentPosition().columnIndex == nextCol).findFirst().orElse(null);
             }
             while (tableToRight != null);
             
@@ -675,20 +651,17 @@ public class TableManager
         }
     }
 
-    @OnThread(Tag.FXPlatform)
     private CellPosition getTopRight(TableDisplayBase display)
     {
         return new CellPosition(display.getMostRecentPosition().rowIndex, display.getBottomRightIncl().columnIndex);
     }
 
-    @OnThread(Tag.Simulation)
     public void addComment(GridComment comment)
     {
         comments.add(comment);
         listeners.forEach(l -> l.addComment(comment));
     }
 
-    @OnThread(Tag.Simulation)
     public void removeComment(GridComment comment)
     {
         comments.remove(comment);
@@ -697,25 +670,21 @@ public class TableManager
 
     public static interface TableMaker<T extends Table>
     {
-        @OnThread(Tag.Simulation)
-        @NonNull T make() throws InternalException;
+        T make() throws InternalException;
     }
 
-    @OnThread(Tag.Simulation)
-    public <@NonNull T extends Table> T edit(Table oldTable, SimulationFunctionInt<TableId, T> makeReplacement, RenameOnEdit renameOnEdit) throws InternalException
+    public <T extends Table> T edit(Table oldTable, SimulationFunctionInt<TableId, T> makeReplacement, RenameOnEdit renameOnEdit) throws InternalException
     {
         TableId newTableId = renameOnEdit.rename(oldTable);
         return editImpl(oldTable.getId(), () -> makeReplacement.apply(newTableId), oldTable.getId().equals(newTableId) ? TableAndColumnRenames.EMPTY : new TableAndColumnRenames(ImmutableMap.of(oldTable.getId(), new Pair<>(newTableId, ImmutableMap.of()))));
     }
 
-    @OnThread(Tag.Simulation)
     public void reRun(Table table) throws InternalException
     {
         this.<Table>editImpl(table.getId(), null, TableAndColumnRenames.EMPTY);
     }
 
-    @OnThread(Tag.Simulation)
-    public <@NonNull T extends Table> @PolyNull T editData(@Nullable TableId affectedTableId, @PolyNull TableMaker<T> makeReplacement, TableAndColumnRenames renames) throws InternalException
+    public <T extends Table> T editData(TableId affectedTableId, TableMaker<T> makeReplacement, TableAndColumnRenames renames) throws InternalException
     {
         return editImpl(affectedTableId, makeReplacement, renames);
     }
@@ -738,8 +707,7 @@ public class TableManager
      * @throws InternalException
      * @throws UserException
      */
-    @OnThread(Tag.Simulation)
-    private <T extends @NonNull Table> @PolyNull T editImpl(@Nullable TableId affectedTableId, @PolyNull TableMaker<T> makeReplacement, TableAndColumnRenames renames) throws InternalException
+    private <T extends Table> T editImpl(TableId affectedTableId, TableMaker<T> makeReplacement, TableAndColumnRenames renames) throws InternalException
     {
         HashSet<TableId> affected = new HashSet<>();
         // If it is null, new table, so nothing should be affected:
@@ -771,7 +739,7 @@ public class TableManager
                     {
                         // Ignore types and units because they are all already loaded
                         @Override
-                        public @OnThread(Tag.Simulation) void saveTable(String script)
+                        public void saveTable(String script)
                         {
                             reRun.add(script);
                             if (toSave.decrementAndGet() == 0)
@@ -827,8 +795,7 @@ public class TableManager
      * Removes the given table, saving a script to reproduce it
      * in the given Saver.
      */
-    @OnThread(Tag.Simulation)
-    private void removeAndSerialise(TableId tableId, @Nullable Saver then, TableAndColumnRenames renames)
+    private void removeAndSerialise(TableId tableId, Saver then, TableAndColumnRenames renames)
     {
         //Log.normalStackTrace("Removing table " + tableId + (then == null ? " permanently" : " as part of edit"), 3);
         Table removed = null;
@@ -885,12 +852,11 @@ public class TableManager
     }
     
     // Removes the table from the data and from the display.
-    @OnThread(Tag.Simulation)
     public void remove(TableId tableId)
     {
         removeAndSerialise(tableId, new BlankSaver() {
             @Override
-            public @OnThread(Tag.Simulation) void saveTable(String tableSrc)
+            public void saveTable(String tableSrc)
             {
                 // Re-run dependents:
                 try
@@ -911,7 +877,6 @@ public class TableManager
      * They will be re-run in order, so it is important to pass them in
      * an order where each item only depends on those before it in the list.
      */
-    @OnThread(Tag.Simulation)
     private void reAddAll(List<String> scripts)
     {
         for (String script : scripts)
@@ -934,7 +899,7 @@ public class TableManager
      *                   deemed similar (e.g. differ only in case)
      * @return
      */
-    public synchronized boolean isFreeId(TableId tableId, @Nullable List<TableId> similarIds)
+    public synchronized boolean isFreeId(TableId tableId, List<TableId> similarIds)
     {
         if (similarIds != null)
         {
@@ -951,7 +916,7 @@ public class TableManager
     {
         return newName -> {
             ErrorHandler.getErrorHandler().alertOnError_(TranslationUtility.getString("error.renaming.table"), () -> {
-                this.<Table>editImpl(table.getId(), null, new TableAndColumnRenames(ImmutableMap.of(table.getId(), new Pair<@Nullable TableId, ImmutableMap<ColumnId, ColumnId>>(newName, ImmutableMap.of()))));
+                this.<Table>editImpl(table.getId(), null, new TableAndColumnRenames(ImmutableMap.of(table.getId(), new Pair<TableId, ImmutableMap<ColumnId, ColumnId>>(newName, ImmutableMap.of()))));
             });
         };
     }
@@ -976,10 +941,8 @@ public class TableManager
 
     public static interface TransformationLoader
     {
-        @OnThread(Tag.Simulation)
         public Transformation loadOne(TableManager mgr, TableContext table, ExpressionVersion expressionVersion) throws UserException, InternalException;
 
-        @OnThread(Tag.Simulation)
         public Transformation loadOne(TableManager mgr, SaveTag saveTag, TableTransformationContext table, ExpressionVersion expressionVersion) throws UserException, InternalException;
     }
 
@@ -995,7 +958,7 @@ public class TableManager
         }
 
         @Override
-        public boolean equals(@Nullable Object o)
+        public boolean equals(Object o)
         {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;

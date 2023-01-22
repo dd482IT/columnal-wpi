@@ -72,8 +72,6 @@ import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
 
-@RunWith(JUnitQuickcheck.class)
-@OnThread(Tag.Simulation)
 class BaseTestExpressionEditorError extends FXApplicationTest implements ScrollToTrait, ListUtilTrait, ClickTableLocationTrait, PopupTrait
 {
     // Checks that errors don't show up while still in the span,
@@ -146,7 +144,7 @@ class BaseTestExpressionEditorError extends FXApplicationTest implements ScrollT
                 
                 // Not necessarily caret pos of the end, if they
                 // entered auto-matched brackets.
-                @CanonicalLocation int endingCaretPos = TFXUtil.fx(() -> editorDisplay.getCaretPosition());
+                int endingCaretPos = TFXUtil.fx(() -> editorDisplay.getCaretPosition());
 
                 boolean hasSpanNotContainingEndingPos = Arrays.stream(errors).anyMatch(s -> !s.location.touches(endingCaretPos));
                 assertErrorShowing(hasSpanNotContainingEndingPos, false);
@@ -225,7 +223,7 @@ class BaseTestExpressionEditorError extends FXApplicationTest implements ScrollT
         }
     }
 
-    private void assertErrorShowing(boolean underlineShowing, @Nullable Boolean errorPopupShowing)
+    private void assertErrorShowing(boolean underlineShowing, Boolean errorPopupShowing)
     {
         Scene dialogScene = TFXUtil.fx(() -> getRealFocusedWindow().getScene());
         Collection<Path> errorUnderline = TFXUtil.fx(() -> lookup(".expression-editor .error-underline").<Path>queryAll());
@@ -246,7 +244,7 @@ class BaseTestExpressionEditorError extends FXApplicationTest implements ScrollT
         private final DisplaySpan displayLocation;
         private final ImmutableList<String> expectedMessageParts;
 
-        public Error(@CanonicalLocation int start, @CanonicalLocation int end, ImmutableList<String> expectedMessageParts)
+        public Error(int start, int end, ImmutableList<String> expectedMessageParts)
         {
             this.location = new CanonicalSpan(start, end);
             @SuppressWarnings("units")
@@ -255,7 +253,7 @@ class BaseTestExpressionEditorError extends FXApplicationTest implements ScrollT
             this.expectedMessageParts = expectedMessageParts;
         }
 
-        public Error(@CanonicalLocation int start, @CanonicalLocation int end, @DisplayLocation int displayStart, @DisplayLocation int displayEnd, ImmutableList<String> expectedMessageParts)
+        public Error(int start, int end, int displayStart, int displayEnd, ImmutableList<String> expectedMessageParts)
         {
             this.location = new CanonicalSpan(start, end);
             this.displayLocation = TFXUtil.fx(() -> new DisplaySpan(displayStart, displayEnd));

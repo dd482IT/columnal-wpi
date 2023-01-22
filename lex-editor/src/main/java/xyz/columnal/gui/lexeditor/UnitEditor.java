@@ -30,7 +30,7 @@ import xyz.columnal.utility.function.fx.FXPlatformConsumer;
 
 public class UnitEditor extends TopLevelEditor<UnitExpression, UnitLexer, CodeCompletionContext>
 {
-    public UnitEditor(TypeManager typeManager, @Nullable UnitExpression originalContent, FXPlatformConsumer<@NonNull @Recorded UnitExpression> onChange)
+    public UnitEditor(TypeManager typeManager, UnitExpression originalContent, FXPlatformConsumer<UnitExpression> onChange)
     {
         super(originalContent == null ? null : originalContent.save(SaveDestination.toUnitEditor(typeManager.getUnitManager()), true), new UnitLexer(typeManager, false), typeManager, onChange, "unit-editor");
     }

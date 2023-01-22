@@ -39,7 +39,7 @@ public class UnitExpressionIntLiteral extends UnitExpression
     }
 
     @Override
-    public JellyUnit asUnit(@Recorded UnitExpressionIntLiteral this, UnitManager unitManager) throws UnitLookupException
+    public JellyUnit asUnit(UnitExpressionIntLiteral this, UnitManager unitManager) throws UnitLookupException
     {
         if (number == 1)
             return JellyUnit.fromConcrete(Unit.SCALAR);
@@ -59,7 +59,7 @@ public class UnitExpressionIntLiteral extends UnitExpression
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;

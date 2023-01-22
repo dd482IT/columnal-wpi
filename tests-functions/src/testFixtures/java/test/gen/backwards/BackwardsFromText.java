@@ -44,7 +44,7 @@ public class BackwardsFromText extends BackwardsProvider
     }
 
     @Override
-    public List<ExpressionMaker> terminals(DataType targetType, @Value Object targetValue) throws InternalException, UserException
+    public List<ExpressionMaker> terminals(DataType targetType, Object targetValue) throws InternalException, UserException
     {
         String val = DataTypeUtility.valueToString(targetValue);
         return ImmutableList.of(
@@ -56,7 +56,7 @@ public class BackwardsFromText extends BackwardsProvider
     }
 
     @Override
-    public List<ExpressionMaker> deep(int maxLevels, DataType targetType, @Value Object targetValue) throws InternalException, UserException
+    public List<ExpressionMaker> deep(int maxLevels, DataType targetType, Object targetValue) throws InternalException, UserException
     {        
         String val = DataTypeUtility.valueToString(targetValue);
         return ImmutableList.of(

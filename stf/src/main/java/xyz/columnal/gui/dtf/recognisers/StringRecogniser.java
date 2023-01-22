@@ -29,7 +29,7 @@ import xyz.columnal.utility.adt.Either;
 import xyz.columnal.utility.adt.Pair;
 import xyz.columnal.utility.ParseProgress;
 
-public class StringRecogniser extends Recogniser<@ImmediateValue String>
+public class StringRecogniser extends Recogniser<String>
 {
     private final boolean soloRecogniser;
 
@@ -40,11 +40,11 @@ public class StringRecogniser extends Recogniser<@ImmediateValue String>
 
 
     @Override
-    public Either<ErrorDetails, SuccessDetails<@ImmediateValue String>> process(ParseProgress orig, boolean immediatelySurroundedByRoundBrackets)
+    public Either<ErrorDetails, SuccessDetails<String>> process(ParseProgress orig, boolean immediatelySurroundedByRoundBrackets)
     {
         ParseProgress pp = orig.consumeNext("\"");
         Pair<String, ParseProgress> content;
-        @Nullable String replacement;
+        String replacement;
         if (pp == null)
         {
             if (!soloRecogniser)

@@ -18,7 +18,6 @@
  * with Columnal. If not, see <https://www.gnu.org/licenses/>.
  */
 
-@OnThread(Tag.Simulation)
 package test.gen.type;
 
 import threadchecker.OnThread;

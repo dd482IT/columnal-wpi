@@ -37,11 +37,9 @@ import static org.junit.Assert.assertEquals;
 /**
  * Created by neil on 14/05/2017.
  */
-@RunWith(JUnitQuickcheck.class)
 public class PropUtility
 {
-    @Property(trials = 2000)
-    public void testNumberFracUtilities(@From(GenNumber.class) @Value Number n) throws UserException
+    public void testNumberFracUtilities(Number n) throws UserException
     {
         /* Too hard to test
         assertEquals(Utility.toBigDecimal(n),

@@ -26,12 +26,12 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class SingleUnit implements Comparable<SingleUnit>
 {
-    private final @UnitIdentifier String unitName;
+    private final String unitName;
     private final String description;
     private final String prefix;
     private final String suffix;
 
-    public SingleUnit(@UnitIdentifier String unitName, String description, String prefix, String suffix)
+    public SingleUnit(String unitName, String description, String prefix, String suffix)
     {
         this.unitName = unitName;
         this.description = description;
@@ -39,7 +39,7 @@ public class SingleUnit implements Comparable<SingleUnit>
         this.suffix = suffix;
     }
 
-    public @UnitIdentifier String getName()
+    public String getName()
     {
         return unitName;
     }
@@ -60,7 +60,7 @@ public class SingleUnit implements Comparable<SingleUnit>
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -83,7 +83,7 @@ public class SingleUnit implements Comparable<SingleUnit>
     }
     
     @Override
-    public int compareTo(@NonNull SingleUnit o)
+    public int compareTo(SingleUnit o)
     {
         return unitName.compareTo(o.unitName);
     }

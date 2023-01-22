@@ -44,7 +44,7 @@ import xyz.columnal.utility.Utility.EpsilonType;
  */
 public class PlusMinusPatternExpression extends BinaryOpExpression
 {
-    public PlusMinusPatternExpression(@Recorded Expression lhs, @Recorded Expression rhs)
+    public PlusMinusPatternExpression(Expression lhs, Expression rhs)
     {
         super(lhs, rhs);
     }
@@ -56,14 +56,13 @@ public class PlusMinusPatternExpression extends BinaryOpExpression
     }
 
     @Override
-    public BinaryOpExpression copy(@Nullable @Recorded Expression replaceLHS, @Nullable @Recorded Expression replaceRHS)
+    public BinaryOpExpression copy(Expression replaceLHS, Expression replaceRHS)
     {
         return new PlusMinusPatternExpression(replaceLHS == null ? lhs : replaceLHS, replaceRHS == null ? rhs : replaceRHS);
     }
 
     @Override
-    @RequiresNonNull({"lhsType", "rhsType"})
-    protected @Nullable CheckedExp checkBinaryOp(@Recorded PlusMinusPatternExpression this, ColumnLookup data, TypeState state, ExpressionKind kind, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    protected CheckedExp checkBinaryOp(PlusMinusPatternExpression this, ColumnLookup data, TypeState state, ExpressionKind kind, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         if (kind != ExpressionKind.PATTERN)
         {
@@ -87,17 +86,17 @@ public class PlusMinusPatternExpression extends BinaryOpExpression
     }
 
     @Override
-    public @Value Object getValueBinaryOp(ValueResult lhsValue, ValueResult rhsValue) throws InternalException
+    public Object getValueBinaryOp(ValueResult lhsValue, ValueResult rhsValue) throws InternalException
     {
         throw new InternalException("Calling getValue on plus minus pattern (should only call matchAsPattern)");
     }
 
     @Override
-    public ValueResult matchAsPattern(@Value Object value, EvaluateState state) throws InternalException, EvaluationException
+    public ValueResult matchAsPattern(Object value, EvaluateState state) throws InternalException, EvaluationException
     {
         ImmutableList.Builder<ValueResult> lhsrhs = ImmutableList.builderWithExpectedSize(2);
-        @Value Object lhsValue = fetchSubExpression(lhs, state, lhsrhs).value;
-        @Value Object rhsValue = fetchSubExpression(rhs, state, lhsrhs).value;
+        Object lhsValue = fetchSubExpression(lhs, state, lhsrhs).value;
+        Object rhsValue = fetchSubExpression(rhs, state, lhsrhs).value;
         boolean match = Utility.compareNumbers(Utility.cast(value, Number.class), Utility.cast(lhsValue, Number.class), new Pair<>(EpsilonType.ABSOLUTE, Utility.toBigDecimal(Utility.cast(rhsValue, Number.class)))) == 0;
         return explanation(DataTypeUtility.value(match), ExecutionType.MATCH, state, lhsrhs.build(), ImmutableList.of(), false);
     }

@@ -75,12 +75,12 @@ import java.util.stream.DoubleStream;
 
 public class ConvertFromR
 {
-    private static ColumnId getColumnName(@Nullable RValue listColumnNames, int index) throws UserException, InternalException
+    private static ColumnId getColumnName(RValue listColumnNames, int index) throws UserException, InternalException
     {
-        @ExpressionIdentifier String def = IdentifierUtility.identNum("Column", index);
+        String def = IdentifierUtility.identNum("Column", index);
         if (listColumnNames != null)
         {
-            @Value String s = RUtility.getString(RUtility.getListItem(listColumnNames, index));
+            String s = RUtility.getString(RUtility.getListItem(listColumnNames, index));
             return new ColumnId(IdentifierUtility.fixExpressionIdentifier(s == null ? "" : s, def));
         }
         return new ColumnId(def);
@@ -89,29 +89,29 @@ public class ConvertFromR
     /**
      * The returned type is the type of each list element (i.e. is not [necessarily] an array type).
      */
-    public static Pair<DataType, ImmutableList<@Value Object>> convertRToTypedValueList(TypeManager typeManager, RValue rValue) throws InternalException, UserException
+    public static Pair<DataType, ImmutableList<Object>> convertRToTypedValueList(TypeManager typeManager, RValue rValue) throws InternalException, UserException
     {
-        return rValue.visit(new RVisitor<Pair<DataType, ImmutableList<@Value Object>>>()
+        return rValue.visit(new RVisitor<Pair<DataType, ImmutableList<Object>>>()
         {
             @Override
-            public Pair<DataType, ImmutableList<@Value Object>> visitNil() throws InternalException, UserException
+            public Pair<DataType, ImmutableList<Object>> visitNil() throws InternalException, UserException
             {
                 throw new UserException("Cannot turn nil into value");
             }
 
             @Override
-            public Pair<DataType, ImmutableList<@Value Object>> visitString(@Nullable @Value String s, boolean isSymbol) throws InternalException, UserException
+            public Pair<DataType, ImmutableList<Object>> visitString(String s, boolean isSymbol) throws InternalException, UserException
             {
-                return visitStringList(ImmutableList.<Optional<@Value String>>of(Optional.<@Value String>ofNullable(s)), null);
+                return visitStringList(ImmutableList.<Optional<String>>of(Optional.<String>ofNullable(s)), null);
             }
 
             @Override
-            public Pair<DataType, ImmutableList<@Value Object>> visitLogicalList(boolean[] values, boolean @Nullable [] isNA, @Nullable RValue attributes) throws InternalException, UserException
+            public Pair<DataType, ImmutableList<Object>> visitLogicalList(boolean[] values, boolean[] isNA, RValue attributes) throws InternalException, UserException
             {
                 if (isNA == null)
-                    return new Pair<>(DataType.BOOLEAN, Utility.<@ImmediateValue Boolean, @Value Object>mapListI(Booleans.asList(values), b -> DataTypeUtility.value(b)));
+                    return new Pair<>(DataType.BOOLEAN, Utility.<Boolean, Object>mapListI(Booleans.asList(values), b -> DataTypeUtility.value(b)));
 
-                ImmutableList.Builder<@Value Object> maybeValues = ImmutableList.builderWithExpectedSize(values.length);
+                ImmutableList.Builder<Object> maybeValues = ImmutableList.builderWithExpectedSize(values.length);
                 for (int i = 0; i < values.length; i++)
                 {
                     if (isNA[i])
@@ -123,14 +123,14 @@ public class ConvertFromR
             }
 
             @Override
-            public Pair<DataType,ImmutableList<@Value Object>> visitIntList(int[] values, @Nullable RValue attributes) throws InternalException, UserException
+            public Pair<DataType,ImmutableList<Object>> visitIntList(int[] values, RValue attributes) throws InternalException, UserException
             {
                 // int[] doesn't use NA; always doubles if has NA
-                return new Pair<>(DataType.NUMBER, Utility.<@ImmediateValue Integer, @Value Object>mapListI(Ints.asList(values), i -> DataTypeUtility.value(i)));
+                return new Pair<>(DataType.NUMBER, Utility.<Integer, Object>mapListI(Ints.asList(values), i -> DataTypeUtility.value(i)));
             }
 
             @Override
-            public Pair<DataType, ImmutableList<@Value Object>> visitDoubleList(double[] values, @Nullable RValue attributes) throws InternalException, UserException
+            public Pair<DataType, ImmutableList<Object>> visitDoubleList(double[] values, RValue attributes) throws InternalException, UserException
             {
                 boolean hasNaNs = false;
                 for (int i = 0; i < values.length; i++)
@@ -143,7 +143,7 @@ public class ConvertFromR
                 }
                 if (hasNaNs)
                 {
-                    ImmutableList.Builder<@Value Object> maybeValues = ImmutableList.builderWithExpectedSize(values.length);
+                    ImmutableList.Builder<Object> maybeValues = ImmutableList.builderWithExpectedSize(values.length);
                     for (int i = 0; i < values.length; i++)
                     {
                         if (Double.isNaN(values[i]))
@@ -156,41 +156,41 @@ public class ConvertFromR
                 }
                 else
                 {
-                    return new Pair<>(DataType.NUMBER, DoubleStream.of(values).<@ImmediateValue Object>mapToObj(d -> RUtility.doubleToValue(d)).collect(ImmutableList.<@Value @NonNull Object>toImmutableList()));
+                    return new Pair<>(DataType.NUMBER, DoubleStream.of(values).<Object>mapToObj(d -> RUtility.doubleToValue(d)).collect(ImmutableList.<Object>toImmutableList()));
                 }
             }
 
             @Override
             @SuppressWarnings("optional")
-            public Pair<DataType, ImmutableList<@Value Object>> visitStringList(ImmutableList<Optional<@Value String>> values, @Nullable RValue attributes) throws InternalException, UserException
+            public Pair<DataType, ImmutableList<Object>> visitStringList(ImmutableList<Optional<String>> values, RValue attributes) throws InternalException, UserException
             {
                 if (values.stream().allMatch(v -> v.isPresent()))
                 {
-                    return new Pair<>(DataType.TEXT, Utility.<Optional<@Value String>, @Value Object>mapListI(values, v -> v.get()));
+                    return new Pair<>(DataType.TEXT, Utility.<Optional<String>, Object>mapListI(values, v -> v.get()));
                 }
                 else 
                 {
-                    return new Pair<>(typeManager.makeMaybeType(DataType.TEXT), Utility.<Optional<@Value String>, @Value Object>mapListI(values, v -> v.<@Value Object>map(s -> typeManager.maybePresent(s)).orElseGet(typeManager::maybeMissing)));
+                    return new Pair<>(typeManager.makeMaybeType(DataType.TEXT), Utility.<Optional<String>, Object>mapListI(values, v -> v.<Object>map(s -> typeManager.maybePresent(s)).orElseGet(typeManager::maybeMissing)));
                 }
             }
 
             @SuppressWarnings("optional")
             @Override
-            public Pair<DataType, ImmutableList<@Value Object>> visitTemporalList(DateTimeType dateTimeType, ImmutableList<Optional<@Value TemporalAccessor>> values, @Nullable RValue attributes) throws InternalException, UserException
+            public Pair<DataType, ImmutableList<Object>> visitTemporalList(DateTimeType dateTimeType, ImmutableList<Optional<TemporalAccessor>> values, RValue attributes) throws InternalException, UserException
             {
                 DateTimeInfo t = new DateTimeInfo(dateTimeType);
                 if (values.stream().allMatch(v -> v.isPresent()))
                 {
-                    return new Pair<>(DataType.date(t), Utility.<Optional<@Value TemporalAccessor>, @Value Object>mapListI(values, v -> v.get()));
+                    return new Pair<>(DataType.date(t), Utility.<Optional<TemporalAccessor>, Object>mapListI(values, v -> v.get()));
                 }
                 else
                 {
-                    return new Pair<>(typeManager.makeMaybeType(DataType.date(t)), Utility.<Optional<@Value TemporalAccessor>, @Value Object>mapListI(values, v -> v.map(typeManager::maybePresent).orElseGet(typeManager::maybeMissing)));
+                    return new Pair<>(typeManager.makeMaybeType(DataType.date(t)), Utility.<Optional<TemporalAccessor>, Object>mapListI(values, v -> v.map(typeManager::maybePresent).orElseGet(typeManager::maybeMissing)));
                 }
             }
 
             @Override
-            public Pair<DataType, ImmutableList<@Value Object>> visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes, boolean isObject) throws InternalException, UserException
+            public Pair<DataType, ImmutableList<Object>> visitGenericList(ImmutableList<RValue> values, RValue attributes, boolean isObject) throws InternalException, UserException
             {
                 if (attributes != null)
                 {
@@ -198,10 +198,10 @@ public class ConvertFromR
                     RValue namesRValue = attrMap.get("names");
                     if (namesRValue != null)
                     {
-                        ImmutableList<Optional<@Value String>> names = namesRValue.visit(new SpecificRVisitor<ImmutableList<Optional<@Value String>>>()
+                        ImmutableList<Optional<String>> names = namesRValue.visit(new SpecificRVisitor<ImmutableList<Optional<String>>>()
                         {
                             @Override
-                            public ImmutableList<Optional<@Value String>> visitStringList(ImmutableList<Optional<@Value String>> values, @Nullable RValue attributes) throws InternalException, UserException
+                            public ImmutableList<Optional<String>> visitStringList(ImmutableList<Optional<String>> values, RValue attributes) throws InternalException, UserException
                             {
                                 return values;
                             }
@@ -217,24 +217,24 @@ public class ConvertFromR
                             paired.add(new Pair<String, RValue>(names.get(i).orElse(DataTypeUtility.value("Unnamed field " + i)), values.get(i)));
                         }
 
-                        Pair<DataType, @Value Object> fieldTypesAndValue = record(typeManager, paired.build());
-                        return new Pair<>(fieldTypesAndValue.getFirst(), ImmutableList.<@Value Object>of(fieldTypesAndValue.getSecond()));
+                        Pair<DataType, Object> fieldTypesAndValue = record(typeManager, paired.build());
+                        return new Pair<>(fieldTypesAndValue.getFirst(), ImmutableList.<Object>of(fieldTypesAndValue.getSecond()));
                     }
                 }
                 return rListToValueList(typeManager, values);
             }
 
             @Override
-            public Pair<DataType, ImmutableList<@Value Object>> visitPairList(ImmutableList<PairListEntry> items) throws InternalException, UserException
+            public Pair<DataType, ImmutableList<Object>> visitPairList(ImmutableList<PairListEntry> items) throws InternalException, UserException
             {
                 // For some reason, factor columns appear as pair list of two with an int[] as second item:
                 if (items.size() == 2)
                 {
-                    RVisitor<Pair<DataType, ImmutableList<@Value Object>>> outer = this;
-                    @Nullable Pair<DataType, ImmutableList<@Value Object>> asFactors = items.get(0).item.visit(new DefaultRVisitor<@Nullable Pair<DataType, ImmutableList<@Value Object>>>(null)
+                    RVisitor<Pair<DataType, ImmutableList<Object>>> outer = this;
+                    Pair<DataType, ImmutableList<Object>> asFactors = items.get(0).item.visit(new DefaultRVisitor<Pair<DataType, ImmutableList<Object>>>(null)
                     {
                         @Override
-                        public @Nullable Pair<DataType, ImmutableList<@Value Object>> visitFactorList(int[] values, ImmutableList<String> levelNames) throws InternalException, UserException
+                        public Pair<DataType, ImmutableList<Object>> visitFactorList(int[] values, ImmutableList<String> levelNames) throws InternalException, UserException
                         {
                             return outer.visitFactorList(values, levelNames);
                         }
@@ -244,7 +244,7 @@ public class ConvertFromR
                 }
 
                 ImmutableList<Pair<String, RValue>> pairs = Utility.mapListExI(items, e -> {
-                    @Value String name = null;
+                    String name = null;
                     if (e.tag != null)
                     {
                         name = RUtility.getString(e.tag);
@@ -254,12 +254,12 @@ public class ConvertFromR
                     return new Pair<>(name, e.item);
                 });
 
-                Pair<DataType, @Value Object> record = record(typeManager, pairs);
-                return new Pair<DataType, ImmutableList<@Value Object>>(record.getFirst(), ImmutableList.<@Value Object>of(record.getSecond()));
+                Pair<DataType, Object> record = record(typeManager, pairs);
+                return new Pair<DataType, ImmutableList<Object>>(record.getFirst(), ImmutableList.<Object>of(record.getSecond()));
             }
 
             @Override
-            public Pair<DataType, ImmutableList<@Value Object>> visitFactorList(int[] values, ImmutableList<String> levelNames) throws InternalException, UserException
+            public Pair<DataType, ImmutableList<Object>> visitFactorList(int[] values, ImmutableList<String> levelNames) throws InternalException, UserException
             {
                 boolean hasNAs = false;
                 for (int value : values)
@@ -272,7 +272,7 @@ public class ConvertFromR
                 }
 
                 TaggedTypeDefinition taggedTypeDefinition = getTaggedTypeForFactors(levelNames, typeManager);
-                ImmutableList.Builder<@Value Object> factorValueBuilder = ImmutableList.builderWithExpectedSize(values.length);
+                ImmutableList.Builder<Object> factorValueBuilder = ImmutableList.builderWithExpectedSize(values.length);
                 for (int n : values)
                 {
                     if (hasNAs && n == RUtility.NA_AS_INTEGER)
@@ -281,11 +281,11 @@ public class ConvertFromR
                     }
                     else
                     {
-                        @Value TaggedValue taggedValue = new TaggedValue(lookupTag(n, levelNames, taggedTypeDefinition), null, taggedTypeDefinition);
+                        TaggedValue taggedValue = new TaggedValue(lookupTag(n, levelNames, taggedTypeDefinition), null, taggedTypeDefinition);
                         factorValueBuilder.add(hasNAs ? typeManager.maybePresent(taggedValue) : taggedValue);
                     }
                 }
-                ImmutableList<@Value Object> factorValues = factorValueBuilder.build();
+                ImmutableList<Object> factorValues = factorValueBuilder.build();
 
                 DataType taggedDataType = taggedTypeDefinition.instantiate(ImmutableList.of(), typeManager);
                 return new Pair<>(hasNAs ? typeManager.makeMaybeType(taggedDataType) : taggedDataType, factorValues);
@@ -305,11 +305,11 @@ public class ConvertFromR
 
     private static TaggedTypeDefinition getTaggedTypeForFactors(ImmutableList<String> levelNames, TypeManager typeManager) throws InternalException, UserException
     {
-        ImmutableList<@ExpressionIdentifier String> processedNames = Streams.<String, @ExpressionIdentifier String>mapWithIndex(levelNames.stream(), (s, i) -> IdentifierUtility.fixExpressionIdentifier(s, IdentifierUtility.identNum("Factor", (int) i))).collect(ImmutableList.<@ExpressionIdentifier String>toImmutableList());
+        ImmutableList<String> processedNames = Streams.<String, String>mapWithIndex(levelNames.stream(), (s, i) -> IdentifierUtility.fixExpressionIdentifier(s, IdentifierUtility.identNum("Factor", (int) i))).collect(ImmutableList.<String>toImmutableList());
 
-        ImmutableSet<@ExpressionIdentifier String> namesAsSet = ImmutableSet.copyOf(processedNames);
+        ImmutableSet<String> namesAsSet = ImmutableSet.copyOf(processedNames);
         TaggedTypeDefinition existing = typeManager.getKnownTaggedTypes().values().stream().filter(ttd ->
-                ttd.getTags().stream().<@ExpressionIdentifier String>map(tt -> tt.getName()).collect(ImmutableSet.<@ExpressionIdentifier String>toImmutableSet()).equals(namesAsSet)
+                ttd.getTags().stream().<String>map(tt -> tt.getName()).collect(ImmutableSet.<String>toImmutableSet()).equals(namesAsSet)
         ).findFirst().orElse(null);
         if (existing != null)
             return existing;
@@ -317,9 +317,9 @@ public class ConvertFromR
         for (int i = 0; i < 100; i++)
         {
             @SuppressWarnings("identifier")
-            @ExpressionIdentifier String hint = "F " + i;
-            @ExpressionIdentifier String typeName = IdentifierUtility.fixExpressionIdentifier(levelNames.stream().sorted().findFirst().orElse("F") + " " + levelNames.size(), hint);
-            TaggedTypeDefinition taggedTypeDefinition = typeManager.registerTaggedType(typeName, ImmutableList.<Pair<TypeVariableKind, @ExpressionIdentifier String>>of(), levelNames.stream().map(s -> new TagType<JellyType>(IdentifierUtility.fixExpressionIdentifier(s, "Factor"), null)).collect(ImmutableList.<TagType<JellyType>>toImmutableList()));
+            String hint = "F " + i;
+            String typeName = IdentifierUtility.fixExpressionIdentifier(levelNames.stream().sorted().findFirst().orElse("F") + " " + levelNames.size(), hint);
+            TaggedTypeDefinition taggedTypeDefinition = typeManager.registerTaggedType(typeName, ImmutableList.<Pair<TypeVariableKind, String>>of(), levelNames.stream().map(s -> new TagType<JellyType>(IdentifierUtility.fixExpressionIdentifier(s, "Factor"), null)).collect(ImmutableList.<TagType<JellyType>>toImmutableList()));
             if (taggedTypeDefinition != null)
                 return taggedTypeDefinition;
         }
@@ -328,13 +328,13 @@ public class ConvertFromR
 
     public static Pair<SimulationFunction<RecordSet, EditableColumn>, Integer> convertRToColumn(TypeManager typeManager, RValue rValue, ColumnId columnName) throws UserException, InternalException
     {
-        Pair<DataType, ImmutableList<@Value Object>> converted = convertRToTypedValueList(typeManager, rValue);
-        return new Pair<>(ColumnUtility.makeImmediateColumn(converted.getFirst(), columnName, Utility.<@Value Object, Either<String, @Value Object>>mapListI(converted.getSecond(), x -> Either.<String, @Value Object>right(x)), DataTypeUtility.makeDefaultValue(converted.getFirst())), converted.getSecond().size());
+        Pair<DataType, ImmutableList<Object>> converted = convertRToTypedValueList(typeManager, rValue);
+        return new Pair<>(ColumnUtility.makeImmediateColumn(converted.getFirst(), columnName, Utility.<Object, Either<String, Object>>mapListI(converted.getSecond(), x -> Either.<String, Object>right(x)), DataTypeUtility.makeDefaultValue(converted.getFirst())), converted.getSecond().size());
     }
 
-    private static SimulationFunction<@Value Object, @Value Object> getOrInternal(ImmutableMap<DataType, SimulationFunction<@Value Object, @Value Object>> map, DataType key) throws InternalException
+    private static SimulationFunction<Object, Object> getOrInternal(ImmutableMap<DataType, SimulationFunction<Object, Object>> map, DataType key) throws InternalException
     {
-        SimulationFunction<@Value Object, @Value Object> f = map.get(key);
+        SimulationFunction<Object, Object> f = map.get(key);
         if (f == null)
             throw new InternalException("No conversion found for type " + key);
         return f;
@@ -342,23 +342,23 @@ public class ConvertFromR
     
     // The DataType is the type of the list *elements*, not the list as a whole.
     // e.g. the return may be (Number, [1,2,3])
-    private static Pair<DataType, ImmutableList<@Value Object>> rListToValueList(TypeManager typeManager, List<RValue> values) throws UserException, InternalException
+    private static Pair<DataType, ImmutableList<Object>> rListToValueList(TypeManager typeManager, List<RValue> values) throws UserException, InternalException
     {
         // The type here will be the type of the object on the right
-        ImmutableList<Pair<DataType, @Value Object>> typedPairs = Utility.<RValue, Pair<DataType, @Value Object>>mapListExI(values, v -> {
-            Pair<DataType, ImmutableList<@Value Object>> r = convertRToTypedValueList(typeManager, v);
+        ImmutableList<Pair<DataType, Object>> typedPairs = Utility.<RValue, Pair<DataType, Object>>mapListExI(values, v -> {
+            Pair<DataType, ImmutableList<Object>> r = convertRToTypedValueList(typeManager, v);
             if (r.getSecond().size() == 1)
                 return r.replaceSecond(r.getSecond().get(0));
             else
                 return new Pair<>(DataType.array(r.getFirst()), DataTypeUtility.value(r.getSecond()));
         });
-        Pair<DataType, ImmutableMap<DataType, SimulationFunction<@Value Object, @Value Object>>> m = generaliseType(typeManager, Utility.mapListExI(typedPairs, p -> p.getFirst()));
-        ImmutableList<@Value Object> loaded = Utility.<Pair<DataType, @Value Object>, @Value Object>mapListExI(typedPairs, p -> getOrInternal(m.getSecond(), p.getFirst()).apply(p.getSecond()));
-        return new Pair<DataType, ImmutableList<@Value Object>>(m.getFirst(), loaded);
+        Pair<DataType, ImmutableMap<DataType, SimulationFunction<Object, Object>>> m = generaliseType(typeManager, Utility.mapListExI(typedPairs, p -> p.getFirst()));
+        ImmutableList<Object> loaded = Utility.<Pair<DataType, Object>, Object>mapListExI(typedPairs, p -> getOrInternal(m.getSecond(), p.getFirst()).apply(p.getSecond()));
+        return new Pair<DataType, ImmutableList<Object>>(m.getFirst(), loaded);
     }
     
     // If smaller can be generalised into larger (or some even larger type), returns the conversion function from small to large and the destination type.  If not (including case where larger can generalise to smaller), return null
-    static @Nullable GeneralisedTypePair generaliseType(TypeManager typeManager, DataType smaller, DataType larger) throws InternalException, TaggedInstantiationException, UnknownTypeException
+    static GeneralisedTypePair generaliseType(TypeManager typeManager, DataType smaller, DataType larger) throws InternalException, TaggedInstantiationException, UnknownTypeException
     {
         if (smaller.equals(larger))
             return new GeneralisedTypePair(larger, x -> x);
@@ -373,23 +373,23 @@ public class ConvertFromR
                 return new GeneralisedTypePair(larger, x -> DataTypeUtility.value(ImmutableList.of(typeManager.maybePresent(x))));
 
             DataType smallInner = getArrayInner(smaller);
-            @Nullable GeneralisedTypePair genInners = smallInner == null ? null : generaliseType(typeManager, smallInner, largeInner);
+            GeneralisedTypePair genInners = smallInner == null ? null : generaliseType(typeManager, smallInner, largeInner);
             if (genInners != null)
             {
                 return new GeneralisedTypePair(DataType.array(genInners.resultingType), applyToList(genInners.smallToResult), applyToList(genInners.largeToResult));
             }
         }
-        @Nullable ImmutableMap<@ExpressionIdentifier String, DataType> smallFields = getRecordFields(smaller);
-        @Nullable ImmutableMap<@ExpressionIdentifier String, DataType> largeFields = getRecordFields(larger);
+        ImmutableMap<String, DataType> smallFields = getRecordFields(smaller);
+        ImmutableMap<String, DataType> largeFields = getRecordFields(larger);
         if (smallFields != null && largeFields != null)
         {
             // Generalisation is possible if all shared fields can be generalised pairwise, and all non-shared fields can be generalised into optional
             // true if large
-            HashMap<@ExpressionIdentifier String, Pair<Boolean, DataType>> nonShared = new HashMap<>();
+            HashMap<String, Pair<Boolean, DataType>> nonShared = new HashMap<>();
             // small, large in pair:
-            HashMap<@ExpressionIdentifier String, Pair<DataType, DataType>> shared = new HashMap<>();
+            HashMap<String, Pair<DataType, DataType>> shared = new HashMap<>();
             nonShared.putAll(Utility.mapValues(smallFields, t -> new Pair<>(false, t)));
-            for (Entry<@ExpressionIdentifier String, DataType> l : largeFields.entrySet())
+            for (Entry<String, DataType> l : largeFields.entrySet())
             {
                 Pair<Boolean, DataType> s = nonShared.remove(l.getKey());
                 if (s == null)
@@ -404,11 +404,11 @@ public class ConvertFromR
                 }
             }
             // Now shared and nonShared are set-up, so get processing into result:
-            HashMap<@ExpressionIdentifier String, GeneralisedTypePair> result = new HashMap<>();
+            HashMap<String, GeneralisedTypePair> result = new HashMap<>();
             
             // Non-shared types need to be optional.
             // (We don't nest optionals)
-            for (Entry<@ExpressionIdentifier String, Pair<Boolean, DataType>> e : nonShared.entrySet())
+            for (Entry<String, Pair<Boolean, DataType>> e : nonShared.entrySet())
             {
                 GeneralisedTypePair r;
                 if (isOptional(e.getValue().getSecond()))
@@ -427,15 +427,15 @@ public class ConvertFromR
                 
             }
 
-            for (Entry<@ExpressionIdentifier String, Pair<DataType, DataType>> e : shared.entrySet())
+            for (Entry<String, Pair<DataType, DataType>> e : shared.entrySet())
             {
-                @Nullable GeneralisedTypePair gen = generaliseType(typeManager, e.getValue().getFirst(), e.getValue().getSecond());
+                GeneralisedTypePair gen = generaliseType(typeManager, e.getValue().getFirst(), e.getValue().getSecond());
                 if (gen == null)
                     return null;//throw new UserException("Cannot generalise shared field named " + e.getKey() + " types: " + e.getValue().getFirst() + " and " + e.getValue().getSecond() + " are incompatible");
                 result.put(e.getKey(), gen);
             }
             
-            return new GeneralisedTypePair(DataType.record(Utility.mapValues(result, p -> p.resultingType)), applyToRecord(typeManager, Utility.<@ExpressionIdentifier String, GeneralisedTypePair, SimulationFunction<@Value Object, @Value Object>>mapValues(result, p -> p.smallToResult)), applyToRecord(typeManager, Utility.<@ExpressionIdentifier String, GeneralisedTypePair, SimulationFunction<@Value Object, @Value Object>>mapValues(result, p -> p.largeToResult)));
+            return new GeneralisedTypePair(DataType.record(Utility.mapValues(result, p -> p.resultingType)), applyToRecord(typeManager, Utility.<String, GeneralisedTypePair, SimulationFunction<Object, Object>>mapValues(result, p -> p.smallToResult)), applyToRecord(typeManager, Utility.<String, GeneralisedTypePair, SimulationFunction<Object, Object>>mapValues(result, p -> p.largeToResult)));
         }
         
         
@@ -453,21 +453,21 @@ public class ConvertFromR
         });
     }
 
-    private static SimulationFunction<@Value Object, @Value Object> applyToRecord(TypeManager typeManager, ImmutableMap<@ExpressionIdentifier String, SimulationFunction<@Value Object, @Value Object>> applyToInner)
+    private static SimulationFunction<Object, Object> applyToRecord(TypeManager typeManager, ImmutableMap<String, SimulationFunction<Object, Object>> applyToInner)
     {
         return x -> {
-            @Value Record record = Utility.cast(x, Record.class);
-            ImmutableMap.Builder<@ExpressionIdentifier String, @Value Object> r = ImmutableMap.builder();
-            HashMap<@ExpressionIdentifier String, SimulationFunction<@Value Object, @Value Object>> stillToApply = new HashMap<>(applyToInner);
-            for (Entry<@ExpressionIdentifier String, @Value Object> entry : record.getFullContent().entrySet())
+            Record record = Utility.cast(x, Record.class);
+            ImmutableMap.Builder<String, Object> r = ImmutableMap.builder();
+            HashMap<String, SimulationFunction<Object, Object>> stillToApply = new HashMap<>(applyToInner);
+            for (Entry<String, Object> entry : record.getFullContent().entrySet())
             {
-                SimulationFunction<@Value Object, @Value Object> f = stillToApply.remove(entry.getKey());
+                SimulationFunction<Object, Object> f = stillToApply.remove(entry.getKey());
                 if (f == null)
                     throw new InternalException("Problem fetching value for " + entry.getKey());
                 r.put(entry.getKey(), f.apply(entry.getValue()));
             }
             // Other fields must now be Optional, so insert None values:
-            for (@ExpressionIdentifier String key : stillToApply.keySet())
+            for (String key : stillToApply.keySet())
             {
                 r.put(key, typeManager.maybeMissing());
             }
@@ -475,12 +475,12 @@ public class ConvertFromR
         };
     }
 
-    private static SimulationFunction<@Value Object, @Value Object> applyToList(SimulationFunction<@Value Object, @Value Object> applyToInner)
+    private static SimulationFunction<Object, Object> applyToList(SimulationFunction<Object, Object> applyToInner)
     {
         return x -> {
-            @Value ListEx list = Utility.cast(x, ListEx.class);
+            ListEx list = Utility.cast(x, ListEx.class);
             int length = list.size();
-            ImmutableList.Builder<@Value Object> processed = ImmutableList.builderWithExpectedSize(length);
+            ImmutableList.Builder<Object> processed = ImmutableList.builderWithExpectedSize(length);
             for (int i = 0; i < length; i++)
             {
                 processed.add(applyToInner.apply(list.get(i)));
@@ -489,20 +489,20 @@ public class ConvertFromR
         };
     }
 
-    private static @Nullable ImmutableMap<@ExpressionIdentifier String, DataType> getRecordFields(DataType dataType) throws InternalException
+    private static ImmutableMap<String, DataType> getRecordFields(DataType dataType) throws InternalException
     {
-        return dataType.apply(new FlatDataTypeVisitor<@Nullable ImmutableMap<@ExpressionIdentifier String, DataType>>(null) {
+        return dataType.apply(new FlatDataTypeVisitor<ImmutableMap<String, DataType>>(null) {
             @Override
-            public @Nullable ImmutableMap<@ExpressionIdentifier String, DataType> record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, InternalException
+            public ImmutableMap<String, DataType> record(ImmutableMap<String, DataType> fields) throws InternalException, InternalException
             {
                 return fields;
             }
         });
     }
 
-    private static @Nullable DataType getArrayInner(DataType dataType) throws InternalException
+    private static DataType getArrayInner(DataType dataType) throws InternalException
     {
-        return dataType.apply(new FlatDataTypeVisitor<@Nullable DataType>(null) {
+        return dataType.apply(new FlatDataTypeVisitor<DataType>(null) {
             @Override
             public DataType array(DataType inner) throws InternalException, InternalException
             {
@@ -520,10 +520,10 @@ public class ConvertFromR
     private static class GeneralisedTypePair
     {
         public final DataType resultingType;
-        public final SimulationFunction<@Value Object, @Value Object> smallToResult;
-        public final SimulationFunction<@Value Object, @Value Object> largeToResult;
+        public final SimulationFunction<Object, Object> smallToResult;
+        public final SimulationFunction<Object, Object> largeToResult;
 
-        public GeneralisedTypePair(DataType resultingType, SimulationFunction<@Value Object, @Value Object> smallToResult, SimulationFunction<@Value Object, @Value Object> largeToResult)
+        public GeneralisedTypePair(DataType resultingType, SimulationFunction<Object, Object> smallToResult, SimulationFunction<Object, Object> largeToResult)
         {
             this.resultingType = resultingType;
             this.smallToResult = smallToResult;
@@ -531,7 +531,7 @@ public class ConvertFromR
         }
 
         // For when large is identity transformation
-        public GeneralisedTypePair(DataType resultingType, SimulationFunction<@Value Object, @Value Object> smallToResult)
+        public GeneralisedTypePair(DataType resultingType, SimulationFunction<Object, Object> smallToResult)
         {
             this(resultingType, smallToResult, x -> x);
         }
@@ -546,12 +546,12 @@ public class ConvertFromR
      * @throws InternalException
      */
     
-    private static Pair<DataType, ImmutableMap<DataType, SimulationFunction<@Value Object, @Value Object>>> generaliseType(TypeManager typeManager, ImmutableList<DataType> types) throws UserException, InternalException
+    private static Pair<DataType, ImmutableMap<DataType, SimulationFunction<Object, Object>>> generaliseType(TypeManager typeManager, ImmutableList<DataType> types) throws UserException, InternalException
     {
         if (types.isEmpty())
-            return new Pair<>(DataType.TEXT, ImmutableMap.<DataType, SimulationFunction<@Value Object, @Value Object>>of());
+            return new Pair<>(DataType.TEXT, ImmutableMap.<DataType, SimulationFunction<Object, Object>>of());
         DataType curType = types.get(0);
-        HashMap<DataType, SimulationFunction<@Value Object, @Value Object>> conversions = new HashMap<>();
+        HashMap<DataType, SimulationFunction<Object, Object>> conversions = new HashMap<>();
         conversions.put(curType, x -> x);
         for (DataType nextType : types.subList(1, types.size()))
         {
@@ -560,7 +560,7 @@ public class ConvertFromR
                 // Fine, already dealt with
                 continue;
             }
-            @Nullable GeneralisedTypePair curToNext = generaliseType(typeManager, curType, nextType);
+            GeneralisedTypePair curToNext = generaliseType(typeManager, curType, nextType);
             if (curToNext != null)
             {
                 conversions.put(curType, x -> x);
@@ -569,7 +569,7 @@ public class ConvertFromR
                 conversions.put(nextType, curToNext.largeToResult);
                 continue;
             }
-            @Nullable GeneralisedTypePair nextToCur = generaliseType(typeManager, nextType, curType);
+            GeneralisedTypePair nextToCur = generaliseType(typeManager, nextType, curType);
             if (nextToCur != null)
             {
                 composeAllWith(conversions, nextToCur.largeToResult);
@@ -583,16 +583,16 @@ public class ConvertFromR
         return new Pair<>(curType, ImmutableMap.copyOf(conversions));
     }
 
-    private static void composeAllWith(HashMap<DataType, SimulationFunction<@Value Object, @Value Object>> current, SimulationFunction<@Value Object, @Value Object> thenApply)
+    private static void composeAllWith(HashMap<DataType, SimulationFunction<Object, Object>> current, SimulationFunction<Object, Object> thenApply)
     {
-        for (Entry<DataType, SimulationFunction<@Value Object, @Value Object>> e : current.entrySet())
+        for (Entry<DataType, SimulationFunction<Object, Object>> e : current.entrySet())
         {
             // Must take value outside lambda, since we're about to change it:
-            SimulationFunction<@Value Object, @Value Object> prev = e.getValue();
-            e.setValue(new SimulationFunction<@Value Object, @Value Object>()
+            SimulationFunction<Object, Object> prev = e.getValue();
+            e.setValue(new SimulationFunction<Object, Object>()
             {
                 @Override
-                public @Value Object apply(@Value Object x) throws InternalException, UserException
+                public Object apply(Object x) throws InternalException, UserException
                 {
                     return thenApply.apply(prev.apply(x));
                 }
@@ -622,9 +622,9 @@ public class ConvertFromR
                     if (rowCount != -1 && col.getSecond() != rowCount)
                     {
                         // Not all the same size, treat as record:
-                        Pair<DataType, @Value Object> recTypeVal = record(typeManager, fields);
+                        Pair<DataType, Object> recTypeVal = record(typeManager, fields);
                         
-                        return ImmutableList.of(new Pair<String, EditableRecordSet>("Value", new EditableRecordSet(ImmutableList.<SimulationFunction<RecordSet, EditableColumn>>of(ColumnUtility.makeImmediateColumn(recTypeVal.getFirst(), new ColumnId("Object"), ImmutableList.<Either<String, @Value Object>>of(Either.<String, @Value Object>right(recTypeVal.getSecond())), DataTypeUtility.makeDefaultValue(recTypeVal.getFirst()))), () -> 1)));
+                        return ImmutableList.of(new Pair<String, EditableRecordSet>("Value", new EditableRecordSet(ImmutableList.<SimulationFunction<RecordSet, EditableColumn>>of(ColumnUtility.makeImmediateColumn(recTypeVal.getFirst(), new ColumnId("Object"), ImmutableList.<Either<String, Object>>of(Either.<String, Object>right(recTypeVal.getSecond())), DataTypeUtility.makeDefaultValue(recTypeVal.getFirst()))), () -> 1)));
                     }
                     
                     rowCount = col.getSecond();
@@ -642,37 +642,37 @@ public class ConvertFromR
             }
 
             @Override
-            public ImmutableList<Pair<String, EditableRecordSet>> visitString(@Nullable @Value String s, boolean isSymbol) throws InternalException, UserException
+            public ImmutableList<Pair<String, EditableRecordSet>> visitString(String s, boolean isSymbol) throws InternalException, UserException
             {
                 return singleColumn();
             }
 
             @Override
-            public ImmutableList<Pair<String, EditableRecordSet>> visitStringList(ImmutableList<Optional<@Value String>> values, @Nullable RValue attributes) throws InternalException, UserException
+            public ImmutableList<Pair<String, EditableRecordSet>> visitStringList(ImmutableList<Optional<String>> values, RValue attributes) throws InternalException, UserException
             {
                 return singleColumn();
             }
 
             @Override
-            public ImmutableList<Pair<String, EditableRecordSet>> visitLogicalList(boolean[] values, boolean @Nullable [] isNA, @Nullable RValue attributes) throws InternalException, UserException
+            public ImmutableList<Pair<String, EditableRecordSet>> visitLogicalList(boolean[] values, boolean[] isNA, RValue attributes) throws InternalException, UserException
             {
                 return singleColumn();
             }
 
             @Override
-            public ImmutableList<Pair<String, EditableRecordSet>> visitIntList(int[] values, @Nullable RValue attributes) throws InternalException, UserException
+            public ImmutableList<Pair<String, EditableRecordSet>> visitIntList(int[] values, RValue attributes) throws InternalException, UserException
             {
                 return singleColumn();
             }
 
             @Override
-            public ImmutableList<Pair<String, EditableRecordSet>> visitDoubleList(double[] values, @Nullable RValue attributes) throws InternalException, UserException
+            public ImmutableList<Pair<String, EditableRecordSet>> visitDoubleList(double[] values, RValue attributes) throws InternalException, UserException
             {
                 return singleColumn();
             }
 
             @Override
-            public ImmutableList<Pair<String, EditableRecordSet>> visitTemporalList(DateTimeType dateTimeType, ImmutableList<Optional<@Value TemporalAccessor>> values, @Nullable RValue attributes) throws InternalException, UserException
+            public ImmutableList<Pair<String, EditableRecordSet>> visitTemporalList(DateTimeType dateTimeType, ImmutableList<Optional<TemporalAccessor>> values, RValue attributes) throws InternalException, UserException
             {
                 return singleColumn();
             }
@@ -710,7 +710,7 @@ public class ConvertFromR
             }
 
             @Override
-            public ImmutableList<Pair<String, EditableRecordSet>> visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes, boolean isObject) throws InternalException, UserException
+            public ImmutableList<Pair<String, EditableRecordSet>> visitGenericList(ImmutableList<RValue> values, RValue attributes, boolean isObject) throws InternalException, UserException
             {
                 // Tricky; could be a list of tables, a list of columns or a list of values!
                 // First try as table (list of columns):
@@ -737,7 +737,7 @@ public class ConvertFromR
                             boolean valueIsDataFrame = value.visit(new DefaultRVisitor<Boolean>(false)
                             {
                                 @Override
-                                public Boolean visitGenericList(ImmutableList<RValue> values, @Nullable RValue attributes, boolean isObject) throws InternalException, UserException
+                                public Boolean visitGenericList(ImmutableList<RValue> values, RValue attributes, boolean isObject) throws InternalException, UserException
                                 {
                                     final ImmutableMap<String, RValue> valueAttrMap = RUtility.pairListToMap(attributes);
                                     return isObject && isDataFrameOrTibble(valueAttrMap);
@@ -796,29 +796,28 @@ public class ConvertFromR
 
     public static enum TableType { DATA_FRAME, TIBBLE }
 
-    @OnThread(Tag.Any)
     public static String usToRTable(TableId tableId)
     {
         return tableId.getRaw().replace(" ", ".");
     }
 
-    private static Pair<DataType, @Value Object> record(TypeManager typeManager, ImmutableList<Pair<String, RValue>> fields) throws UserException, InternalException
+    private static Pair<DataType, Object> record(TypeManager typeManager, ImmutableList<Pair<String, RValue>> fields) throws UserException, InternalException
     {
-        Builder<@ExpressionIdentifier String, Pair<DataType, @Value Object>> r = ImmutableMap.builder();
+        Builder<String, Pair<DataType, Object>> r = ImmutableMap.builder();
 
         for (int j = 0; j < fields.size(); j++)
         {
             Pair<String, RValue> recField = fields.get(j);
-            Pair<DataType, ImmutableList<@Value Object>> asList = convertRToTypedValueList(typeManager, recField.getSecond());
-            @ExpressionIdentifier String name = IdentifierUtility.fixExpressionIdentifier(recField.getFirst(), IdentifierUtility.identNum("Field", j));
-            r.put(name, new Pair<DataType, @Value Object>(asList.getSecond().size() == 1 ? asList.getFirst() : DataType.array(asList.getFirst()), asList.getSecond().size() == 1 ? asList.getSecond().get(0) : DataTypeUtility.value(asList.getSecond())));
+            Pair<DataType, ImmutableList<Object>> asList = convertRToTypedValueList(typeManager, recField.getSecond());
+            String name = IdentifierUtility.fixExpressionIdentifier(recField.getFirst(), IdentifierUtility.identNum("Field", j));
+            r.put(name, new Pair<DataType, Object>(asList.getSecond().size() == 1 ? asList.getFirst() : DataType.array(asList.getFirst()), asList.getSecond().size() == 1 ? asList.getSecond().get(0) : DataTypeUtility.value(asList.getSecond())));
         }
 
-        ImmutableMap<@ExpressionIdentifier String, Pair<DataType, @Value Object>> typedFields = r.build();
+        ImmutableMap<String, Pair<DataType, Object>> typedFields = r.build();
 
         DataType recordType = DataType.record(Utility.mapValues(typedFields, p -> p.getFirst()));
 
-        @Value Record recordValue = DataTypeUtility.value(new RecordMap(Utility.<@ExpressionIdentifier String, Pair<DataType, @Value Object>, @Value Object>mapValues(typedFields, p -> p.getSecond())));
+        Record recordValue = DataTypeUtility.value(new RecordMap(Utility.<String, Pair<DataType, Object>, Object>mapValues(typedFields, p -> p.getSecond())));
 
         return new Pair<>(recordType, recordValue);
     }

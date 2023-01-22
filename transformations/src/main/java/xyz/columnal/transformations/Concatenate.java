@@ -74,7 +74,6 @@ import java.util.stream.Stream;
 /**
  * Created by neil on 18/01/2017.
  */
-@OnThread(Tag.Simulation)
 public class Concatenate extends VisitableTransformation
 {
     // Note: these names are used directly for saving, so must match the parser.
@@ -88,18 +87,13 @@ public class Concatenate extends VisitableTransformation
         WRAPMAYBE
     }
     
-    @OnThread(Tag.Any)
     private final ImmutableList<TableId> sources;
 
-    @OnThread(Tag.Any)
     private final IncompleteColumnHandling incompleteColumnHandling;
 
-    @OnThread(Tag.Any)
-    private final @Nullable String error;
-    @OnThread(Tag.Any)
-    private final @Nullable RecordSet recordSet;
+    private final String error;
+    private final RecordSet recordSet;
             
-    @OnThread(Tag.Any)
     private final boolean includeMarkerColumn;
 
     public Concatenate(TableManager mgr, InitialLoadDetails initialLoadDetails, ImmutableList<TableId> sources, IncompleteColumnHandling incompleteColumnHandling, boolean includeMarkerColumn) throws InternalException
@@ -110,20 +104,20 @@ public class Concatenate extends VisitableTransformation
         this.includeMarkerColumn = includeMarkerColumn;
 
         KnownLengthRecordSet rs = null;
-        @Nullable String err = null;
+        String err = null;
         List<Table> tables = Collections.emptyList();
         try
         {
             class ColumnDetails
             {
                 private final DataType dataType;
-                private final @Value Object defaultValue;
+                private final Object defaultValue;
                 // defaultValue, wrapped into a single item DataTypeValue:
                 private final DataTypeValue defaultValueWrapped;
                 // Function to wrap a value which does exist.  Null means the identity function:
-                private final @Nullable Function<@Value Object, @Value Object> wrapValue;
+                private final Function<Object, Object> wrapValue;
 
-                public ColumnDetails(DataType dataType, @Value Object defaultValue, @Nullable Function<@Value Object, @Value Object> wrapValue) throws InternalException, UserException
+                public ColumnDetails(DataType dataType, Object defaultValue, Function<Object, Object> wrapValue) throws InternalException, UserException
                 {
                     this.dataType = dataType;
                     this.defaultValue = defaultValue;
@@ -164,7 +158,7 @@ public class Concatenate extends VisitableTransformation
                             }));
                             break;
                         default: // Which includes case DEFAULT
-                            @Value Object defaultValue = DataTypeUtility.makeDefaultValue(origType);
+                            Object defaultValue = DataTypeUtility.makeDefaultValue(origType);
                             ourColumns.put(entry.getKey(), new ColumnDetails(origType, defaultValue, null));
                             break;
                     }
@@ -190,15 +184,14 @@ public class Concatenate extends VisitableTransformation
             ArrayList<SimulationFunction<RecordSet, Column>> columns = new ArrayList<>(Utility.<Entry<ColumnId, ColumnDetails>, SimulationFunction<RecordSet, Column>>mapList(new ArrayList<>(ourColumns.entrySet()), (Entry<ColumnId, ColumnDetails> colDetails) -> new SimulationFunction<RecordSet, Column>()
             {
                 @Override
-                @OnThread(Tag.Simulation)
                 public Column apply(RecordSet rs) throws InternalException, UserException
                 {
                     return new Column(rs, colDetails.getKey())
                     {
-                        public @MonotonicNonNull DataTypeValue type;
+                        public DataTypeValue type;
 
                         @Override
-                        public @OnThread(Tag.Any) DataTypeValue getType() throws InternalException, UserException
+                        public DataTypeValue getType() throws InternalException, UserException
                         {
                             if (type == null)
                             {
@@ -210,7 +203,7 @@ public class Concatenate extends VisitableTransformation
                                         {
                                             int start = srcTableIndex == 0 ? 0 : ends.get(srcTableIndex - 1);
                                             // First one with end beyond our target must be right one:
-                                            @Nullable Column oldColumn = tablesFinal.get(srcTableIndex).getData().getColumnOrNull(colDetails.getKey());
+                                            Column oldColumn = tablesFinal.get(srcTableIndex).getData().getColumnOrNull(colDetails.getKey());
                                             if (oldColumn == null)
                                             {
                                                 return new Pair<>(colDetails.getValue().defaultValueWrapped, 0);
@@ -221,7 +214,7 @@ public class Concatenate extends VisitableTransformation
                                             }
                                             else
                                             {
-                                                Function<@Value Object, @Value Object> wrapValue = colDetails.getValue().wrapValue;
+                                                Function<Object, Object> wrapValue = colDetails.getValue().wrapValue;
                                                 DataTypeValue wrapped = colDetails.getValue().dataType.fromCollapsed((i, progB) -> wrapValue.apply(oldColumn.getType().getCollapsed(concatenatedRow - start)));
                                                 return new Pair<>(wrapped, 0);
                                             }
@@ -234,7 +227,7 @@ public class Concatenate extends VisitableTransformation
                         }
 
                         @Override
-                        public @OnThread(Tag.Any) AlteredState getAlteredState()
+                        public AlteredState getAlteredState()
                         {
                             return AlteredState.OVERWRITTEN;
                         }
@@ -248,7 +241,7 @@ public class Concatenate extends VisitableTransformation
                 columns.add(0, recordSet -> new Column(recordSet, new ColumnId("Source"))
                 {
                     @Override
-                    public @OnThread(Tag.Any) DataTypeValue getType() throws InternalException, UserException
+                    public DataTypeValue getType() throws InternalException, UserException
                     {
                         return addManualEditSet(getName(), DataTypeValue.text((concatenatedRow, prog) -> {
                             for (int srcTableIndex = 0; srcTableIndex < ends.size(); srcTableIndex++)
@@ -263,7 +256,7 @@ public class Concatenate extends VisitableTransformation
                     }
 
                     @Override
-                    public @OnThread(Tag.Any) AlteredState getAlteredState()
+                    public AlteredState getAlteredState()
                     {
                         return AlteredState.OVERWRITTEN;
                     }
@@ -283,32 +276,31 @@ public class Concatenate extends VisitableTransformation
     }
     
     @Override
-    @OnThread(Tag.Any)
     public Stream<TableId> getPrimarySources()
     {
         return sources.stream();
     }
 
     @Override
-    protected @OnThread(Tag.Any) Stream<TableId> getSourcesFromExpressions()
+    protected Stream<TableId> getSourcesFromExpressions()
     {
         return Stream.empty();
     }
 
     @Override
-    protected @OnThread(Tag.Any) String getTransformationName()
+    protected String getTransformationName()
     {
         return "concatenate";
     }
 
     @Override
-    protected @OnThread(Tag.Any) List<String> saveDetail(@Nullable File destination, TableAndColumnRenames renames)
+    protected List<String> saveDetail(File destination, TableAndColumnRenames renames)
     {
         return ImmutableList.of("@INCOMPLETE " + incompleteColumnHandling.toString() + (includeMarkerColumn ? " SOURCE " : ""));
     }
 
     @Override
-    public @OnThread(Tag.Any) RecordSet getData() throws UserException, InternalException
+    public RecordSet getData() throws UserException, InternalException
     {
         if (recordSet == null)
             throw new UserException(error == null ? "Unknown error" : error);
@@ -344,9 +336,9 @@ public class Concatenate extends VisitableTransformation
         }
 
         @Override
-        public @OnThread(Tag.Simulation) Transformation load(TableManager mgr, InitialLoadDetails initialLoadDetails, List<TableId> source, String detail, ExpressionVersion expressionVersion) throws InternalException, UserException
+        public Transformation load(TableManager mgr, InitialLoadDetails initialLoadDetails, List<TableId> source, String detail, ExpressionVersion expressionVersion) throws InternalException, UserException
         {
-            Map<ColumnId, Pair<DataType, Optional<@Value Object>>> missingInstr = new HashMap<>();
+            Map<ColumnId, Pair<DataType, Optional<Object>>> missingInstr = new HashMap<>();
             ConcatMissingContext ctx = Utility.parseAsOne(detail, TransformationLexer::new, TransformationParser::new, p -> p.concatMissing());
             IncompleteColumnHandling incompleteColumnHandling;
             if (ctx.concatOmit() != null)
@@ -359,7 +351,7 @@ public class Concatenate extends VisitableTransformation
         }
 
         @Override
-        public @OnThread(Tag.FXPlatform) @Nullable SimulationSupplier<Transformation> make(TableManager mgr, CellPosition destination, FXPlatformSupplier<Optional<Table>> askForSingleSrcTable)
+        public SimulationSupplier<Transformation> make(TableManager mgr, CellPosition destination, FXPlatformSupplier<Optional<Table>> askForSingleSrcTable)
         {
             return () -> new Concatenate(mgr, new InitialLoadDetails(null, null, destination, null), ImmutableList.of(), IncompleteColumnHandling.DEFAULT, true);
         }
@@ -370,7 +362,6 @@ public class Concatenate extends VisitableTransformation
         return incompleteColumnHandling;
     }
 
-    @OnThread(Tag.Any)
     public boolean isIncludeMarkerColumn()
     {
         return includeMarkerColumn;
@@ -398,7 +389,6 @@ public class Concatenate extends VisitableTransformation
     }
 
     @Override
-    @OnThread(Tag.Any)
     public <T> T visit(TransformationVisitor<T> visitor)
     {
         return visitor.concatenate(this);
@@ -412,7 +402,7 @@ public class Concatenate extends VisitableTransformation
 
     public static TableId suggestedName(ImmutableList<TableId> sources)
     {
-        ImmutableList.Builder<@ExpressionIdentifier String> parts = ImmutableList.builder();
+        ImmutableList.Builder<String> parts = ImmutableList.builder();
         parts.add("Conc");
         if (sources.isEmpty())
             parts.add("none");

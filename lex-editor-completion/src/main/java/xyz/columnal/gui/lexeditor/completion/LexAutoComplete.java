@@ -37,17 +37,15 @@ import xyz.columnal.utility.gui.FXUtility;
 import java.util.List;
 import java.util.Optional;
 
-@OnThread(Tag.FXPlatform)
 public class LexAutoComplete
 {
-    @OnThread(Tag.FXPlatform)
     public interface EditorDisplayInterface
     {
         Node asNode();
         
-        public @CanonicalLocation int getCaretPosition();
+        public int getCaretPosition();
 
-        public @Nullable Point2D getCaretBottomOnScreen(@CanonicalLocation int caretPos);
+        public Point2D getCaretBottomOnScreen(int caretPos);
     }
     
     private final LexAutoCompleteWindow window;
@@ -61,7 +59,7 @@ public class LexAutoComplete
     // item beneath.  This value is for comparing to System.currentTimeMillis()
     private long clickImmuneUntil = -1L;
 
-    public LexAutoComplete(@UnknownInitialization EditorDisplayInterface editor, LexCompletionListener triggerCompletion)
+    public LexAutoComplete(EditorDisplayInterface editor, LexCompletionListener triggerCompletion)
     {
         this.window = new LexAutoCompleteWindow(triggerCompletion);
         this.editor = Utility.later(editor);

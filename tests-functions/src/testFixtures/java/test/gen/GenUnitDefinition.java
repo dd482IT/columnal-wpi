@@ -60,7 +60,7 @@ public class GenUnitDefinition extends Generator<UnitDetails>
     @Override
     public UnitDetails generate(SourceOfRandomness random, GenerationStatus status)
     {
-        @UnitIdentifier String id = genIdent(random);
+        String id = genIdent(random);
         if (random.nextInt(4) == 1)
         {
             return new UnitDetails(id, Either.left(genIdent(random)));
@@ -88,7 +88,7 @@ public class GenUnitDefinition extends Generator<UnitDetails>
     }
 
     @SuppressWarnings("identifier")
-    private @UnitIdentifier String genIdent(SourceOfRandomness random)
+    private String genIdent(SourceOfRandomness random)
     {
         StringBuilder sb = new StringBuilder();
         sb.appendCodePoint(pickValid(random));
@@ -114,10 +114,10 @@ public class GenUnitDefinition extends Generator<UnitDetails>
 
     public static class UnitDetails
     {
-        public final @UnitIdentifier String name;
-        public final Either<@UnitIdentifier String, UnitDeclaration> aliasOrDeclaration;
+        public final String name;
+        public final Either<String, UnitDeclaration> aliasOrDeclaration;
 
-        public UnitDetails(@UnitIdentifier String name, Either<@UnitIdentifier String, UnitDeclaration> aliasOrDeclaration)
+        public UnitDetails(String name, Either<String, UnitDeclaration> aliasOrDeclaration)
         {
             this.name = name;
             this.aliasOrDeclaration = aliasOrDeclaration;

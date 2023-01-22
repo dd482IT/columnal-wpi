@@ -50,15 +50,12 @@ import java.util.Random;
 
 import static org.junit.Assert.*;
 
-@RunWith(JUnitQuickcheck.class)
 public class PropStringFunctions
 {
-    @Property
-    @OnThread(Tag.Simulation)
-    public void propTextLength(@From(UnicodeStringGenerator.class) String str) throws Throwable
+    public void propTextLength(String str) throws Throwable
     {
         StringLength function = new StringLength();
-        @Nullable Pair<ValueFunction, DataType> checked = TFunctionUtil.typeCheckFunction(function, ImmutableList.of(DataType.TEXT));
+        Pair<ValueFunction, DataType> checked = TFunctionUtil.typeCheckFunction(function, ImmutableList.of(DataType.TEXT));
         if (checked == null)
         {
             fail("Type check failure");
@@ -66,15 +63,13 @@ public class PropStringFunctions
         else
         {
             assertEquals(DataType.NUMBER, checked.getSecond());
-            @Value Number actual = (Number)checked.getFirst().call(new @Value Object[] {DataTypeUtility.value(str)});
+            Number actual = (Number)checked.getFirst().call(new Object[] {DataTypeUtility.value(str)});
             assertEquals(str.codePointCount(0, str.length()), actual.intValue());
             assertTrue(actual.doubleValue() == (double)actual.intValue());
         }
     }
 
-    @Property
-    @OnThread(Tag.Simulation)
-    public void propTrim(@From(UnicodeStringGenerator.class) String orig, @From(GenRandom.class) Random r) throws Throwable
+    public void propTrim(String orig, Random r) throws Throwable
     {
         // We don't want any spaces besides the ones we add!
         while (!orig.isEmpty() && CharMatcher.whitespace().matches(orig.charAt(0)))
@@ -84,7 +79,7 @@ public class PropStringFunctions
 
 
         StringTrim function = new StringTrim();
-        @Nullable Pair<ValueFunction, DataType> checked = TFunctionUtil.typeCheckFunction(function, ImmutableList.of(DataType.TEXT));
+        Pair<ValueFunction, DataType> checked = TFunctionUtil.typeCheckFunction(function, ImmutableList.of(DataType.TEXT));
         if (checked == null)
         {
             fail("Type check failure");
@@ -105,19 +100,19 @@ public class PropStringFunctions
                 withSpaces = withSpaces + SPACES.charAt(r.nextInt(SPACES.length()));
             }
 
-            @Value String actual = (String)checked.getFirst().call(new @Value Object[] {DataTypeUtility.value(withSpaces)});
+            String actual = (String)checked.getFirst().call(new Object[] {DataTypeUtility.value(withSpaces)});
                 assertEquals(orig, actual);
 
         }
     }
 
     // Shortcut method
-    private static @Value String v(String s)
+    private static String v(String s)
     {
         return DataTypeUtility.value(s);
     }
 
-    private static @Value Integer v(int n)
+    private static Integer v(int n)
     {
         return DataTypeUtility.value(n);
     }
@@ -262,15 +257,13 @@ public class PropStringFunctions
     }
     */
 
-    @Property(trials = 200)
-    @OnThread(Tag.Simulation)
-    public void propShow(@From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws UserException, InternalException
+    public void propShow(TypeAndValueGen typeAndValueGen) throws UserException, InternalException
     {
         FunctionDefinition toString = new ToString();
         @SuppressWarnings("nullness") // Will throw if null
         @NonNull FunctionDefinition fromString = FunctionList.lookup(DummyManager.make().getUnitManager(), "from text");
-        @Nullable Pair<ValueFunction, DataType> checkedToString = TFunctionUtil.typeCheckFunction(toString, ImmutableList.of(typeAndValueGen.getType()), typeAndValueGen.getTypeManager());
-        @Nullable Pair<ValueFunction, DataType> checkedFromString = TFunctionUtil.typeCheckFunction(fromString, typeAndValueGen.getType(), ImmutableList.of(DataType.TEXT), typeAndValueGen.getTypeManager());
+        Pair<ValueFunction, DataType> checkedToString = TFunctionUtil.typeCheckFunction(toString, ImmutableList.of(typeAndValueGen.getType()), typeAndValueGen.getTypeManager());
+        Pair<ValueFunction, DataType> checkedFromString = TFunctionUtil.typeCheckFunction(fromString, typeAndValueGen.getType(), ImmutableList.of(DataType.TEXT), typeAndValueGen.getTypeManager());
         if (checkedToString == null || checkedFromString == null)
         {
             fail("Type check failure");
@@ -282,31 +275,29 @@ public class PropStringFunctions
 
             for (int i = 0; i < 100; i++)
             {
-                @Value Object value = typeAndValueGen.makeValue();
-                @Value Object asString = checkedToString.getFirst().call(new @Value Object[] {value});
-                @Value Object roundTripped = checkedFromString.getFirst().call(new @Value Object[] {asString});
+                Object value = typeAndValueGen.makeValue();
+                Object asString = checkedToString.getFirst().call(new Object[] {value});
+                Object roundTripped = checkedFromString.getFirst().call(new Object[] {asString});
                 TBasicUtil.assertValueEqual(asString.toString(), value, roundTripped);
             }
         }
     }
     
-    @Test
-    @OnThread(Tag.Simulation)
     public void testEscape() throws InternalException, UserException
     {
         @SuppressWarnings("nullness") // Will throw if null
         @NonNull FunctionDefinition toString = FunctionList.lookup(DummyManager.make().getUnitManager(), "to text");
 
-        @Nullable Pair<ValueFunction, DataType> checkedToString = TFunctionUtil.typeCheckFunction(toString, DataType.TEXT, ImmutableList.of(DataType.TEXT), null);
+        Pair<ValueFunction, DataType> checkedToString = TFunctionUtil.typeCheckFunction(toString, DataType.TEXT, ImmutableList.of(DataType.TEXT), null);
         assertNotNull(checkedToString);
         if (checkedToString == null)
             return;
         ValueFunction f = checkedToString.getFirst();
         
-        assertEquals("\"\"", f.call(new @Value Object[] {DataTypeUtility.value("")}));
-        assertEquals("\"hi\"", f.call(new @Value Object[] {DataTypeUtility.value("hi")}));
-        assertEquals("\"^q\"", f.call(new @Value Object[] {DataTypeUtility.value("\"")}));
-        assertEquals("\"^c^q\"", f.call(new @Value Object[] {DataTypeUtility.value("^\"")}));
-        assertEquals("\"^cc^cq\"", f.call(new @Value Object[] {DataTypeUtility.value("^c^q")}));
+        assertEquals("\"\"", f.call(new Object[] {DataTypeUtility.value("")}));
+        assertEquals("\"hi\"", f.call(new Object[] {DataTypeUtility.value("hi")}));
+        assertEquals("\"^q\"", f.call(new Object[] {DataTypeUtility.value("\"")}));
+        assertEquals("\"^c^q\"", f.call(new Object[] {DataTypeUtility.value("^\"")}));
+        assertEquals("\"^cc^cq\"", f.call(new Object[] {DataTypeUtility.value("^c^q")}));
     }
 }

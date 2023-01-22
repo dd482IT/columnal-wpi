@@ -29,11 +29,9 @@ import xyz.columnal.utility.function.fx.FXPlatformFunction;
 
 public interface DimmableParent
 {
-    @OnThread(Tag.FXPlatform)
-    public Window dimWhileShowing(@UnknownInitialization(Dialog.class) Dialog<?> dialog);
+    public Window dimWhileShowing(Dialog<?> dialog);
 
     // Only use for things like file choosers where you can't get a reference to the dialog.
-    @OnThread(Tag.FXPlatform)
     public <T> T dimAndWait(FXPlatformFunction<Window, T> showAndWait);
     
     public static class Undimmed implements DimmableParent
@@ -46,13 +44,13 @@ public interface DimmableParent
         }
 
         @Override
-        public @OnThread(Tag.FXPlatform) Window dimWhileShowing(@UnknownInitialization(Dialog.class) Dialog<?> dialog)
+        public Window dimWhileShowing(Dialog<?> dialog)
         {
             return window;
         }
 
         @Override
-        public <T> @OnThread(Tag.FXPlatform) T dimAndWait(FXPlatformFunction<Window, T> showAndWait)
+        public <T> T dimAndWait(FXPlatformFunction<Window, T> showAndWait)
         {
             return showAndWait.apply(window);
         }

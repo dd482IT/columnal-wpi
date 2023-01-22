@@ -32,6 +32,5 @@ public abstract class VisitableTransformation extends Transformation
         super(mgr, initialLoadDetails);
     }
     
-    @OnThread(Tag.Any)
     public abstract <T> T visit(TransformationVisitor<T> visitor);
 }

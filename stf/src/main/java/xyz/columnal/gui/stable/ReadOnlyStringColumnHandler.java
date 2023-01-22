@@ -34,20 +34,19 @@ import xyz.columnal.utility.function.fx.FXPlatformConsumer;
 
 public abstract class ReadOnlyStringColumnHandler implements ColumnHandler
 {
-    private final @TableDataColIndex int columnIndex;
+    private final int columnIndex;
 
-    public ReadOnlyStringColumnHandler(@TableDataColIndex int columnIndex)
+    public ReadOnlyStringColumnHandler(int columnIndex)
     {
         this.columnIndex = columnIndex;
     }
 
     @Override
-    public void fetchValue(@TableDataRowIndex int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformBiConsumer<KeyCode, CellPosition> relinquishFocus, EditorKitCallback setCellContent)
+    public void fetchValue(int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformBiConsumer<KeyCode, CellPosition> relinquishFocus, EditorKitCallback setCellContent)
     {
         fetchValueForRow(rowIndex, s -> setCellContent.loadedValue(rowIndex, columnIndex, new ReadOnlyDocument(s)));
     }
 
-    @OnThread(Tag.FXPlatform)
     public abstract void fetchValueForRow(int rowIndex, FXPlatformConsumer<String> withValue);
 
     @Override
@@ -56,22 +55,22 @@ public abstract class ReadOnlyStringColumnHandler implements ColumnHandler
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) void modifiedDataItems(int startRowIncl, int endRowIncl)
+    public void modifiedDataItems(int startRowIncl, int endRowIncl)
     {
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) void removedAddedRows(int startRowIncl, int removedRowsCount, int addedRowsCount)
+    public void removedAddedRows(int startRowIncl, int removedRowsCount, int addedRowsCount)
     {
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) void addedColumn(Column newColumn)
+    public void addedColumn(Column newColumn)
     {
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) void removedColumn(ColumnId oldColumnId)
+    public void removedColumn(ColumnId oldColumnId)
     {
     }
 

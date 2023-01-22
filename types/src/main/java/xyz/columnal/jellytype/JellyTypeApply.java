@@ -49,9 +49,9 @@ import static xyz.columnal.typeExp.TypeExp.ALL_TYPE_CLASSES;
 public class JellyTypeApply extends JellyType
 {
     private final TypeId typeName;
-    private final ImmutableList<Either<JellyUnit, @Recorded JellyType>> typeParams;
+    private final ImmutableList<Either<JellyUnit, JellyType>> typeParams;
 
-    public JellyTypeApply(TypeId typeName, ImmutableList<Either<JellyUnit, @Recorded JellyType>> typeParams)
+    public JellyTypeApply(TypeId typeName, ImmutableList<Either<JellyUnit, JellyType>> typeParams)
     {
         this.typeName = typeName;
         this.typeParams = typeParams;
@@ -66,11 +66,11 @@ public class JellyTypeApply extends JellyType
     }
 
     @Override
-    public DataType makeDataType(@Recorded JellyTypeApply this, ImmutableMap<String, Either<Unit, DataType>> typeVariables, TypeManager mgr) throws InternalException, UnknownTypeException, TaggedInstantiationException
+    public DataType makeDataType(JellyTypeApply this, ImmutableMap<String, Either<Unit, DataType>> typeVariables, TypeManager mgr) throws InternalException, UnknownTypeException, TaggedInstantiationException
     {
         ImmutableList.Builder<Either<Unit, DataType>> typeParamConcrete = ImmutableList.builderWithExpectedSize(typeParams.size());
 
-        for (Either<JellyUnit, @Recorded JellyType> typeParam : typeParams)
+        for (Either<JellyUnit, JellyType> typeParam : typeParams)
         {
             typeParamConcrete.add(typeParam.<Unit, DataType, InternalException, UnknownTypeException, TaggedInstantiationException>mapBothEx3(u -> u.makeUnit(typeVariables), t -> t.makeDataType(typeVariables, mgr)));
         }
@@ -102,7 +102,7 @@ public class JellyTypeApply extends JellyType
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -138,7 +138,7 @@ public class JellyTypeApply extends JellyType
         return typeName;
     }
     
-    public ImmutableList<Either<JellyUnit, @Recorded JellyType>> getTypeParams()
+    public ImmutableList<Either<JellyUnit, JellyType>> getTypeParams()
     {
         return typeParams;
     }

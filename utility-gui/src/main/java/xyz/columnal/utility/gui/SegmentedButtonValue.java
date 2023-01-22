@@ -39,7 +39,6 @@ import java.util.IdentityHashMap;
  * An augmented version of SegmentedButton that allows you
  * to get the selected value from the buttons easily.
  */
-@OnThread(Tag.FX)
 public class SegmentedButtonValue<T> extends SegmentedButton
 {
     private final IdentityHashMap<Toggle, T> buttons = new IdentityHashMap<>();
@@ -47,9 +46,9 @@ public class SegmentedButtonValue<T> extends SegmentedButton
 
     @SuppressWarnings("nullness") // We know each button will have a mapped value in the binding
     @SafeVarargs
-    public SegmentedButtonValue(Pair<@LocalizableKey String, T>... choices)
+    public SegmentedButtonValue(Pair<String, T>... choices)
     {
-        for (Pair<@LocalizableKey String, T> choice : choices)
+        for (Pair<String, T> choice : choices)
         {
             ToggleButton button = new TickToggleButton(TranslationUtility.getString(choice.getFirst()));
             getButtons().add(button);
@@ -65,10 +64,9 @@ public class SegmentedButtonValue<T> extends SegmentedButton
         return valueProperty;
     }
 
-    @OnThread(Tag.FX)
     private static class TickToggleButton extends ToggleButton
     {
-        public TickToggleButton(@Localized String text)
+        public TickToggleButton(String text)
         {
             super(text);
             Label tick = new Label("\u2713");

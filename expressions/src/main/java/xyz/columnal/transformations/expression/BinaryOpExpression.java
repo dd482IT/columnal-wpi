@@ -70,12 +70,12 @@ public abstract class BinaryOpExpression extends Expression
     }
 
     private final Op op;*/
-    protected final @Recorded Expression lhs;
-    protected final @Recorded Expression rhs;
-    protected @MonotonicNonNull CheckedExp lhsType;
-    protected @MonotonicNonNull CheckedExp rhsType;
+    protected final Expression lhs;
+    protected final Expression rhs;
+    protected CheckedExp lhsType;
+    protected CheckedExp rhsType;
 
-    protected BinaryOpExpression(@Recorded Expression lhs, @Recorded Expression rhs)
+    protected BinaryOpExpression(Expression lhs, Expression rhs)
     {
         this.lhs = lhs;
         this.rhs = rhs;
@@ -105,7 +105,7 @@ public abstract class BinaryOpExpression extends Expression
     protected abstract String saveOp();
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -126,7 +126,7 @@ public abstract class BinaryOpExpression extends Expression
         return result;
     }
     
-    public abstract BinaryOpExpression copy(@Nullable @Recorded Expression replaceLHS, @Nullable @Recorded Expression replaceRHS);
+    public abstract BinaryOpExpression copy(Expression replaceLHS, Expression replaceRHS);
 
     @Override
     @SuppressWarnings("recorded") // Because the replaced version is immediately loaded again
@@ -139,7 +139,6 @@ public abstract class BinaryOpExpression extends Expression
     }
 
     @Override
-    @OnThread(Tag.Simulation)
     public final ValueResult calculateValue(EvaluateState state) throws EvaluationException, InternalException
     {
         if (lhs instanceof ImplicitLambdaArg || rhs instanceof ImplicitLambdaArg)
@@ -150,7 +149,7 @@ public abstract class BinaryOpExpression extends Expression
                 ValueResult rhsValue = fetchSubExpression(rhs, s, lhsrhs);
                 try
                 {
-                    @Value Object result = getValueBinaryOp(lhsValue, rhsValue);
+                    Object result = getValueBinaryOp(lhsValue, rhsValue);
                     return result(result, s, lhsrhs.build());
                 }
                 catch (UserException e)
@@ -164,7 +163,7 @@ public abstract class BinaryOpExpression extends Expression
             ImmutableList.Builder<ValueResult> lhsrhs = ImmutableList.builderWithExpectedSize(2);
             ValueResult lhsValue = fetchSubExpression(lhs, state, lhsrhs);
             ValueResult rhsValue = fetchSubExpression(rhs, state, lhsrhs);
-            @Value Object result;
+            Object result;
             try
             {
                 result = getValueBinaryOp(lhsValue, rhsValue);
@@ -179,23 +178,22 @@ public abstract class BinaryOpExpression extends Expression
 
     // This is allowed to throw UserException since it won't fetch any
     // sub-expressions and thus we can assume it is top of a stack:
-    @OnThread(Tag.Simulation)
-    public abstract @Value Object getValueBinaryOp(ValueResult lhsValue, ValueResult rhsValue) throws UserException, InternalException;
+    public abstract Object getValueBinaryOp(ValueResult lhsValue, ValueResult rhsValue) throws UserException, InternalException;
 
     @Override
-    public final @Nullable CheckedExp check(@Recorded BinaryOpExpression this, ColumnLookup dataLookup, TypeState typeState, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public final CheckedExp check(BinaryOpExpression this, ColumnLookup dataLookup, TypeState typeState, ExpressionKind kind, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        Pair<@Nullable UnaryOperator<@Recorded TypeExp>, TypeState> lambda = ImplicitLambdaArg.detectImplicitLambda(this, ImmutableList.of(lhs, rhs), typeState, onError);
+        Pair<UnaryOperator<TypeExp>, TypeState> lambda = ImplicitLambdaArg.detectImplicitLambda(this, ImmutableList.of(lhs, rhs), typeState, onError);
         typeState = lambda.getSecond();
-        @Nullable CheckedExp lhsChecked = lhs.check(dataLookup, typeState, getOperandKinds().getFirst(), argLocationInfo(), onError);
+        CheckedExp lhsChecked = lhs.check(dataLookup, typeState, getOperandKinds().getFirst(), argLocationInfo(), onError);
         if (lhsChecked == null)
             return null;
-        @Nullable CheckedExp rhsChecked = rhs.check(dataLookup, lhsChecked.typeState, getOperandKinds().getSecond(), argLocationInfo(), onError);
+        CheckedExp rhsChecked = rhs.check(dataLookup, lhsChecked.typeState, getOperandKinds().getSecond(), argLocationInfo(), onError);
         if (rhsChecked == null)
             return null;
         lhsType = lhsChecked;
         rhsType = rhsChecked;
-        @Nullable CheckedExp checked = checkBinaryOp(dataLookup, typeState, kind, onError);
+        CheckedExp checked = checkBinaryOp(dataLookup, typeState, kind, onError);
         return checked == null ? null : checked.applyToType(lambda.getFirst());
     }
 
@@ -206,8 +204,7 @@ public abstract class BinaryOpExpression extends Expression
 
     protected abstract Pair<ExpressionKind, ExpressionKind> getOperandKinds();
     
-    @RequiresNonNull({"lhsType", "rhsType"})
-    protected abstract @Nullable CheckedExp checkBinaryOp(@Recorded BinaryOpExpression this, ColumnLookup data, TypeState typeState, ExpressionKind expressionKind, ErrorAndTypeRecorder onError) throws UserException, InternalException;
+    protected abstract CheckedExp checkBinaryOp(BinaryOpExpression this, ColumnLookup data, TypeState typeState, ExpressionKind expressionKind, ErrorAndTypeRecorder onError) throws UserException, InternalException;
 
     @SuppressWarnings("recorded")
     @Override

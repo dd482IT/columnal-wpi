@@ -28,6 +28,5 @@ import threadchecker.Tag;
  */
 public interface FXPlatformConsumer<T>
 {
-    @OnThread(Tag.FXPlatform)
     public void consume(T t);
 }

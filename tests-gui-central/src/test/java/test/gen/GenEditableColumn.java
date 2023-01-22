@@ -53,7 +53,6 @@ public class GenEditableColumn extends GenValueBase<EditableColumn>
     }
 
     @Override
-    @OnThread(value = Tag.Simulation,ignoreParent = true)
     public EditableColumn generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
     {
         GenDataType genDataType = new GenDataType(true);
@@ -62,8 +61,8 @@ public class GenEditableColumn extends GenValueBase<EditableColumn>
         this.gs = generationStatus;
         try
         {
-            final @Initialized int length = sourceOfRandomness.nextInt(5000);
-            List<Either<String, @Value Object>> values = new ArrayList<>();
+            final int length = sourceOfRandomness.nextInt(5000);
+            List<Either<String, Object>> values = new ArrayList<>();
             for (int i = 0; i < length; i++)
             {
                 values.add(Either.right(makeValue(type)));

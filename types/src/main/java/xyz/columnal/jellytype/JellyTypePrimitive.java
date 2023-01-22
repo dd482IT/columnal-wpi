@@ -95,7 +95,7 @@ class JellyTypePrimitive extends JellyType
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -151,7 +151,7 @@ class JellyTypePrimitive extends JellyType
             }
 
             @Override
-            public R record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, E
+            public R record(ImmutableMap<String, DataType> fields) throws InternalException, E
             {
                 return _throw();
             }

@@ -52,7 +52,7 @@ public class JoinLists extends FunctionDefinition
     private static class Instance extends ValueFunction
     {
         @Override
-        public @OnThread(Tag.Simulation) @Value Object _call() throws InternalException, UserException
+        public Object _call() throws InternalException, UserException
         {
             ListEx listOfLists = arg(0, ListEx.class);
             return DataTypeUtility.value(new ListEx()
@@ -74,7 +74,7 @@ public class JoinLists extends FunctionDefinition
                 }
 
                 @Override
-                public @Value Object get(int index) throws InternalException, UserException
+                public Object get(int index) throws InternalException, UserException
                 {
                     // We could cache the individual list sizes.
                     for (int i = 0; i < listOfLists.size(); i++)

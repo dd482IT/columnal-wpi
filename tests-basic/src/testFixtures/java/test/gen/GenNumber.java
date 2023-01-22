@@ -36,7 +36,7 @@ import java.util.List;
 /**
  * Created by neil on 13/12/2016.
  */
-public class GenNumber extends Generator<@Value Number>
+public class GenNumber extends Generator<Number>
 {
     private final boolean fixBits;
 
@@ -53,9 +53,9 @@ public class GenNumber extends Generator<@Value Number>
     }
 
     @Override
-    public @Value Number generate(SourceOfRandomness sourceOfRandomness, @Nullable GenerationStatus generationStatus)
+    public Number generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
     {
-        @Value Number n;
+        Number n;
         try
         {
             n = Utility.parseNumber(new GenNumberAsString(fixBits).generate(sourceOfRandomness, generationStatus));
@@ -64,7 +64,7 @@ public class GenNumber extends Generator<@Value Number>
         {
             throw new RuntimeException(e);
         }
-        List<@Value Number> rets = new ArrayList<>();
+        List<Number> rets = new ArrayList<>();
         rets.add(n);
         if (n.doubleValue() == (double)n.intValue())
         {

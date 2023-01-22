@@ -78,7 +78,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-@OnThread(Tag.FXPlatform)
 public class TypesDialog extends Dialog<Void>
 {
     private final TypeManager typeManager;
@@ -103,7 +102,7 @@ public class TypesDialog extends Dialog<Void>
             ListCell<TaggedTypeDefinition> cell = new ListCell<TaggedTypeDefinition>()
             {
                 @Override
-                protected void updateItem(@Nullable TaggedTypeDefinition item, boolean empty)
+                protected void updateItem(TaggedTypeDefinition item, boolean empty)
                 {
                     super.updateItem(item, empty);
                     if (!empty && item != null)
@@ -127,14 +126,14 @@ public class TypesDialog extends Dialog<Void>
         });
         
         Button editButton = GUI.button("types.edit", () -> {
-            @Nullable TaggedTypeDefinition typeDefinition = types.getSelectionModel().getSelectedItem();
+            TaggedTypeDefinition typeDefinition = types.getSelectionModel().getSelectedItem();
             if (typeDefinition != null)
             {
                 editType(typeManager, types, typeDefinition);
             }
         });
         Button removeButton = GUI.button("types.remove", () -> {
-            @Nullable TaggedTypeDefinition typeDefinition = types.getSelectionModel().getSelectedItem();
+            TaggedTypeDefinition typeDefinition = types.getSelectionModel().getSelectedItem();
             if (typeDefinition != null)
             {
                 typeManager.unregisterTaggedType(typeDefinition.getTaggedTypeName());
@@ -152,13 +151,13 @@ public class TypesDialog extends Dialog<Void>
         getDialogPane().lookupButton(ButtonType.CLOSE).getStyleClass().add("close-button");
     }
 
-    public void editType(@UnknownInitialization(Object.class) TypesDialog this, TypeManager typeManager, ListView<TaggedTypeDefinition> types, TaggedTypeDefinition existing)
+    public void editType(TypesDialog this, TypeManager typeManager, ListView<TaggedTypeDefinition> types, TaggedTypeDefinition existing)
     {
-        @Nullable TaggedTypeDefinition changedType = new EditTypeDialog(existing).showAndWait().orElse(null);
+        TaggedTypeDefinition changedType = new EditTypeDialog(existing).showAndWait().orElse(null);
         if (changedType != null)
         {
             TypeId oldTypeName = existing.getTaggedTypeName();
-            @NonNull TaggedTypeDefinition newTypeFinal = changedType;
+            TaggedTypeDefinition newTypeFinal = changedType;
             FXUtility.alertOnErrorFX_(TranslationUtility.getString("error.saving.type.change"), () -> {
                 typeManager.unregisterTaggedType(oldTypeName);
                 typeManager.registerTaggedType(newTypeFinal.getTaggedTypeName().getRaw(), newTypeFinal.getTypeArguments(), newTypeFinal.getTags());
@@ -172,7 +171,6 @@ public class TypesDialog extends Dialog<Void>
         types.getItems().setAll(typeManager.getUserTaggedTypes().values());
     }
 
-    @OnThread(Tag.FXPlatform)
     private class EditTypeDialog extends ErrorableDialog<TaggedTypeDefinition>
     {
         private final TextArea plainTagList;
@@ -181,12 +179,12 @@ public class TypesDialog extends Dialog<Void>
         private final TabPane tabPane;
         private final TextField typeName;
         // Error or tag type
-        private final FancyList<Either<@Localized String, TagType<JellyType>>, TagValueEdit> innerValueTagList;
+        private final FancyList<Either<String, TagType<JellyType>>, TagValueEdit> innerValueTagList;
         private final TextField innerValueTypeArgs;
         // Avoids re-entrancy when copying one tab to another:
         private boolean crossSetting = false;
 
-        public EditTypeDialog(@Nullable TaggedTypeDefinition existing)
+        public EditTypeDialog(TaggedTypeDefinition existing)
         {
             super(new DialogPaneWithSideButtons());
             Scene parentScene = TypesDialog.this.getDialogPane().getScene();
@@ -239,9 +237,9 @@ public class TypesDialog extends Dialog<Void>
                 {
                     crossSetting = true;
                     innerValueTypeArgs.setText("");
-                    innerValueTagList.resetItems(getPlainTags(plainTagList).<Either<@Localized String, TagType<JellyType>>>map(plain -> {
+                    innerValueTagList.resetItems(getPlainTags(plainTagList).<Either<String, TagType<JellyType>>>map(plain -> {
                         return plain.map(p -> new TagType<JellyType>(p, null));
-                    }).collect(Collectors.<Either<@Localized String, TagType<JellyType>>>toList()));
+                    }).collect(Collectors.<Either<String, TagType<JellyType>>>toList()));
                     crossSetting = false;
                 }
             });
@@ -268,7 +266,7 @@ public class TypesDialog extends Dialog<Void>
             }
         }
 
-        public void innerValueChanged(@UnknownInitialization(Object.class) EditTypeDialog this)
+        public void innerValueChanged(EditTypeDialog this)
         {
             if (tabPane == null || innerValueTypeArgs == null || innerValueTagList == null || plainTab == null || plainTagList == null)
                 return; // Not initialised yet, just ignores
@@ -276,7 +274,7 @@ public class TypesDialog extends Dialog<Void>
             if (tabPane.getSelectionModel().getSelectedItem() == innerValuesTab && !crossSetting)
             {
                 boolean hasTypeArgs = !innerValueTypeArgs.getText().trim().isEmpty();
-                Either<@Localized String, ImmutableList<String>> plainTagNames = Either.<@Localized String, String, Either<@Localized String, TagType<JellyType>>>mapM(innerValueTagList.getItems(), t -> t.<String>flatMap(v -> v.getInner() == null ? Either.<@NonNull @Localized String, @NonNull String>right(v.getName()) : Either.<@NonNull @Localized String, @NonNull String>left(Utility.universal("err"))));
+                Either<String, ImmutableList<String>> plainTagNames = Either.<String, String, Either<String, TagType<JellyType>>>mapM(innerValueTagList.getItems(), t -> t.<String>flatMap(v -> v.getInner() == null ? Either.<String, String>right(v.getName()) : Either.<String, String>left(Utility.universal("err"))));
                 boolean enablePlain = !hasTypeArgs && plainTagNames.isRight();
                 crossSetting = true;
                 plainTab.setDisable(!enablePlain);
@@ -290,11 +288,11 @@ public class TypesDialog extends Dialog<Void>
         }
 
         @Override
-        protected @OnThread(Tag.FXPlatform) Either<@Localized String, TaggedTypeDefinition> calculateResult()
+        protected Either<String, TaggedTypeDefinition> calculateResult()
         {
             try
             {
-                @ExpressionIdentifier String typeIdentifier = IdentifierUtility.asExpressionIdentifier(typeName.getText().trim());
+                String typeIdentifier = IdentifierUtility.asExpressionIdentifier(typeName.getText().trim());
                 
                 if (typeIdentifier == null)
                     return Either.left(Utility.concatLocal(TranslationUtility.getString("type.invalid.identifier"), Utility.userInput(typeName.getText().trim())));
@@ -302,19 +300,19 @@ public class TypesDialog extends Dialog<Void>
 
                 if (tabPane.getSelectionModel().getSelectedItem() == plainTab)
                 {
-                    ImmutableList<Either<@Localized String, @ExpressionIdentifier String>> tags = getPlainTags(plainTagList).collect(ImmutableList.<Either<@Localized String, @ExpressionIdentifier String>>toImmutableList());
-                    Either<@Localized String, ImmutableList<@ExpressionIdentifier String>> tagsFlipped = Either.<@Localized String, @ExpressionIdentifier String, Either<@Localized String, @ExpressionIdentifier String>>mapM(tags, (Either<@Localized String, @ExpressionIdentifier String> x) -> x);
-                    Either<@Localized String, TaggedTypeDefinition> r = tagsFlipped.mapInt((ImmutableList<@ExpressionIdentifier String> ts) -> new TaggedTypeDefinition(typeIdentifierFinal, ImmutableList.of(), Utility.mapListI(ts, (@ExpressionIdentifier String t) -> new TagType<JellyType>(t, null))));
+                    ImmutableList<Either<String, String>> tags = getPlainTags(plainTagList).collect(ImmutableList.<Either<String, String>>toImmutableList());
+                    Either<String, ImmutableList<String>> tagsFlipped = Either.<String, String, Either<String, String>>mapM(tags, (Either<String, String> x) -> x);
+                    Either<String, TaggedTypeDefinition> r = tagsFlipped.mapInt((ImmutableList<String> ts) -> new TaggedTypeDefinition(typeIdentifierFinal, ImmutableList.of(), Utility.mapListI(ts, (String t) -> new TagType<JellyType>(t, null))));
                     return r;
                 }
                 else if (tabPane.getSelectionModel().getSelectedItem() == innerValuesTab)
                 {
                     String[] typeArgs = innerValueTypeArgs.getText().trim().split("\\s*,\\s*");
-                    Either<@Localized String, ImmutableList<Pair<TypeVariableKind, @ExpressionIdentifier String>>> typeArgsOrErr = Either.right(ImmutableList.<Pair<TypeVariableKind, @ExpressionIdentifier String>>of());
+                    Either<String, ImmutableList<Pair<TypeVariableKind, String>>> typeArgsOrErr = Either.right(ImmutableList.<Pair<TypeVariableKind, String>>of());
                     if (!Arrays.equals(typeArgs, new String[]{""}))
-                        typeArgsOrErr = Either.<@Localized String, Pair<TypeVariableKind, @ExpressionIdentifier String>, String>mapM(Arrays.<String>asList(typeArgs), t -> parseTagName(TranslationUtility.getString("type.invalid.argument"), t));
+                        typeArgsOrErr = Either.<String, Pair<TypeVariableKind, String>, String>mapM(Arrays.<String>asList(typeArgs), t -> parseTagName(TranslationUtility.getString("type.invalid.argument"), t));
                     
-                    return typeArgsOrErr.flatMapInt(args -> Either.<@Localized String, TagType<JellyType>, Either<@Localized String, TagType<JellyType>>>mapM(innerValueTagList.getItems(), (Either<@Localized String, TagType<JellyType>> e) -> e).mapInt(ts -> new TaggedTypeDefinition(typeIdentifierFinal, args, ts)));
+                    return typeArgsOrErr.flatMapInt(args -> Either.<String, TagType<JellyType>, Either<String, TagType<JellyType>>>mapM(innerValueTagList.getItems(), (Either<String, TagType<JellyType>> e) -> e).mapInt(ts -> new TaggedTypeDefinition(typeIdentifierFinal, args, ts)));
                 }
                 
                 // Shouldn't happen:
@@ -327,30 +325,30 @@ public class TypesDialog extends Dialog<Void>
             }
         }
 
-        private Stream<Either<@Localized String, @ExpressionIdentifier String>> getPlainTags(@UnknownInitialization(Object.class) EditTypeDialog this, TextArea plainTagList)
+        private Stream<Either<String, String>> getPlainTags(EditTypeDialog this, TextArea plainTagList)
         {
             return Arrays.stream(plainTagList.getText().split(" *[,\n\r] *"))
                 .map(s -> s.trim())
                 .filter(s -> !s.isEmpty())
-                .<Either<@Localized String, @ExpressionIdentifier String>>map(s -> {
-                    @Nullable @ExpressionIdentifier String ident = IdentifierUtility.asExpressionIdentifier(s);
+                .<Either<String, String>>map(s -> {
+                    String ident = IdentifierUtility.asExpressionIdentifier(s);
                     if (ident == null)
                     {
-                        return Either.<@Localized String, @ExpressionIdentifier String>left(
-                            Utility.concatLocal(ImmutableList.<@Localized String>of(TranslationUtility.getString("type.invalid.tag.name"),
+                        return Either.<String, String>left(
+                            Utility.concatLocal(ImmutableList.<String>of(TranslationUtility.getString("type.invalid.tag.name"),
                                 Utility.universal("\""),
                                 Utility.userInput(s),
                                 Utility.universal("\""))));
                     }
                     else 
                     {
-                        return Either.<@Localized String, @ExpressionIdentifier String>right(ident);
+                        return Either.<String, String>right(ident);
                     }
                 });
         }
 
         // Variables surrounded by {} are unit variables.
-        private Either<@Localized String, Pair<TypeVariableKind, @ExpressionIdentifier String>> parseTagName(@Localized String errorPrefix, String src)
+        private Either<String, Pair<TypeVariableKind, String>> parseTagName(String errorPrefix, String src)
         {
             TypeVariableKind typeVariableKind = TypeVariableKind.TYPE;
             
@@ -360,25 +358,24 @@ public class TypesDialog extends Dialog<Void>
                 src = src.substring(1, src.length() - 1);
             }
             
-            @Nullable @ExpressionIdentifier String identifier = IdentifierUtility.asExpressionIdentifier(src.trim());
+            String identifier = IdentifierUtility.asExpressionIdentifier(src.trim());
             if (identifier == null)
-                return Either.<@Localized String, Pair<TypeVariableKind, @ExpressionIdentifier String>>left(Utility.concatLocal(errorPrefix, Utility.userInput("\"" + src.trim() + "\"")));
+                return Either.<String, Pair<TypeVariableKind, String>>left(Utility.concatLocal(errorPrefix, Utility.userInput("\"" + src.trim() + "\"")));
             else
-                return Either.<@Localized String, Pair<TypeVariableKind, @ExpressionIdentifier String>>right(new Pair<>(typeVariableKind, identifier));
+                return Either.<String, Pair<TypeVariableKind, String>>right(new Pair<>(typeVariableKind, identifier));
         }
 
-        @OnThread(Tag.FXPlatform)
         private class TagValueEdit extends BorderPane
         {
             private final TextField tagName;
             private final TypeEditor innerType;
-            private final ObjectProperty<Either<@Localized String, TagType<JellyType>>> currentValue;
+            private final ObjectProperty<Either<String, TagType<JellyType>>> currentValue;
 
-            public TagValueEdit(@Nullable TagType<JellyType> initialContent, boolean editImmediately)
+            public TagValueEdit(TagType<JellyType> initialContent, boolean editImmediately)
             {
                 getStyleClass().add("tag-value-edit");
                 String initialName = initialContent == null ? "" : initialContent.getName();
-                this.currentValue = new SimpleObjectProperty<Either<@Localized String, TagType<JellyType>>>(Either.left(Utility.universal("Loading")));
+                this.currentValue = new SimpleObjectProperty<Either<String, TagType<JellyType>>>(Either.left(Utility.universal("Loading")));
                 this.tagName = new TextField(initialName);
                 tagName.setPromptText(TranslationUtility.getString("edit.type.inner.tag.prompt"));
                 FXUtility.addChangeListenerPlatformNN(tagName.textProperty(), name -> {
@@ -414,8 +411,7 @@ public class TypesDialog extends Dialog<Void>
             }
 
             // null when only name has changed.
-            @RequiresNonNull({"tagName", "currentValue"})
-            public void updateCurrentValue(@UnknownInitialization(BorderPane.class) TagValueEdit this, @Nullable TypeExpression latest)
+            public void updateCurrentValue(TagValueEdit this, TypeExpression latest)
             {
                 if (innerType == null)
                     return;
@@ -425,21 +421,21 @@ public class TypesDialog extends Dialog<Void>
                 try
                 {
                     @SuppressWarnings("recorded")
-                    @Nullable JellyType jellyType = latest.isEmpty() ? null : latest.toJellyType(typeManager, new JellyRecorder()
+                    JellyType jellyType = latest.isEmpty() ? null : latest.toJellyType(typeManager, new JellyRecorder()
                     {
                         @SuppressWarnings("recorded")
                         @Override
-                        public @Recorded JellyType record(JellyType jellyType, @Recorded TypeExpression source)
+                        public JellyType record(JellyType jellyType, TypeExpression source)
                         {
                             return jellyType;
                         }
                     });
-                    @ExpressionIdentifier String ident = IdentifierUtility.asExpressionIdentifier(tagName.getText());
+                    String ident = IdentifierUtility.asExpressionIdentifier(tagName.getText());
                     if (ident != null)
                         currentValue.set(Either.right(new TagType<JellyType>(ident, jellyType)));
                     else
                         currentValue.set(Either.left(
-                            Utility.concatLocal(ImmutableList.<@Localized String>of(
+                            Utility.concatLocal(ImmutableList.<String>of(
                                 TranslationUtility.getString("type.invalid.tag.name"),
                                 Utility.universal("\""),
                                 Utility.userInput(tagName.getText()),
@@ -455,13 +451,12 @@ public class TypesDialog extends Dialog<Void>
             }
         }
 
-        private class InnerValueTagList extends FancyList<Either<@Localized String, TagType<JellyType>>, TagValueEdit>
+        private class InnerValueTagList extends FancyList<Either<String, TagType<JellyType>>, TagValueEdit>
         {
             @SuppressWarnings("identifier") // For the blank identifier used as starting argument
-            @OnThread(Tag.FXPlatform)
-            public InnerValueTagList(@Nullable TaggedTypeDefinition existing)
+            public InnerValueTagList(TaggedTypeDefinition existing)
             {
-                super(existing == null ? ImmutableList.<Either<@Localized String, TagType<JellyType>>>of() : Utility.<TagType<JellyType>, Either<@Localized String, TagType<JellyType>>>mapListI(existing.getTags(), x -> Either.<@Localized String, TagType<JellyType>>right(x)), true, true, true);
+                super(existing == null ? ImmutableList.<Either<String, TagType<JellyType>>>of() : Utility.<TagType<JellyType>, Either<String, TagType<JellyType>>>mapListI(existing.getTags(), x -> Either.<String, TagType<JellyType>>right(x)), true, true, true);
                 listenForCellChange(c -> innerValueChanged());
             }
 
@@ -476,10 +471,9 @@ public class TypesDialog extends Dialog<Void>
 
             @SuppressWarnings("prefer.map.and.orelse")
             @Override
-            @OnThread(Tag.FXPlatform)
-            protected Pair<TagValueEdit, FXPlatformSupplier<Either<@Localized String, TagType<JellyType>>>> makeCellContent(Optional<Either<@Localized String, TagType<JellyType>>> initialContent, boolean editImmediately)
+            protected Pair<TagValueEdit, FXPlatformSupplier<Either<String, TagType<JellyType>>>> makeCellContent(Optional<Either<String, TagType<JellyType>>> initialContent, boolean editImmediately)
             {
-                TagValueEdit tagValueEdit = new TagValueEdit(!initialContent.isPresent() ? null : initialContent.get().<@Nullable TagType<JellyType>>either(s -> null, v -> v), editImmediately);
+                TagValueEdit tagValueEdit = new TagValueEdit(!initialContent.isPresent() ? null : initialContent.get().<TagType<JellyType>>either(s -> null, v -> v), editImmediately);
                 return new Pair<>(tagValueEdit, tagValueEdit.currentValue::get);
             }
 

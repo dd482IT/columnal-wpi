@@ -44,13 +44,12 @@ public interface ColumnStorage<T>
     // as many columns will be loaded/calculated on demand.
     public int filled();
 
-    default public void add(@NonNull T item) throws InternalException
+    default public void add(T item) throws InternalException
     {
-        addAll(Stream.<Either<String, @NonNull T>>of(Either.<String, @NonNull T>right(item)));
+        addAll(Stream.<Either<String, T>>of(Either.<String, T>right(item)));
     }
-    public void addAll(Stream<Either<String, @NonNull T>> items) throws InternalException;
+    public void addAll(Stream<Either<String, T>> items) throws InternalException;
 
-    @OnThread(Tag.Any)
     public abstract DataTypeValue getType();
 
     public ImmutableList<Either<String, T>> getAllCollapsed(int fromIncl, int toExcl) throws InternalException;
@@ -62,6 +61,6 @@ public interface ColumnStorage<T>
 
     public static interface BeforeGet<S extends ColumnStorage<?>>
     {
-        public void beforeGet(S storage, int index, @Nullable ProgressListener progressListener) throws InternalException, UserException;
+        public void beforeGet(S storage, int index, ProgressListener progressListener) throws InternalException, UserException;
     }
 }

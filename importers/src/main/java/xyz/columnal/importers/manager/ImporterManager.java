@@ -60,7 +60,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@OnThread(Tag.FXPlatform)
 public class ImporterManager
 {
     // Singleton:
@@ -80,7 +79,7 @@ public class ImporterManager
         filters.addAll(registeredImporters.stream().flatMap(imp -> imp.getSupportedFileTypes().stream().map(ext -> new ExtensionFilter(imp.getName(), ext))).collect(Collectors.<ExtensionFilter>toList()));
         filters.add(new ExtensionFilter(TranslationUtility.getString("importer.all.files"), "*.*"));
 
-        @Nullable File chosen = FXUtility.chooseFileOpen("data.import.dialogTitle", "dataImport", parent,
+        File chosen = FXUtility.chooseFileOpen("data.import.dialogTitle", "dataImport", parent,
                 filters.toArray(new ExtensionFilter[0])
         );
         if (chosen != null)
@@ -96,10 +95,9 @@ public class ImporterManager
         }
     }
 
-    @OnThread(Tag.FXPlatform)
     public void chooseAndImportURL(Window parent, TableManager tableManager, CellPosition destination, SimulationConsumerNoError<DataSource> onLoad)
     {
-        @Nullable URLImportDetails choice = new ImportURLDialog().showAndWait().orElse(null);
+        URLImportDetails choice = new ImportURLDialog().showAndWait().orElse(null);
         if (choice != null)
         {
             choice.chosenImporter.importFile(parent, tableManager, destination, choice.downloadedFile, choice.source, onLoad);
@@ -123,7 +121,6 @@ public class ImporterManager
     }
 
 
-    @OnThread(Tag.FXPlatform)
     public void importFile(Window parent, TableManager tableManager, CellPosition destination, File file, URL source, SimulationConsumerNoError<DataSource> onLoad)
     {
         // Work out which importer will handle it:
@@ -171,7 +168,6 @@ public class ImporterManager
         private final TextField linkField;
         private final PickImporterPane pickImporterPane;
 
-        @OnThread(Tag.FXPlatform)
         public ImportURLDialog()
         {
             linkField = new TextField();
@@ -209,11 +205,10 @@ public class ImporterManager
         }
 
         @Override
-        @OnThread(Tag.FXPlatform)
-        protected Either<@Localized String, URLImportDetails> calculateResult()
+        protected Either<String, URLImportDetails> calculateResult()
         {
             return checkURL(linkField.getText()).flatMap(url -> {
-                @Nullable Importer importer = pickImporterPane.get();
+                Importer importer = pickImporterPane.get();
                 if (importer == null)
                     return Either.left(TranslationUtility.getString("importer.noimporter"));
 
@@ -231,7 +226,7 @@ public class ImporterManager
     }
 
 
-    private static Either<@Localized String, URL> checkURL(String src)
+    private static Either<String, URL> checkURL(String src)
     {
         if (src.isEmpty())
             return Either.left(TranslationUtility.getString("importer.error.url.blank"));
@@ -277,13 +272,13 @@ public class ImporterManager
     {
         private final ListView<Importer> importerList;
 
-        public PickImporterPane(@Nullable String fileExtensionWithoutDot)
+        public PickImporterPane(String fileExtensionWithoutDot)
         {
             this.importerList = new ListView<>(FXCollections.observableArrayList(registeredImporters));
             importerList.setCellFactory(lv -> {
                 return new ListCell<Importer>() {
                     @Override
-                    protected void updateItem(@Nullable Importer item, boolean empty)
+                    protected void updateItem(Importer item, boolean empty)
                     {
                         super.updateItem(item, empty);
                         if (item != null && !empty)
@@ -300,21 +295,19 @@ public class ImporterManager
                 guessImporterFromFileExtension(fileExtensionWithoutDot);
         }
 
-        @RequiresNonNull("importerList")
-        protected void guessImporterFromFileExtension(@UnknownInitialization(BorderPane.class) PickImporterPane this, String fileExtensionWithoutDot)
+        protected void guessImporterFromFileExtension(PickImporterPane this, String fileExtensionWithoutDot)
         {
             Importer importer = registeredImporters.stream().filter(imp -> imp.getSupportedFileTypes().stream().anyMatch(ext -> ext.equalsIgnoreCase("*." + fileExtensionWithoutDot))).findFirst().orElse(null);
             if (importer != null)
                 importerList.getSelectionModel().select(importer);
         }
 
-        public @Nullable Importer get()
+        public Importer get()
         {
             return importerList.getSelectionModel().getSelectedItem();
         }
     }
 
-    @OnThread(Tag.FXPlatform)
     private class PickImporterDialog extends ErrorableDialog<Importer>
     {
         private final PickImporterPane pickImporterPane;
@@ -327,9 +320,9 @@ public class ImporterManager
         }
 
         @Override
-        protected Either<@Localized String, Importer> calculateResult()
+        protected Either<String, Importer> calculateResult()
         {
-            @Nullable Importer sel = pickImporterPane.get();
+            Importer sel = pickImporterPane.get();
             if (sel != null)
                 return Either.right(sel);
             else

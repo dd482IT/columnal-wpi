@@ -53,7 +53,7 @@ import java.util.stream.Stream;
 public final class EvaluateState
 {
     private final TypeManager typeManager;
-    private final ImmutableMap<String, @Value Object> variables;
+    private final ImmutableMap<String, Object> variables;
     private final OptionalInt rowIndex;
     private final boolean recordExplanation;
 
@@ -67,7 +67,7 @@ public final class EvaluateState
         this(makeVariables(rowIndex), typeManager, rowIndex, recordExplanation);
     }
 
-    private EvaluateState(ImmutableMap<String, @Value Object> variables, TypeManager typeManager, OptionalInt rowIndex, boolean recordExplanation)
+    private EvaluateState(ImmutableMap<String, Object> variables, TypeManager typeManager, OptionalInt rowIndex, boolean recordExplanation)
     {
         this.variables = variables;
         this.typeManager = typeManager;
@@ -75,14 +75,14 @@ public final class EvaluateState
         this.recordExplanation = recordExplanation;
     }
 
-    private static ImmutableMap<String, @Value Object> makeVariables(OptionalInt rowIndex)
+    private static ImmutableMap<String, Object> makeVariables(OptionalInt rowIndex)
     {
-        return rowIndex.isPresent() ? ImmutableMap.<String, @Value Object>of(TypeState.ROW_NUMBER, DataTypeUtility.<Integer>value(rowIndex.getAsInt() + 1)) : ImmutableMap.<String, @Value Object>of();
+        return rowIndex.isPresent() ? ImmutableMap.<String, Object>of(TypeState.ROW_NUMBER, DataTypeUtility.<Integer>value(rowIndex.getAsInt() + 1)) : ImmutableMap.<String, Object>of();
     }
 
-    public EvaluateState add(String varName, @Value Object value) throws InternalException
+    public EvaluateState add(String varName, Object value) throws InternalException
     {
-        HashMap<String, @Value Object> copy = new HashMap<>();
+        HashMap<String, Object> copy = new HashMap<>();
         if (!varName.startsWith("?") && variables.containsKey(varName))
         {
             throw new InternalException("Duplicate variable name: " + varName);
@@ -96,9 +96,9 @@ public final class EvaluateState
      * Gets value of variable.  Throws InternalException if variable not found
      * (since if we passed the type check, variable must be present during execution).
      */
-    public @Value Object get(String varName) throws InternalException
+    public Object get(String varName) throws InternalException
     {
-        @Value Object value = variables.get(varName);
+        Object value = variables.get(varName);
         if (value == null)
             throw new InternalException("Trying to access undeclared variable: \"" + varName + "\"");
         return value;
@@ -110,7 +110,7 @@ public final class EvaluateState
     }
 
     @SuppressWarnings("units")
-    public @TableDataRowIndex int getRowIndex() throws UserException
+    public int getRowIndex() throws UserException
     {
         return rowIndex.orElseThrow(() -> new UserException("No row index available."));
     }
@@ -120,7 +120,7 @@ public final class EvaluateState
         return rowIndex;
     }
     
-    public ImmutableMap<String, @Value Object> _test_getVariables()
+    public ImmutableMap<String, Object> _test_getVariables()
     {
         return variables;
     }
@@ -132,24 +132,23 @@ public final class EvaluateState
 
     public EvaluateState varFilteredTo(ImmutableSet<String> variableNames)
     {
-        return new EvaluateState(ImmutableMap.<String, @Value Object>copyOf(Maps.<String, @Value Object>filterEntries(variables, (Entry<String, @Value Object> e) -> e != null && variableNames.contains(e.getKey()))), typeManager, rowIndex, recordExplanation);
+        return new EvaluateState(ImmutableMap.<String, Object>copyOf(Maps.<String, Object>filterEntries(variables, (Entry<String, Object> e) -> e != null && variableNames.contains(e.getKey()))), typeManager, rowIndex, recordExplanation);
     }
 
     // Equals and hashCode on EvaluateState are only used by
     // explanations, for checking if two executations of the same
     // expression had equivalent context.
     @Override
-    @OnThread(value = Tag.Simulation, ignoreParent = true)
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         EvaluateState that = (EvaluateState) o;
         if (!variables.keySet().equals(that.variables.keySet()))
             return false;
-        for (Entry<String, @Value Object> var : variables.entrySet())
+        for (Entry<String, Object> var : variables.entrySet())
         {
-            @Value Object otherVarValue = that.variables.get(var.getKey());
+            Object otherVarValue = that.variables.get(var.getKey());
             // Shouldn't be null given the above keySet check, but satisfy checker:
             if (otherVarValue == null)
                 continue;

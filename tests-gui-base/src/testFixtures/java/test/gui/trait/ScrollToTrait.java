@@ -63,17 +63,15 @@ import static org.junit.Assert.fail;
 public interface ScrollToTrait extends FxRobotInterface, FocusOwnerTrait, QueryTrait
 {
     // Scrolls until the entire node is on screen
-    @OnThread(Tag.Any)
     default public void scrollTo(String nodeLocator)
     {
         scrollTo(TFXUtil.fx(() -> lookup(nodeLocator)));
     }
 
     // Scrolls until the entire node is on screen
-    @OnThread(Tag.Any)
     default public void scrollTo(NodeQuery nodeLocator)
     {
-        @Nullable Node targetQ = TFXUtil.fx(() -> nodeLocator.query());
+        Node targetQ = TFXUtil.fx(() -> nodeLocator.query());
         if (targetQ == null)
         {
             System.err.println("No such node to scroll to: " + nodeLocator);
@@ -83,7 +81,6 @@ public interface ScrollToTrait extends FxRobotInterface, FocusOwnerTrait, QueryT
     }
 
     // Scrolls until the entire node is on screen
-    @OnThread(Tag.Any)
     default public void scrollTo(Node target)
     {
         // Find enclosing scroll:
@@ -137,7 +134,6 @@ public interface ScrollToTrait extends FxRobotInterface, FocusOwnerTrait, QueryT
         assertTrue("View bounds: " + viewBounds + " target: " + targetScreenBounds + " target before scroll: " + targetBeforeScroll, viewBounds.contains(targetScreenBounds));
     }
     
-    @OnThread(Tag.Any)
     default void keyboardMoveTo(VirtualGrid virtualGrid, CellPosition target)
     {
         Random r = new Random(target.rowIndex * 100 + target.columnIndex);
@@ -181,8 +177,7 @@ public interface ScrollToTrait extends FxRobotInterface, FocusOwnerTrait, QueryT
         assertTrue("Selected is " + selection.toString() + " aiming for " + target + " focus owner is " + getFocusOwner() + (bypassGUI ? " bypassed GUI" : " used GUI"), TFXUtil.fx(() -> selection.map(s -> s.isExactly(target) || s.getActivateTarget().equals(target)).orElse(false)));
     }
 
-    @OnThread(Tag.Any)
-    default CellPosition keyboardMoveTo(VirtualGrid virtualGrid, TableManager tableManager, TableId tableId, @TableDataRowIndex int row, @TableDataColIndex int col) throws UserException
+    default CellPosition keyboardMoveTo(VirtualGrid virtualGrid, TableManager tableManager, TableId tableId, int row, int col) throws UserException
     {
         Random r = new Random(row * 100 + col);
         
@@ -192,12 +187,12 @@ public interface ScrollToTrait extends FxRobotInterface, FocusOwnerTrait, QueryT
         
         boolean usingMenu = r.nextDouble() < menuChance;
         Table table = tableManager.getSingleTableOrThrow(tableId);
-        TableDisplay tableDisplay = (TableDisplay) TFXUtil.<@Nullable TableDisplayBase>fx(() -> table.getDisplay());
+        TableDisplay tableDisplay = (TableDisplay) TFXUtil.<TableDisplayBase>fx(() -> table.getDisplay());
         assertNotNull(tableDisplay);
         if (tableDisplay == null)
             throw new RuntimeException("Impossible");
         keyboardMoveTo(virtualGrid, TFXUtil.fx(() -> {
-            @TableDataRowIndex int rowIndex = usingMenu ? DataItemPosition.row(0) : row;
+            int rowIndex = usingMenu ? DataItemPosition.row(0) : row;
             return tableDisplay.getDataPosition(rowIndex, col);
         }));
         if (usingMenu)
@@ -215,13 +210,12 @@ public interface ScrollToTrait extends FxRobotInterface, FocusOwnerTrait, QueryT
         return TFXUtil.fx(() -> tableDisplay.getDataPosition(row, col));
     }
 
-    default CellPosition keyboardMoveTo(VirtualGrid virtualGrid, TableManager tableManager, TableId tableId, @TableDataRowIndex int row) throws UserException
+    default CellPosition keyboardMoveTo(VirtualGrid virtualGrid, TableManager tableManager, TableId tableId, int row) throws UserException
     {
         return keyboardMoveTo(virtualGrid, tableManager, tableId, row, DataItemPosition.col(0));
     }
 
-    @OnThread(Tag.Any)
-    default CellPosition keyboardMoveTo(VirtualGrid virtualGrid, TableManager tableManager, TableId tableId, ColumnId columnId, @TableDataRowIndex int row) throws UserException
+    default CellPosition keyboardMoveTo(VirtualGrid virtualGrid, TableManager tableManager, TableId tableId, ColumnId columnId, int row) throws UserException
     {
         Table table = tableManager.getSingleTableOrThrow(tableId);
         TableDisplay display = (TableDisplay) TBasicUtil.checkNonNull(TFXUtil.fx(() -> table.getDisplay()));
@@ -229,7 +223,6 @@ public interface ScrollToTrait extends FxRobotInterface, FocusOwnerTrait, QueryT
     }
     
     // Ideally, will be private in later Java:
-    @OnThread(Tag.Any)
     default public void clickOrScroll(NodeQuery nodeQuery, Runnable scroll)
     {
         Node scrollButton = TFXUtil.fx(() -> nodeQuery.tryQuery()).orElse(null);

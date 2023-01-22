@@ -220,25 +220,21 @@ import java.util.stream.Collectors;
 /**
  * A specialisation of DataDisplay that links it to an actual Table.
  */
-@OnThread(Tag.FXPlatform)
 public final class TableDisplay extends DataDisplay implements RecordSetListener, TableDisplayBase
 {
     private static final int INITIAL_LOAD = 100;
     private static final int LOAD_CHUNK = 100;
     // Can be null if there is error in initial loading
-    @OnThread(Tag.Any)
-    private final @Nullable RecordSet recordSet;
+    private final RecordSet recordSet;
     // The latest error message:
-    @OnThread(Tag.FXPlatform)
-    private final ObjectProperty<@Nullable ExceptionWithStyle> errorMessage = new SimpleObjectProperty<>(null);
+    private final ObjectProperty<ExceptionWithStyle> errorMessage = new SimpleObjectProperty<>(null);
     private final Table table;
     private final View parent;
-    @OnThread(Tag.Any)
     private final AtomicReference<CellPosition> mostRecentBounds;
     // Should only be set in loadPosition and setDisplay:
     private final ObjectProperty<Pair<Display, ImmutableList<ColumnId>>> columnDisplay = new SimpleObjectProperty<>(new Pair<>(Display.ALL, ImmutableList.of()));
     private final TableBorderOverlay tableBorderOverlay;
-    private final @Nullable TableHat tableHat;
+    private final TableHat tableHat;
     private final TableErrorDisplay tableErrorDisplay;
     private boolean currentKnownRowsIsFinal = false;
 
@@ -247,7 +243,6 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
     private final FXPlatformRunnable onModify;
     private boolean queuedUpdateRows = false;
 
-    @OnThread(Tag.Any)
     @Override
     public Table getTable()
     {
@@ -265,12 +260,12 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) void updateKnownRows(@GridAreaRowIndex int checkUpToRowInclGrid, FXPlatformRunnable updateSizeAndPositions)
+    public void updateKnownRows(int checkUpToRowInclGrid, FXPlatformRunnable updateSizeAndPositions)
     {
-        @TableDataRowIndex int checkUpToRowIncl = getRowIndexWithinTable(checkUpToRowInclGrid);
+        int checkUpToRowIncl = getRowIndexWithinTable(checkUpToRowInclGrid);
         if (!currentKnownRowsIsFinal && currentKnownRows < checkUpToRowIncl && recordSet != null && !queuedUpdateRows)
         {
-            final @NonNull RecordSet recordSetFinal = recordSet;
+            final RecordSet recordSetFinal = recordSet;
             queuedUpdateRows = true;
             Workers.onWorkerThread("Fetching row size", Priority.FETCH, () -> {
                 try
@@ -293,7 +288,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
                         // Just a matter of working out where it ends.  Since we know end is close,
                         // just force with getLength:
                         @SuppressWarnings("units")
-                        @TableDataRowIndex int length = recordSetFinal.getLength();
+                        int length = recordSetFinal.getLength();
                         Platform.runLater(() -> {
                             queuedUpdateRows = false;
                             currentKnownRows = length;
@@ -312,41 +307,41 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) Pair<ListenerOutcome, @Nullable FXPlatformConsumer<VisibleBounds>> selectionChanged(@Nullable CellSelection oldSelection, @Nullable CellSelection newSelection)
+    public Pair<ListenerOutcome, FXPlatformConsumer<VisibleBounds>> selectionChanged(CellSelection oldSelection, CellSelection newSelection)
     {
         ListenerOutcome outcome = super.selectionChanged(oldSelection, newSelection).getFirst();        
         return new Pair<>(outcome, tableBorderOverlay::updateClip);
     }
 
-    public CellPosition getDataPosition(@UnknownInitialization(DataDisplay.class) TableDisplay this, @TableDataRowIndex int rowIndex, @TableDataColIndex int columnIndex)
+    public CellPosition getDataPosition(TableDisplay this, int rowIndex, int columnIndex)
     {
         return getPosition().offsetByRowCols(getDataDisplayTopLeftIncl().rowIndex + rowIndex, getDataDisplayTopLeftIncl().columnIndex + columnIndex);
     }
 
-    private TableDisplayUtility.GetDataPosition makeGetDataPosition(@UnknownInitialization(DataDisplay.class) TableDisplay this)
+    private TableDisplayUtility.GetDataPosition makeGetDataPosition(TableDisplay this)
     {
         return new GetDataPosition()
         {
             @SuppressWarnings("units")
-            private final @TableDataRowIndex int invalid = -1;
+            private final int invalid = -1;
             
             @Override
-            public @OnThread(Tag.FXPlatform) CellPosition getDataPosition(@TableDataRowIndex int rowIndex, @TableDataColIndex int columnIndex)
+            public CellPosition getDataPosition(int rowIndex, int columnIndex)
             {
                 return TableDisplay.this.getDataPosition(rowIndex, columnIndex);
             }
 
             @Override
-            public @OnThread(Tag.FXPlatform) @TableDataRowIndex int getFirstVisibleRowIncl()
+            public int getFirstVisibleRowIncl()
             {
                 Optional<VisibleBounds> bounds = withParent(g -> g.getVisibleBounds());
                 if (!bounds.isPresent())
                     return invalid;
                 @SuppressWarnings("units")
-                @GridAreaRowIndex int gridAreaRow = bounds.get().firstRowIncl - getPosition().rowIndex;
-                @TableDataRowIndex int rowIndexWithinTable = TableDisplay.this.getRowIndexWithinTable(gridAreaRow);
+                int gridAreaRow = bounds.get().firstRowIncl - getPosition().rowIndex;
+                int rowIndexWithinTable = TableDisplay.this.getRowIndexWithinTable(gridAreaRow);
                 @SuppressWarnings("units")
-                @TableDataRowIndex int zero = 0;
+                int zero = 0;
                 if (rowIndexWithinTable < zero)
                     return zero;
                 else
@@ -354,18 +349,18 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
             }
 
             @Override
-            public @OnThread(Tag.FXPlatform) @TableDataRowIndex int getLastVisibleRowIncl()
+            public int getLastVisibleRowIncl()
             {
                 Optional<VisibleBounds> bounds = withParent(g -> g.getVisibleBounds());
                 if (!bounds.isPresent())
                     return invalid;
                 @SuppressWarnings("units")
-                @GridAreaRowIndex int gridAreaRow = bounds.get().lastRowIncl - getPosition().rowIndex;
-                @TableDataRowIndex int rowIndexWithinTable = TableDisplay.this.getRowIndexWithinTable(gridAreaRow);
+                int gridAreaRow = bounds.get().lastRowIncl - getPosition().rowIndex;
+                int rowIndexWithinTable = TableDisplay.this.getRowIndexWithinTable(gridAreaRow);
                 if (rowIndexWithinTable >= currentKnownRows)
                 {
                     @SuppressWarnings("units")
-                    @TableDataRowIndex int lastRow = currentKnownRows - 1;
+                    int lastRow = currentKnownRows - 1;
                     return lastRow;
                 }
                 else
@@ -375,7 +370,6 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
     }
 
     @Override
-    @OnThread(Tag.FXPlatform)
     public void modifiedDataItems(int startRowIncl, int endRowIncl)
     {
         onModify.run();
@@ -387,7 +381,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
         if (startRowIncl < currentKnownRows)
         {
             @SuppressWarnings("units")
-            @TableDataRowIndex int difference = addedRowsCount - removedRowsCount;
+            int difference = addedRowsCount - removedRowsCount;
             this.currentKnownRows += difference;
         }
         currentKnownRowsIsFinal = false;
@@ -396,30 +390,29 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) void addedColumn(Column newColumn)
+    public void addedColumn(Column newColumn)
     {
         setColumns();
     }
 
-    @RequiresNonNull({"parent", "table"})
-    private void setColumns(@UnknownInitialization(DataDisplay.class) TableDisplay this)
+    private void setColumns(TableDisplay this)
     {
         if (recordSet != null)
             setColumns(TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), c -> null, makeGetDataPosition(), onModify, FXUtility.mouse(this)::getMenuItems), table.getOperations(), c -> getColumnActions(parent.getManager(), table, c));
     }
 
-    private ImmutableList<MenuItem> getMenuItems(boolean focused, ColumnId columnId, @TableDataRowIndex int rowIndex)
+    private ImmutableList<MenuItem> getMenuItems(boolean focused, ColumnId columnId, int rowIndex)
     {
         OptionalInt colIndex = Utility.findFirstIndex(getDisplayColumns(), c -> c.getColumnId().equals(columnId));
         if (!focused && table instanceof VisitableTransformation && colIndex.isPresent())
         {
             @SuppressWarnings("units")
-            @TableDataColIndex int columnIndex = colIndex.getAsInt();
+            int columnIndex = colIndex.getAsInt();
             CellPosition cellPosition = getDataPosition(rowIndex, columnIndex);
-            @Nullable FXPlatformRunnable why = ((VisitableTransformation)table).visit(new TransformationVisitor<@Nullable FXPlatformRunnable>()
+            FXPlatformRunnable why = ((VisitableTransformation)table).visit(new TransformationVisitor<FXPlatformRunnable>()
             {
                 @Override
-                public @Nullable FXPlatformRunnable aggregate(Aggregate aggregate)
+                public FXPlatformRunnable aggregate(Aggregate aggregate)
                 {
                     Expression expression = aggregate.getColumnExpressions().stream().filter(p -> p.getFirst().equals(columnId)).map(p -> p.getSecond()).findFirst().orElse(null);
                     if (expression != null)
@@ -451,7 +444,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
                 }
 
                 @Override
-                public @Nullable FXPlatformRunnable calculate(Calculate calculate)
+                public FXPlatformRunnable calculate(Calculate calculate)
                 {
                     Expression expression = calculate.getCalculatedColumns().get(columnId);
                     if (expression != null)
@@ -483,7 +476,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
                 }
 
                 @Override
-                public @Nullable FXPlatformRunnable check(Check check)
+                public FXPlatformRunnable check(Check check)
                 {
                     return () -> {
                         Workers.onWorkerThread("Fetching check explanation", Priority.FETCH, () -> {
@@ -497,25 +490,25 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
                 }
 
                 @Override
-                public @Nullable FXPlatformRunnable concatenate(Concatenate concatenate)
+                public FXPlatformRunnable concatenate(Concatenate concatenate)
                 {
                     return null;
                 }
 
                 @Override
-                public @Nullable FXPlatformRunnable runR(RTransformation rTransformation)
+                public FXPlatformRunnable runR(RTransformation rTransformation)
                 {
                     return null;
                 }
 
                 @Override
-                public @Nullable FXPlatformRunnable filter(Filter filter)
+                public FXPlatformRunnable filter(Filter filter)
                 {
                     return () -> {
                         Workers.onWorkerThread("Explain Calculate", Priority.FETCH, () -> {
                             try
                             {
-                                @TableDataRowIndex Integer srcRowIndex = filter.getSourceRowFor(rowIndex);
+                                Integer srcRowIndex = filter.getSourceRowFor(rowIndex);
                                 if (srcRowIndex != null)
                                 {
                                     Explanation explanation;
@@ -547,25 +540,25 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
                 }
 
                 @Override
-                public @Nullable FXPlatformRunnable hideColumns(HideColumns hideColumns)
+                public FXPlatformRunnable hideColumns(HideColumns hideColumns)
                 {
                     return null;
                 }
 
                 @Override
-                public @Nullable FXPlatformRunnable join(Join join)
+                public FXPlatformRunnable join(Join join)
                 {
                     return null;
                 }
 
                 @Override
-                public @Nullable FXPlatformRunnable manualEdit(ManualEdit manualEdit)
+                public FXPlatformRunnable manualEdit(ManualEdit manualEdit)
                 {
                     return null;
                 }
 
                 @Override
-                public @Nullable FXPlatformRunnable sort(Sort sort)
+                public FXPlatformRunnable sort(Sort sort)
                 {
                     return null;
                 }
@@ -577,13 +570,13 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) void removedColumn(ColumnId oldColumnId)
+    public void removedColumn(ColumnId oldColumnId)
     {
         setColumns();
     }
 
     //TODO @Override
-    protected @Nullable FXPlatformConsumer<ColumnId> hideColumnOperation()
+    protected FXPlatformConsumer<ColumnId> hideColumnOperation()
     {
         return columnId -> {
             // Do null checks at run-time:
@@ -620,7 +613,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
 
     @Override
     @SuppressWarnings("units")
-    protected @TableDataRowIndex int getCurrentKnownRows()
+    protected int getCurrentKnownRows()
     {
         return currentKnownRows + (displayColumns == null || displayColumns.isEmpty() ? 0 : getHeaderRowCount()) + (canExpandDown() ? 1 : 0);
     }
@@ -637,14 +630,12 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
         return showAddColumnArrow(table);
     }
 
-    @RequiresNonNull("columnDisplay")
-    private int internal_getColumnCount(@UnknownInitialization(DataDisplay.class) TableDisplay this, Table table)
+    private int internal_getColumnCount(TableDisplay this, Table table)
     {
         return (displayColumns == null ? 0 : displayColumns.size()) + (showAddColumnArrow(table) ? 1 : 0);
     }
 
-    @RequiresNonNull("columnDisplay")
-    private boolean showAddColumnArrow(@UnknownInitialization(DataDisplay.class) TableDisplay this, Table table)
+    private boolean showAddColumnArrow(TableDisplay this, Table table)
     {
         return addColumnOperation(table) != null &&
             columnDisplay.get().getFirst() != Display.COLLAPSED;
@@ -661,9 +652,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
 
     // The last data row in grid area terms, not including any append buttons
     @SuppressWarnings({"contracts.precondition.override", "units"})
-    @RequiresNonNull("columnDisplay")
-    @OnThread(Tag.FXPlatform)
-    public GridAreaCellPosition getDataDisplayBottomRightIncl(@UnknownInitialization(DataDisplay.class) TableDisplay this)
+    public GridAreaCellPosition getDataDisplayBottomRightIncl(TableDisplay this)
     {
         return new GridAreaCellPosition(Math.max(0, getHeaderRowCount() + (columnDisplay.get().getFirst() == Display.COLLAPSED ? 0 : currentKnownRows - 1)), Math.max(0, displayColumns == null ? 0 : (displayColumns.size() - 1)));
     }
@@ -706,7 +695,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
     }
 
     @Override
-    public void doCopy(@Nullable RectangleBounds bounds)
+    public void doCopy(RectangleBounds bounds)
     {
         Log.debug("Copying from " + bounds);
         int firstColumn = bounds == null ? 0 : Math.max(0, bounds.topLeftIncl.columnIndex - getPosition().columnIndex);
@@ -724,9 +713,9 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
         else
         {
             @SuppressWarnings("units")
-            @TableDataRowIndex int firstRowIncl = Math.max(0, bounds.topLeftIncl.rowIndex - (getPosition().rowIndex + getHeaderRowCount()));
+            int firstRowIncl = Math.max(0, bounds.topLeftIncl.rowIndex - (getPosition().rowIndex + getHeaderRowCount()));
             @SuppressWarnings("units")
-            @TableDataRowIndex int lastRowIncl = Math.min(getBottomRightIncl().rowIndex, bounds.bottomRightIncl.rowIndex) - (getPosition().rowIndex + getHeaderRowCount());
+            int lastRowIncl = Math.min(getBottomRightIncl().rowIndex, bounds.bottomRightIncl.rowIndex) - (getPosition().rowIndex + getHeaderRowCount());
             calcRowRange = () -> new RowRange(firstRowIncl, lastRowIncl);
         }
         
@@ -749,7 +738,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
     }
 
     @Override
-    public void setPosition(@UnknownInitialization(GridArea.class) TableDisplay this, CellPosition cellPosition)
+    public void setPosition(TableDisplay this, CellPosition cellPosition)
     {
         super.setPosition(cellPosition);
         if (mostRecentBounds != null)
@@ -783,12 +772,12 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
     */
     
     @Override
-    protected @Nullable FXPlatformConsumer<TableId> renameTableOperation(Table table)
+    protected FXPlatformConsumer<TableId> renameTableOperation(Table table)
     {
-        @Nullable RenameTable renameTable = table.getOperations().renameTable;
+        RenameTable renameTable = table.getOperations().renameTable;
         if (renameTable == null)
             return null;
-        @NonNull RenameTable renameTableFinal = renameTable;
+        RenameTable renameTableFinal = renameTable;
         
         return newTableId -> {
             if (Objects.equals(newTableId, curTableId))
@@ -802,14 +791,13 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
         };
     }
 
-    @OnThread(Tag.FXPlatform)
     public TableDisplay(View parent, VirtualGridSupplierFloating supplierFloating, Table table)
     {
         super(parent.getManager(), table, supplierFloating);
         this.parent = parent;
         this.table = table;
         this.curTableId = table.getId();
-        @Nullable RecordSet recordSet = null;
+        RecordSet recordSet = null;
         try
         {
             recordSet = table.getData();
@@ -832,9 +820,9 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
         // Hat:
         if (table instanceof VisitableTransformation)
         {
-            @UnknownInitialization(DataDisplay.class) TableDisplay us = this;
+            TableDisplay us = this;
             @SuppressWarnings("assignment") // Don't understand why we need this here
-            @Initialized TableHat hat = new TableHat(us, parent, (VisitableTransformation) table);
+            TableHat hat = new TableHat(us, parent, (VisitableTransformation) table);
             this.tableHat = hat;
             supplierFloating.addItem(this.tableHat);
         }
@@ -864,21 +852,20 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
         this.table.setDisplay(usInit);
     }
 
-    public static @Nullable FXPlatformConsumer<TableId> renameTableSim(Table table)
+    public static FXPlatformConsumer<TableId> renameTableSim(Table table)
     {
-        @Nullable RenameTable renameTable = table.getOperations().renameTable;
+        RenameTable renameTable = table.getOperations().renameTable;
         if (renameTable == null)
             return null;
-        @NonNull RenameTable renameTableFinal = renameTable;
+        RenameTable renameTableFinal = renameTable;
         return newName -> {
             Workers.onWorkerThread("Renaming table", Priority.SAVE, () -> renameTableFinal.renameTable(newName));
         };
     }
     
-    @RequiresNonNull({"columnDisplay", "errorMessage", "onModify", "parent", "recordSet", "table"})
-    private void setupWithRecordSet(@UnknownInitialization(DataDisplay.class) TableDisplay this)
+    private void setupWithRecordSet(TableDisplay this)
     {
-        @NonNull RecordSet recordSetFinal = this.recordSet;
+        RecordSet recordSetFinal = this.recordSet;
         setColumns();
         //TODO restore editability on/off
         //setEditable(getColumns().stream().anyMatch(TableColumn::isEditable));
@@ -913,13 +900,11 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
         });
 
         // Should be done last:
-        @SuppressWarnings("assignment") @Initialized TableDisplay usInit = this;
+        @SuppressWarnings("assignment") TableDisplay usInit = this;
         recordSet.setListener(usInit);
     }
 
-    @OnThread(Tag.Simulation)
-    @RequiresNonNull("errorMessage")
-    private void watchForError_(@UnknownInitialization(DataDisplay.class) TableDisplay this, SimulationEx action)
+    private void watchForError_(TableDisplay this, SimulationEx action)
     {
         try
         {
@@ -943,8 +928,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
             */
     }
 
-    @RequiresNonNull({"mostRecentBounds"})
-    private void updateMostRecentBounds(@UnknownInitialization(GridArea.class) TableDisplay this)
+    private void updateMostRecentBounds(TableDisplay this)
     {
         mostRecentBounds.set(getPosition());
     }
@@ -991,8 +975,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
         return new ContextMenu(items.toArray(new MenuItem[0]));
     }
 
-    @RequiresNonNull({"columnDisplay", "table", "parent"})
-    private void editCustomDisplay(@UnknownInitialization(Object.class) TableDisplay this)
+    private void editCustomDisplay(TableDisplay this)
     {
         ImmutableList<ColumnId> blackList = new CustomColumnDisplayDialog(parent.getManager(), table.getId(), columnDisplay.get().getSecond()).showAndWait().orElse(null);
         // Only switch if they didn't cancel, otherwise use previous view mode:
@@ -1000,14 +983,12 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
             setDisplay(Display.CUSTOM, blackList);
     }
 
-    @RequiresNonNull({"columnDisplay", "table", "parent"})
-    private void setDisplay(@UnknownInitialization(Object.class) TableDisplay this, Pair<Display, ImmutableList<ColumnId>> newState)
+    private void setDisplay(TableDisplay this, Pair<Display, ImmutableList<ColumnId>> newState)
     {
         setDisplay(newState.getFirst(), newState.getSecond());
     }
 
-    @RequiresNonNull({"columnDisplay", "table", "parent"})
-    private void setDisplay(@UnknownInitialization(Object.class) TableDisplay this, Display newState, ImmutableList<ColumnId> blackList)
+    private void setDisplay(TableDisplay this, Display newState, ImmutableList<ColumnId> blackList)
     {
         this.columnDisplay.set(new Pair<>(newState, blackList));
         table.setShowColumns(newState, blackList);
@@ -1021,7 +1002,6 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
         parent.modified();
     }
     
-    @OnThread(Tag.FXPlatform)
     @Override
     public void loadPosition(CellPosition cellPosition, Pair<Display, ImmutableList<ColumnId>> display)
     {
@@ -1029,7 +1009,6 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
         this.columnDisplay.set(display);
     }
 
-    @OnThread(Tag.Any)
     @Override
     public CellPosition getMostRecentPosition()
     {
@@ -1037,7 +1016,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) void promptForTransformationEdit(int index, Pair<ColumnId, DataType> column, Either<String, @Value Object> value)
+    public void promptForTransformationEdit(int index, Pair<ColumnId, DataType> column, Either<String, Object> value)
     {
         Alert alert = new Alert(AlertType.CONFIRMATION, "Transformation results cannot be directly edited.  Add an edit transformation to allow editing of specific items?", ButtonType.YES, ButtonType.CANCEL);
         alert.setHeaderText("Create edit transformation?");
@@ -1047,26 +1026,24 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
         {
             CellPosition insertPos = parent.getManager().getNextInsertPosition(getTable().getId());
             Workers.onWorkerThread("Creating edit transformation", Priority.SAVE, () -> FXUtility.alertOnError_(TranslationUtility.getString("error.creating.edit"), () -> {
-                @NonNull ManualEdit manualEdit = (ManualEdit)parent.getManager().record(new ManualEdit(parent.getManager(), new InitialLoadDetails(null, null, insertPos, null), getTable().getId(), null, ImmutableMap.of(column.getFirst(), new ColumnReplacementValues(column.getSecond(), ImmutableList.<Pair<@Value Object, Either<String, @Value Object>>>of(new Pair<@Value Object, Either<String, @Value Object>>(DataTypeUtility.value(index), value))))));
+                ManualEdit manualEdit = (ManualEdit)parent.getManager().record(new ManualEdit(parent.getManager(), new InitialLoadDetails(null, null, insertPos, null), getTable().getId(), null, ImmutableMap.of(column.getFirst(), new ColumnReplacementValues(column.getSecond(), ImmutableList.<Pair<Object, Either<String, Object>>>of(new Pair<Object, Either<String, Object>>(DataTypeUtility.value(index), value))))));
                 Platform.runLater(() -> TableHat.editManualEdit(parent, manualEdit, true, RenameOnEdit::renameToSuggested));
             }));
         }
     }
 
-    @RequiresNonNull("parent")
-    public ColumnHeaderOps getColumnActions(@UnknownInitialization(DataDisplay.class) TableDisplay this, TableManager tableManager, Table table, ColumnId c)
+    public ColumnHeaderOps getColumnActions(TableDisplay this, TableManager tableManager, Table table, ColumnId c)
     {
         ImmutableList.Builder<FXPlatformSupplier<MenuItem>> r = ImmutableList.builder();
 
         TableOperations operations = table.getOperations();
-        @Nullable FXPlatformConsumer<@Nullable ColumnId> addColumn = addColumnOperation(table);
+        FXPlatformConsumer<ColumnId> addColumn = addColumnOperation(table);
         if (addColumn != null)
         {
-            @NonNull FXPlatformConsumer<@Nullable ColumnId> addColumnFinal = addColumn;
+            FXPlatformConsumer<ColumnId> addColumnFinal = addColumn;
             r.add(new ColumnOperation("virtGrid.column.addBefore")
             {
                 @Override
-                @OnThread(Tag.FXPlatform)
                 public void executeFX()
                 {
                     addColumnFinal.consume(c);
@@ -1079,12 +1056,11 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
                 OptionalInt ourIndex = Utility.findFirstIndex(tableColumns, otherCol -> otherCol.getName().equals(c));
                 if (ourIndex.isPresent())
                 {
-                    @Nullable ColumnId columnAfter = ourIndex.getAsInt() + 1 < tableColumns.size() ? tableColumns.get(ourIndex.getAsInt() + 1).getName() : null;
+                    ColumnId columnAfter = ourIndex.getAsInt() + 1 < tableColumns.size() ? tableColumns.get(ourIndex.getAsInt() + 1).getName() : null;
                     
                     r.add(new ColumnOperation("virtGrid.column.addAfter")
                     {
                         @Override
-                        @OnThread(Tag.FXPlatform)
                         public void executeFX()
                         {
                             addColumnFinal.consume(columnAfter);
@@ -1098,14 +1074,14 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
                 Log.log(e);
             }
         }
-        @Nullable DeleteColumn deleteColumn = operations.deleteColumn.apply(c);
-        final @Nullable ColumnOperation deleteOp;
+        DeleteColumn deleteColumn = operations.deleteColumn.apply(c);
+        final ColumnOperation deleteOp;
         if (deleteColumn != null)
         {
             deleteOp = new ColumnOperation("virtGrid.column.delete")
             {
                 @Override
-                public @OnThread(Tag.FXPlatform) void executeFX()
+                public void executeFX()
                 {
                     Workers.onWorkerThread("Removing column", Priority.SAVE, () -> {
                         deleteColumn.deleteColumn(c);
@@ -1153,25 +1129,24 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
             Log.log(e);
         }
 
-        @Nullable DataType typeFinal = type;
+        DataType typeFinal = type;
         ImmutableList<FXPlatformSupplier<MenuItem>> menuItemMakers = r.build();
         return new ColumnHeaderOps()
         {
             @Override
-            @OnThread(Tag.FXPlatform)
             public ImmutableList<MenuItem> contextOperations()
             {
                 return Utility.mapListI(menuItemMakers, maker -> maker.get());
             }
 
             @Override
-            public @Nullable ColumnOperation getDeleteOperation()
+            public ColumnOperation getDeleteOperation()
             {
                 return deleteOp;
             }
 
             @Override
-            public @Nullable FXPlatformConsumer<EditTarget> getPrimaryEditOperation()
+            public FXPlatformConsumer<EditTarget> getPrimaryEditOperation()
             {
                 if (table instanceof Calculate)
                 {
@@ -1206,35 +1181,33 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
         };
     }
 
-    @RequiresNonNull("parent")
-    private ColumnOperation transformType(@UnknownInitialization(DataDisplay.class) TableDisplay this, TableManager tableManager, Table table, ColumnId columnId, DataTypeValue dataTypeValue, @LocalizableKey String nameKey)
+    private ColumnOperation transformType(TableDisplay this, TableManager tableManager, Table table, ColumnId columnId, DataTypeValue dataTypeValue, String nameKey)
     {
         return new SimpleColumnOperation(tableManager, table.getId(), nameKey)
         {
             private final FunctionLookup functionLookup = FunctionList.getFunctionLookup(tableManager.getUnitManager());
 
             @Override
-            public @OnThread(Tag.Simulation) void execute(CellPosition insertPosition)
+            public void execute(CellPosition insertPosition)
             {
                 FXUtility.alertOnError_(TranslationUtility.getString("error.investigating.type.transformation"), new RunOrError()
                 {
                     @Override
-                    public @OnThread(Tag.Simulation) void run() throws InternalException, UserException
+                    public void run() throws InternalException, UserException
                     {
                     // Check the type, then hop back to the FX thread for confirmation.
                     ImmutableList<TypeTransform> possibles = dataTypeValue.applyGet(new DataTypeVisitorGet<ImmutableList<TypeTransform>>()
                     {
                         @SuppressWarnings("recorded")
-                        private final @Recorded Expression columnReference = IdentExpression.column(columnId);
+                        private final Expression columnReference = IdentExpression.column(columnId);
 
                         @Override
-                        @OnThread(Tag.Simulation)
-                        public ImmutableList<TypeTransform> number(GetValue<@Value Number> g, NumberInfo displayInfo) throws InternalException, UserException
+                        public ImmutableList<TypeTransform> number(GetValue<Number> g, NumberInfo displayInfo) throws InternalException, UserException
                         {
                             ImmutableList.Builder<TypeTransform> r = ImmutableList.builder();
                             r.add(toText());
                             
-                            ImmutableList<@Value Number> sample = sample(g);
+                            ImmutableList<Number> sample = sample(g);
                             if (!sample.isEmpty())
                             {
                                 if (displayInfo.getUnit().equals(Unit.SCALAR))
@@ -1254,20 +1227,19 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
                         }
 
                         @Override
-                        @OnThread(Tag.Simulation)
-                        public ImmutableList<TypeTransform> text(GetValue<@Value String> g) throws InternalException, UserException
+                        public ImmutableList<TypeTransform> text(GetValue<String> g) throws InternalException, UserException
                         {
                             // Don't offer toText as that is redundant.
                             class FromText
                             {
                                 private final DataType destType;
-                                private final SimulationFunction<@Value String, Boolean> conversionTrial;
-                                private final @Recorded Expression conversionExpression;
+                                private final SimulationFunction<String, Boolean> conversionTrial;
+                                private final Expression conversionExpression;
                                 // Mutable:
                                 private int failCount = 0;
 
                                 @SuppressWarnings("recorded")
-                                FromText(DataType destType, SimulationFunction<@Value String, Boolean> conversionTrial, Expression conversionExpression)
+                                FromText(DataType destType, SimulationFunction<String, Boolean> conversionTrial, Expression conversionExpression)
                                 {
                                     this.destType = destType;
                                     this.conversionTrial = conversionTrial;
@@ -1278,8 +1250,8 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
                             final ArrayList<FromText> conversions = new ArrayList<>();
 
                             ValueFunction extractNumber = new ExtractNumber().getInstance();
-                            conversions.add(new FromText(DataType.NUMBER, s -> {extractNumber.call(new @Value Object[] {s}); return true;}, new CallExpression(functionLookup, ExtractNumber.NAME, columnReference)));
-                            conversions.add(new FromText(parent.getManager().getTypeManager().getMaybeType().instantiate(ImmutableList.of(Either.<Unit, DataType>right(DataType.NUMBER)), parent.getManager().getTypeManager()), s -> {extractNumber.call(new @Value Object[] {s}); return true;}, new CallExpression(functionLookup, ExtractNumberOrNone.NAME, columnReference)));
+                            conversions.add(new FromText(DataType.NUMBER, s -> {extractNumber.call(new Object[] {s}); return true;}, new CallExpression(functionLookup, ExtractNumber.NAME, columnReference)));
+                            conversions.add(new FromText(parent.getManager().getTypeManager().getMaybeType().instantiate(ImmutableList.of(Either.<Unit, DataType>right(DataType.NUMBER)), parent.getManager().getTypeManager()), s -> {extractNumber.call(new Object[] {s}); return true;}, new CallExpression(functionLookup, ExtractNumberOrNone.NAME, columnReference)));
                             for (DateTimeType dtt : DateTimeType.values())
                             {
                                 DataType destType = DataType.date(new DateTimeInfo(dtt));
@@ -1294,12 +1266,12 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
                             conversions.add(new FromText(DataType.BOOLEAN, s -> bools.contains(s.toLowerCase(Locale.ENGLISH)), call));
                             
                             
-                            final ImmutableList<@Value String> samples = sample(g);
+                            final ImmutableList<String> samples = sample(g);
                             // Everything will look plausible if no data:
                             if (samples.isEmpty())
                                 return ImmutableList.of();
                             final int maxFail = samples.size() / 5;
-                            for (@Value String sample : samples)
+                            for (String sample : samples)
                             {
                                 if (conversions.isEmpty())
                                     break;
@@ -1324,15 +1296,15 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
                         }
 
                         @Override
-                        public ImmutableList<TypeTransform> bool(GetValue<@Value Boolean> g) throws InternalException, UserException
+                        public ImmutableList<TypeTransform> bool(GetValue<Boolean> g) throws InternalException, UserException
                         {
                             @SuppressWarnings("recorded")
-                            @Recorded IfThenElseExpression ifThenElseExpression = IfThenElseExpression.unrecorded(columnReference, new NumericLiteral(DataTypeUtility.value(1), null), new NumericLiteral(DataTypeUtility.value(0), null));
+                            IfThenElseExpression ifThenElseExpression = IfThenElseExpression.unrecorded(columnReference, new NumericLiteral(DataTypeUtility.value(1), null), new NumericLiteral(DataTypeUtility.value(0), null));
                             return ImmutableList.of(toText(), new TypeTransform(ifThenElseExpression, DataType.NUMBER));
                         }
 
                         @Override
-                        public ImmutableList<TypeTransform> date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> g) throws InternalException, UserException
+                        public ImmutableList<TypeTransform> date(DateTimeInfo dateTimeInfo, GetValue<TemporalAccessor> g) throws InternalException, UserException
                         {
                             HashMap<DateTimeType, ImmutableList<String>> destTypesAndFunctions = new HashMap<>();
                             destTypesAndFunctions.put(dateTimeInfo.getType(), ImmutableList.of());
@@ -1364,7 +1336,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
                         }
 
                         @Override
-                        public ImmutableList<TypeTransform> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tagTypes, GetValue<@Value TaggedValue> g) throws InternalException, UserException
+                        public ImmutableList<TypeTransform> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tagTypes, GetValue<TaggedValue> g) throws InternalException, UserException
                         {
                             if (typeName.equals(tableManager.getTypeManager().getMaybeType().getTaggedTypeName()))
                             {
@@ -1374,7 +1346,6 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
                                 TypeTransform unwrap = new TypeTransform(new FXPlatformSupplier<Optional<Expression>>()
                                 {
                                     @Override
-                                    @OnThread(Tag.FXPlatform)
                                     public Optional<Expression> get()
                                     {
                                         Optional<Expression> r = FXUtility.alertOnErrorFX(TranslationUtility.getString("error.recognising.tagged.type"), () -> unwrapOptionalType(inner, columnReference, TableDisplayUtility.recogniser(inner, false)));
@@ -1391,13 +1362,13 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
                         }
 
                         @Override
-                        public ImmutableList<TypeTransform> record(ImmutableMap<@ExpressionIdentifier String, DataType> types, GetValue<@Value Record> g) throws InternalException, UserException
+                        public ImmutableList<TypeTransform> record(ImmutableMap<String, DataType> types, GetValue<Record> g) throws InternalException, UserException
                         {
                             return ImmutableList.of(toText());
                         }
 
                         @Override
-                        public ImmutableList<TypeTransform> array(DataType inner, GetValue<@Value ListEx> g) throws InternalException, UserException
+                        public ImmutableList<TypeTransform> array(DataType inner, GetValue<ListEx> g) throws InternalException, UserException
                         {
                             return ImmutableList.of(toText());
                         }
@@ -1408,10 +1379,9 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
                             return new TypeTransform(new CallExpression(IdentExpression.function(new ToString().getFullName()), ImmutableList.of(columnReference)), DataType.TEXT);
                         }
                         
-                        @OnThread(Tag.Simulation)
-                        private <T extends @NonNull @Value Object> ImmutableList<@Value T> sample(GetValue<@NonNull @Value T> getValue) throws InternalException, UserException
+                        private <T extends Object> ImmutableList<T> sample(GetValue<T> getValue) throws InternalException, UserException
                         {
-                            ImmutableList.Builder<@Value T> r = ImmutableList.builder();
+                            ImmutableList.Builder<T> r = ImmutableList.builder();
                             long startMillis = System.currentTimeMillis();
                             // Spend up to half a second getting as many values as possible:
                             RecordSet recordSet = table.getData();
@@ -1450,16 +1420,15 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
             }
 
             @SuppressWarnings("cast.unsafe")
-            @OnThread(Tag.FXPlatform)
-            private <T extends @NonNull @ImmediateValue Object> Optional<Expression> unwrapOptionalType(DataType inner, Expression columnReference, RecogniserAndType<T> recogniser)
+            private <T extends Object> Optional<Expression> unwrapOptionalType(DataType inner, Expression columnReference, RecogniserAndType<T> recogniser)
             {
-                @Nullable Optional<Expression> optionalExpression = FXUtility.<Optional<Expression>>alertOnErrorFX(TranslationUtility.getString("error.asking.for.default.value"), () -> {
+                Optional<Expression> optionalExpression = FXUtility.<Optional<Expression>>alertOnErrorFX(TranslationUtility.getString("error.asking.for.default.value"), () -> {
                     EnterValueDialog<T> dialog = new EnterValueDialog<T>(parent, inner, recogniser);
                     return dialog.showAndWait().<Expression>flatMap(new Function<T, Optional<? extends Expression>>() {
                         @Override
                         public Optional<? extends Expression> apply(T v) {
                             return Optional.<Expression>ofNullable(FXUtility.<Expression>alertOnErrorFX(TranslationUtility.getString("error.converting.value.to.expression"), () -> {
-                                Expression defaultValueExpression = AppUtility.valueToExpressionFX(tableManager.getTypeManager(), functionLookup, inner, (@ImmediateValue T) v);
+                                Expression defaultValueExpression = AppUtility.valueToExpressionFX(tableManager.getTypeManager(), functionLookup, inner, (T) v);
                                 return new CallExpression(functionLookup, GetOptionalOrDefault.NAME, columnReference, defaultValueExpression);
                             }));
                         }
@@ -1473,18 +1442,17 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
         };
     }
 
-    public @Nullable FXPlatformConsumer<@Nullable ColumnId> addColumnOperation()
+    public FXPlatformConsumer<ColumnId> addColumnOperation()
     {
         return addColumnOperation(table);
     }
 
     // If beforeColumn is null, add at end
-    @OnThread(Tag.FXPlatform)
-    private @Nullable FXPlatformConsumer<@Nullable ColumnId> addColumnOperation(@UnknownInitialization(DataDisplay.class) TableDisplay this, Table table)
+    private FXPlatformConsumer<ColumnId> addColumnOperation(TableDisplay this, Table table)
     {
         if (table instanceof ImmediateDataSource)
         {
-            @NonNull ImmediateDataSource ids = (ImmediateDataSource) table;
+            ImmediateDataSource ids = (ImmediateDataSource) table;
             return beforeColumn -> {
                 FXUtility.mouse(this).addColumnBefore_IDS(ids, beforeColumn);
             };
@@ -1506,7 +1474,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
         return null;
     }
     
-    void addColumnBefore_Calc(@UnknownInitialization(DataDisplay.class) TableDisplay this, View parent, Calculate calc, @Nullable ColumnId beforeColumn, Function<TableId, RenameOnEdit> renameOnEdit, @Nullable @LocalizableKey String topMessageKey)
+    void addColumnBefore_Calc(TableDisplay this, View parent, Calculate calc, ColumnId beforeColumn, Function<TableId, RenameOnEdit> renameOnEdit, String topMessageKey)
     {
         EditColumnExpressionDialog<?> dialog = EditColumnExpressionDialog.withoutSidePane(parent, parent.getManager().getSingleTableOrNull(calc.getSrcTableId()), null, null, ed -> new MultipleTableLookup(calc.getId(), parent.getManager(), calc.getSrcTableId(), ed == null ? null : calc.makeEditor(ed)), () -> Calculate.makeTypeState(parent.getManager()), null);
         
@@ -1524,7 +1492,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
         });
     }
 
-    private void addColumnBefore_Agg(Aggregate agg, @Nullable ColumnId beforeColumn)
+    private void addColumnBefore_Agg(Aggregate agg, ColumnId beforeColumn)
     {
         EditColumnExpressionDialog<ImmutableList<ColumnId>> dialog = AggregateSplitByPane.editColumn(parent, parent.getManager().getSingleTableOrNull(agg.getSrcTableId()), null, null, _ed -> agg.getColumnLookup(), () -> Aggregate.makeTypeState(parent.getManager()), null, agg.getSplitBy());
 
@@ -1539,7 +1507,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
         });
     }
 
-    public void addColumnBefore_IDS(ImmediateDataSource ids, @Nullable ColumnId beforeColumn)
+    public void addColumnBefore_IDS(ImmediateDataSource ids, ColumnId beforeColumn)
     {
         Optional<EditImmediateColumnDialog.ColumnDetails> optInitialDetails = new EditImmediateColumnDialog(parent, parent.getManager(), null, null, false, InitialFocus.FOCUS_COLUMN_NAME).showAndWait();
         optInitialDetails.ifPresent(initialDetails -> Workers.onWorkerThread("Adding column", Priority.SAVE, () ->
@@ -1557,20 +1525,18 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
 
     private static interface MakeColumnTransformation
     {
-        @OnThread(Tag.Simulation)
         public Transformation makeTransform(ColumnId targetId, CellPosition targetPosition) throws InternalException, UserException;
     }
 
     private static interface MakeTableTransformation
     {
-        @OnThread(Tag.Simulation)
         public Transformation makeTransform(CellPosition targetPosition) throws InternalException, UserException;
     }
 
-    private ColumnOperation columnQuickTransform(@UnknownInitialization(DataDisplay.class) TableDisplay this, TableManager tableManager, Table us, @LocalizableKey String nameKey, String suggestedPrefix, ColumnId srcColumn, MakeColumnTransformation makeTransform) throws InternalException, UserException
+    private ColumnOperation columnQuickTransform(TableDisplay this, TableManager tableManager, Table us, String nameKey, String suggestedPrefix, ColumnId srcColumn, MakeColumnTransformation makeTransform) throws InternalException, UserException
     {
-        @ExpressionIdentifier String stem = IdentifierUtility.fixExpressionIdentifier(suggestedPrefix + " " + srcColumn.getRaw(), srcColumn.getRaw());
-        @ExpressionIdentifier String nextId = stem;
+        String stem = IdentifierUtility.fixExpressionIdentifier(suggestedPrefix + " " + srcColumn.getRaw(), srcColumn.getRaw());
+        String nextId = stem;
         for (int i = 1; i <= 1000; i++)
         {
             if (!us.getData().getColumnIds().contains(new ColumnId(nextId)))
@@ -1583,7 +1549,6 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
         return new SimpleColumnOperation(tableManager, us.getId(), nameKey)
         {
             @Override
-            @OnThread(Tag.Simulation)
             public void execute(CellPosition insertPosition)
             {
                 FXUtility.alertOnError_(TranslationUtility.getString("error.adding.column"), () -> {
@@ -1594,12 +1559,11 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
         };
     }
 
-    private ColumnOperation columnQuickTransform(@UnknownInitialization(DataDisplay.class) TableDisplay this, TableManager tableManager, Table us, @LocalizableKey String nameKey, MakeTableTransformation makeTransform)
+    private ColumnOperation columnQuickTransform(TableDisplay this, TableManager tableManager, Table us, String nameKey, MakeTableTransformation makeTransform)
     {
         return new SimpleColumnOperation(tableManager, us.getId(), nameKey)
         {
             @Override
-            @OnThread(Tag.Simulation)
             public void execute(CellPosition insertPosition)
             {
                 FXUtility.alertOnError_(TranslationUtility.getString("error.adding.column"), () -> {
@@ -1617,24 +1581,24 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
     }
 
     @Override
-    public ContextMenu makeRowContextMenu(@TableDataRowIndex int row)
+    public ContextMenu makeRowContextMenu(int row)
     {
         ContextMenu contextMenu = new ContextMenu();
-        @Nullable InsertRows insertRows = table.getOperations().insertRows;
+        InsertRows insertRows = table.getOperations().insertRows;
         if (insertRows != null)
         {
-            @NonNull InsertRows insertRowsFinal = insertRows;
+            InsertRows insertRowsFinal = insertRows;
             @SuppressWarnings("units")
-            @TableDataRowIndex final int ONE = 1;
+            final int ONE = 1;
             contextMenu.getItems().addAll(
                 GUI.menuItem("virtGrid.row.insertBefore", () -> Workers.onWorkerThread("Inserting row", Priority.SAVE, () -> insertRowsFinal.insertRows(row, 1))),
                 GUI.menuItem("virtGrid.row.insertAfter", () -> Workers.onWorkerThread("Inserting row", Priority.SAVE, () -> insertRowsFinal.insertRows(row + ONE, 1)))
             );
         }
-        @Nullable DeleteRows deleteRows = table.getOperations().deleteRows;
+        DeleteRows deleteRows = table.getOperations().deleteRows;
         if (deleteRows != null)
         {
-            @NonNull DeleteRows deleteRowsFinal = deleteRows;
+            DeleteRows deleteRowsFinal = deleteRows;
             contextMenu.getItems().add(
                 GUI.menuItem("virtGrid.row.delete", () -> Workers.onWorkerThread("Deleting row", Priority.SAVE, () -> deleteRowsFinal.deleteRows(row, 1)))
             );
@@ -1653,32 +1617,28 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
         return currentKnownRows;
     }
 
-    @OnThread(Tag.FXPlatform)
     public void editAfterCreation()
     {
         if (table instanceof VisitableTransformation)
         {
-            ((VisitableTransformation)table).visit(new TransformationVisitor<@Nullable Void>()
+            ((VisitableTransformation)table).visit(new TransformationVisitor<Void>()
             {
                 @Override
-                @OnThread(Tag.FXPlatform)
-                public @Nullable Void runR(RTransformation rTransformation)
+                public Void runR(RTransformation rTransformation)
                 {
                     TableHat.editR(parent, rTransformation, true, RenameOnEdit::renameToSuggested);
                     return null;
                 }
                 
                 @Override
-                @OnThread(Tag.FXPlatform)
-                public @Nullable Void calculate(Calculate calculate)
+                public Void calculate(Calculate calculate)
                 {
                     addColumnBefore_Calc(parent, calculate, null, RenameOnEdit::renameToSuggested, "transform.calculate.addInitial");
                     return null;
                 }
 
                 @Override
-                @OnThread(Tag.FXPlatform)
-                public @Nullable Void filter(Filter filter)
+                public Void filter(Filter filter)
                 {
                     new EditExpressionDialog(parent,
                             parent.getManager().getSingleTableOrNull(filter.getSrcTableId()),
@@ -1695,8 +1655,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
                 }
 
                 @Override
-                @OnThread(Tag.FXPlatform)
-                public @Nullable Void aggregate(Aggregate aggregate)
+                public Void aggregate(Aggregate aggregate)
                 {
                     Optional<EditColumnExpressionDialog<ImmutableList<ColumnId>>.Result> result = AggregateSplitByPane.editColumn(parent, parent.getManager().getSingleTableOrNull(aggregate.getSrcTableId()), null, null, _ed -> aggregate.getColumnLookup(), () -> Aggregate.makeTypeState(parent.getManager()), null, aggregate.getSplitBy()).showAndWait();
                     if (result.isPresent())
@@ -1725,47 +1684,42 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
                 }
 
                 @Override
-                @OnThread(Tag.FXPlatform)
-                public @Nullable Void sort(Sort sort)
+                public Void sort(Sort sort)
                 {
                     TableHat.editSort(null, parent, sort, RenameOnEdit::renameToSuggested);
                     return null;
                 }
 
                 @Override
-                @OnThread(Tag.FXPlatform)
-                public @Nullable Void manualEdit(ManualEdit manualEdit)
+                public Void manualEdit(ManualEdit manualEdit)
                 {
                     TableHat.editManualEdit(parent, manualEdit, true, RenameOnEdit::renameToSuggested);
                     return null;
                 }
 
                 @Override
-                @OnThread(Tag.FXPlatform)
-                public @Nullable Void concatenate(Concatenate concatenate)
+                public Void concatenate(Concatenate concatenate)
                 {
                     TableHat.editConcatenate(new Point2D(0, 0), parent, concatenate, RenameOnEdit::renameToSuggested);
                     return null;
                 }
 
                 @Override
-                @OnThread(Tag.FXPlatform)
-                public @Nullable Void join(Join join)
+                public Void join(Join join)
                 {
                     TableHat.editJoin(parent, join, RenameOnEdit::renameToSuggested);
                     return null;
                 }
 
                 @Override
-                @OnThread(Tag.FXPlatform)
-                public @Nullable Void hideColumns(HideColumns hideColumns)
+                public Void hideColumns(HideColumns hideColumns)
                 {
                     TableHat.editHideColumns(parent, hideColumns, RenameOnEdit::renameToSuggested);
                     return null;
                 }
 
                 @Override
-                public @Nullable Void check(Check check)
+                public Void check(Check check)
                 {
                     // Not handled in this method
                     return null;
@@ -1777,7 +1731,6 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
     private class CompleteRowRangeSupplier implements SimulationSupplier<RowRange>
     {
         @SuppressWarnings("units")
-        @OnThread(Tag.Simulation)
         @Override
         public RowRange get() throws InternalException, UserException
         {
@@ -1785,11 +1738,10 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
         }
     }
 
-    private StyledString fixExpressionLink(EditableExpression fixer, @Nullable @LocalizableKey String headerKey)
+    private StyledString fixExpressionLink(EditableExpression fixer, String headerKey)
     {
         return StyledString.styled("Edit expression", new Clickable() {
             @Override
-            @OnThread(Tag.FXPlatform)
             protected void onClick(MouseButton mouseButton, Point2D screenPoint)
             {
                 if (mouseButton == MouseButton.PRIMARY)
@@ -1820,7 +1772,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
     }
 
     @Override
-    protected void deleteValue(ColumnId columnId, @TableDataRowIndex int rowIndex)
+    protected void deleteValue(ColumnId columnId, int rowIndex)
     {
         if (recordSet == null)
             return;
@@ -1828,10 +1780,10 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
         try
         {
             Column column = recordSet.getColumn(columnId);
-            @TableDataColIndex int colIndex = Utility.findFirstIndex(displayColumns, d -> d.getColumnId().equals(columnId)).orElse(-1) * TableDataColIndex.ONE;
+            int colIndex = Utility.findFirstIndex(displayColumns, d -> d.getColumnId().equals(columnId)).orElse(-1) * TableDataColIndex.ONE;
             if (column != null && colIndex != -1)
             {
-                @Value Object defaultValue = column.getDefaultValue();
+                Object defaultValue = column.getDefaultValue();
                 Workers.onWorkerThread("Getting default value", Priority.FETCH, () -> {
                     try
                     {
@@ -1839,7 +1791,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
                         {
                             String string = DataTypeUtility.valueToString(defaultValue);
                             Platform.runLater(() -> {
-                                @Nullable VersionedSTF cell = parent.getDataCellSupplier().getItemAt(getDataPosition(rowIndex, colIndex));
+                                VersionedSTF cell = parent.getDataCellSupplier().getItemAt(getDataPosition(rowIndex, colIndex));
                                 if (cell != null)
                                 {
                                     cell.replaceAll(string, true);
@@ -1860,11 +1812,10 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
         }
     }
 
-    @OnThread(Tag.FXPlatform)
     private class TableErrorDisplay extends FloatingItem<Pane>
     {
-        private @Nullable BorderPane container;
-        private @Nullable TextFlow textFlow;
+        private BorderPane container;
+        private TextFlow textFlow;
         
         protected TableErrorDisplay()
         {
@@ -1877,7 +1828,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
         @Override
         protected Optional<BoundingBox> calculatePosition(VisibleBounds visibleBounds)
         {
-            @Nullable ExceptionWithStyle err = errorMessage.get();
+            ExceptionWithStyle err = errorMessage.get();
             if (err != null)
             {
                 // We need a cell to do the calculation:
@@ -1907,7 +1858,6 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
         }
 
         @Override
-        @EnsuresNonNull({"container", "textFlow"})
         protected Pane makeCell(VisibleBounds visibleBounds)
         {
             TextFlow textFlow = new TextFlow();
@@ -1928,7 +1878,7 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
         }
 
         @Override
-        public @Nullable Pair<ItemState, @Nullable StyledString> getItemState(CellPosition cellPosition, Point2D screenPos)
+        public Pair<ItemState, StyledString> getItemState(CellPosition cellPosition, Point2D screenPos)
         {
             if (container == null)
                 return null;
@@ -1943,7 +1893,6 @@ public final class TableDisplay extends DataDisplay implements RecordSetListener
         }
     }
 
-    @OnThread(Tag.FXPlatform)
     private static class ErrorDetailsDialog extends Dialog<Object>
     {
         public ErrorDetailsDialog(ImmutableList<Text> details, String plainContent)

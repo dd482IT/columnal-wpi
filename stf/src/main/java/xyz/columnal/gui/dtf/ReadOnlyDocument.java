@@ -65,7 +65,7 @@ public class ReadOnlyDocument extends Document
     }
 
     @Override
-    TrackedPosition trackPosition(int pos, Bias bias, @Nullable FXPlatformRunnable onChange)
+    TrackedPosition trackPosition(int pos, Bias bias, FXPlatformRunnable onChange)
     {
         // No need to actually track; if content can't change, neither can positions:
         return new TrackedPosition(pos, bias, onChange);

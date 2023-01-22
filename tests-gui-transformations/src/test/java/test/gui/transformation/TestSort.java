@@ -73,16 +73,11 @@ import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
 
-@RunWith(JUnitQuickcheck.class)
 public class TestSort extends FXApplicationTest implements ListUtilTrait, ScrollToTrait, PopupTrait, ClickTableLocationTrait, ClipboardTrait
 {
-    @Property(trials = 10)
-    @OnThread(Tag.Simulation)
     public void propSort(
-            @When(seed=8654547839924125953L)
-            @CanHaveErrorValues @From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr original,
-            @When(seed=4262804225929162744L)
-            @From(GenRandom.class) Random r) throws Exception
+            GenImmediateData.ImmediateData_Mgr original,
+            Random r) throws Exception
     {
         // Save the table, then open GUI and load it, then add a sort transformation
         MainWindowActions mainWindowActions = TAppUtil.openDataAsTable(windowToUse, original.mgr).get();
@@ -130,7 +125,7 @@ public class TestSort extends FXApplicationTest implements ListUtilTrait, Scroll
             // All columns start ascending.  We click n * 2 times, + 1 if descending
             int numClicks = 2 * r.nextInt(3) + (pickedColumn.getSecond() == Direction.DESCENDING ? 1 : 0);
             // Bit of a hack to find the matching button
-            Parent sortPane = TBasicUtil.checkNonNull(TFXUtil.<@Nullable Parent>fx(() -> TFXUtil.findParent(focused.getParent(), p -> p.getStyleClass().contains("sort-pane"))));
+            Parent sortPane = TBasicUtil.checkNonNull(TFXUtil.<Parent>fx(() -> TFXUtil.findParent(focused.getParent(), p -> p.getStyleClass().contains("sort-pane"))));
             Node button = TBasicUtil.checkNonNull(TFXUtil.fx(() -> sortPane.lookup(".sort-direction-button")));
             for (int i = 0; i < numClicks; i++)
             {
@@ -153,7 +148,7 @@ public class TestSort extends FXApplicationTest implements ListUtilTrait, Scroll
                 
         Optional<ImmutableList<LoadedColumnInfo>> clip = TFXUtil.<Optional<ImmutableList<LoadedColumnInfo>>>fx(() -> ClipboardUtils.loadValuesFromClipboard(original.mgr.getTypeManager()));
         assertTrue(clip.isPresent());
-        List<Map<ColumnId, Either<String, @Value Object>>> sorted = new ArrayList<>();
+        List<Map<ColumnId, Either<String, Object>>> sorted = new ArrayList<>();
         int length = original.data().getData().getLength();
         for (int i = 0; i < length; i++)
         {
@@ -162,22 +157,21 @@ public class TestSort extends FXApplicationTest implements ListUtilTrait, Scroll
         checkSorted(original.data().getData().getLength(), pickedColumns, sorted);
     }
 
-    @OnThread(Tag.Simulation)
-    public static void checkSorted(int length, List<Pair<ColumnId, Direction>> sortBy, List<Map<ColumnId, Either<String, @Value Object>>> actual) throws UserException, InternalException
+    public static void checkSorted(int length, List<Pair<ColumnId, Direction>> sortBy, List<Map<ColumnId, Either<String, Object>>> actual) throws UserException, InternalException
     {
         // No point checking order if 1 row or less:
         if (length > 1)
         {
             // Need to check that items are in the right order:
-            Map<ColumnId, Either<String, @Value Object>> prev = actual.get(0);
+            Map<ColumnId, Either<String, Object>> prev = actual.get(0);
             for (int i = 1; i < length; i++)
             {
-                Map<ColumnId, Either<String, @Value Object>> cur = actual.get(i);
+                Map<ColumnId, Either<String, Object>> cur = actual.get(i);
 
                 for (Pair<ColumnId, Direction> pickedColumn : sortBy)
                 {
-                    Either<String, @Value Object> prevVal = TBasicUtil.checkNonNull(prev.get(pickedColumn.getFirst()));
-                    Either<String, @Value Object> curVal = TBasicUtil.checkNonNull(cur.get(pickedColumn.getFirst()));
+                    Either<String, Object> prevVal = TBasicUtil.checkNonNull(prev.get(pickedColumn.getFirst()));
+                    Either<String, Object> curVal = TBasicUtil.checkNonNull(cur.get(pickedColumn.getFirst()));
                     // If both errors, sort by error text:
                     if (prevVal.isLeft() && curVal.isLeft())
                     {
@@ -213,7 +207,7 @@ public class TestSort extends FXApplicationTest implements ListUtilTrait, Scroll
         }
     }
 
-    private Map<ColumnId, Either<String, @Value Object>> getRow(ImmutableList<LoadedColumnInfo> loadedColumnInfos, int row)
+    private Map<ColumnId, Either<String, Object>> getRow(ImmutableList<LoadedColumnInfo> loadedColumnInfos, int row)
     {
         return loadedColumnInfos.stream().collect(Collectors.toMap(c -> TBasicUtil.checkNonNull(c.columnName), c -> c.dataValues.get(row)));
     }

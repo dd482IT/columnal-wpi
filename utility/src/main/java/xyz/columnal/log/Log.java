@@ -41,17 +41,15 @@ import java.util.function.Consumer;
 
 public class Log
 {
-    private static @MonotonicNonNull Logger logger;
+    private static Logger logger;
     
     // This is a bit hacky for this to live in the Log class,
     // but in practical terms it's the easiest thing to do:
-    @OnThread(value = Tag.Any, requireSynchronized = true)
     private static Consumer<InternalException> internalExceptionHandler = e -> {};
     
     // Used to remember which thread set off which runnable.  Each thread can only manipulate
     // its own caller state.
-    @OnThread(Tag.Any)
-    private static final ThreadLocal<@Nullable ImmutableList<Throwable>> threadCaller = new ThreadLocal<>();
+    private static final ThreadLocal<ImmutableList<Throwable>> threadCaller = new ThreadLocal<>();
 
     public static void normal(String message)
     {
@@ -98,7 +96,7 @@ public class Log
      * https://ionutbalosin.com/2018/06/an-even-faster-way-than-stackwalker-api-for-asynchronously-processing-the-stack-frames/
      * https://ionutbalosin.com/2018/06/getting-the-stack-trace-versus-throwing-an-exception-what-is-common-and-what-is-different/
      */
-    public static void storeThreadedCaller(@Nullable ImmutableList<Throwable> stack)
+    public static void storeThreadedCaller(ImmutableList<Throwable> stack)
     {
         if (stack != null)
             threadCaller.set(stack);
@@ -111,7 +109,7 @@ public class Log
     public static ImmutableList<Throwable> getTotalStack()
     {
         Throwable ourStack = new Throwable();
-        @Nullable ImmutableList<Throwable> prev = threadCaller.get();
+        ImmutableList<Throwable> prev = threadCaller.get();
         return prev == null ? ImmutableList.of(ourStack) : Utility.prependToList(ourStack, prev);
     }
 
@@ -120,7 +118,6 @@ public class Log
         log("", e);
     }
 
-    @Pure
     public static void logStackTrace(String s)
     {
         if (getLogger().isDebugEnabled())
@@ -130,7 +127,6 @@ public class Log
         }
     }
 
-    @Pure
     public static void normalStackTrace(String message, int maxLevels)
     {
         String trace = getStackTrace(1, maxLevels);
@@ -154,7 +150,7 @@ public class Log
 
     private static void logCallers(StringBuilder sb)
     {
-        @Nullable ImmutableList<Throwable> throwables = threadCaller.get();
+        ImmutableList<Throwable> throwables = threadCaller.get();
         if (throwables != null)
         {
             for (Throwable throwable : throwables)
@@ -172,14 +168,12 @@ public class Log
     }
 
     // This should only be used temporarily while debugging, and should not be left in:
-    @Pure
     public static void debug(String s)
     {
         getLogger().log(Level.DEBUG, s);
     }
 
     // This should only be used temporarily while debugging, and should not be left in:
-    @Pure
     public static void debugTime(String s)
     {
         long millis = System.currentTimeMillis() % 100000L;

@@ -64,7 +64,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-@OnThread(Tag.FXPlatform)
 public final class GuidanceWindow extends Stage
 {
     private final TextFlow contentDisplay;
@@ -120,9 +119,7 @@ public final class GuidanceWindow extends Stage
         });
     }
     
-    @EnsuresNonNull("curGuidance")
-    @RequiresNonNull({"contentDisplay", "buttonBar", "cancel"})
-    private void setGuidance(@UnknownInitialization(Object.class) GuidanceWindow this, Guidance guidance)
+    private void setGuidance(GuidanceWindow this, Guidance guidance)
     {
         if (curGuidance != null)
         {
@@ -151,17 +148,16 @@ public final class GuidanceWindow extends Stage
         });
     }
     
-    @OnThread(Tag.FXPlatform)
     public static class Guidance
     {
         private final StyledString content;
-        private final @Nullable TargetFinder lookupToHighlight;
+        private final TargetFinder lookupToHighlight;
         private final Condition conditionToAdvance;
-        private final FXPlatformSupplier<@Nullable Guidance> next;
-        private final @Nullable Button extraButton;
+        private final FXPlatformSupplier<Guidance> next;
+        private final Button extraButton;
         private final ArrayList<Popup> highlightWindows = new ArrayList<>();
         
-        public Guidance(StyledString content, Condition conditionToAdvance, @Nullable String lookupToHighlight, FXPlatformSupplier<@Nullable Guidance> next)
+        public Guidance(StyledString content, Condition conditionToAdvance, String lookupToHighlight, FXPlatformSupplier<Guidance> next)
         {
             this.content = content;
             this.conditionToAdvance = conditionToAdvance;
@@ -170,7 +166,7 @@ public final class GuidanceWindow extends Stage
             this.next = next;
         }
 
-        public Guidance(StyledString content, Condition conditionToAdvance, TargetFinder lookupToHighlight, FXPlatformSupplier<@Nullable Guidance> next)
+        public Guidance(StyledString content, Condition conditionToAdvance, TargetFinder lookupToHighlight, FXPlatformSupplier<Guidance> next)
         {
             this.content = content;
             this.conditionToAdvance = conditionToAdvance;
@@ -179,11 +175,11 @@ public final class GuidanceWindow extends Stage
             this.next = next;
         }
         
-        public Guidance(StyledString content, @LocalizableKey String buttonKey, FXPlatformSupplier<@Nullable Guidance> next)
+        public Guidance(StyledString content, String buttonKey, FXPlatformSupplier<Guidance> next)
         {
             this.content = content;
             this.lookupToHighlight = null;
-            SimpleObjectProperty<@Nullable FXPlatformRunnable> runOnClick = new SimpleObjectProperty<>(); 
+            SimpleObjectProperty<FXPlatformRunnable> runOnClick = new SimpleObjectProperty<>(); 
             this.conditionToAdvance = onAdvance -> {
                 runOnClick.set(onAdvance);
             };
@@ -208,7 +204,7 @@ public final class GuidanceWindow extends Stage
             
             if (on && lookupToHighlight != null)
             {
-                @Nullable Pair<Window, Bounds> lookupBounds = lookupToHighlight.findSceneAndScreenBounds();
+                Pair<Window, Bounds> lookupBounds = lookupToHighlight.findSceneAndScreenBounds();
                 
                 if (lookupBounds != null)
                 {
@@ -263,21 +259,19 @@ public final class GuidanceWindow extends Stage
 
         public static interface TargetFinder
         {
-            public @Nullable Pair<Window, Bounds> findSceneAndScreenBounds();
+            public Pair<Window, Bounds> findSceneAndScreenBounds();
         }
     }
     
     public static interface Condition
     {
-        @OnThread(Tag.FXPlatform)
         public void onSatisfied(FXPlatformRunnable runOnceSatsified);
     }
     
-    @OnThread(Tag.FXPlatform)
     public static class WindowCondition implements Condition
     {
         private final Class<? extends Window> windowClass;
-        private @MonotonicNonNull Timeline timeline;
+        private Timeline timeline;
 
         public WindowCondition(Class<? extends Window> windowClass)
         {
@@ -301,21 +295,19 @@ public final class GuidanceWindow extends Stage
         }
     }
     
-    @OnThread(Tag.FXPlatform)
     public static class LookupKeyCondition extends LookupCondition
     {
-        public LookupKeyCondition(@LocalizableKey String nodeLookupKey)
+        public LookupKeyCondition(String nodeLookupKey)
         {
             super("." + GUI.makeId(nodeLookupKey));
         }
     }
 
-    @OnThread(Tag.FXPlatform)
     public static class LookupCondition implements Condition
     {
         private final String nodeLookup;
         private final boolean targetShow;
-        private @MonotonicNonNull Timeline timeline;
+        private Timeline timeline;
 
         public LookupCondition(String nodeLookup, boolean showing)
         {
@@ -346,7 +338,7 @@ public final class GuidanceWindow extends Stage
         }
     }
 
-    private static @Nullable Node findNode(String nodeLookup)
+    private static Node findNode(String nodeLookup)
     {
         Iterator<Window> it = Window.getWindows().iterator();
         while (it.hasNext())
@@ -376,7 +368,7 @@ public final class GuidanceWindow extends Stage
         };
     }
 
-    private static @Nullable Window findWindow(Class<? extends Window> windowClass)
+    private static Window findWindow(Class<? extends Window> windowClass)
     {
         Iterator<Window> it = Window.getWindows().iterator();
         while (it.hasNext())

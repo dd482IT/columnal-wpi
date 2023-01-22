@@ -45,7 +45,7 @@ import java.util.stream.Stream;
 
 public abstract class GenExpressionValueBase extends GenValueBaseE<ExpressionValue>
 {
-    private final IdentityHashMap<Expression, Pair<DataType, @Value Object>> expressionValues = new IdentityHashMap<>();
+    private final IdentityHashMap<Expression, Pair<DataType, Object>> expressionValues = new IdentityHashMap<>();
     protected DummyManager dummyManager;
     private List<DataType> distinctTypes;
 
@@ -56,7 +56,6 @@ public abstract class GenExpressionValueBase extends GenValueBaseE<ExpressionVal
     }
 
     @Override
-    @OnThread(value = Tag.Simulation, ignoreParent = true)
     public final ExpressionValue generate(SourceOfRandomness r, GenerationStatus generationStatus)
     {
         this.r = r;
@@ -73,12 +72,11 @@ public abstract class GenExpressionValueBase extends GenValueBaseE<ExpressionVal
         return r.choose(distinctTypes);
     }
 
-    @OnThread(value = Tag.Simulation, ignoreParent = true)
     protected abstract ExpressionValue generate();
     
-    public final Expression register(Expression expression, DataType dataType, @Value Object value)
+    public final Expression register(Expression expression, DataType dataType, Object value)
     {
-        expressionValues.put(expression, new Pair<DataType, @Value Object>(dataType, value));
+        expressionValues.put(expression, new Pair<DataType, Object>(dataType, value));
         return expression;
     }
 
@@ -89,10 +87,9 @@ public abstract class GenExpressionValueBase extends GenValueBaseE<ExpressionVal
     }
 
     @Override
-    @OnThread(value = Tag.Simulation, ignoreParent = true)
     public List<ExpressionValue> doShrink(SourceOfRandomness random, ExpressionValue larger)
     {
-        return expressionValues.entrySet().stream().flatMap((Entry<Expression, Pair<DataType, @Value Object>> e) -> {
+        return expressionValues.entrySet().stream().flatMap((Entry<Expression, Pair<DataType, Object>> e) -> {
             Expression replacement = makeLiteral(e.getValue().getFirst(), e.getValue().getSecond());
             if (replacement == null)
                 return Stream.of();
@@ -113,8 +110,7 @@ public abstract class GenExpressionValueBase extends GenValueBaseE<ExpressionVal
         return super.magnitude(value);
     }
 
-    @OnThread(Tag.Simulation)
-    private @Nullable Expression makeLiteral(DataType dataType, @Value Object object)
+    private Expression makeLiteral(DataType dataType, Object object)
     {
         try
         {

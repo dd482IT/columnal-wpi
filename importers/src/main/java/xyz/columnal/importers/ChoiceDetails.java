@@ -36,14 +36,14 @@ import java.util.function.Function;
  */
 public class ChoiceDetails<C>
 {
-    private final @LocalizableKey String labelKey;
-    private final @HelpKey String helpKey;
-    public final ImmutableList<@NonNull C> quickPicks;
+    private final String labelKey;
+    private final String helpKey;
+    public final ImmutableList<C> quickPicks;
     // If null, quick picks are the only options.  If non-null, offer an "Other" pick
     // in the combo box which shows a text field:
-    public final @Nullable Function<String, Either<@Localized String, @NonNull C>> stringEntry;
+    public final Function<String, Either<String, C>> stringEntry;
 
-    public ChoiceDetails(@LocalizableKey String labelKey, @HelpKey String helpKey, ImmutableList<@NonNull C> quickPicks, @Nullable Function<String, Either<@Localized String, @NonNull C>> stringEntry)
+    public ChoiceDetails(String labelKey, String helpKey, ImmutableList<C> quickPicks, Function<String, Either<String, C>> stringEntry)
     {
         this.labelKey = labelKey;
         this.helpKey = helpKey;
@@ -51,12 +51,12 @@ public class ChoiceDetails<C>
         this.stringEntry = stringEntry;
     }
 
-    public @LocalizableKey String getLabelKey()
+    public String getLabelKey()
     {
         return labelKey;
     }
 
-    public @HelpKey String getHelpId()
+    public String getHelpId()
     {
         return helpKey;
     }

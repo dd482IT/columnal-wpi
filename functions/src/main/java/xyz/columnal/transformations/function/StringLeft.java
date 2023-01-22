@@ -45,7 +45,7 @@ public class StringLeft //extends FunctionDefinition
     {
 
         @Override
-        public @Value Object _call() throws UserException, InternalException
+        public Object _call() throws UserException, InternalException
         {
             String src = arg(0, String.class);
             int codePointCount = intArg(1);

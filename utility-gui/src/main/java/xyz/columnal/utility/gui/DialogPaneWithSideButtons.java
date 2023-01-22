@@ -51,7 +51,6 @@ import java.util.WeakHashMap;
  * 
  * Useful when you don't want the auto-complete popups to hide the OK/cancel buttons.
  */
-@OnThread(Tag.FXPlatform)
 public class DialogPaneWithSideButtons extends DialogPane
 {
     // createButtonBar() gets called by superclass so will be non-null
@@ -59,7 +58,7 @@ public class DialogPaneWithSideButtons extends DialogPane
     @SuppressWarnings("nullness")
     private VBox buttonBar;
 
-    private @MonotonicNonNull Map<ButtonType, Node> buttonNodes;
+    private Map<ButtonType, Node> buttonNodes;
     
     public DialogPaneWithSideButtons()
     {
@@ -73,8 +72,7 @@ public class DialogPaneWithSideButtons extends DialogPane
     }
     
     @Override
-    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-    protected Node createButtonBar(@UnknownInitialization(DialogPane.class) DialogPaneWithSideButtons this)
+    protected Node createButtonBar(DialogPaneWithSideButtons this)
     {
         buttonBar = new VBox();
         buttonBar.getStyleClass().add("side-button-bar");
@@ -84,8 +82,7 @@ public class DialogPaneWithSideButtons extends DialogPane
     }
 
     // Part-borrowed from superclass method
-    @RequiresNonNull("buttonBar")
-    private void updateButtons(@UnknownInitialization(DialogPane.class) DialogPaneWithSideButtons this)
+    private void updateButtons(DialogPaneWithSideButtons this)
     {
         buttonBar.getChildren().clear();
 
@@ -129,7 +126,6 @@ public class DialogPaneWithSideButtons extends DialogPane
     }
 
     @Override
-    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     protected void layoutChildren()
     {
         final double leftPadding = snappedLeftInset();
@@ -150,28 +146,24 @@ public class DialogPaneWithSideButtons extends DialogPane
     }
 
     @Override
-    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     protected double computeMinWidth(double height)
     {
         return snappedLeftInset() + snappedRightInset() + Optional.ofNullable(getContent()).map(n -> n.minWidth(height)).orElse(0.0) + buttonBar.minWidth(height);
     }
 
     @Override
-    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     protected double computeMinHeight(double width)
     {
         return snappedTopInset() + snappedBottomInset() + Math.max(Optional.ofNullable(getContent()).map(n -> n.minHeight(width)).orElse(0.0), buttonBar.minHeight(width));
     }
 
     @Override
-    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     protected double computePrefWidth(double height)
     {
         return snappedLeftInset() + snappedRightInset() + Optional.ofNullable(getContent()).map(n -> n.prefWidth(height)).orElse(0.0) + buttonBar.prefWidth(height);
     }
 
     @Override
-    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     protected double computePrefHeight(double width)
     {
         return snappedTopInset() + snappedBottomInset() + Math.max(Optional.ofNullable(getContent()).map(n -> n.prefHeight(width)).orElse(0.0), buttonBar.prefHeight(width));

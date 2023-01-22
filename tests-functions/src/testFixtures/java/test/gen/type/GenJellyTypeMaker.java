@@ -74,7 +74,7 @@ public class GenJellyTypeMaker extends Generator<JellyTypeMaker>
     }
 
     private final ImmutableSet<TypeKinds> startingTypeKinds;
-    private final ImmutableSet<@ExpressionIdentifier String> availableTypeVars;
+    private final ImmutableSet<String> availableTypeVars;
     private final boolean mustHaveValues;
 
     /**
@@ -114,7 +114,7 @@ public class GenJellyTypeMaker extends Generator<JellyTypeMaker>
         this(typeKinds, ImmutableSet.of(), false);
     }
 
-    public GenJellyTypeMaker(ImmutableSet<TypeKinds> typeKinds, ImmutableSet<@ExpressionIdentifier String> availableTypeVars, boolean mustHaveValues)
+    public GenJellyTypeMaker(ImmutableSet<TypeKinds> typeKinds, ImmutableSet<String> availableTypeVars, boolean mustHaveValues)
     {
         super(JellyTypeMaker.class);
         this.startingTypeKinds = typeKinds;
@@ -123,7 +123,6 @@ public class GenJellyTypeMaker extends Generator<JellyTypeMaker>
     }
 
     @Override
-    @OnThread(value = Tag.Simulation, ignoreParent = true)
     public JellyTypeMaker generate(SourceOfRandomness r, GenerationStatus generationStatus)
     {
         // Use depth system to prevent infinite generation:
@@ -161,7 +160,7 @@ public class GenJellyTypeMaker extends Generator<JellyTypeMaker>
         if (maxDepth > 1 && typeKinds.contains(TypeKinds.RECORD))
         {
             options.add(
-                    () -> JellyType.record(TBasicUtil.<Pair<@ExpressionIdentifier String, JellyType>>makeList(r, 2, 5, () -> new Pair<>(TBasicUtil.generateExpressionIdentifier(r), genDepth(typeManager, r, maxDepth - 1, gs, typeKinds))).stream().collect(ImmutableMap.<Pair<@ExpressionIdentifier String, JellyType>, @ExpressionIdentifier String, Field>toImmutableMap((Pair<@ExpressionIdentifier String, JellyType> p) -> p.getFirst(), p -> new Field(p.getSecond(), true), (Field a, Field b) -> a)))
+                    () -> JellyType.record(TBasicUtil.<Pair<String, JellyType>>makeList(r, 2, 5, () -> new Pair<>(TBasicUtil.generateExpressionIdentifier(r), genDepth(typeManager, r, maxDepth - 1, gs, typeKinds))).stream().collect(ImmutableMap.<Pair<String, JellyType>, String, Field>toImmutableMap((Pair<String, JellyType> p) -> p.getFirst(), p -> new Field(p.getSecond(), true), (Field a, Field b) -> a)))
             );
         }
         if (maxDepth > 1 && typeKinds.contains(TypeKinds.LIST))
@@ -230,22 +229,22 @@ public class GenJellyTypeMaker extends Generator<JellyTypeMaker>
         {
             // Don't need to add N more, just add one for now:
 
-            final ImmutableList<Pair<TypeVariableKind, @ExpressionIdentifier String>> typeVars;
+            final ImmutableList<Pair<TypeVariableKind, String>> typeVars;
             if (r.nextBoolean() && typeKinds.contains(TypeKinds.NEW_TAGGED_INNER))
             {
                 // Must use distinct to make sure no duplicates:
-                typeVars = TBasicUtil.<@ExpressionIdentifier String>makeList(r, 1, 4, () -> {
+                typeVars = TBasicUtil.<String>makeList(r, 1, 4, () -> {
                     @SuppressWarnings("identifier")
-                    @ExpressionIdentifier String az = "" + r.nextChar('a', 'z');
+                    String az = "" + r.nextChar('a', 'z');
                     return az;
-                }).stream().distinct().<Pair<TypeVariableKind, @ExpressionIdentifier String>>map(s -> new Pair<TypeVariableKind, @ExpressionIdentifier String>(r.nextInt(3) == 1 ? TypeVariableKind.UNIT : TypeVariableKind.TYPE, s)).collect(ImmutableList.<Pair<TypeVariableKind, @ExpressionIdentifier String>>toImmutableList());
+                }).stream().distinct().<Pair<TypeVariableKind, String>>map(s -> new Pair<TypeVariableKind, String>(r.nextInt(3) == 1 ? TypeVariableKind.UNIT : TypeVariableKind.TYPE, s)).collect(ImmutableList.<Pair<TypeVariableKind, String>>toImmutableList());
             }
             else
             {
                 typeVars = ImmutableList.of();
             }
             // Outside type variables are not visible in a new tagged type:
-            ArrayList<@Nullable JellyType> types;
+            ArrayList<JellyType> types;
             // First add the items with inner type:
             if (r.nextInt(3) == 1 || !typeKinds.contains(TypeKinds.NEW_TAGGED_INNER))
                 types = new ArrayList<>();
@@ -258,10 +257,10 @@ public class GenJellyTypeMaker extends Generator<JellyTypeMaker>
                 types.add(r.nextInt(types.size() + 1), null);
             }
             @SuppressWarnings("identifier")
-            @ExpressionIdentifier String typeName = "" + r.nextChar('A', 'Z') + r.nextChar('A', 'Z');
+            String typeName = "" + r.nextChar('A', 'Z') + r.nextChar('A', 'Z');
             typeDefinition = typeManager.registerTaggedType(typeName, typeVars, Utility.mapListExI_Index(types, (i, t) -> {
                 @SuppressWarnings("identifier")
-                @ExpressionIdentifier String tagName = "T" + r.nextChar('A', 'Z') + " " + i;
+                String tagName = "T" + r.nextChar('A', 'Z') + " " + i;
                 return new DataType.TagType<JellyType>(tagName, t);
             }));
         }

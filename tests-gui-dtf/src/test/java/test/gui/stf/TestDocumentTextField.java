@@ -64,20 +64,17 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-@RunWith(JUnitQuickcheck.class)
 public class TestDocumentTextField extends FXApplicationTest
 {
     @SuppressWarnings("nullness")
     private DocumentTextField field;
     
-    @Before
     public void makeField()
     {
         field = TFXUtil.fx(() -> new DocumentTextField(null));
     }
     
-    @Property(trials=5, shrink = false)
-    public void testBasic(@From(GenString.class) String s, @From(GenRandom.class) Random r)
+    public void testBasic(String s, Random r)
     {
         s = removeNonPrintableAndRtoL(s);
         
@@ -230,7 +227,6 @@ public class TestDocumentTextField extends FXApplicationTest
         assertThat(TFXUtil.fx(() -> field.getHeight()), Matchers.greaterThanOrEqualTo(10.0));
     }
 
-    @Test
     public void testDelete1()
     {
         initialiseField("");
@@ -247,8 +243,7 @@ public class TestDocumentTextField extends FXApplicationTest
         assertEquals("13", getText());
     }
     
-    @Property(trials=5)
-    public void testMove(@From(GenString.class) String s, @From(GenRandom.class) Random r)
+    public void testMove(String s, Random r)
     {
         s = removeNonPrintableAndRtoL(s);
 
@@ -301,13 +296,11 @@ public class TestDocumentTextField extends FXApplicationTest
 
     }
 
-    @OnThread(Tag.Any)
     public int getFieldAnchorPos()
     {
         return (int) TFXUtil.<Integer>fx(() -> (Integer)field.getAnchorPosition());
     }
 
-    @OnThread(Tag.Any)
     public int getFieldCaretPos()
     {
         return (int) TFXUtil.<Integer>fx(() -> (Integer)field.getCaretPosition());
@@ -334,8 +327,7 @@ public class TestDocumentTextField extends FXApplicationTest
         return new String(filteredCodePoints, 0, filteredCodePoints.length);
     }
     
-    @Property(trials=3)
-    public void testHorizScroll(@From(GenString.class) String s)
+    public void testHorizScroll(String s)
     {
         s = removeNonPrintableAndRtoL(s);
         Assume.assumeFalse(s.isEmpty());

@@ -65,7 +65,7 @@ public class ToDateTimeZone extends ToTemporalFunction
         */
         r.add(new FunctionDefinition("datetime:datetimezoned from dtz") {
             @Override
-            public @OnThread(Tag.Simulation) ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
+            public ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
             {
                 return new D_T_Z();
             }
@@ -85,7 +85,7 @@ public class ToDateTimeZone extends ToTemporalFunction
     }
 
     @Override
-    @Value Temporal fromTemporal(TemporalAccessor temporalAccessor)
+    Temporal fromTemporal(TemporalAccessor temporalAccessor)
     {
         return ZonedDateTime.from(temporalAccessor);
     }
@@ -115,7 +115,7 @@ public class ToDateTimeZone extends ToTemporalFunction
     private class D_T_Z extends ValueFunction
     {
         @Override
-        public @Value Object _call() throws UserException, InternalException
+        public Object _call() throws UserException, InternalException
         {
             return ZonedDateTime.of(LocalDateTime.of(arg(0, LocalDate.class), arg(1, LocalTime.class)), ZoneId.of(arg(2, String.class)));
         }

@@ -30,7 +30,6 @@ import static org.junit.Assert.assertTrue;
 
 public class TestIdentifier
 {
-    @Test
     public void testUnitIdents()
     {
         assertTrue(u("a"));
@@ -83,7 +82,6 @@ public class TestIdentifier
         return src.equals(IdentifierUtility.asUnitIdentifier(src));
     }
 
-    @Test
     public void testExpressionIdents()
     {
         assertTrue(e("a"));

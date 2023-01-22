@@ -45,31 +45,30 @@ public class BooleanColumnStorage extends SparseErrorColumnStorage<Boolean> impl
 {
     private int length = 0;
     private final BitSet data = new BitSet();
-    @OnThread(Tag.Any)
     private final DataTypeValue type;
-    private final @Nullable BeforeGet<BooleanColumnStorage> beforeGet;
+    private final BeforeGet<BooleanColumnStorage> beforeGet;
 
-    public BooleanColumnStorage(@Nullable BeforeGet<BooleanColumnStorage> beforeGet, boolean isImmediateData)
+    public BooleanColumnStorage(BeforeGet<BooleanColumnStorage> beforeGet, boolean isImmediateData)
     {
         super(isImmediateData);
         this.beforeGet = beforeGet;
-        this.type = DataTypeValue.bool(new GetValueOrError<@Value Boolean>()
+        this.type = DataTypeValue.bool(new GetValueOrError<Boolean>()
         {
             @Override
-            protected @OnThread(Tag.Simulation) void _beforeGet(int index, @Nullable ProgressListener progressListener) throws InternalException, UserException
+            protected void _beforeGet(int index, ProgressListener progressListener) throws InternalException, UserException
             {
                 if (beforeGet != null)
                     beforeGet.beforeGet(Utility.later(BooleanColumnStorage.this), index, progressListener);
             }
 
             @Override
-            public @Value Boolean _getWithProgress(int i, @Nullable ProgressListener progressListener) throws UserException, InternalException
+            public Boolean _getWithProgress(int i, ProgressListener progressListener) throws UserException, InternalException
             {
                 return Utility.later(BooleanColumnStorage.this).getWithProgress(i, progressListener);
             }
 
             @Override
-            public @OnThread(Tag.Simulation) void _set(int index, @Nullable @Value Boolean value) throws InternalException
+            public void _set(int index, Boolean value) throws InternalException
             {
                 data.set(index, value != null ? value : DataTypeUtility.value(false));
             }
@@ -82,7 +81,7 @@ public class BooleanColumnStorage extends SparseErrorColumnStorage<Boolean> impl
     }
 
 
-    private @Value Boolean getWithProgress(int i, @Nullable ProgressListener progressListener) throws UserException, InternalException
+    private Boolean getWithProgress(int i, ProgressListener progressListener) throws UserException, InternalException
     {
         if (i < 0 || i >= filled())
             throw new UserException("Attempting to access invalid element: " + i + " of " + filled());
@@ -90,7 +89,7 @@ public class BooleanColumnStorage extends SparseErrorColumnStorage<Boolean> impl
     }
 
     @Override
-    public int filled(@UnknownInitialization(Object.class) BooleanColumnStorage this)
+    public int filled(BooleanColumnStorage this)
     {
         return length;
     }
@@ -105,14 +104,13 @@ public class BooleanColumnStorage extends SparseErrorColumnStorage<Boolean> impl
         }
     }
 
-    @OnThread(Tag.Any)
     public DataTypeValue getType()
     {
         return type;
     }
 
     @Override
-    public SimulationRunnable _insertRows(int index, List<@Nullable Boolean> items) throws InternalException
+    public SimulationRunnable _insertRows(int index, List<Boolean> items) throws InternalException
     {
         int count = items.size();
         // Could probably do this faster:

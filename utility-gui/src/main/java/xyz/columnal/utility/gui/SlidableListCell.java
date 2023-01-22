@@ -41,7 +41,6 @@ import java.util.List;
  */
 public class SlidableListCell<T> extends ListCell<T>
 {
-    @OnThread(Tag.FX)
     protected final DoubleProperty xPosition = new SimpleDoubleProperty(0);
 
     public SlidableListCell()
@@ -50,8 +49,7 @@ public class SlidableListCell<T> extends ListCell<T>
         xPosition.addListener(c -> requestLayout());
     }
 
-    @OnThread(Tag.FXPlatform)
-    public static void animateOutToRight(List<? extends SlidableListCell<?>> cells, @Nullable FXPlatformRunnable after)
+    public static void animateOutToRight(List<? extends SlidableListCell<?>> cells, FXPlatformRunnable after)
     {
         for (SlidableListCell<?> cell : cells)
         {
@@ -69,8 +67,7 @@ public class SlidableListCell<T> extends ListCell<T>
         t.play();
     }
 
-    @OnThread(Tag.FXPlatform)
-    public static void animateInFromLeft(List<? extends SlidableListCell<?>> cells, @Nullable FXPlatformRunnable after)
+    public static void animateInFromLeft(List<? extends SlidableListCell<?>> cells, FXPlatformRunnable after)
     {
         for (SlidableListCell<?> cell : cells)
         {
@@ -89,15 +86,13 @@ public class SlidableListCell<T> extends ListCell<T>
     }
 
     @Override
-    @OnThread(Tag.FX)
-    protected void updateItem(@Nullable T item, boolean empty)
+    protected void updateItem(T item, boolean empty)
     {
         super.updateItem(item, empty);
         xPosition.setValue(0);
     }
 
     @Override
-    @OnThread(Tag.FX)
     protected void layoutChildren()
     {
         final double x = snappedLeftInset();

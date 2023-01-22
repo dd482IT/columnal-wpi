@@ -114,10 +114,10 @@ public abstract class TypeExpression implements StyledShowable, Replaceable<Type
             }
 
             @Override
-            public TypeExpression record(ImmutableMap<@ExpressionIdentifier String, DataType> fields) throws InternalException, InternalException
+            public TypeExpression record(ImmutableMap<String, DataType> fields) throws InternalException, InternalException
             {
-                ImmutableList.Builder<Pair<@ExpressionIdentifier String, TypeExpression>> b = ImmutableList.builderWithExpectedSize(fields.size());
-                for (Entry<@ExpressionIdentifier String, DataType> entry : Utility.iterableStream(fields.entrySet().stream().sorted(Comparator.comparing(e -> e.getKey()))))
+                ImmutableList.Builder<Pair<String, TypeExpression>> b = ImmutableList.builderWithExpectedSize(fields.size());
+                for (Entry<String, DataType> entry : Utility.iterableStream(fields.entrySet().stream().sorted(Comparator.comparing(e -> e.getKey()))))
                 {
                     b.add(new Pair<>(entry.getKey(), fromDataType(entry.getValue())));
                 }
@@ -125,7 +125,7 @@ public abstract class TypeExpression implements StyledShowable, Replaceable<Type
             }
 
             @Override
-            public TypeExpression array(@Nullable DataType inner) throws InternalException, InternalException
+            public TypeExpression array(DataType inner) throws InternalException, InternalException
             {
                 return new ListTypeExpression(inner == null ? new InvalidIdentTypeExpression("") : fromDataType(inner));
             }
@@ -181,10 +181,10 @@ public abstract class TypeExpression implements StyledShowable, Replaceable<Type
             }
 
             @Override
-            public TypeExpression record(ImmutableMap<@ExpressionIdentifier String, Field> fields, boolean complete) throws InternalException, UserException
+            public TypeExpression record(ImmutableMap<String, Field> fields, boolean complete) throws InternalException, UserException
             {
-                ImmutableList.Builder<Pair<@ExpressionIdentifier String, TypeExpression>> b = ImmutableList.builderWithExpectedSize(fields.size());
-                for (Entry<@ExpressionIdentifier String, Field> entry : Utility.iterableStream(fields.entrySet().stream().sorted(Comparator.comparing(e -> e.getKey()))))
+                ImmutableList.Builder<Pair<String, TypeExpression>> b = ImmutableList.builderWithExpectedSize(fields.size());
+                for (Entry<String, Field> entry : Utility.iterableStream(fields.entrySet().stream().sorted(Comparator.comparing(e -> e.getKey()))))
                 {
                     b.add(new Pair<>(entry.getKey(), fromJellyType(entry.getValue().getJellyType(), mgr)));
                 }
@@ -213,35 +213,35 @@ public abstract class TypeExpression implements StyledShowable, Replaceable<Type
 
     public abstract String save(SaveDestination saveDestination, TableAndColumnRenames renames);
 
-    public abstract @Nullable DataType toDataType(TypeManager typeManager);
+    public abstract DataType toDataType(TypeManager typeManager);
 
-    public abstract @Recorded JellyType toJellyType(@Recorded TypeExpression this, TypeManager typeManager, JellyRecorder jellyRecorder) throws InternalException, UnJellyableTypeExpression;
+    public abstract JellyType toJellyType(TypeExpression this, TypeManager typeManager, JellyRecorder jellyRecorder) throws InternalException, UnJellyableTypeExpression;
     
     public static interface JellyRecorder
     {
-        public @Recorded JellyType record(JellyType jellyType, @Recorded TypeExpression source);
+        public JellyType record(JellyType jellyType, TypeExpression source);
     }
     
     public static class UnJellyableTypeExpression extends UserException
     {
-        private final Either<@Recorded UnitExpression, @Recorded TypeExpression> source; // For error location
+        private final Either<UnitExpression, TypeExpression> source; // For error location
         private final ImmutableList<QuickFix<UnitExpression>> fixes;
 
-        public UnJellyableTypeExpression(String message, @Recorded TypeExpression source)
+        public UnJellyableTypeExpression(String message, TypeExpression source)
         {
             super(message);
             this.source = Either.right(source);
             this.fixes = ImmutableList.of();
         }
 
-        public UnJellyableTypeExpression(StyledString message, @Recorded UnitExpression source, ImmutableList<QuickFix<UnitExpression>> fixes)
+        public UnJellyableTypeExpression(StyledString message, UnitExpression source, ImmutableList<QuickFix<UnitExpression>> fixes)
         {
             super(message);
             this.source = Either.left(source);
             this.fixes = fixes;
         }
 
-        public Either<@Recorded UnitExpression, @Recorded TypeExpression> getSource()
+        public Either<UnitExpression, TypeExpression> getSource()
         {
             return source;
         }
@@ -351,11 +351,11 @@ public abstract class TypeExpression implements StyledShowable, Replaceable<Type
                 @Override
                 public TypeExpression visitRecordTypeExpression(RecordTypeExpressionContext ctx)
                 {
-                    ImmutableList.Builder<Pair<@ExpressionIdentifier String, TypeExpression>> members = ImmutableList.builderWithExpectedSize(ctx.typeExpression().size());
+                    ImmutableList.Builder<Pair<String, TypeExpression>> members = ImmutableList.builderWithExpectedSize(ctx.typeExpression().size());
 
                     for (int i = 0; i < ctx.fieldName().size(); i++)
                     {
-                        @ExpressionIdentifier String fieldName = IdentifierUtility.asExpressionIdentifier(ctx.fieldName(i).getText());
+                        String fieldName = IdentifierUtility.asExpressionIdentifier(ctx.fieldName(i).getText());
                         if (fieldName != null)
                             members.add(new Pair<>(fieldName, visitTypeExpression(ctx.typeExpression(i))));
                     }
@@ -374,7 +374,7 @@ public abstract class TypeExpression implements StyledShowable, Replaceable<Type
                 @Override
                 public TypeExpression visitApplyTypeExpression(ApplyTypeExpressionContext ctx)
                 {
-                    @ExpressionIdentifier String typeName = IdentifierUtility.fromParsed(ctx.ident());
+                    String typeName = IdentifierUtility.fromParsed(ctx.ident());
 
                     ImmutableList.Builder<Either<UnitExpression, TypeExpression>> args = ImmutableList.builderWithExpectedSize(ctx.applyArgumentExpression().size());
                     for (ApplyArgumentExpressionContext applyArgumentExpressionContext : ctx.applyArgumentExpression())
@@ -402,7 +402,7 @@ public abstract class TypeExpression implements StyledShowable, Replaceable<Type
                 }
 
                 public TypeExpression visitChildren(RuleNode node) {
-                    @Nullable TypeExpression result = this.defaultResult();
+                    TypeExpression result = this.defaultResult();
                     int n = node.getChildCount();
 
                     for(int i = 0; i < n && this.shouldVisitNextChild(node, result); ++i) {
@@ -434,12 +434,12 @@ public abstract class TypeExpression implements StyledShowable, Replaceable<Type
 
     // Force sub-expressions to implement equals and hashCode:
     @Override
-    public abstract boolean equals(@Nullable Object o);
+    public abstract boolean equals(Object o);
     @Override
     public abstract int hashCode();
 
     // If this can be an ident key in a record type, return the ident:
-    public abstract @Nullable @ExpressionIdentifier String asIdent();
+    public abstract String asIdent();
 
     // Useful for debugging:
     @Override

@@ -31,21 +31,20 @@ import threadchecker.Tag;
  * of any individual table bounds.
  */
 /* package-visible */
-@OnThread(Tag.Any)
 public class CellPosition
 {
     // Both are zero-based:
-    public final @AbsRowIndex int rowIndex;
-    public final @AbsColIndex int columnIndex;
+    public final int rowIndex;
+    public final int columnIndex;
 
-    public CellPosition(@AbsRowIndex int rowIndex, @AbsColIndex int columnIndex)
+    public CellPosition(int rowIndex, int columnIndex)
     {
         this.rowIndex = rowIndex;
         this.columnIndex = columnIndex;
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -79,13 +78,13 @@ public class CellPosition
     public static final CellPosition ORIGIN = new CellPosition(row(0), col(0)); 
 
     @SuppressWarnings("units")
-    public static @AbsRowIndex int row(int row)
+    public static int row(int row)
     {
         return row;
     }
 
     @SuppressWarnings("units")
-    public static @AbsColIndex int col(int col)
+    public static int col(int col)
     {
         return col;
     }

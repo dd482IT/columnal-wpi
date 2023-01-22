@@ -154,14 +154,12 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         }
 
         @Override
-        @OnThread(Tag.Any)
         public String getContent()
         {
             return keyword;
         }
 
         @Override
-        @OnThread(Tag.Any)
         public StyledString toStyledString()
         {
             String content = getContent();
@@ -215,16 +213,15 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         COMMA(",", "op.separator");
 
         private final String op;
-        private final @LocalizableKey String localNameKey;
+        private final String localNameKey;
 
-        private Op(String op, @LocalizableKey String localNameKey)
+        private Op(String op, String localNameKey)
         {
             this.op = op;
             this.localNameKey = localNameKey;
         }
 
         @Override
-        @OnThread(Tag.Any)
         public String getContent()
         {
             return op;
@@ -241,9 +238,9 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
     private final FunctionLookup functionLookup;
     private final ImmutableList<StandardFunctionDefinition> allFunctions;
     private final FXPlatformSupplierInt<TypeState> makeTypeState;
-    private final @Nullable DataType expectedType;
+    private final DataType expectedType;
 
-    public ExpressionLexer(ObservableObjectValue<ColumnLookup> columnLookup, TypeManager typeManager, FunctionLookup functionLookup, FXPlatformSupplierInt<TypeState> makeTypeState, @Nullable DataType expectedType)
+    public ExpressionLexer(ObservableObjectValue<ColumnLookup> columnLookup, TypeManager typeManager, FunctionLookup functionLookup, FXPlatformSupplierInt<TypeState> makeTypeState, DataType expectedType)
     {
         this.columnLookup = columnLookup;
         this.typeManager = typeManager;
@@ -255,10 +252,10 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
     }
 
     @Override
-    public LexerResult<Expression, ExpressionCompletionContext> process(String content, @Nullable @RawInputLocation Integer curCaretPos, InsertListener insertListener)
+    public LexerResult<Expression, ExpressionCompletionContext> process(String content, Integer curCaretPos, InsertListener insertListener)
     {
         ExpressionSaver saver = new ExpressionSaver(typeManager, functionLookup, insertListener);
-        @RawInputLocation int curIndex = RawInputLocation.ZERO;
+        int curIndex = RawInputLocation.ZERO;
         // Index is in original parameter "content":
         RemovedCharacters removedChars = new RemovedCharacters();
         BitSet suppressBracketMatching = new BitSet();
@@ -324,7 +321,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
             {
                 // Consume string until next quote:
                 @SuppressWarnings("units")
-                @RawInputLocation int endQuote = content.indexOf("\"", curIndex + 1);
+                int endQuote = content.indexOf("\"", curIndex + 1);
                 if (endQuote != -1)
                 {
                     saver.saveOperand(new StringLiteral(content.substring(curIndex + 1, endQuote)), removedChars.map(curIndex, endQuote + RawInputLocation.ONE));
@@ -332,7 +329,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                     @SuppressWarnings("units")
                     ImmutableList<CaretPos> caretPositions = IntStream.range(0, stringLit.length() + 1).mapToObj(i -> new CaretPos(i, i)).collect(ImmutableList.<CaretPos>toImmutableList());
                     @SuppressWarnings("units")
-                    ImmutableList<@CanonicalLocation Integer> wordCaretPos = Stream.<Integer>of(0, 1, stringLit.length() - 1, stringLit.length()).distinct().collect(ImmutableList.<@CanonicalLocation Integer>toImmutableList());
+                    ImmutableList<Integer> wordCaretPos = Stream.<Integer>of(0, 1, stringLit.length() - 1, stringLit.length()).distinct().collect(ImmutableList.<Integer>toImmutableList());
                     chunks.add(new ContentChunk(stringLit, StyledString.s(stringLit).withStyle(new StyledCSS("expression-string-literal")), caretPositions, wordCaretPos, ChunkType.CLOSING));
                     suppressBracketMatching.set(curIndex + 1, endQuote);
                     curIndex = endQuote + RawInputLocation.ONE;
@@ -352,7 +349,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
             
             if (content.charAt(curIndex) >= '0' && content.charAt(curIndex) <= '9')
             {
-                @RawInputLocation int numberStart = curIndex;
+                int numberStart = curIndex;
                 // Before dot:
                 do
                 {
@@ -368,7 +365,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                     }
                     while (curIndex < content.length() && content.charAt(curIndex) >= '0' && content.charAt(curIndex) <= '9');
                 }
-                Optional<@Value Number> number = Utility.parseNumberOpt(content.substring(numberStart, curIndex));
+                Optional<Number> number = Utility.parseNumberOpt(content.substring(numberStart, curIndex));
                 if (number.isPresent())
                 {
                     saver.saveOperand(new NumericLiteral(number.get(), null), removedChars.map(numberStart, curIndex));
@@ -379,14 +376,14 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
 
             for (Pair<String, Function<NestedLiteralSource, LiteralOutcome>> nestedLiteral : getNestedLiterals(saver.lastWasNumber(), insertListener))
             {
-                @Nullable NestedLiteralSource nestedOutcome = tryNestedLiteral(nestedLiteral.getFirst(), content, curIndex, removedChars, saver.locationRecorder);
+                NestedLiteralSource nestedOutcome = tryNestedLiteral(nestedLiteral.getFirst(), content, curIndex, removedChars, saver.locationRecorder);
                 if (nestedOutcome != null)
                 {
                     LiteralOutcome outcome = nestedLiteral.getSecond().apply(nestedOutcome);
                     saver.saveOperand(outcome.expression, removedChars.map(curIndex, nestedOutcome.positionAfter));
                     @SuppressWarnings("units")
-                    @DisplayLocation int displayOffset = nestedLiteral.getFirst().length() + chunks.stream().mapToInt(c -> c.displayContent.getLength()).sum();
-                    @CanonicalLocation int caretPosOffset = removedChars.map(curIndex + rawLength(nestedLiteral.getFirst()));
+                    int displayOffset = nestedLiteral.getFirst().length() + chunks.stream().mapToInt(c -> c.displayContent.getLength()).sum();
+                    int caretPosOffset = removedChars.map(curIndex + rawLength(nestedLiteral.getFirst()));
                     if (outcome.locationRecorder != null)
                         saver.addNestedLocations(outcome.locationRecorder, caretPosOffset);
                     saver.addNestedErrors(outcome.nestedErrors, caretPosOffset, displayOffset);
@@ -406,8 +403,8 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                 continue nextToken;
             }
 
-            @Nullable Consumed<Pair<@Nullable @ExpressionIdentifier String, ImmutableList<@ExpressionIdentifier String>>> parsed = IdentifierUtility.consumePossiblyScopedExpressionIdentifier(content, curIndex, curCaretPos != null ? curCaretPos : -1 * RawInputLocation.ONE);
-            final @CanonicalLocation int canonIndex = removedChars.map(curIndex);
+            Consumed<Pair<String, ImmutableList<String>>> parsed = IdentifierUtility.consumePossiblyScopedExpressionIdentifier(content, curIndex, curCaretPos != null ? curCaretPos : -1 * RawInputLocation.ONE);
+            final int canonIndex = removedChars.map(curIndex);
             if (parsed != null && parsed.positionAfter > curIndex)
             {
                 prevWasIdent = true;
@@ -422,7 +419,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
             if (content.startsWith("@", curIndex))
             {
                 @SuppressWarnings("units")
-                @RawInputLocation int nonLetter = CharMatcher.inRange('a', 'z').or(CharMatcher.inRange('A', 'Z')).negate().indexIn(content, curIndex + 1);
+                int nonLetter = CharMatcher.inRange('a', 'z').or(CharMatcher.inRange('A', 'Z')).negate().indexIn(content, curIndex + 1);
                 if (nonLetter == -1)
                     nonLetter = rawLength(content);
                 String stem = content.substring(curIndex, nonLetter);
@@ -453,7 +450,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
             chunks.add(new ContentChunk(content.substring(curIndex, curIndex + 1), ChunkType.IDENT));
             curIndex += RawInputLocation.ONE;
         }
-        @Recorded Expression saved = saver.finish(removedChars.map(curIndex, curIndex));
+        Expression saved = saver.finish(removedChars.map(curIndex, curIndex));
         try
         {
             TypeExp typeExp = saved.checkExpression(columnLookup.get(), makeTypeState.get(), saver.locationRecorder.getRecorder());
@@ -463,7 +460,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                 // Must be concrete:
                 if (expectedType != null)
                     TypeExp.unifyTypes(typeExp, TypeExp.fromDataType(null, expectedType)).ifLeft(err -> saver.locationRecorder.addErrorAndFixes(saver.recorderFor(saved), err.getMessage(), ImmutableList.of()));
-                @RawInputLocation int lastIndex = curIndex;
+                int lastIndex = curIndex;
                 saver.locationRecorder.getRecorder().recordLeftError(typeManager, functionLookup, saved, typeExp.toConcreteType(typeManager, false));
             }
         }
@@ -481,7 +478,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         
         String internalContent = chunks.stream().map(c -> c.internalContent).collect(Collectors.joining());
         StyledString display = chunks.stream().map(c -> c.displayContent).filter(d -> d.getLength() > 0).collect(StyledString.joining(""));
-        Pair<ArrayList<CaretPos>, ImmutableList<@CanonicalLocation Integer>> caretPos = calculateCaretPos(chunks);
+        Pair<ArrayList<CaretPos>, ImmutableList<Integer>> caretPos = calculateCaretPos(chunks);
 
         ImmutableList<ErrorDetails> errors = saver.getErrors();
         try
@@ -503,14 +500,14 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
             // Can be swapped back in Java 9
 
             @Override
-            public ExpressionCompletionContext makeCompletions(String chunk, @CanonicalLocation int canonIndex, ChunkType curChunk, ChunkType precedingChunk)
+            public ExpressionCompletionContext makeCompletions(String chunk, int canonIndex, ChunkType curChunk, ChunkType precedingChunk)
             {
                 return ExpressionLexer.this.makeCompletions(chunk, canonIndex, curChunk, precedingChunk, insertListener);
             }
         }), nestedCompletions.build()), suppressBracketMatching, !saver.hasUnmatchedBrackets(), saver::getDisplayFor);
     }
 
-    private StyledString addIndents(StyledString display, ArrayList<CaretPos> caretPos, @Recorded Expression expression, EditorLocationAndErrorRecorder locations) throws InternalException
+    private StyledString addIndents(StyledString display, ArrayList<CaretPos> caretPos, Expression expression, EditorLocationAndErrorRecorder locations) throws InternalException
     {
         ImmutableList<AddedSpace> addedSpaces = expression.visit(new AddedSpaceCalculator(locations)).sorted(Comparator.<AddedSpace, Integer>comparing(a -> a.addedAtInternalPos)).collect(ImmutableList.<AddedSpace>toImmutableList());
 
@@ -524,17 +521,17 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
     
     private class AddedSpace
     {
-        private final @CanonicalLocation int addedAtInternalPos;
+        private final int addedAtInternalPos;
         private final String added;
 
-        public AddedSpace(@CanonicalLocation int addedAtInternalPos, String added)
+        public AddedSpace(int addedAtInternalPos, String added)
         {
             this.addedAtInternalPos = addedAtInternalPos;
             this.added = added;
         }
     }
     
-    private StyledString addDisplayAfter(StyledString display, ArrayList<CaretPos> caretPos, @CanonicalLocation int after, StyledString displayContentToAdd) throws InternalException
+    private StyledString addDisplayAfter(StyledString display, ArrayList<CaretPos> caretPos, int after, StyledString displayContentToAdd) throws InternalException
     {
         // We find the caret pos at the end of the span:
         CaretPos posAfter = caretPos.stream().filter(p -> p.positionInternal == after).findFirst().orElse(null);
@@ -559,12 +556,12 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         return StyledString.concat(displayBefore, displayContentToAdd, displayAfter);
     }
 
-    private AutoCompleteDetails<ExpressionCompletionContext> offsetBy(AutoCompleteDetails<CodeCompletionContext> acd, @CanonicalLocation int caretPosOffset)
+    private AutoCompleteDetails<ExpressionCompletionContext> offsetBy(AutoCompleteDetails<CodeCompletionContext> acd, int caretPosOffset)
     {
         return new AutoCompleteDetails<>(acd.location.offsetBy(caretPosOffset), new ExpressionCompletionContext(acd.codeCompletionContext, caretPosOffset));
     }
 
-    private ExpressionCompletionContext makeCompletions(String stem, @CanonicalLocation int canonIndex, ChunkType curChunk, ChunkType precedingChunk, InsertListener insertListener)
+    private ExpressionCompletionContext makeCompletions(String stem, int canonIndex, ChunkType curChunk, ChunkType precedingChunk, InsertListener insertListener)
     {
         // Large size to avoid reallocations:
         Builder<Pair<CompletionStatus, ExpressionCompletion>> completions = ImmutableList.builderWithExpectedSize(1000);
@@ -594,9 +591,9 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         if (!directAndRelated.isEmpty())
         {
             @SuppressWarnings("units") // Due to IntStream use
-            @CanonicalLocation int start = directAndRelated.stream().mapToInt(p -> p.getSecond().completion.startPos).min().orElse(canonIndex);
+            int start = directAndRelated.stream().mapToInt(p -> p.getSecond().completion.startPos).min().orElse(canonIndex);
             @SuppressWarnings("units") // Due to IntStream use
-            @CanonicalLocation int end = directAndRelated.stream().mapToInt(p -> p.getSecond().completion.lastShowPosIncl).max().orElse(canonIndex);
+            int end = directAndRelated.stream().mapToInt(p -> p.getSecond().completion.lastShowPosIncl).max().orElse(canonIndex);
             
             if (guides.isEmpty())
             {
@@ -617,7 +614,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         return original.mapSecond(c -> new ExpressionCompletion(c.completion.copyNoShowAtFirstPos(), c.completionType));
     }
 
-    private ImmutableList<LexCompletion> getOperatorCompletions(@CanonicalLocation int canonIndex, String stem, ChunkType curChunk, ChunkType precedingChunkType)
+    private ImmutableList<LexCompletion> getOperatorCompletions(int canonIndex, String stem, ChunkType curChunk, ChunkType precedingChunkType)
     {
         // We need to get the operator completions.  Consider an expression like:
         // ab<cd
@@ -640,7 +637,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                 return Stream.of(new LexCompletion(canonIndex, common, op.getContent())
                 {
                     @Override
-                    public boolean showFor(@CanonicalLocation int caretPos)
+                    public boolean showFor(int caretPos)
                     {
                         if (caretPos == canonIndex)
                             return showOpsAtStart;
@@ -657,7 +654,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                     return new LexCompletion(canonIndex + offset * CanonicalLocation.ONE, 0, op.getContent())
                     {
                         @Override
-                        public boolean showFor(@CanonicalLocation int caretPos)
+                        public boolean showFor(int caretPos)
                         {
                             if (caretPos == canonIndex && offset == 0)
                                 return showOpsAtStart;
@@ -678,12 +675,12 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
             Utility.longestCommonStart(stem, 0, op.getASCIIContent(), 0));
     }
 
-    private LexCompletion guideCompletion(String name, String guideFileName, @CanonicalLocation int start, @CanonicalLocation int end)
+    private LexCompletion guideCompletion(String name, String guideFileName, int start, int end)
     {
         return new LexCompletion(start, end, StyledString.s(name), "guide-" + guideFileName + ".html");
     }
 
-    private void addKeywordCompletions(Builder<Pair<CompletionStatus, ExpressionCompletion>> completions, String stem, @CanonicalLocation int canonIndex)
+    private void addKeywordCompletions(Builder<Pair<CompletionStatus, ExpressionCompletion>> completions, String stem, int canonIndex)
     {
         if (Utility.startsWithIgnoreCase("@i", stem) || Utility.startsWithIgnoreCase("if", stem))
         {
@@ -707,7 +704,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
             if (keyword.getContent().startsWith("@") && !stem.startsWith("@"))
             {
                 @SuppressWarnings("units")
-                @RawInputLocation int common = Utility.longestCommonStart(keyword.getContent(), 1, stem, 0);
+                int common = Utility.longestCommonStart(keyword.getContent(), 1, stem, 0);
                 // We only show as related if we actually match at least one character:
                 if (common > 0)
                 {
@@ -733,7 +730,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
      * @param stem The stem to narrow down the options, if non-null.  If null, add all functions
      * @param canonIndex The position to pass to the completion
      */
-    private void addNestedLiteralCompletions(Builder<Pair<CompletionStatus, ExpressionCompletion>> identCompletions, @Nullable String stem, @CanonicalLocation int canonIndex, InsertListener insertListener)
+    private void addNestedLiteralCompletions(Builder<Pair<CompletionStatus, ExpressionCompletion>> identCompletions, String stem, int canonIndex, InsertListener insertListener)
     {
         for (Pair<String, Function<NestedLiteralSource, LiteralOutcome>> nestedLiteral : getNestedLiterals(false, insertListener))
         {
@@ -758,7 +755,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
      * @param stem The stem to narrow down the options, if non-null.  If null, add all functions
      * @param canonIndex The position to pass to the completion
      */
-    private void addVariableCompletions(Builder<Pair<CompletionStatus, ExpressionCompletion>> identCompletions, @Nullable String stem, @CanonicalLocation int canonIndex)
+    private void addVariableCompletions(Builder<Pair<CompletionStatus, ExpressionCompletion>> identCompletions, String stem, int canonIndex)
     {
         for (String bool : ImmutableList.of("true", "false"))
         {
@@ -798,9 +795,9 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
      * @param stem The stem to narrow down the options, if non-null.  If null, add all functions
      * @param canonIndex The position to pass to the completion
      */
-    private void addColumnAndTableCompletions(Builder<Pair<CompletionStatus, ExpressionCompletion>> identCompletions, @Nullable String stem, @CanonicalLocation int canonIndex)
+    private void addColumnAndTableCompletions(Builder<Pair<CompletionStatus, ExpressionCompletion>> identCompletions, String stem, int canonIndex)
     {
-        for (Pair<@Nullable TableId, ColumnId> availableColumn : Utility.iterableStream(columnLookup.get().getAvailableColumnReferences()))
+        for (Pair<TableId, ColumnId> availableColumn : Utility.iterableStream(columnLookup.get().getAvailableColumnReferences()))
         {
             if (availableColumn.getFirst() == null)
             {
@@ -823,7 +820,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         }
     }
 
-    private String htmlForColumn(@Nullable TableId t, ColumnId c)
+    private String htmlForColumn(TableId t, ColumnId c)
     {
         String funcdocURL = FXUtility.getStylesheet("funcdoc.css");
         String webURL = FXUtility.getStylesheet("web.css");
@@ -863,7 +860,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
      * @param stem The stem to narrow down the options, if non-null.  If null, add all functions
      * @param canonIndex The position to pass to the completion
      */
-    private void addFunctionCompletions(Builder<Pair<CompletionStatus, ExpressionCompletion>> identCompletions, @Nullable String stem, @CanonicalLocation int canonIndex)
+    private void addFunctionCompletions(Builder<Pair<CompletionStatus, ExpressionCompletion>> identCompletions, String stem, int canonIndex)
     {
         for (StandardFunctionDefinition function : allFunctions)
         {
@@ -904,7 +901,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
      * @param stem The stem to narrow down the options, if non-null.  If null, add all functions
      * @param canonIndex The position to pass to the completion
      */
-    private void addTagCompletions(Builder<Pair<CompletionStatus, ExpressionCompletion>> identCompletions, @Nullable String stem, @CanonicalLocation int canonIndex)
+    private void addTagCompletions(Builder<Pair<CompletionStatus, ExpressionCompletion>> identCompletions, String stem, int canonIndex)
     {
         for (TagCompletion tag : getTagCompletions(typeManager.getKnownTaggedTypes()))
         {
@@ -916,7 +913,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         }
     }
 
-    private @Nullable String getDocURLFor(Keyword keyword)
+    private String getDocURLFor(Keyword keyword)
     {
         switch (keyword)
         {
@@ -958,11 +955,11 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
     class TagCompletion implements Comparable<TagCompletion>
     {
         // Non-null if needed to disambiguate, null if type name is unique
-        private final @Nullable TypeId typeName;
+        private final TypeId typeName;
         private final String tagName;
         private final boolean hasInner;
 
-        public TagCompletion(@Nullable TypeId typeName, String tagName, boolean hasInner)
+        public TagCompletion(TypeId typeName, String tagName, boolean hasInner)
         {
             this.typeName = typeName;
             this.tagName = tagName;
@@ -970,7 +967,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         }
 
         @Override
-        public boolean equals(@Nullable Object o)
+        public boolean equals(Object o)
         {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
@@ -1019,7 +1016,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                 TagCompletion simpleKey = new TagCompletion(null, tag.getName(), tag.getInner() != null);
                 TagCompletion fullKey = new TagCompletion(value.getTaggedTypeName(), tag.getName(), tag.getInner() != null);
                 completions.put(fullKey, Optional.of(value));
-                @Nullable Optional<TaggedTypeDefinition> prevSimple = completions.remove(simpleKey);
+                Optional<TaggedTypeDefinition> prevSimple = completions.remove(simpleKey);
                 if (prevSimple == null)
                 {
                     completions.put(simpleKey, Optional.of(value));
@@ -1045,14 +1042,14 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         public final ContentChunk chunk;
         public final ImmutableList<ErrorDetails> nestedErrors;
         public final ImmutableList<AutoCompleteDetails<CodeCompletionContext>> completions;
-        public final @Nullable EditorLocationAndErrorRecorder locationRecorder;
+        public final EditorLocationAndErrorRecorder locationRecorder;
         
         @SuppressWarnings("units")
         public LiteralOutcome(NestedLiteralSource source, Expression expression)
         {
             String content = source.prefix + source.innerContent + (source.terminatedProperly ? "}" : "");
             this.chunk = new ContentChunk(content, StyledString.s(content), IntStream.concat(IntStream.concat(IntStream.of(0), IntStream.range(0, source.innerContent.length() + 1).map(n -> n + source.prefix.length())), IntStream.range(source.terminatedProperly ? content.length() - 1 : content.length(), content.length() + 1)).mapToObj(i -> new CaretPos(i, i)).collect(ImmutableList.<CaretPos>toImmutableList()), 
-                    Stream.<Integer>of(0, source.prefix.length(), source.terminatedProperly ? content.length() - 1 : content.length(), content.length()).distinct().collect(ImmutableList.<@CanonicalLocation Integer>toImmutableList()),
+                    Stream.<Integer>of(0, source.prefix.length(), source.terminatedProperly ? content.length() - 1 : content.length(), content.length()).distinct().collect(ImmutableList.<Integer>toImmutableList()),
                     ChunkType.NESTED_START);
             this.expression = expression;
             this.removedChars = new RemovedCharacters();
@@ -1062,7 +1059,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         }
 
         @SuppressWarnings("units")
-        public LiteralOutcome(String prefix, String internalContent, StyledString displayContent, Expression expression, String suffix, RemovedCharacters removedChars, ImmutableList<CaretPos> caretPos, ImmutableList<@CanonicalLocation Integer> wordBoundaryCaretPos, ImmutableList<ErrorDetails> errors, ImmutableList<AutoCompleteDetails<CodeCompletionContext>> completions,                             EditorLocationAndErrorRecorder locationRecorder)
+        public LiteralOutcome(String prefix, String internalContent, StyledString displayContent, Expression expression, String suffix, RemovedCharacters removedChars, ImmutableList<CaretPos> caretPos, ImmutableList<Integer> wordBoundaryCaretPos, ImmutableList<ErrorDetails> errors, ImmutableList<AutoCompleteDetails<CodeCompletionContext>> completions,                             EditorLocationAndErrorRecorder locationRecorder)
         {
             ImmutableList.Builder<CaretPos> caretPosIncludingPrefixSuffix = ImmutableList.builder();
             CaretPos initialPos = new CaretPos(0, 0);
@@ -1072,9 +1069,9 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
                 caretPosIncludingPrefixSuffix.add(new CaretPos(p.positionInternal + prefix.length(), p.positionDisplay + prefix.length()));
             }
             caretPosIncludingPrefixSuffix.add(new CaretPos(prefix.length() + internalContent.length() + suffix.length(), prefix.length() + displayContent.getLength() + suffix.length()));
-            ImmutableList.Builder<@CanonicalLocation Integer> wordPosIncludingPrefixSuffix = ImmutableList.builder();
+            ImmutableList.Builder<Integer> wordPosIncludingPrefixSuffix = ImmutableList.builder();
             wordPosIncludingPrefixSuffix.add(initialPos.positionInternal);
-            for (@CanonicalLocation Integer p : wordBoundaryCaretPos)
+            for (Integer p : wordBoundaryCaretPos)
             {
                 wordPosIncludingPrefixSuffix.add(p + prefix.length());
             }
@@ -1121,10 +1118,10 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
     {
         private final String prefix;
         private final String innerContent;
-        private final @RawInputLocation int positionAfter;
+        private final int positionAfter;
         private final boolean terminatedProperly;
 
-        public NestedLiteralSource(String prefix, String innerContent, @RawInputLocation int positionAfter, boolean terminatedProperly)
+        public NestedLiteralSource(String prefix, String innerContent, int positionAfter, boolean terminatedProperly)
         {
             this.prefix = prefix;
             this.innerContent = innerContent;
@@ -1134,12 +1131,12 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
     }
     
     @SuppressWarnings("units")
-    private @Nullable NestedLiteralSource tryNestedLiteral(String prefixInclCurly, String content, @RawInputLocation int curIndex, RemovedCharacters removedChars, EditorLocationAndErrorRecorder locationRecorder)
+    private NestedLiteralSource tryNestedLiteral(String prefixInclCurly, String content, int curIndex, RemovedCharacters removedChars, EditorLocationAndErrorRecorder locationRecorder)
     {
         if (content.startsWith(prefixInclCurly, curIndex))
         {
             curIndex += prefixInclCurly.length();
-            @RawInputLocation int startIndex = curIndex;
+            int startIndex = curIndex;
             int openCount = 1;
             while (curIndex < content.length() && openCount > 0)
             {
@@ -1247,7 +1244,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
      * @param completionText The completion text to search for.
      * @return True, completion if at very start; False, completion if it maps a later word.
      */
-    private static ImmutableMap<WordPosition, LexCompletion> matchWordStart(@Nullable Pair<String, Integer> src, @CanonicalLocation int startPos, String completionText, @Nullable String sideText, WordPosition... possiblePositions)
+    private static ImmutableMap<WordPosition, LexCompletion> matchWordStart(Pair<String, Integer> src, int startPos, String completionText, String sideText, WordPosition... possiblePositions)
     {
         if (src == null)
             return ImmutableMap.of(WordPosition.FIRST_WORD, addSideText(new LexCompletion(startPos, 0, completionText), sideText));
@@ -1267,10 +1264,10 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
             if ((firstWord && len == 0 && curCompletionStart == 0) || (len > 0 && len > prevCompletionLength))
             {
                 @SuppressWarnings("units")
-                @CanonicalLocation int adjStartPos = startPos + prevCompletionLength;
+                int adjStartPos = startPos + prevCompletionLength;
                 r.put(curCompletionStart == 0 ? WordPosition.FIRST_WORD : WordPosition.LATER_WORD, addSideText(new LexCompletion(startPos, len, completionText) {
                     @Override
-                    public boolean showFor(@CanonicalLocation int caretPos)
+                    public boolean showFor(int caretPos)
                     {
                         if (firstWordNonEmpty)
                             return adjStartPos < caretPos && caretPos <= adjStartPos + (len * CanonicalLocation.ONE);
@@ -1294,7 +1291,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         return ImmutableMap.copyOf(r);
     }
     
-    private static LexCompletion addSideText(LexCompletion completion, @Nullable String sideText)
+    private static LexCompletion addSideText(LexCompletion completion, String sideText)
     {
         if (sideText != null)
             return completion.withSideText(sideText);
@@ -1303,12 +1300,11 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
     }
 
     // Helper for above that uses zero as the src start position
-    private static ImmutableMap<WordPosition, LexCompletion> matchWordStart(@Nullable String src, @CanonicalLocation int startPos, String completionText, @Nullable String sideText, WordPosition... possiblePositions)
+    private static ImmutableMap<WordPosition, LexCompletion> matchWordStart(String src, int startPos, String completionText, String sideText, WordPosition... possiblePositions)
     {
         return matchWordStart(src == null ? null : new Pair<>(src, 0), startPos, completionText, sideText, possiblePositions);
     }
 
-    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     class AddedSpaceCalculator extends ExpressionVisitorStream<AddedSpace>
     {
         private final EditorLocationAndErrorRecorder locations;
@@ -1320,7 +1316,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         }
 
         @Override
-        public Stream<AddedSpace> ifThenElse(IfThenElseExpression self, @Recorded Expression condition, @Recorded Expression thenExpression, @Recorded Expression elseExpression)
+        public Stream<AddedSpace> ifThenElse(IfThenElseExpression self, Expression condition, Expression thenExpression, Expression elseExpression)
         {
             return Stream.<AddedSpace>concat(Stream.<AddedSpace>of(
                 new AddedSpace(self.getThenLocation().start, "\n" + INDENT),
@@ -1330,7 +1326,7 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         }
 
         @Override
-        public Stream<AddedSpace> match(MatchExpression self, @Recorded Expression expression, ImmutableList<MatchClause> clauses)
+        public Stream<AddedSpace> match(MatchExpression self, Expression expression, ImmutableList<MatchClause> clauses)
         {
             Stream.Builder<AddedSpace> r = Stream.builder();
 
@@ -1343,14 +1339,14 @@ public class ExpressionLexer extends Lexer<Expression, ExpressionCompletionConte
         }
 
         @Override
-        public Stream<AddedSpace> define(DefineExpression self, ImmutableList<DefineItem> defines, @Recorded Expression body)
+        public Stream<AddedSpace> define(DefineExpression self, ImmutableList<DefineItem> defines, Expression body)
         {
             Stream.Builder<AddedSpace> r = Stream.builder();
 
             for (int i = 0; i < defines.size(); i++)
             {
-                Either<@Recorded HasTypeExpression, Definition> item = defines.get(i).typeOrDefinition;
-                @Recorded Expression expression = item.<@Recorded Expression>either(t -> t, d -> d.rhsValue);
+                Either<HasTypeExpression, Definition> item = defines.get(i).typeOrDefinition;
+                Expression expression = item.<Expression>either(t -> t, d -> d.rhsValue);
                 boolean followedByComma = defines.size() > 1 && i < defines.size() - 1;
                 r.add(new AddedSpace(defines.get(i).trailingCommaOrThenLocation.start + (followedByComma ? CanonicalLocation.ONE : CanonicalLocation.ZERO), followedByComma ? "\n       " : "\n  " ));
             }

@@ -114,7 +114,7 @@ public abstract class CalculatedColumn<S extends ColumnStorage<?>> extends Colum
     }
 */
     @Override
-    public final void beforeGet(S storage, int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
+    public final void beforeGet(S storage, int index, ProgressListener progressListener) throws UserException, InternalException
     {
         if (index < 0 || index >= getLength())
             return; // Will later throw out of bounds problem

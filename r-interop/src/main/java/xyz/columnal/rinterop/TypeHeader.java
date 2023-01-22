@@ -40,9 +40,9 @@ final class TypeHeader
         headerBits = d.readInt();
     }
 
-    @Nullable RValue readAttributes(DataInputStream d, HashMap<Integer, String> atoms) throws IOException, UserException, InternalException
+    RValue readAttributes(DataInputStream d, HashMap<Integer, String> atoms) throws IOException, UserException, InternalException
     {
-        final @Nullable RValue attr;
+        final RValue attr;
         if (hasAttributes())
         {
             // Also read trailing attributes:
@@ -55,9 +55,9 @@ final class TypeHeader
         return attr;
     }
 
-    @Nullable RValue readTag(DataInputStream d, HashMap<Integer, String> atoms) throws IOException, UserException, InternalException
+    RValue readTag(DataInputStream d, HashMap<Integer, String> atoms) throws IOException, UserException, InternalException
     {
-        final @Nullable RValue tag;
+        final RValue tag;
         if (hasTag())
         {
             // Also read trailing attributes:

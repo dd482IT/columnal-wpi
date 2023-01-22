@@ -48,16 +48,16 @@ public class LogarithmNatural extends FunctionDefinition
     }
 
     @Override
-    public @OnThread(Tag.Simulation) ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
+    public ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
     {
         return new ValueFunction1<Number>(Number.class) {
 
             @Override
-            public @OnThread(Tag.Simulation) @Value Object call1(@Value Number x) throws InternalException, UserException
+            public Object call1(Number x) throws InternalException, UserException
             {
                 try
                 {
-                    @Value BigDecimal bd = Utility.toBigDecimal(x);
+                    BigDecimal bd = Utility.toBigDecimal(x);
                     return DataTypeUtility.value(BigDecimalMath.log(bd, MathContext.DECIMAL128));
                 }
                 catch (ArithmeticException e)

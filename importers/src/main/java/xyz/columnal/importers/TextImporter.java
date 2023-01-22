@@ -91,7 +91,6 @@ import java.util.concurrent.TimeoutException;
  */
 public class TextImporter implements Importer
 {
-    @OnThread(Tag.Any)
     @Override
     public ImmutableList<String> getSupportedFileTypes()
     {
@@ -99,7 +98,7 @@ public class TextImporter implements Importer
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) void importFile(Window parent, TableManager tableManager, CellPosition destination, File src, URL origin, SimulationConsumerNoError<DataSource> recordLoadedTable)
+    public void importFile(Window parent, TableManager tableManager, CellPosition destination, File src, URL origin, SimulationConsumerNoError<DataSource> recordLoadedTable)
     {
         Workers.onWorkerThread("GuessFormat data", Priority.LOAD_FROM_DISK, () ->
         {
@@ -115,13 +114,12 @@ public class TextImporter implements Importer
     }
 
     @Override
-    public @Localized String getName()
+    public String getName()
     {
         return TranslationUtility.getString("importer.files.text");
     }
 
-    @OnThread(Tag.Simulation)
-    public static void importTextFile(@Nullable Window parentWindow, TableManager mgr, File textFile, CellPosition destination, SimulationConsumerNoError<DataSource> then) throws IOException
+    public static void importTextFile(Window parentWindow, TableManager mgr, File textFile, CellPosition destination, SimulationConsumerNoError<DataSource> then) throws IOException
     {
         Map<Charset, List<String>> initial = getInitial(textFile);
         GuessFormat.guessTextFormatGUI_Then(parentWindow, mgr, textFile, Files.getNameWithoutExtension(textFile.getName()), initial, impInfo ->
@@ -140,7 +138,6 @@ public class TextImporter implements Importer
         });
     }
 
-    @OnThread(Tag.Simulation)
     public static CompletableFuture<RecordSet> _test_importTextFile(TableManager mgr, File textFile) throws IOException, InternalException, UserException, InterruptedException, ExecutionException, TimeoutException
     {
         CompletableFuture<RecordSet> f = new CompletableFuture<>();
@@ -158,7 +155,6 @@ public class TextImporter implements Importer
         return f;
     }
 
-    @OnThread(Tag.Simulation)
     private static DataSource makeDataSource(TableManager mgr, final File textFile, final InitialLoadDetails initialLoadDetails, final FinalTextFormat format) throws IOException, InternalException, UserException
     {
         RecordSet rs = makeRecordSet(mgr.getTypeManager(), textFile, format);
@@ -168,8 +164,7 @@ public class TextImporter implements Importer
             return new ImmediateDataSource(mgr, initialLoadDetails, new EditableRecordSet(rs));
     }
 
-    @OnThread(Tag.Simulation)
-    public static RecordSet makeSrcRecordSet(File textFile, Charset charset, @Nullable String separator, @Nullable String quote, int totalColumns) throws IOException, InternalException, UserException
+    public static RecordSet makeSrcRecordSet(File textFile, Charset charset, String separator, String quote, int totalColumns) throws IOException, InternalException, UserException
     {
         List<SimulationFunction<RecordSet, Column>> columns = new ArrayList<>();
         for (int i = 0; i < totalColumns; i++)
@@ -186,7 +181,6 @@ public class TextImporter implements Importer
         return new KnownLengthRecordSet(columns, Utility.countLines(textFile, charset));
     }
 
-    @OnThread(Tag.Simulation)
     public static RecordSet makeRecordSet(TypeManager typeManager, File textFile, FinalTextFormat format) throws IOException, InternalException, UserException
     {
         List<SimulationFunction<RecordSet, Column>> columns = new ArrayList<>();
@@ -222,7 +216,7 @@ public class TextImporter implements Importer
                             }
                             else
                             {
-                                return Utility.parseNumberOpt(str).map((@ImmediateValue Number n) -> {
+                                return Utility.parseNumberOpt(str).map((Number n) -> {
                                     return Either.<String, TaggedValue>right(new TaggedValue(1, n, typeManager.getMaybeType()));
                                 }).orElse(Either.<String, TaggedValue>left(str));
                             }
@@ -261,7 +255,7 @@ public class TextImporter implements Importer
 
             @Override
             @SuppressWarnings("units")
-            public @TableDataRowIndex int getLength() throws UserException
+            public int getLength() throws UserException
             {
                 if (rowCount == -1)
                 {

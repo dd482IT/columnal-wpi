@@ -48,12 +48,12 @@ public class TaggedTypeDefinition implements TaggedTypeDefinitionBase
     
     private final TypeId name;
     // Order matters here:
-    private final ImmutableList<Pair<TypeVariableKind, @ExpressionIdentifier String>> typeVariables;
+    private final ImmutableList<Pair<TypeVariableKind, String>> typeVariables;
     // Version with the type variables unsubstituted:
     // The only free variables should be the ones in the typeVariables list:
     private final ImmutableList<TagType<JellyType>> tags;
     
-    public TaggedTypeDefinition(TypeId name, ImmutableList<Pair<TypeVariableKind, @ExpressionIdentifier String>> typeVariables, ImmutableList<TagType<JellyType>> tags) throws InternalException
+    public TaggedTypeDefinition(TypeId name, ImmutableList<Pair<TypeVariableKind, String>> typeVariables, ImmutableList<TagType<JellyType>> tags) throws InternalException
     {
         this.name = name;
         this.typeVariables = typeVariables;
@@ -118,7 +118,7 @@ public class TaggedTypeDefinition implements TaggedTypeDefinitionBase
             else
             {
                 @SuppressWarnings("recorded")
-                @NonNull DataType inner = tag.getInner().makeDataType(substitutions, mgr);
+                DataType inner = tag.getInner().makeDataType(substitutions, mgr);
                 substitutedTags.add(new TagType<>(tag.getName(), inner));
             }
         }
@@ -134,7 +134,7 @@ public class TaggedTypeDefinition implements TaggedTypeDefinitionBase
     public void save(OutputBuilder b)
     {
         b.t(FormatLexer.TAGGED, FormatLexer.VOCABULARY);
-        for (Pair<TypeVariableKind, @ExpressionIdentifier String> typeVariable : typeVariables)
+        for (Pair<TypeVariableKind, String> typeVariable : typeVariables)
         {
             b.t(typeVariable.getFirst() == TypeVariableKind.TYPE ? FormatLexer.TYPEVAR : FormatLexer.UNITVAR, FormatLexer.VOCABULARY)
                 .expId(typeVariable.getSecond());
@@ -146,7 +146,7 @@ public class TaggedTypeDefinition implements TaggedTypeDefinitionBase
             if (!first)
                 b.t(FormatLexer.TAGOR, FormatLexer.VOCABULARY);
             b.expId(tag.getName());
-            @Nullable JellyType inner = tag.getInner();
+            JellyType inner = tag.getInner();
             if (inner != null)
             {
                 b.raw("(");
@@ -159,7 +159,7 @@ public class TaggedTypeDefinition implements TaggedTypeDefinitionBase
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -175,7 +175,7 @@ public class TaggedTypeDefinition implements TaggedTypeDefinitionBase
         return Objects.hash(name, typeVariables, tags);
     }
 
-    public ImmutableList<Pair<TypeVariableKind, @ExpressionIdentifier String>> getTypeArguments()
+    public ImmutableList<Pair<TypeVariableKind, String>> getTypeArguments()
     {
         return typeVariables;
     }

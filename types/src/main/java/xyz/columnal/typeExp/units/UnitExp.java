@@ -83,7 +83,7 @@ public final class UnitExp implements StyledShowable
 
     private void timesInPlace(UnitExp rhs)
     {
-        for (Entry<@KeyFor("rhs.units") ComparableEither<MutUnitVar, SingleUnit>, Integer> rhsUnit : rhs.units.entrySet())
+        for (Entry<ComparableEither<MutUnitVar, SingleUnit>, Integer> rhsUnit : rhs.units.entrySet())
         {
             units.merge(rhsUnit.getKey(), rhsUnit.getValue(), (l, r) -> {
                 return addButZeroIsNull(l, r);
@@ -107,7 +107,7 @@ public final class UnitExp implements StyledShowable
     public UnitExp reciprocal()
     {
         UnitExp u = new UnitExp();
-        for (Entry<@KeyFor("this.units") ComparableEither<MutUnitVar, SingleUnit>, Integer> entry : units.entrySet())
+        for (Entry<ComparableEither<MutUnitVar, SingleUnit>, Integer> entry : units.entrySet())
         {
             u.units.put(entry.getKey(), - entry.getValue());
         }
@@ -124,7 +124,7 @@ public final class UnitExp implements StyledShowable
         return u;
     }
 
-    public @Nullable UnitExp unifyWith(UnitExp other)
+    public UnitExp unifyWith(UnitExp other)
     {
         // Here's my understanding of "Types for Units-of-Measure: Theory and Practice" by Kennedy (CEFP '09)
         // section 3.5/Figure 5.  First we invert one side and multiply together, then attempt to unify to one:
@@ -152,10 +152,10 @@ public final class UnitExp implements StyledShowable
         do
         {
             substituted = false;
-            for (Iterator<Entry<@KeyFor("this.units") ComparableEither<MutUnitVar, SingleUnit>, Integer>> iterator = units.entrySet().iterator(); iterator.hasNext(); )
+            for (Iterator<Entry<ComparableEither<MutUnitVar, SingleUnit>, Integer>> iterator = units.entrySet().iterator(); iterator.hasNext(); )
             {
-                Entry<@KeyFor("this.units") ComparableEither<MutUnitVar, SingleUnit>, Integer> entry = iterator.next();
-                @Nullable UnitExp pointer = entry.getKey().<@Nullable UnitExp>either(mut -> mut.pointer, s -> null);
+                Entry<ComparableEither<MutUnitVar, SingleUnit>, Integer> entry = iterator.next();
+                UnitExp pointer = entry.getKey().<UnitExp>either(mut -> mut.pointer, s -> null);
                 if (pointer != null)
                 {
                     // Must remove before doing times in place, otherwise modification exception:
@@ -187,7 +187,7 @@ public final class UnitExp implements StyledShowable
         // so no type vars to resolve:
         if (units.isEmpty())
             return true;
-        List<Pair<MutUnitVar, Integer>> typeVars = units.entrySet().stream().flatMap((Entry<@KeyFor("this.units") ComparableEither<MutUnitVar, SingleUnit>, Integer> e) -> e.getKey().either(mut -> Stream.of(new Pair<>(mut, e.getValue())), fixed -> Stream.<Pair<MutUnitVar, Integer>>empty())).collect(Collectors.<Pair<MutUnitVar, Integer>>toList());
+        List<Pair<MutUnitVar, Integer>> typeVars = units.entrySet().stream().flatMap((Entry<ComparableEither<MutUnitVar, SingleUnit>, Integer> e) -> e.getKey().either(mut -> Stream.of(new Pair<>(mut, e.getValue())), fixed -> Stream.<Pair<MutUnitVar, Integer>>empty())).collect(Collectors.<Pair<MutUnitVar, Integer>>toList());
         
         // If no type vars (and not empty overall) then we can't unify to one: fail
         if (typeVars.isEmpty())
@@ -196,7 +196,7 @@ public final class UnitExp implements StyledShowable
         if (typeVars.size() == 1)
         {
             int powerOfTypeVar = typeVars.get(0).getSecond();
-            if (units.entrySet().stream().filter((Entry<@KeyFor("this.units") ComparableEither<MutUnitVar, SingleUnit>, Integer> e) -> e.getKey().isRight()).allMatch((Entry<@KeyFor("this.units") ComparableEither<MutUnitVar, SingleUnit>, Integer> e) -> Math.abs(e.getValue()) % Math.abs(powerOfTypeVar) == 0))
+            if (units.entrySet().stream().filter((Entry<ComparableEither<MutUnitVar, SingleUnit>, Integer> e) -> e.getKey().isRight()).allMatch((Entry<ComparableEither<MutUnitVar, SingleUnit>, Integer> e) -> Math.abs(e.getValue()) % Math.abs(powerOfTypeVar) == 0))
             {
                 // It does divide all remaining fixed units: Do it!
                 UnitExp result = new UnitExp();
@@ -250,9 +250,9 @@ public final class UnitExp implements StyledShowable
         units.forEach((k, v) -> subst.units.put(k, -(v / divisor)));
         lowestAbsPower.getFirst().pointer = subst;
         
-        for (Iterator<Entry<@KeyFor("this.units") ComparableEither<MutUnitVar, SingleUnit>, Integer>> iterator = units.entrySet().iterator(); iterator.hasNext(); )
+        for (Iterator<Entry<ComparableEither<MutUnitVar, SingleUnit>, Integer>> iterator = units.entrySet().iterator(); iterator.hasNext(); )
         {
-            Entry<@KeyFor("this.units") ComparableEither<MutUnitVar, SingleUnit>, Integer> entry = iterator.next();
+            Entry<ComparableEither<MutUnitVar, SingleUnit>, Integer> entry = iterator.next();
             int mod = IntMath.mod(entry.getValue(), Math.abs(lowestAbsPower.getSecond()));
             if (mod == 0)
             {
@@ -269,13 +269,13 @@ public final class UnitExp implements StyledShowable
             
     }
 
-    public @Nullable Unit toConcreteUnit()
+    public Unit toConcreteUnit()
     {
         substituteMutVars();
         Unit u = Unit.SCALAR;
-        for (Entry<@KeyFor("this.units") ComparableEither<MutUnitVar, SingleUnit>, Integer> e : units.entrySet())
+        for (Entry<ComparableEither<MutUnitVar, SingleUnit>, Integer> e : units.entrySet())
         {
-            @Nullable Unit multiplier = e.getKey().<@Nullable Unit>either(l -> null, singleUnit -> new Unit(singleUnit).raisedTo(e.getValue()));
+            Unit multiplier = e.getKey().<Unit>either(l -> null, singleUnit -> new Unit(singleUnit).raisedTo(e.getValue()));
             if (multiplier == null)
                 return null;
             u = u.times(multiplier);
@@ -375,7 +375,7 @@ public final class UnitExp implements StyledShowable
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;

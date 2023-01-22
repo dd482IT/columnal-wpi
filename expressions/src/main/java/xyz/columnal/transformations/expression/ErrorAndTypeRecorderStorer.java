@@ -56,7 +56,7 @@ public class ErrorAndTypeRecorderStorer implements ErrorAndTypeRecorder
     }
 
     @Override
-    public <EXPRESSION extends StyledShowable> void recordInformation(EXPRESSION src, Pair<StyledString, @Nullable QuickFix<EXPRESSION>> error)
+    public <EXPRESSION extends StyledShowable> void recordInformation(EXPRESSION src, Pair<StyledString, QuickFix<EXPRESSION>> error)
     {
     }
 
@@ -66,7 +66,7 @@ public class ErrorAndTypeRecorderStorer implements ErrorAndTypeRecorder
         // Ignore them, just interested in errors
     }
 
-    public Stream<@NonNull StyledString> getAllErrors()
+    public Stream<StyledString> getAllErrors()
     {
         return errorMessages.stream();
     }
@@ -80,7 +80,7 @@ public class ErrorAndTypeRecorderStorer implements ErrorAndTypeRecorder
 
     @SuppressWarnings("recorded")
     @Override
-    public @Recorded TypeExp recordTypeNN(Expression expression, TypeExp typeExp)
+    public TypeExp recordTypeNN(Expression expression, TypeExp typeExp)
     {
         types.put(expression, typeExp);
         return typeExp;
@@ -89,7 +89,7 @@ public class ErrorAndTypeRecorderStorer implements ErrorAndTypeRecorder
     // Don't require @Recorded on src
     @SuppressWarnings("recorded")
     @Override
-    public <T> @Nullable T recordLeftError(TypeManager typeManager, FunctionLookup functionLookup, Expression src, Either<TypeConcretisationError, T> errorOrVal)
+    public <T> T recordLeftError(TypeManager typeManager, FunctionLookup functionLookup, Expression src, Either<TypeConcretisationError, T> errorOrVal)
     {
         return ErrorAndTypeRecorder.super.recordLeftError(typeManager, functionLookup, src, errorOrVal);
     }

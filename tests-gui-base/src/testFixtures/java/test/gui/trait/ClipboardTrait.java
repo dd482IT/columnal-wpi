@@ -18,14 +18,12 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public interface ClipboardTrait extends FxRobotInterface
 {
     // Return is guaranteed to actually be a new clipboard entry
-    @OnThread(Tag.Simulation)
     public default String copyToClipboard()
     {
         return copyToClipboard(() -> push(KeyCode.F11));
     }
 
     // Action will be run from the current thread!
-    @OnThread(Tag.Simulation)
     public default String copyToClipboard(Runnable doCopyAction)
     {
         final String BLANK_CLIPBOARD = "@TEST";
@@ -38,7 +36,7 @@ public interface ClipboardTrait extends FxRobotInterface
         int count = 80;
         do
         {
-            r = TFXUtil.<@Nullable String>fx(() -> Clipboard.getSystemClipboard().getString());
+            r = TFXUtil.<String>fx(() -> Clipboard.getSystemClipboard().getString());
             TFXUtil.sleep(100);
             count--;
         }

@@ -34,16 +34,15 @@ import java.util.function.Function;
  */
 public class TableOperations
 {
-    public final @Nullable RenameTable renameTable;
-    public final Function<ColumnId, @Nullable DeleteColumn> deleteColumn;
-    public final @Nullable AppendRows appendRows;
+    public final RenameTable renameTable;
+    public final Function<ColumnId, DeleteColumn> deleteColumn;
+    public final AppendRows appendRows;
     // Row index to insert at, count
-    public final @Nullable InsertRows insertRows;
+    public final InsertRows insertRows;
     // Row index to delete at (incl), count
-    public final @Nullable DeleteRows deleteRows;
+    public final DeleteRows deleteRows;
 
-    @OnThread(Tag.Any)
-    public TableOperations(@Nullable RenameTable renameTable, Function<ColumnId, @Nullable DeleteColumn> deleteColumn, @Nullable AppendRows appendRows, @Nullable InsertRows insertRows, @Nullable DeleteRows deleteRows)
+    public TableOperations(RenameTable renameTable, Function<ColumnId, DeleteColumn> deleteColumn, AppendRows appendRows, InsertRows insertRows, DeleteRows deleteRows)
     {
         this.renameTable = renameTable;
         this.deleteColumn = deleteColumn;
@@ -56,7 +55,6 @@ public class TableOperations
     @FunctionalInterface
     public static interface DeleteColumn
     {
-        @OnThread(Tag.Simulation)
         public void deleteColumn(ColumnId columnId);
     }
 
@@ -64,15 +62,13 @@ public class TableOperations
     @FunctionalInterface
     public static interface AppendRows
     {
-        @OnThread(Tag.Simulation)
         public void appendRows(int count);
     }
 
     // Add rows in middle
     public static interface InsertRows
     {
-        @OnThread(Tag.Simulation)
-        public void insertRows(@TableDataRowIndex int beforeRowIndex, int count);
+        public void insertRows(int beforeRowIndex, int count);
 
         // TODO
         //@OnThread(Tag.Simulation)
@@ -81,13 +77,11 @@ public class TableOperations
 
     public static interface DeleteRows
     {
-        @OnThread(Tag.Simulation)
-        public void deleteRows(@TableDataRowIndex int rowIndex, int count);
+        public void deleteRows(int rowIndex, int count);
     }
     
     public static interface RenameTable
     {
-        @OnThread(Tag.Simulation)
         public void renameTable(TableId newName);
     }
 }
